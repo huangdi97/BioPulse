@@ -1,4 +1,5 @@
 """用药提醒服务。"""
+
 import httpx
 from datetime import datetime, timezone
 from patient_engage.app.database import get_cache, set_cache
@@ -21,16 +22,21 @@ async def create_reminder(patient_id: str, drug: str, schedule: dict) -> dict:
         创建的提醒计划信息。
     """
     async with httpx.AsyncClient() as client:
-        resp = await client.post(f"{CLOUD_API}/notifications/reminders", json={
-            "patient_id": patient_id,
-            "drug": drug,
-            "schedule": schedule,
-            "type": "medication",
-        })
+        resp = await client.post(
+            f"{CLOUD_API}/notifications/reminders",
+            json={
+                "patient_id": patient_id,
+                "drug": drug,
+                "schedule": schedule,
+                "type": "medication",
+            },
+        )
 
     reminder_data = resp.json() if resp.status_code == 200 else {}
     return {
-        "reminder_id": reminder_data.get("data", reminder_data).get("reminder_id", f"REM-{patient_id}-{int(datetime.now().timestamp())}"),
+        "reminder_id": reminder_data.get("data", reminder_data).get(
+            "reminder_id", f"REM-{patient_id}-{int(datetime.now().timestamp())}"
+        ),
         "patient_id": patient_id,
         "drug": drug,
         "schedule": schedule,
@@ -57,9 +63,12 @@ async def get_reminder_status(patient_id: str) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/notifications/reminders", params={
-            "patient_id": patient_id,
-        })
+        resp = await client.get(
+            f"{CLOUD_API}/notifications/reminders",
+            params={
+                "patient_id": patient_id,
+            },
+        )
         reminders = []
         if resp.status_code == 200:
             rdata = resp.json()
@@ -86,7 +95,9 @@ def _build_reminder_status(patient_id: str, reminders: list) -> dict:
             "pending": pending or 2,
             "adherence_rate": round(((completed or 7) / ((total or 10) or 1)) * 100, 1),
         },
-        "reminders": reminders[:10] if reminders else [
+        "reminders": reminders[:10]
+        if reminders
+        else [
             {"drug": "阿莫西林", "time": "08:00", "status": "completed"},
             {"drug": "阿莫西林", "time": "20:00", "status": "pending"},
             {"drug": "维生素D", "time": "12:00", "status": "missed"},
@@ -120,7 +131,8 @@ async def get_adherence_report(patient_id: str, days: int = 30) -> dict:
 
 def _build_adherence_report(patient_id: str, days: int) -> dict:
     """构建依从性报告。"""
-    from random import uniform, randint
+    from random import uniform
+
     overall_rate = round(uniform(70, 95), 1)
 
     weekly_rates = []
@@ -141,7 +153,9 @@ def _build_adherence_report(patient_id: str, days: int) -> dict:
             "best_time": "早晨",
             "worst_time": "晚间",
             "most_missed_drug": "维生素D",
-            "trend": "improving" if weekly_rates and weekly_rates[-1] >= weekly_rates[0] else "stable",
+            "trend": "improving"
+            if weekly_rates and weekly_rates[-1] >= weekly_rates[0]
+            else "stable",
         },
         "recommendations": [
             "设置固定用药闹钟可提高依从性",

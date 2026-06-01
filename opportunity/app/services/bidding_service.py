@@ -12,11 +12,14 @@ class BiddingService(BaseService):
     def create_bidding(self, body, user_id: int) -> int:
         repo = BiddingInfoRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()
-        return repo.create(body.model_dump(), extra={
-            "created_by": user_id,
-            "created_at": now,
-            "updated_at": now,
-        })
+        return repo.create(
+            body.model_dump(),
+            extra={
+                "created_by": user_id,
+                "created_at": now,
+                "updated_at": now,
+            },
+        )
 
     def list_bidding(
         self,
@@ -45,7 +48,8 @@ class BiddingService(BaseService):
             params.append(f"%{product_category}%")
 
         return repo.paginate(
-            page, page_size,
+            page,
+            page_size,
             conditions=conditions,
             params=params,
             order_by="id DESC",

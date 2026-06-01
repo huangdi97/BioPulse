@@ -3,9 +3,7 @@ import os
 from datetime import datetime
 
 
-EXPORT_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), "data", "exports"
-)
+EXPORT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "exports")
 
 
 def export_csv(rows: list, columns: list, filename_prefix: str) -> str:

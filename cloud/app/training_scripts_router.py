@@ -81,7 +81,8 @@ def list_scripts(
     service: TrainingScriptsService = Depends(),
 ) -> ApiResponse[PaginatedResponse[ScriptOut]]:
     result = service.list_scripts(
-        page=page, page_size=page_size,
+        page=page,
+        page_size=page_size,
         source_agent_role=source_agent_role,
         difficulty=difficulty,
         target_roles=target_roles,

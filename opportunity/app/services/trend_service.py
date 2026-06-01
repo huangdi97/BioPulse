@@ -1,9 +1,11 @@
 import json
 import urllib.request
 from datetime import datetime, timezone
-from typing import Optional
 
-from opportunity.app.repositories import TrendAnalysisRepository, ResearchTrailRepository
+from opportunity.app.repositories import (
+    TrendAnalysisRepository,
+    ResearchTrailRepository,
+)
 from opportunity.app.services.base import BaseService
 
 AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
@@ -41,13 +43,19 @@ class TrendService(BaseService):
             fmt = "%Y"
         else:
             fmt = "%Y-%m"
-        format_str = f"'%{fmt.replace('%Y', 'Y').replace('%m', 'm').replace('%q', 'Q')}'"
-        rows = ResearchTrailRepository(self.db).db.execute(
-            f"SELECT strftime('{fmt}', pub_date) as period, COUNT(*) as cnt "
-            f"FROM research_trail WHERE topic LIKE ? AND is_active=1 "
-            f"GROUP BY period ORDER BY period",
-            (f"%{topic}%",),
-        ).fetchall()
+        format_str = (
+            f"'%{fmt.replace('%Y', 'Y').replace('%m', 'm').replace('%q', 'Q')}'"
+        )
+        rows = (
+            ResearchTrailRepository(self.db)
+            .db.execute(
+                f"SELECT strftime('{fmt}', pub_date) as period, COUNT(*) as cnt "
+                f"FROM research_trail WHERE topic LIKE ? AND is_active=1 "
+                f"GROUP BY period ORDER BY period",
+                (f"%{topic}%",),
+            )
+            .fetchall()
+        )
         data_points = [{"period": r["period"], "count": r["cnt"]} for r in rows]
         total = sum(p["count"] for p in data_points)
         return data_points, total
@@ -83,17 +91,19 @@ class TrendService(BaseService):
                 "similar_topics": [],
             }
         now = datetime.now(timezone.utc).isoformat()
-        TrendAnalysisRepository(self.db).create({
-            "topic": body.topic,
-            "analysis_type": "prediction",
-            "period": "monthly",
-            "data_summary": data_summary,
-            "result": json.dumps(parsed, ensure_ascii=False),
-            "confidence": parsed.get("confidence", "medium"),
-            "analyzed_at": now,
-            "created_by": user_id,
-            "created_at": now,
-        })
+        TrendAnalysisRepository(self.db).create(
+            {
+                "topic": body.topic,
+                "analysis_type": "prediction",
+                "period": "monthly",
+                "data_summary": data_summary,
+                "result": json.dumps(parsed, ensure_ascii=False),
+                "confidence": parsed.get("confidence", "medium"),
+                "analyzed_at": now,
+                "created_by": user_id,
+                "created_at": now,
+            }
+        )
         return {
             "topic": body.topic,
             "prediction": parsed.get("prediction", ""),
@@ -105,4 +115,6 @@ class TrendService(BaseService):
 
     def list_history(self, page: int, page_size: int) -> tuple:
         repo = TrendAnalysisRepository(self.db)
-        return repo.paginate(page=page, page_size=page_size, order_by="analyzed_at DESC")
+        return repo.paginate(
+            page=page, page_size=page_size, order_by="analyzed_at DESC"
+        )

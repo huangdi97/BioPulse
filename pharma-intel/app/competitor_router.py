@@ -7,6 +7,7 @@ from shared.base import success
 
 router = APIRouter(prefix="/api/competitor", tags=["竞品情报"])
 
+
 @router.get("/intel")
 async def competitor_intel(
     company: str = Query(..., description="公司名称"),
@@ -14,6 +15,7 @@ async def competitor_intel(
     """获取指定竞争对手的综合情报。返回新闻摘要、论文活动、近期事件。"""
     result = await get_competitor_intel(company)
     return success(data=result)
+
 
 @router.get("/news")
 async def market_news(

@@ -39,7 +39,8 @@ class ScheduleService(BaseService):
             params.append(end_date)
         repo = ScheduleRepository(self.db)
         return repo.paginate(
-            page, page_size,
+            page,
+            page_size,
             conditions=conditions if conditions else None,
             params=params if params else None,
             order_by="start_time DESC",

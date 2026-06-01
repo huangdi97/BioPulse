@@ -35,6 +35,7 @@ def get_psql_checkpointer(conn_string: Optional[str] = None):
     """返回 PostgresSaver checkpointer。配置连接字符串后可使用。"""
     if conn_string:
         from langgraph.checkpoint.postgres import PostgresSaver
+
         return PostgresSaver.from_conn_string(conn_string)
     return get_checkpointer()
 

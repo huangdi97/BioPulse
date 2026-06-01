@@ -40,9 +40,16 @@ def log_metric(
     current_user: dict = Depends(require_scope("visit")),
     service: MarketplaceService = Depends(),
 ) -> Any:
-    return success(data=service.log_metric(
-        body.agent_role, body.metric_type, body.metric_value,
-        body.metric_unit, body.period_start, body.period_end))
+    return success(
+        data=service.log_metric(
+            body.agent_role,
+            body.metric_type,
+            body.metric_value,
+            body.metric_unit,
+            body.period_start,
+            body.period_end,
+        )
+    )
 
 
 @router.get("/metrics/dashboard")
@@ -60,7 +67,9 @@ def generate_benchmark(
     current_user: dict = Depends(require_scope("visit")),
     service: MarketplaceService = Depends(),
 ) -> Any:
-    return success(data=service.generate_benchmark(body.report_name, body.report_type, body.period))
+    return success(
+        data=service.generate_benchmark(body.report_name, body.report_type, body.period)
+    )
 
 
 @router.get("/benchmark/list")
@@ -78,9 +87,16 @@ def publish_item(
     current_user: dict = Depends(require_scope("visit")),
     service: MarketplaceService = Depends(),
 ) -> Any:
-    return success(data=service.publish_item(
-        body.item_name, body.description, body.agent_config,
-        body.category, body.price_model, str(current_user.get("sub", "unknown"))))
+    return success(
+        data=service.publish_item(
+            body.item_name,
+            body.description,
+            body.agent_config,
+            body.category,
+            body.price_model,
+            str(current_user.get("sub", "unknown")),
+        )
+    )
 
 
 @router.get("/items/discover")
@@ -91,4 +107,8 @@ def discover_items(
     price_model: Optional[str] = Query(None),
     enabled: Optional[int] = Query(None),
 ) -> Any:
-    return success(data=service.discover_items(category=category, price_model=price_model, enabled=enabled))
+    return success(
+        data=service.discover_items(
+            category=category, price_model=price_model, enabled=enabled
+        )
+    )

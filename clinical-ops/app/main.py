@@ -1,4 +1,5 @@
 """ClinicalOps · 临床试验运营 — FastAPI 入口。"""
+
 import time
 from fastapi import FastAPI
 from shared.middleware import RequestIDMiddleware
@@ -16,6 +17,7 @@ app.add_middleware(RequestIDMiddleware)
 @app.on_event("startup")
 def startup():
     from clinical_ops.app.database import init_cache_db
+
     init_cache_db()
 
 
@@ -31,6 +33,7 @@ def health():
 from clinical_ops.app.site_router import router as site_router
 from clinical_ops.app.recruitment_router import router as recruitment_router
 from clinical_ops.app.monitoring_router import router as monitoring_router
+
 app.include_router(site_router)
 app.include_router(recruitment_router)
 app.include_router(monitoring_router)

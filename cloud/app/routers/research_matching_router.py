@@ -4,9 +4,8 @@ Matches research products against PI profiles (by research area)
 or free-text method descriptions using keyword overlap scoring.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from starlette import status
 
 from shared.auth import get_current_user
 from shared.auth_scope import require_scope
@@ -25,11 +24,13 @@ router = APIRouter(
 
 class PiMatchRequest(BaseModel):
     """Request body: match products for a specific PI."""
+
     pi_id: int
 
 
 class MethodMatchRequest(BaseModel):
     """Request body: match products by a free-text method description."""
+
     method_description: str
 
 
@@ -63,7 +64,9 @@ def match_by_method(
     """
     db = get_research_db()
     try:
-        results = match_products_by_method(body.method_description, top_k=3, research_db=db)
+        results = match_products_by_method(
+            body.method_description, top_k=3, research_db=db
+        )
         return {"code": 0, "data": results, "message": "success"}
     finally:
         db.close()

@@ -51,8 +51,13 @@ class ComplianceStrategyService:
                 "level": "L1",
                 "action": "block",
                 "violations": [
-                    {"rule_code": v.rule_code, "rule_name": v.rule_name,
-                     "severity": v.severity, "action": v.action, "detail": v.detail}
+                    {
+                        "rule_code": v.rule_code,
+                        "rule_name": v.rule_name,
+                        "severity": v.severity,
+                        "action": v.action,
+                        "detail": v.detail,
+                    }
                     for v in l1_violations
                 ],
             }
@@ -108,10 +113,16 @@ class ComplianceStrategyService:
         try:
             val = float(field_val) if field_val is not None else 0
             thr = float(threshold)
-            if (op == "gt" and val > thr) or (op == "gte" and val >= thr) \
-               or (op == "lt" and val < thr) or (op == "lte" and val <= thr) \
-               or (op == "eq" and val == thr):
-                return self._l2_violation(rule, f"字段[{field}]值[{val}]超出阈值[{thr}]")
+            if (
+                (op == "gt" and val > thr)
+                or (op == "gte" and val >= thr)
+                or (op == "lt" and val < thr)
+                or (op == "lte" and val <= thr)
+                or (op == "eq" and val == thr)
+            ):
+                return self._l2_violation(
+                    rule, f"字段[{field}]值[{val}]超出阈值[{thr}]"
+                )
         except (TypeError, ValueError):
             pass
         return None
@@ -120,7 +131,10 @@ class ComplianceStrategyService:
         field = condition.get("field")
         expected = condition.get("expected")
         if visit_data.get(field) != expected:
-            return self._l2_violation(rule, f"字段[{field}]期望值[{expected}]，实际值[{visit_data.get(field)}]")
+            return self._l2_violation(
+                rule,
+                f"字段[{field}]期望值[{expected}]，实际值[{visit_data.get(field)}]",
+            )
         return None
 
     def _check_frequency(self, rule, condition, threshold, visit_data):
@@ -135,7 +149,10 @@ class ComplianceStrategyService:
             (entity_id, since),
         ).fetchone()["c"]
         if count >= int(threshold):
-            return self._l2_violation(rule, f"实体[{entity_id}]在{window_days}天内拜访{count}次，阈值[{threshold}]")
+            return self._l2_violation(
+                rule,
+                f"实体[{entity_id}]在{window_days}天内拜访{count}次，阈值[{threshold}]",
+            )
         return None
 
     def _check_concentration(self, rule, condition, threshold, visit_data):
@@ -156,14 +173,18 @@ class ComplianceStrategyService:
             ).fetchone()["c"]
             ratio = dept_count / total
             if ratio >= ratio_threshold:
-                return self._l2_violation(rule, f"值[{dept_val}]占比{ratio:.1%}，阈值[{ratio_threshold:.0%}]")
+                return self._l2_violation(
+                    rule, f"值[{dept_val}]占比{ratio:.1%}，阈值[{ratio_threshold:.0%}]"
+                )
         return None
 
     def _check_citation(self, rule, condition, visit_data):
         field = condition.get("field")
         expected = condition.get("expected")
         if visit_data.get(field) != expected:
-            return self._l2_violation(rule, f"引用未验证，字段[{field}]值[{visit_data.get(field)}]")
+            return self._l2_violation(
+                rule, f"引用未验证，字段[{field}]值[{visit_data.get(field)}]"
+            )
         return None
 
     def _check_expiry(self, rule, condition, threshold, visit_data):
@@ -172,11 +193,17 @@ class ComplianceStrategyService:
         expiry = visit_data.get(field)
         if expiry:
             try:
-                expiry_date = datetime.fromisoformat(expiry) if isinstance(expiry, str) else expiry
+                expiry_date = (
+                    datetime.fromisoformat(expiry)
+                    if isinstance(expiry, str)
+                    else expiry
+                )
                 if isinstance(expiry_date, datetime):
                     remaining = (expiry_date - datetime.now()).days
                     if remaining <= lead_days:
-                        return self._l2_violation(rule, f"资质{remaining}天后到期，预警期{lead_days}天")
+                        return self._l2_violation(
+                            rule, f"资质{remaining}天后到期，预警期{lead_days}天"
+                        )
             except (ValueError, TypeError):
                 pass
         return None
@@ -210,7 +237,14 @@ class ComplianceStrategyService:
         for v in violations:
             self.db.execute(
                 "INSERT INTO compliance_l2_log (rule_id, rule_name, severity, check_type, visit_data_json, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-                (v["rule_id"], v["rule_name"], v["severity"], v["check_type"], json.dumps(visit_data, ensure_ascii=False), now),
+                (
+                    v["rule_id"],
+                    v["rule_name"],
+                    v["severity"],
+                    v["check_type"],
+                    json.dumps(visit_data, ensure_ascii=False),
+                    now,
+                ),
             )
         self.db.commit()
 
@@ -225,15 +259,30 @@ class ComplianceStrategyService:
     def get_strategy(self, rule_id: str) -> Optional[dict]:
         for rule in load_pharma_rules():
             if rule.get("code") == rule_id:
-                return {"rule_id": rule_id, "level": "L1", "action": "block", "severity": rule.get("severity")}
+                return {
+                    "rule_id": rule_id,
+                    "level": "L1",
+                    "action": "block",
+                    "severity": rule.get("severity"),
+                }
         for rule in load_research_rules():
             if rule.get("code") == rule_id:
-                return {"rule_id": rule_id, "level": "L1", "action": "block", "severity": rule.get("severity")}
+                return {
+                    "rule_id": rule_id,
+                    "level": "L1",
+                    "action": "block",
+                    "severity": rule.get("severity"),
+                }
         for rule in self._all_l2_rules:
             if rule.get("id") == rule_id:
                 sev = rule.get("severity")
                 action = "warn" if sev in ("warning",) else "review"
-                return {"rule_id": rule_id, "level": "L2", "action": action, "severity": sev}
+                return {
+                    "rule_id": rule_id,
+                    "level": "L2",
+                    "action": action,
+                    "severity": sev,
+                }
         return None
 
     def get_l2_rules(self) -> list:

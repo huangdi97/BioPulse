@@ -1,9 +1,13 @@
 """PatientEngage · 患者服务 — FastAPI 入口。"""
+
 import time
 from fastapi import FastAPI
-from shared.middleware import RequestIDMiddleware
+from shared.request_id_middleware import RequestIDMiddleware
+from shared.structured_logging import setup_logging
 
 START_TIME = time.time()
+
+setup_logging("patient-engage")
 
 app = FastAPI(
     title="PatientEngage · 患者服务",
@@ -16,6 +20,7 @@ app.add_middleware(RequestIDMiddleware)
 @app.on_event("startup")
 def startup():
     from patient_engage.app.database import init_cache_db
+
     init_cache_db()
 
 
@@ -31,6 +36,7 @@ def health():
 from patient_engage.app.education_router import router as education_router
 from patient_engage.app.reminder_router import router as reminder_router
 from patient_engage.app.followup_router import router as followup_router
+
 app.include_router(education_router)
 app.include_router(reminder_router)
 app.include_router(followup_router)

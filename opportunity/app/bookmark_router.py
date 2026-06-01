@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette import status
@@ -58,7 +58,10 @@ def list_bookmarks(
 ) -> ApiResponse[PaginatedResponse[BookmarkOut]]:
     user_id = int(current_user["sub"])
     total, total_pages, rows = service.list_bookmarks(
-        page, page_size, user_id, entity_type,
+        page,
+        page_size,
+        user_id,
+        entity_type,
     )
     items = [BookmarkOut(**dict(r)) for r in rows]
     return success(

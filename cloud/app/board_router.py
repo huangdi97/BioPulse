@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from starlette import status
 
@@ -28,7 +28,9 @@ def create_board(
     service: BoardService = Depends(),
 ) -> Any:
     user_id = int(current_user["sub"])
-    result = service.create_board(name=body.name, description=body.description, owner_id=user_id)
+    result = service.create_board(
+        name=body.name, description=body.description, owner_id=user_id
+    )
     return success(data=result)
 
 
@@ -56,7 +58,9 @@ def update_board(
     current_user: dict = Depends(require_scope("visit")),
     service: BoardService = Depends(),
 ) -> Any:
-    result = service.update_board(board_id, name=body.name, description=body.description)
+    result = service.update_board(
+        board_id, name=body.name, description=body.description
+    )
     return success(data=result)
 
 

@@ -59,84 +59,135 @@ export default function RepLayout() {
   ]
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      <header className="flex items-center justify-between px-4 py-2 bg-primary text-primary-foreground shrink-0">
-        <div className="flex items-center gap-2">
-          <Pill className="h-5 w-5" />
+    <div className="flex h-screen bg-background">
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex flex-col w-56 bg-slate-900 text-slate-100 shrink-0">
+        <div className="flex items-center gap-2 px-4 py-4 border-b border-slate-700">
+          <Pill className="h-5 w-5 text-primary-foreground" />
           <span className="font-semibold text-sm">云四端</span>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm">{user?.username}</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleLogout}
-            className="text-primary-foreground hover:bg-primary-foreground/10"
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
-      </header>
-
-      <nav className="flex items-center gap-0.5 px-2 py-1.5 bg-primary/90 text-primary-foreground shrink-0 overflow-x-auto">
-        {END_PORTS.map((end) => {
-          const Icon = end.icon
-          return (
-            <NavLink
-              key={end.to}
-              to={end.to}
-              className={({ isActive }) =>
-                `flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs whitespace-nowrap transition-colors ${
-                  isActive
-                    ? 'bg-white/20 font-medium'
-                    : 'hover:bg-white/10'
-                }`
-              }
-            >
-              <Icon className="h-3.5 w-3.5" />
-              <span>{end.label}</span>
-            </NavLink>
-          )
-        })}
-      </nav>
-
-      <main className="flex-1 overflow-y-auto p-4">
-        <Outlet />
-      </main>
-
-      <nav className="flex border-t bg-background shrink-0">
-        {tabs.map((tab) => {
-          const Icon = tab.icon
-          if (tab.disabled) {
+        <nav className="flex-1 py-3 space-y-1 px-2">
+          {END_PORTS.map((end) => {
+            const Icon = end.icon
             return (
-              <span
+              <NavLink
+                key={end.to}
+                to={end.to}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  }`
+                }
+              >
+                <Icon className="h-4 w-4" />
+                <span>{end.label}</span>
+              </NavLink>
+            )
+          })}
+        </nav>
+        <div className="px-3 py-3 border-t border-slate-700">
+          <div className="flex items-center gap-3">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-600 text-xs text-white">
+              {user?.username?.charAt(0) ?? 'R'}
+            </div>
+            <span className="text-sm text-slate-300 truncate">{user?.username}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              className="ml-auto text-slate-400 hover:text-white hover:bg-slate-800 h-7 w-7"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main content area */}
+      <div className="flex flex-col flex-1 min-w-0">
+        {/* Mobile header */}
+        <header className="flex md:hidden items-center justify-between px-4 py-2 bg-primary text-primary-foreground shrink-0">
+          <div className="flex items-center gap-2">
+            <Pill className="h-5 w-5" />
+            <span className="font-semibold text-sm">云四端</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm">{user?.username}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              className="text-primary-foreground hover:bg-primary-foreground/10"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        </header>
+
+        {/* Mobile port nav */}
+        <nav className="flex md:hidden items-center gap-0.5 px-2 py-1.5 bg-primary/90 text-primary-foreground shrink-0 overflow-x-auto">
+          {END_PORTS.map((end) => {
+            const Icon = end.icon
+            return (
+              <NavLink
+                key={end.to}
+                to={end.to}
+                className={({ isActive }) =>
+                  `flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs whitespace-nowrap transition-colors ${
+                    isActive
+                      ? 'bg-white/20 font-medium'
+                      : 'hover:bg-white/10'
+                  }`
+                }
+              >
+                <Icon className="h-3.5 w-3.5" />
+                <span>{end.label}</span>
+              </NavLink>
+            )
+          })}
+        </nav>
+
+        <main className="flex-1 overflow-y-auto p-4">
+          <Outlet />
+        </main>
+
+        {/* Mobile bottom tabs */}
+        <nav className="flex md:hidden border-t bg-background shrink-0">
+          {tabs.map((tab) => {
+            const Icon = tab.icon
+            if (tab.disabled) {
+              return (
+                <span
+                  key={tab.to}
+                  className="flex-1 flex flex-col items-center justify-center py-2 text-muted-foreground cursor-not-allowed opacity-40"
+                >
+                  <Icon className="h-5 w-5" />
+                  <span className="text-xs mt-1">{tab.label}</span>
+                </span>
+              )
+            }
+            return (
+              <NavLink
                 key={tab.to}
-                className="flex-1 flex flex-col items-center justify-center py-2 text-muted-foreground cursor-not-allowed opacity-40"
+                to={tab.to}
+                end={tab.to === '/rep/dashboard'}
+                className={({ isActive }) =>
+                  `flex-1 flex flex-col items-center justify-center py-2 text-sm transition-colors ${
+                    isActive
+                      ? 'text-primary font-medium'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`
+                }
               >
                 <Icon className="h-5 w-5" />
                 <span className="text-xs mt-1">{tab.label}</span>
-              </span>
+              </NavLink>
             )
-          }
-          return (
-            <NavLink
-              key={tab.to}
-              to={tab.to}
-              end={tab.to === '/rep/dashboard'}
-              className={({ isActive }) =>
-                `flex-1 flex flex-col items-center justify-center py-2 text-sm transition-colors ${
-                  isActive
-                    ? 'text-primary font-medium'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`
-              }
-            >
-              <Icon className="h-5 w-5" />
-              <span className="text-xs mt-1">{tab.label}</span>
-            </NavLink>
-          )
-        })}
-      </nav>
+          })}
+        </nav>
+      </div>
     </div>
   )
 }

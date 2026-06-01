@@ -19,10 +19,13 @@ async def get_monitoring_plan(trial_id: str) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/kg/entities", params={
-            "name": trial_id,
-            "entity_type": "trial",
-        })
+        resp = await client.get(
+            f"{CLOUD_API}/kg/entities",
+            params={
+                "name": trial_id,
+                "entity_type": "trial",
+            },
+        )
         entities = []
         if resp.status_code == 200:
             data = resp.json()
@@ -51,9 +54,21 @@ def _build_monitoring_plan(trial_id: str, entities: list) -> dict:
             "CRF 数据完整性",
         ],
         "team": [
-            {"role": "临床监察员(CRA)", "name": props.get("cra_name", "待分配"), "email": props.get("cra_email", "")},
-            {"role": "临床研究协调员(CRC)", "name": props.get("crc_name", "待分配"), "email": props.get("crc_email", "")},
-            {"role": "数据管理员", "name": props.get("data_manager", "待分配"), "email": props.get("dm_email", "")},
+            {
+                "role": "临床监察员(CRA)",
+                "name": props.get("cra_name", "待分配"),
+                "email": props.get("cra_email", ""),
+            },
+            {
+                "role": "临床研究协调员(CRC)",
+                "name": props.get("crc_name", "待分配"),
+                "email": props.get("crc_email", ""),
+            },
+            {
+                "role": "数据管理员",
+                "name": props.get("data_manager", "待分配"),
+                "email": props.get("dm_email", ""),
+            },
         ],
         "risk_based": props.get("risk_based", True),
         "status": props.get("monitoring_status", "active"),
@@ -73,10 +88,13 @@ async def get_monitoring_report(trial_id: str, report_id: str) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/kg/entities", params={
-            "name": trial_id,
-            "entity_type": "trial",
-        })
+        resp = await client.get(
+            f"{CLOUD_API}/kg/entities",
+            params={
+                "name": trial_id,
+                "entity_type": "trial",
+            },
+        )
         entities = []
         if resp.status_code == 200:
             data = resp.json()
@@ -93,9 +111,24 @@ def _build_monitoring_report(trial_id: str, report_id: str, entities: list) -> d
     props = entity.get("properties", {})
 
     findings = [
-        {"type": "major", "description": "2例SAE未在24小时内报告", "severity": "高", "status": "open"},
-        {"type": "minor", "description": "3份知情同意书签名日期缺失", "severity": "中", "status": "closed"},
-        {"type": "observation", "description": "试验药物温度记录有1次超限", "severity": "中", "status": "in_progress"},
+        {
+            "type": "major",
+            "description": "2例SAE未在24小时内报告",
+            "severity": "高",
+            "status": "open",
+        },
+        {
+            "type": "minor",
+            "description": "3份知情同意书签名日期缺失",
+            "severity": "中",
+            "status": "closed",
+        },
+        {
+            "type": "observation",
+            "description": "试验药物温度记录有1次超限",
+            "severity": "中",
+            "status": "in_progress",
+        },
     ]
 
     return {
@@ -126,10 +159,13 @@ async def generate_report(trial_id: str) -> dict:
     返回新生成的报告标识和概览。
     """
     async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/kg/entities", params={
-            "name": trial_id,
-            "entity_type": "trial",
-        })
+        resp = await client.get(
+            f"{CLOUD_API}/kg/entities",
+            params={
+                "name": trial_id,
+                "entity_type": "trial",
+            },
+        )
         entities = []
         if resp.status_code == 200:
             data = resp.json()

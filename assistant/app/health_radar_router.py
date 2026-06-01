@@ -92,12 +92,17 @@ def list_health_radar(
     service: HealthRadarService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[HealthRadarOut]]:
-    total, total_pages, rows = service.list(page, page_size, patient_name, score_min, score_max, date_from, date_to)
+    total, total_pages, rows = service.list(
+        page, page_size, patient_name, score_min, score_max, date_from, date_to
+    )
     items = [HealthRadarOut(**dict(r)) for r in rows]
     return success(
         data=PaginatedResponse(
-            items=items, total=total, page=page,
-            page_size=page_size, total_pages=total_pages,
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
         )
     )
 

@@ -1,6 +1,4 @@
-import pytest
 import sqlite3
-import os
 from cloud.app.services.compliance_enforcer import ComplianceEnforcer
 from cloud.app.repositories import PiRepository, ProductRepository
 from cloud.app.database import DB_PATH
@@ -32,7 +30,7 @@ class TestCoreAPIPerformance:
             db.close()
 
     def test_compliance_enforce(self, benchmark):
-        db = sqlite3.connect(':memory:')
+        db = sqlite3.connect(":memory:")
         db.row_factory = sqlite3.Row
         enforcer = ComplianceEnforcer(db)
         visit = {"notes": "正常拜访", "expenses": 0}
@@ -41,15 +39,22 @@ class TestCoreAPIPerformance:
 
     def test_langgraph_execution(self, benchmark):
         from cloud.langgraph.graph import get_test_graph
+
         graph = get_test_graph()
         result = benchmark(
             graph.invoke,
-            {'messages': ['hello'], 'next_agent': '', 'metadata': {}, 'needs_review': False},
-            {'configurable': {'thread_id': 'bench-test'}}
+            {
+                "messages": ["hello"],
+                "next_agent": "",
+                "metadata": {},
+                "needs_review": False,
+            },
+            {"configurable": {"thread_id": "bench-test"}},
         )
         assert "processed_by_B" in result["messages"]
 
     def test_product_matching(self, benchmark):
         from cloud.app.services.product_matching_service import _tokenize
+
         result = benchmark(_tokenize, "PCR amplification for DNA sequencing")
         assert isinstance(result, set)

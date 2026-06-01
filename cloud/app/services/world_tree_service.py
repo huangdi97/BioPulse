@@ -62,8 +62,16 @@ class WorldTreeService(BaseService):
             self._refresh_path(child["id"])
             self._refresh_children(child["id"])
 
-    def create_node(self, name: str, description: str, parent_id: Optional[int],
-                    node_type: str, sort_order: int, metadata: dict, uid: int) -> dict:
+    def create_node(
+        self,
+        name: str,
+        description: str,
+        parent_id: Optional[int],
+        node_type: str,
+        sort_order: int,
+        metadata: dict,
+        uid: int,
+    ) -> dict:
         now = self._now()
         nodes_repo, _, _, _ = self._get_repos()
 
@@ -75,23 +83,26 @@ class WorldTreeService(BaseService):
                 raise self._n404("Parent")
             path, level = p["path"] + "/" + name, p["level"] + 1
 
-        node_id = nodes_repo.create({
-            "name": name,
-            "description": description,
-            "parent_id": parent_id,
-            "path": path,
-            "level": level,
-            "node_type": node_type,
-            "sort_order": sort_order,
-            "metadata": json.dumps(metadata, ensure_ascii=False),
-            "created_by": uid,
-            "created_at": now,
-            "updated_at": now,
-        })
+        node_id = nodes_repo.create(
+            {
+                "name": name,
+                "description": description,
+                "parent_id": parent_id,
+                "path": path,
+                "level": level,
+                "node_type": node_type,
+                "sort_order": sort_order,
+                "metadata": json.dumps(metadata, ensure_ascii=False),
+                "created_by": uid,
+                "created_at": now,
+                "updated_at": now,
+            }
+        )
         return self._build(nodes_repo.get_by_id(node_id))
 
-    def list_nodes(self, node_type: Optional[str] = None,
-                   parent_id: Optional[int] = None) -> List[dict]:
+    def list_nodes(
+        self, node_type: Optional[str] = None, parent_id: Optional[int] = None
+    ) -> List[dict]:
         nodes_repo, _, _, _ = self._get_repos()
         conditions, params = [], []
         if node_type:
@@ -103,7 +114,9 @@ class WorldTreeService(BaseService):
         elif not node_type:
             conditions.append("parent_id IS NULL")
         rows = nodes_repo.list_all(
-            conditions=conditions or None, params=params or None, order_by="sort_order, name"
+            conditions=conditions or None,
+            params=params or None,
+            order_by="sort_order, name",
         )
         return [self._build(r) for r in rows]
 
@@ -111,14 +124,21 @@ class WorldTreeService(BaseService):
         nodes_repo, _, nml_repo, _ = self._get_repos()
         n = self._node_or_404(nodes_repo, node_id)
         d = self._build(n)
-        d["child_count"] = nodes_repo.count(conditions=["parent_id=?"], params=[node_id])
+        d["child_count"] = nodes_repo.count(
+            conditions=["parent_id=?"], params=[node_id]
+        )
         d["memory_count"] = nml_repo.count_by_node(node_id)
         return d
 
-    def update_node(self, node_id: int, name: Optional[str] = None,
-                    description: Optional[str] = None, node_type: Optional[str] = None,
-                    sort_order: Optional[int] = None,
-                    metadata: Optional[dict] = None) -> dict:
+    def update_node(
+        self,
+        node_id: int,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        node_type: Optional[str] = None,
+        sort_order: Optional[int] = None,
+        metadata: Optional[dict] = None,
+    ) -> dict:
         nodes_repo, _, _, _ = self._get_repos()
         n = self._node_or_404(nodes_repo, node_id)
         old_pid = n["parent_id"]
@@ -155,7 +175,7 @@ class WorldTreeService(BaseService):
         snapshots_repo.delete_by_nodes(ids)
         for nid in reversed(ids):
             nodes_repo.delete(nid)
-        return f"Deleted node {node_id} and {len(ids)-1} descendants"
+        return f"Deleted node {node_id} and {len(ids) - 1} descendants"
 
     def get_children(self, node_id: int) -> List[dict]:
         nodes_repo, _, _, _ = self._get_repos()
@@ -182,11 +202,13 @@ class WorldTreeService(BaseService):
         self._node_or_404(nodes_repo, node_id)
         if not mem_repo.find_active_by_id(memory_id):
             raise self._n404("Memory entry")
-        nml_repo.create({
-            "node_id": node_id,
-            "memory_entry_id": memory_id,
-            "created_at": self._now(),
-        })
+        nml_repo.create(
+            {
+                "node_id": node_id,
+                "memory_entry_id": memory_id,
+                "created_at": self._now(),
+            }
+        )
 
     def unlink_memory(self, node_id: int, memory_id: int) -> None:
         nodes_repo, _, _, _ = self._get_repos()

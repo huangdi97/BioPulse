@@ -15,23 +15,33 @@ class ComplianceRulesRepository(BaseRepository):
 
 class ComplianceAuditRecordsRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(db, "compliance_audit_records", TABLE_COMPLIANCE_AUDIT_RECORDS_COLS)
+        super().__init__(
+            db, "compliance_audit_records", TABLE_COMPLIANCE_AUDIT_RECORDS_COLS
+        )
 
 
 class NmpaComplianceLogsRepository(BaseRepository):
     def __init__(self, db):
         super().__init__(db, "nmpa_compliance_logs", TABLE_NMPA_COMPLIANCE_LOGS_COLS)
 
-    def list_filtered(self, document_type=None, check_result=None, human_review_required=None):
+    def list_filtered(
+        self, document_type=None, check_result=None, human_review_required=None
+    ):
         conditions, params = [], []
         if document_type:
-            conditions.append("document_type=?"); params.append(document_type)
+            conditions.append("document_type=?")
+            params.append(document_type)
         if check_result:
-            conditions.append("check_result=?"); params.append(check_result)
+            conditions.append("check_result=?")
+            params.append(check_result)
         if human_review_required is not None:
-            conditions.append("human_review_required=?"); params.append(human_review_required)
-        return self.list_all(conditions=conditions or None, params=params or None,
-                             order_by="created_at DESC")
+            conditions.append("human_review_required=?")
+            params.append(human_review_required)
+        return self.list_all(
+            conditions=conditions or None,
+            params=params or None,
+            order_by="created_at DESC",
+        )
 
 
 class DataMaskingRulesRepository(BaseRepository):

@@ -10,9 +10,12 @@ class WorldTreeNodesRepository(BaseRepository):
         super().__init__(db, "world_tree_nodes", TABLE_WORLD_TREE_NODES_COLS)
 
     def exists_by_id(self, node_id):
-        return self.db.execute(
-            f"SELECT id FROM {self.table_name} WHERE id=?", (node_id,)
-        ).fetchone() is not None
+        return (
+            self.db.execute(
+                f"SELECT id FROM {self.table_name} WHERE id=?", (node_id,)
+            ).fetchone()
+            is not None
+        )
 
     def list_active_sorted(self):
         placeholders = ", ".join(self.cols)
@@ -27,9 +30,12 @@ class WorldTreeNodesRepository(BaseRepository):
         while stack:
             cur = stack.pop()
             ids.append(cur)
-            stack.extend(c["id"] for c in self.db.execute(
-                f"SELECT id FROM {self.table_name} WHERE parent_id=?", (cur,)
-            ).fetchall())
+            stack.extend(
+                c["id"]
+                for c in self.db.execute(
+                    f"SELECT id FROM {self.table_name} WHERE parent_id=?", (cur,)
+                ).fetchall()
+            )
         return ids
 
     def update_parent(self, node_id, parent_id, now):
@@ -67,4 +73,6 @@ class WorldTreeSnapshotsRepository(BaseRepository):
         if not node_ids:
             return
         ph = ",".join("?" for _ in node_ids)
-        self.db.execute(f"DELETE FROM {self.table_name} WHERE node_id IN ({ph})", node_ids)
+        self.db.execute(
+            f"DELETE FROM {self.table_name} WHERE node_id IN ({ph})", node_ids
+        )

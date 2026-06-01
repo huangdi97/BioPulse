@@ -1,11 +1,27 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { fetchAssistantTasks, type AssistantTask } from '@/api/assistant-api'
 import { Card, CardContent } from '@/components/ui/card'
 import { Calendar, Check } from 'lucide-react'
+import { FilterDropdown } from '@/components/FilterDropdown'
+import { Skeleton } from '@/components/Skeleton'
+
+const STATUS_OPTIONS = [
+  { value: '全部', label: '全部状态' },
+  { value: 'pending', label: '待办' },
+  { value: 'completed', label: '已完成' },
+]
+
+const TYPE_OPTIONS = [
+  { value: '全部', label: '全部类型' },
+  { value: 'high', label: '高优先级' },
+  { value: 'medium', label: '中优先级' },
+]
 
 export default function TaskList() {
   const [tasks, setTasks] = useState<AssistantTask[]>([])
   const [loading, setLoading] = useState(true)
+  const [status, setStatus] = useState('全部')
+  const [type, setType] = useState('全部')
 
   useEffect(() => {
     let cancelled = false
@@ -17,12 +33,32 @@ export default function TaskList() {
     return () => { cancelled = true }
   }, [])
 
-  if (loading) return <div className="space-y-3">{[1, 2].map((i) => <Card key={i}><CardContent className="p-4 animate-pulse"><div className="h-16 bg-muted rounded" /></CardContent></Card>)}</div>
+  const filtered = useMemo(() => {
+    return tasks.filter((t) => {
+      const matchStatus = status === '全部' || t.status === status
+      const matchType = type === '全部' || t.priority === type
+      return matchStatus && matchType
+    })
+  }, [tasks, status, type])
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2].map((i) => (
+          <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full" /></CardContent></Card>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">任务列表</h2>
-      {tasks.map((task) => (
+      <div className="flex gap-2 flex-wrap">
+        <FilterDropdown label="状态" value={status} options={STATUS_OPTIONS} onChange={setStatus} />
+        <FilterDropdown label="类型" value={type} options={TYPE_OPTIONS} onChange={setType} />
+      </div>
+      {filtered.map((task) => (
         <Card key={task.id} className={task.status === 'completed' ? 'opacity-60' : ''}>
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
@@ -41,6 +77,9 @@ export default function TaskList() {
           </CardContent>
         </Card>
       ))}
+      {!loading && filtered.length === 0 && (
+        <div className="text-center py-12 text-sm text-muted-foreground">没有找到匹配的任务</div>
+      )}
     </div>
   )
 }

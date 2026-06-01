@@ -39,7 +39,9 @@ def approve_quotation(id: int, current_user: dict = Depends(get_current_user)):
 
 
 @router.post("/{id}/reject")
-def reject_quotation(id: int, body: RejectRequest, current_user: dict = Depends(get_current_user)):
+def reject_quotation(
+    id: int, body: RejectRequest, current_user: dict = Depends(get_current_user)
+):
     try:
         reject(id, current_user.get("username", "unknown"), body.reason)
         return {"code": 0, "message": "rejected"}

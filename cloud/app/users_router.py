@@ -80,7 +80,9 @@ def delete_user(
     _require_admin(current_user)
 
     if str(current_user["sub"]) == str(user_id):
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Cannot disable your own account")
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST, detail="Cannot disable your own account"
+        )
 
     service.delete_user(user_id)
     return success()

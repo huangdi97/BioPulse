@@ -2,18 +2,100 @@ import json
 import re
 from typing import Any
 
-STOP_WORDS = {"the", "a", "an", "is", "are", "was", "were", "be", "been",
-              "being", "have", "has", "had", "do", "does", "did", "but",
-              "if", "or", "because", "as", "until", "while", "of", "at",
-              "by", "for", "with", "about", "against", "between", "into",
-              "through", "during", "before", "after", "above", "below",
-              "to", "from", "up", "down", "in", "out", "on", "off", "over",
-              "under", "again", "further", "then", "once", "here", "there",
-              "when", "where", "why", "how", "all", "each", "every", "both",
-              "few", "more", "most", "other", "some", "such", "no", "nor",
-              "not", "only", "own", "same", "so", "than", "too", "very",
-              "just", "also", "can", "will", "may", "would", "could",
-              "should", "might", "method", "using", "based", "use", "used"}
+STOP_WORDS = {
+    "the",
+    "a",
+    "an",
+    "is",
+    "are",
+    "was",
+    "were",
+    "be",
+    "been",
+    "being",
+    "have",
+    "has",
+    "had",
+    "do",
+    "does",
+    "did",
+    "but",
+    "if",
+    "or",
+    "because",
+    "as",
+    "until",
+    "while",
+    "of",
+    "at",
+    "by",
+    "for",
+    "with",
+    "about",
+    "against",
+    "between",
+    "into",
+    "through",
+    "during",
+    "before",
+    "after",
+    "above",
+    "below",
+    "to",
+    "from",
+    "up",
+    "down",
+    "in",
+    "out",
+    "on",
+    "off",
+    "over",
+    "under",
+    "again",
+    "further",
+    "then",
+    "once",
+    "here",
+    "there",
+    "when",
+    "where",
+    "why",
+    "how",
+    "all",
+    "each",
+    "every",
+    "both",
+    "few",
+    "more",
+    "most",
+    "other",
+    "some",
+    "such",
+    "no",
+    "nor",
+    "not",
+    "only",
+    "own",
+    "same",
+    "so",
+    "than",
+    "too",
+    "very",
+    "just",
+    "also",
+    "can",
+    "will",
+    "may",
+    "would",
+    "could",
+    "should",
+    "might",
+    "method",
+    "using",
+    "based",
+    "use",
+    "used",
+}
 
 
 def _compute_jaccard_score(a: set, b: set) -> float:
@@ -39,6 +121,7 @@ def match_products_for_pi(
     pi_id: int, top_k: int = 3, research_db=None
 ) -> list[dict[str, Any]]:
     from cloud.app.research_database import get_research_db
+
     close_db = False
     if research_db is None:
         research_db = get_research_db()
@@ -61,9 +144,7 @@ def match_products_for_pi(
             area_tokens.update(_tokenize(area))
         if not area_tokens:
             return []
-        product_rows = research_db.execute(
-            "SELECT * FROM research_products"
-        ).fetchall()
+        product_rows = research_db.execute("SELECT * FROM research_products").fetchall()
         scored = []
         for p in product_rows:
             prod = dict(p)
@@ -72,13 +153,15 @@ def match_products_for_pi(
             all_prod_tokens = set(product_keywords) | prod_name_tokens
             score = _compute_jaccard_score(area_tokens, all_prod_tokens)
             if score > 0:
-                scored.append({
-                    "product_id": prod["product_id"],
-                    "name": prod["name"],
-                    "category": prod.get("category", ""),
-                    "score": score,
-                    "match_reason": f"Similarity: {score:.2f}",
-                })
+                scored.append(
+                    {
+                        "product_id": prod["product_id"],
+                        "name": prod["name"],
+                        "category": prod.get("category", ""),
+                        "score": score,
+                        "match_reason": f"Similarity: {score:.2f}",
+                    }
+                )
         scored.sort(key=lambda x: x["score"], reverse=True)
         return scored[:top_k]
     finally:
@@ -92,6 +175,7 @@ def match_products_by_method(
     if not method_description.strip():
         return []
     from cloud.app.research_database import get_research_db
+
     close_db = False
     if research_db is None:
         research_db = get_research_db()
@@ -100,9 +184,7 @@ def match_products_by_method(
         method_tokens = _tokenize(method_description)
         if not method_tokens:
             return []
-        product_rows = research_db.execute(
-            "SELECT * FROM research_products"
-        ).fetchall()
+        product_rows = research_db.execute("SELECT * FROM research_products").fetchall()
         scored = []
         for p in product_rows:
             prod = dict(p)
@@ -111,13 +193,15 @@ def match_products_by_method(
             all_prod_tokens = set(product_keywords) | prod_name_tokens
             score = _compute_jaccard_score(method_tokens, all_prod_tokens)
             if score > 0:
-                scored.append({
-                    "product_id": prod["product_id"],
-                    "name": prod["name"],
-                    "category": prod.get("category", ""),
-                    "score": score,
-                    "match_reason": f"Similarity: {score:.2f}",
-                })
+                scored.append(
+                    {
+                        "product_id": prod["product_id"],
+                        "name": prod["name"],
+                        "category": prod.get("category", ""),
+                        "score": score,
+                        "match_reason": f"Similarity: {score:.2f}",
+                    }
+                )
         scored.sort(key=lambda x: x["score"], reverse=True)
         return scored[:top_k]
     finally:

@@ -119,9 +119,9 @@ class TestAuthChecks:
         resp = client.get("/schedule")
         assert resp.status_code == 401
 
-        resp = client.post("/schedule", json={
-            "title": "Test", "start_time": "2024-01-01T00:00:00"
-        })
+        resp = client.post(
+            "/schedule", json={"title": "Test", "start_time": "2024-01-01T00:00:00"}
+        )
         assert resp.status_code == 401
 
         resp = client.get("/hcp")

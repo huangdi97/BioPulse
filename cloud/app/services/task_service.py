@@ -4,7 +4,11 @@ from typing import Optional
 from fastapi import HTTPException
 from starlette import status
 
-from cloud.app.repositories import BoardTasksRepository, TaskBoardsRepository, NotificationsRepository
+from cloud.app.repositories import (
+    BoardTasksRepository,
+    TaskBoardsRepository,
+    NotificationsRepository,
+)
 from cloud.app.services.base import BaseService
 from shared.base import validate_columns
 from shared.columns import TABLE_BOARD_TASKS_COLS
@@ -29,25 +33,46 @@ class TaskService(BaseService):
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Task not found")
         return row
 
-    def create_task(self, board_id: int, title: str, description: str,
-                    status_filter: str, priority: str, assignee_id: Optional[int],
-                    due_date: Optional[str], sort_order: int, user_id: int) -> dict:
+    def create_task(
+        self,
+        board_id: int,
+        title: str,
+        description: str,
+        status_filter: str,
+        priority: str,
+        assignee_id: Optional[int],
+        due_date: Optional[str],
+        sort_order: int,
+        user_id: int,
+    ) -> dict:
         self._get_board_or_404(board_id)
         tasks_repo = BoardTasksRepository(self.db)
         notif_repo = NotificationsRepository(self.db)
         now = _now()
-        task_id = tasks_repo.create({
-            "board_id": board_id, "title": title, "description": description,
-            "status": status_filter, "priority": priority,
-            "assignee_id": assignee_id, "due_date": due_date,
-            "sort_order": sort_order, "created_by": user_id,
-            "created_at": now, "updated_at": now,
-        })
+        task_id = tasks_repo.create(
+            {
+                "board_id": board_id,
+                "title": title,
+                "description": description,
+                "status": status_filter,
+                "priority": priority,
+                "assignee_id": assignee_id,
+                "due_date": due_date,
+                "sort_order": sort_order,
+                "created_by": user_id,
+                "created_at": now,
+                "updated_at": now,
+            }
+        )
         if assignee_id is not None:
             notif_repo.create_notification(
-                user_id=assignee_id, title="新任务指派",
+                user_id=assignee_id,
+                title="新任务指派",
                 body_text=f"你被指派了任务：{title}",
-                category="task", ref_type="board_tasks", ref_id=task_id)
+                category="task",
+                ref_type="board_tasks",
+                ref_id=task_id,
+            )
         return tasks_repo.get_by_id(task_id)
 
     def list_tasks(self, board_id: int, status_filter: Optional[str] = None) -> list:
@@ -55,14 +80,18 @@ class TaskService(BaseService):
         tasks_repo = BoardTasksRepository(self.db)
         return tasks_repo.list_by_board(board_id, status_filter=status_filter)
 
-    def update_task(self, board_id: int, task_id: int,
-                    title: Optional[str] = None,
-                    description: Optional[str] = None,
-                    status_filter: Optional[str] = None,
-                    priority: Optional[str] = None,
-                    assignee_id: Optional[int] = None,
-                    due_date: Optional[str] = None,
-                    sort_order: Optional[int] = None) -> dict:
+    def update_task(
+        self,
+        board_id: int,
+        task_id: int,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        status_filter: Optional[str] = None,
+        priority: Optional[str] = None,
+        assignee_id: Optional[int] = None,
+        due_date: Optional[str] = None,
+        sort_order: Optional[int] = None,
+    ) -> dict:
         self._get_task_or_404(board_id, task_id)
         tasks_repo = BoardTasksRepository(self.db)
         updates = {}
@@ -82,7 +111,7 @@ class TaskService(BaseService):
             updates["sort_order"] = sort_order
         if updates:
             updates["updated_at"] = _now()
-            validate_columns(updates, 'board_tasks', TABLE_BOARD_TASKS_COLS)
+            validate_columns(updates, "board_tasks", TABLE_BOARD_TASKS_COLS)
             tasks_repo.update(task_id, updates)
         return tasks_repo.get_by_board_and_id(board_id, task_id)
 

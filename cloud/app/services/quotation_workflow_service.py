@@ -14,14 +14,24 @@ def submit_for_approval(quotation_id: int, submitter: str):
             raise ValueError("Quotation not found")
         quotation = dict(row)
         if quotation["status"] != "draft":
-            raise ValueError(f"Cannot submit quotation in status: {quotation['status']}")
+            raise ValueError(
+                f"Cannot submit quotation in status: {quotation['status']}"
+            )
         db.execute(
             "UPDATE research_quotations SET status = ? WHERE quotation_id = ?",
             ("pending_approval", quotation_id),
         )
         db.execute(
             "INSERT INTO research_audit_log (event_type, entity_type, entity_id, old_value, new_value, operator, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            ("submit_for_approval", "research_quotation", quotation_id, "draft", "pending_approval", submitter, datetime.now(timezone.utc).isoformat()),
+            (
+                "submit_for_approval",
+                "research_quotation",
+                quotation_id,
+                "draft",
+                "pending_approval",
+                submitter,
+                datetime.now(timezone.utc).isoformat(),
+            ),
         )
         db.commit()
     finally:
@@ -38,14 +48,24 @@ def approve(quotation_id: int, reviewer: str):
             raise ValueError("Quotation not found")
         quotation = dict(row)
         if quotation["status"] != "pending_approval":
-            raise ValueError(f"Cannot approve quotation in status: {quotation['status']}")
+            raise ValueError(
+                f"Cannot approve quotation in status: {quotation['status']}"
+            )
         db.execute(
             "UPDATE research_quotations SET status = ? WHERE quotation_id = ?",
             ("approved", quotation_id),
         )
         db.execute(
             "INSERT INTO research_audit_log (event_type, entity_type, entity_id, old_value, new_value, operator, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            ("approve", "research_quotation", quotation_id, "pending_approval", "approved", reviewer, datetime.now(timezone.utc).isoformat()),
+            (
+                "approve",
+                "research_quotation",
+                quotation_id,
+                "pending_approval",
+                "approved",
+                reviewer,
+                datetime.now(timezone.utc).isoformat(),
+            ),
         )
         db.commit()
     finally:
@@ -62,7 +82,9 @@ def reject(quotation_id: int, reviewer: str, reason: str):
             raise ValueError("Quotation not found")
         quotation = dict(row)
         if quotation["status"] != "pending_approval":
-            raise ValueError(f"Cannot reject quotation in status: {quotation['status']}")
+            raise ValueError(
+                f"Cannot reject quotation in status: {quotation['status']}"
+            )
         old_status = quotation["status"]
         db.execute(
             "UPDATE research_quotations SET status = ? WHERE quotation_id = ?",
@@ -70,7 +92,15 @@ def reject(quotation_id: int, reviewer: str, reason: str):
         )
         db.execute(
             "INSERT INTO research_audit_log (event_type, entity_type, entity_id, old_value, new_value, operator, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            ("reject", "research_quotation", quotation_id, old_status, json.dumps({"status": "rejected", "reason": reason}), reviewer, datetime.now(timezone.utc).isoformat()),
+            (
+                "reject",
+                "research_quotation",
+                quotation_id,
+                old_status,
+                json.dumps({"status": "rejected", "reason": reason}),
+                reviewer,
+                datetime.now(timezone.utc).isoformat(),
+            ),
         )
         db.commit()
     finally:

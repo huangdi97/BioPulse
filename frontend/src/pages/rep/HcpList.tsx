@@ -2,97 +2,35 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchHcps, type HcpQueryParams } from '@/api/hcps'
 import type { HCP } from '@/types'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
-import { Search, ChevronDown, MapPin, Building2, Star, User } from 'lucide-react'
+import { SearchBar } from '@/components/SearchBar'
+import { FilterDropdown } from '@/components/FilterDropdown'
+import { Skeleton } from '@/components/Skeleton'
+import { MapPin, Building2, Star, User } from 'lucide-react'
 
-const DEPT_OPTIONS = ['全部', '心内科', '内分泌科', '消化内科', '呼吸科', '神经内科']
-const REGION_OPTIONS = ['全部', '北京', '上海', '广州', '杭州']
+const DEPT_OPTIONS = [
+  { value: '全部', label: '全部科室' },
+  { value: '心内科', label: '心内科' },
+  { value: '内分泌科', label: '内分泌科' },
+  { value: '消化内科', label: '消化内科' },
+  { value: '呼吸科', label: '呼吸科' },
+  { value: '神经内科', label: '神经内科' },
+]
+
+const REGION_OPTIONS = [
+  { value: '全部', label: '全部地区' },
+  { value: '北京', label: '北京' },
+  { value: '上海', label: '上海' },
+  { value: '广州', label: '广州' },
+  { value: '杭州', label: '杭州' },
+]
+
 const PRIORITY_OPTIONS = [
-  { value: '全部', label: '全部' },
+  { value: '全部', label: '全部优先级' },
   { value: 'high', label: '高' },
   { value: 'medium', label: '中' },
   { value: 'low', label: '低' },
 ]
-
-function FilterDropdown({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string
-  value: string
-  options: string[] | { value: string; label: string }[]
-  onChange: (v: string) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
-
-  const displayLabel = getDisplayLabel(value, options)
-
-  return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 h-9 px-3 rounded-md border border-input bg-background text-sm hover:bg-accent hover:text-accent-foreground"
-      >
-        <span className="text-muted-foreground">{label}:</span>
-        <span className="font-medium">{displayLabel}</span>
-        <ChevronDown className="h-3 w-3 text-muted-foreground" />
-      </button>
-      {open && (
-        <div className="absolute top-full left-0 mt-1 z-50 min-w-[120px] rounded-md border bg-popover shadow-md">
-          {Array.isArray(options)
-            ? options.map((opt) => {
-                const v = typeof opt === 'string' ? opt : opt.value
-                const l = typeof opt === 'string' ? opt : opt.label
-                return (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => {
-                      onChange(v)
-                      setOpen(false)
-                    }}
-                    className={`w-full text-left px-3 py-1.5 text-sm hover:bg-accent rounded-sm ${
-                      value === v ? 'font-medium bg-accent' : ''
-                    }`}
-                  >
-                    {l}
-                  </button>
-                )
-              })
-            : null}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function getDisplayLabel(
-  value: string,
-  options: string[] | { value: string; label: string }[]
-): string {
-  if (typeof options[0] === 'string') {
-    return value
-  }
-  const match = (options as { value: string; label: string }[]).find(
-    (o) => o.value === value
-  )
-  return match?.label ?? value
-}
 
 function priorityBadge(priority: HCP['priority']): {
   color: string
@@ -155,49 +93,25 @@ export default function HcpList() {
 
   return (
     <div className="space-y-4">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="搜索姓名或医院..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
-        />
-      </div>
-
+      <SearchBar placeholder="搜索姓名或医院..." value={search} onChange={setSearch} />
       <div className="flex gap-2 flex-wrap">
-        <FilterDropdown
-          label="科室"
-          value={dept}
-          options={DEPT_OPTIONS}
-          onChange={setDept}
-        />
-        <FilterDropdown
-          label="地区"
-          value={region}
-          options={REGION_OPTIONS}
-          onChange={setRegion}
-        />
-        <FilterDropdown
-          label="优先级"
-          value={priority}
-          options={PRIORITY_OPTIONS}
-          onChange={setPriority}
-        />
+        <FilterDropdown label="科室" value={dept} options={DEPT_OPTIONS} onChange={setDept} />
+        <FilterDropdown label="地区" value={region} options={REGION_OPTIONS} onChange={setRegion} />
+        <FilterDropdown label="优先级" value={priority} options={PRIORITY_OPTIONS} onChange={setPriority} />
       </div>
 
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
             <Card key={i}>
-              <CardContent className="p-4 animate-pulse">
+              <CardContent className="p-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-muted" />
+                  <Skeleton className="h-10 w-10 rounded-full" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-4 w-24 bg-muted rounded" />
-                    <div className="h-3 w-40 bg-muted rounded" />
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-40" />
                   </div>
-                  <div className="h-6 w-10 bg-muted rounded-full" />
+                  <Skeleton className="h-6 w-10 rounded-full" />
                 </div>
               </CardContent>
             </Card>
@@ -205,7 +119,7 @@ export default function HcpList() {
         </div>
       ) : hcps.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-          <Search className="h-12 w-12 mb-3 opacity-30" />
+          <User className="h-12 w-12 mb-3 opacity-30" />
           <p className="text-sm">未找到匹配的客户</p>
           <p className="text-xs mt-1">请尝试调整搜索条件</p>
         </div>

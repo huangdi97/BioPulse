@@ -6,10 +6,10 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-logger = logging.getLogger('rate_limiter')
+logger = logging.getLogger("rate_limiter")
 if not logger.handlers:
     handler = logging.StreamHandler()
-    handler.setFormatter(logging.Formatter('%(message)s'))
+    handler.setFormatter(logging.Formatter("%(message)s"))
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
 
@@ -59,7 +59,11 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
 
-        if path in WHITELIST_PATHS or path.startswith("/docs") or path.startswith("/openapi.json"):
+        if (
+            path in WHITELIST_PATHS
+            or path.startswith("/docs")
+            or path.startswith("/openapi.json")
+        ):
             return await call_next(request)
 
         client_ip = request.client.host if request.client else "127.0.0.1"

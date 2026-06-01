@@ -19,10 +19,13 @@ async def get_recruitment_status(trial_id: str) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/kg/entities", params={
-            "name": trial_id,
-            "entity_type": "trial",
-        })
+        resp = await client.get(
+            f"{CLOUD_API}/kg/entities",
+            params={
+                "name": trial_id,
+                "entity_type": "trial",
+            },
+        )
         entities = []
         if resp.status_code == 200:
             data = resp.json()
@@ -74,10 +77,13 @@ async def get_pipeline() -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/kg/entities/list", params={
-            "entity_type": "trial",
-            "status": "active",
-        })
+        resp = await client.get(
+            f"{CLOUD_API}/kg/entities/list",
+            params={
+                "entity_type": "trial",
+                "status": "active",
+            },
+        )
         entities = []
         if resp.status_code == 200:
             data = resp.json()
@@ -105,22 +111,28 @@ def _build_pipeline(entities: list) -> dict:
         total_target += target
         phase_distribution[phase] = phase_distribution.get(phase, 0) + 1
 
-        trials.append({
-            "trial_id": entity.get("entity_id", ""),
-            "trial_name": props.get("name", ""),
-            "indication": props.get("indication", ""),
-            "phase": phase,
-            "status": props.get("recruitment_status", "recruiting"),
-            "enrolled": enrolled,
-            "target": target,
-            "completion_pct": round((enrolled / target) * 100, 1) if target > 0 else 0,
-        })
+        trials.append(
+            {
+                "trial_id": entity.get("entity_id", ""),
+                "trial_name": props.get("name", ""),
+                "indication": props.get("indication", ""),
+                "phase": phase,
+                "status": props.get("recruitment_status", "recruiting"),
+                "enrolled": enrolled,
+                "target": target,
+                "completion_pct": round((enrolled / target) * 100, 1)
+                if target > 0
+                else 0,
+            }
+        )
 
     return {
         "total_trials": len(trials),
         "total_enrolled": total_enrolled,
         "total_target": total_target,
-        "overall_completion_pct": round((total_enrolled / total_target) * 100, 1) if total_target > 0 else 0,
+        "overall_completion_pct": round((total_enrolled / total_target) * 100, 1)
+        if total_target > 0
+        else 0,
         "phase_distribution": phase_distribution,
         "trials": trials,
         "last_updated": datetime.now(timezone.utc).isoformat(),

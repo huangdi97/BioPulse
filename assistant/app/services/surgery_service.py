@@ -1,6 +1,6 @@
 import asyncio
 from datetime import date, datetime, timezone
-from typing import List, Optional
+from typing import Optional
 
 from assistant.app.repositories import SurgeryReminderRepository
 from assistant.app.services.base import BaseService
@@ -34,24 +34,28 @@ class SurgeryService(BaseService):
                 "pre_op_notes": body.pre_op_notes,
                 "post_op_notes": body.post_op_notes,
                 "status": initial_status,
-                "reminder_before": body.reminder_before if body.reminder_before is not None else 1,
+                "reminder_before": body.reminder_before
+                if body.reminder_before is not None
+                else 1,
                 "notification_status": "pending",
                 "created_by": user_id,
                 "created_at": now,
                 "updated_at": now,
             },
         )
-        asyncio.create_task(connection_manager.send_to_user(
-            user_id,
-            {
-                "type": "surgery_reminder",
-                "title": "新手术提醒",
-                "body": f"{body.patient_name} · {body.surgery_type or '手术'} · {body.hospital or ''}",
-                "surgery_id": row_id,
-                "surgery_date": body.surgery_date or "",
-                "timestamp": now,
-            },
-        ))
+        asyncio.create_task(
+            connection_manager.send_to_user(
+                user_id,
+                {
+                    "type": "surgery_reminder",
+                    "title": "新手术提醒",
+                    "body": f"{body.patient_name} · {body.surgery_type or '手术'} · {body.hospital or ''}",
+                    "surgery_id": row_id,
+                    "surgery_date": body.surgery_date or "",
+                    "timestamp": now,
+                },
+            )
+        )
         return {"id": row_id}
 
     def today(self) -> list:

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from starlette import status
 
@@ -62,9 +62,14 @@ def create_profile(
 ):
     user_id = int(current_user["sub"])
     row = service.create_profile(
-        name=body.name, title=body.title, hospital=body.hospital,
-        department=body.department, specialty=body.specialty,
-        city=body.city, tier=body.tier, traits=body.traits,
+        name=body.name,
+        title=body.title,
+        hospital=body.hospital,
+        department=body.department,
+        specialty=body.specialty,
+        city=body.city,
+        tier=body.tier,
+        traits=body.traits,
         prescription_volume=body.prescription_volume,
         influence_score=body.influence_score,
         digital_engagement=body.digital_engagement,
@@ -84,8 +89,11 @@ def list_profiles(
     service: HcpSandboxService = Depends(),
 ):
     result = service.list_profiles(
-        tier=tier, specialty=specialty, city=city,
-        page=page, page_size=page_size,
+        tier=tier,
+        specialty=specialty,
+        city=city,
+        page=page,
+        page_size=page_size,
     )
     return success(data=result)
 
@@ -108,9 +116,14 @@ def update_profile(
     service: HcpSandboxService = Depends(),
 ):
     row = service.update_profile(
-        hcp_id=hcp_id, name=body.name, title=body.title,
-        hospital=body.hospital, department=body.department,
-        specialty=body.specialty, city=body.city, tier=body.tier,
+        hcp_id=hcp_id,
+        name=body.name,
+        title=body.title,
+        hospital=body.hospital,
+        department=body.department,
+        specialty=body.specialty,
+        city=body.city,
+        tier=body.tier,
         traits=body.traits,
         prescription_volume=body.prescription_volume,
         influence_score=body.influence_score,
@@ -129,10 +142,14 @@ def create_interaction(
 ):
     user_id = int(current_user["sub"])
     row = service.create_interaction(
-        hcp_id=hcp_id, interaction_type=body.interaction_type,
-        content=body.content, response=body.response,
-        outcome=body.outcome, strategy_used=body.strategy_used,
-        conducted_at=body.conducted_at, user_id=user_id,
+        hcp_id=hcp_id,
+        interaction_type=body.interaction_type,
+        content=body.content,
+        response=body.response,
+        outcome=body.outcome,
+        strategy_used=body.strategy_used,
+        conducted_at=body.conducted_at,
+        user_id=user_id,
     )
     return success(data=row)
 
@@ -146,7 +163,9 @@ def list_interactions(
     service: HcpSandboxService = Depends(),
 ):
     result = service.list_interactions(
-        hcp_id=hcp_id, page=page, page_size=page_size,
+        hcp_id=hcp_id,
+        page=page,
+        page_size=page_size,
     )
     return success(data=result)
 
@@ -160,8 +179,10 @@ def simulate(
 ):
     user_id = int(current_user["sub"])
     row = service.simulate(
-        hcp_id=hcp_id, scenario=body.scenario,
-        strategy=body.strategy, user_id=user_id,
+        hcp_id=hcp_id,
+        scenario=body.scenario,
+        strategy=body.strategy,
+        user_id=user_id,
     )
     return success(data=row)
 
@@ -176,7 +197,10 @@ def list_simulations(
     service: HcpSandboxService = Depends(),
 ):
     result = service.list_simulations(
-        hcp_id=hcp_id, status=status, page=page, page_size=page_size,
+        hcp_id=hcp_id,
+        status=status,
+        page=page,
+        page_size=page_size,
     )
     return success(data=result)
 

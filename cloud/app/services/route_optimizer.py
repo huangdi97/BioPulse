@@ -1,5 +1,4 @@
 import math
-from typing import Any
 
 
 def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -7,9 +6,12 @@ def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     R = 6371.0
     dlat = math.radians(lat2 - lat1)
     dlon = math.radians(lon2 - lon1)
-    a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(
-        math.radians(lat2)
-    ) * math.sin(dlon / 2) ** 2
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(math.radians(lat1))
+        * math.cos(math.radians(lat2))
+        * math.sin(dlon / 2) ** 2
+    )
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return R * c
 
@@ -39,7 +41,11 @@ def optimize_route(points: list[dict]) -> list[dict]:
     if not points:
         return []
 
-    valid = [p for p in points if -90 <= p.get("lat", 0) <= 90 and -180 <= p.get("lng", 0) <= 180]
+    valid = [
+        p
+        for p in points
+        if -90 <= p.get("lat", 0) <= 90 and -180 <= p.get("lng", 0) <= 180
+    ]
     if not valid:
         return []
 
@@ -54,12 +60,14 @@ def optimize_route(points: list[dict]) -> list[dict]:
         if i > 0:
             prev = ordered[i - 1]
             cumulative += haversine(prev["lat"], prev["lng"], p["lat"], p["lng"])
-        result.append({
-            "pi_id": p["pi_id"],
-            "name": p["name"],
-            "visit_order": i + 1,
-            "estimated_distance_km": round(cumulative, 2),
-        })
+        result.append(
+            {
+                "pi_id": p["pi_id"],
+                "name": p["name"],
+                "visit_order": i + 1,
+                "estimated_distance_km": round(cumulative, 2),
+            }
+        )
     return result
 
 

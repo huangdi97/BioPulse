@@ -38,8 +38,10 @@ class OpportunityService(BaseService):
             params.append(f"%{hcp_name}%")
 
         return repo.paginate(
-            page=page, page_size=page_size,
-            conditions=conditions, params=params,
+            page=page,
+            page_size=page_size,
+            conditions=conditions,
+            params=params,
         )
 
     def get_opportunity(self, opportunity_id: int) -> dict:

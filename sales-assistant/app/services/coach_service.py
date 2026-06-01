@@ -82,7 +82,7 @@ class CoachService(BaseService):
             ]
             return {"suggestions": suggestions}
 
-        system_prompt = "你是一位资深销售教练，根据场景生成话术建议。回复JSON：{\"suggestions\":[{\"title\":\"...\",\"content\":\"...\",\"priority\":5}]}"
+        system_prompt = '你是一位资深销售教练，根据场景生成话术建议。回复JSON：{"suggestions":[{"title":"...","content":"...","priority":5}]}'
         user_parts = [f"场景：{body.scenario}"]
         if body.hcp_name:
             user_parts.append(f"客户：{body.hcp_name}")

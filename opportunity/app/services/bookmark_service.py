@@ -14,10 +14,13 @@ class BookmarkService(BaseService):
         repo = UserBookmarkRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()
         try:
-            return repo.create(body.model_dump(), extra={
-                "created_by": user_id,
-                "created_at": now,
-            })
+            return repo.create(
+                body.model_dump(),
+                extra={
+                    "created_by": user_id,
+                    "created_at": now,
+                },
+            )
         except sqlite3.IntegrityError:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -34,13 +37,16 @@ class BookmarkService(BaseService):
             params.append(entity_type)
         repo = UserBookmarkRepository(self.db)
         return repo.paginate(
-            page, page_size,
+            page,
+            page_size,
             conditions=conditions,
             params=params,
             order_by="created_at DESC",
         )
 
-    def check_bookmark(self, entity_type: str, entity_id: int, user_id: int) -> Optional[dict]:
+    def check_bookmark(
+        self, entity_type: str, entity_id: int, user_id: int
+    ) -> Optional[dict]:
         repo = UserBookmarkRepository(self.db)
         row = repo.get_by_entity(entity_type, entity_id, user_id)
         return dict(row) if row else None

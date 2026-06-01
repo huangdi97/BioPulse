@@ -45,9 +45,7 @@ class StrategyService(BaseService):
             conditions.append("goal LIKE ?")
             params.append(f"%{goal}%")
         repo = StrategyRepository(self.db)
-        return repo.paginate(
-            page, page_size, conditions, params, "created_at DESC"
-        )
+        return repo.paginate(page, page_size, conditions, params, "created_at DESC")
 
     def get_strategy(self, strategy_id: int) -> dict:
         repo = StrategyRepository(self.db)
@@ -95,14 +93,16 @@ class StrategyService(BaseService):
         try:
             req = urllib.request.Request(
                 AI_GATEWAY_URL,
-                data=json.dumps({
-                    "messages": [
-                        {"role": "system", "content": sp},
-                        {"role": "user", "content": user_text},
-                    ],
-                    "temperature": 0.7,
-                    "max_tokens": 2048,
-                }).encode(),
+                data=json.dumps(
+                    {
+                        "messages": [
+                            {"role": "system", "content": sp},
+                            {"role": "user", "content": user_text},
+                        ],
+                        "temperature": 0.7,
+                        "max_tokens": 2048,
+                    }
+                ).encode(),
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )
@@ -127,7 +127,9 @@ class StrategyService(BaseService):
     def compare_strategies(self, ids: str) -> list:
         id_list = [int(x.strip()) for x in ids.split(",") if x.strip()]
         if not id_list:
-            raise HTTPException(status_code=400, detail="Provide at least one strategy id")
+            raise HTTPException(
+                status_code=400, detail="Provide at least one strategy id"
+            )
         repo = StrategyRepository(self.db)
         conditions = [f"id IN ({','.join('?' * len(id_list))})", "is_active = 1"]
         rows = repo.list_all(conditions, id_list)
@@ -150,14 +152,16 @@ class StrategyService(BaseService):
         try:
             req = urllib.request.Request(
                 AI_GATEWAY_URL,
-                data=json.dumps({
-                    "messages": [
-                        {"role": "system", "content": "你是一位策略分析师。"},
-                        {"role": "user", "content": user_text},
-                    ],
-                    "temperature": 0.5,
-                    "max_tokens": 512,
-                }).encode(),
+                data=json.dumps(
+                    {
+                        "messages": [
+                            {"role": "system", "content": "你是一位策略分析师。"},
+                            {"role": "user", "content": user_text},
+                        ],
+                        "temperature": 0.5,
+                        "max_tokens": 512,
+                    }
+                ).encode(),
                 headers={"Content-Type": "application/json"},
                 method="POST",
             )

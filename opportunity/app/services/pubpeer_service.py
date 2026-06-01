@@ -3,7 +3,10 @@ import urllib.request
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
-from opportunity.app.repositories import PaperIntegrityRepository, ResearchTrailRepository
+from opportunity.app.repositories import (
+    PaperIntegrityRepository,
+    ResearchTrailRepository,
+)
 from opportunity.app.services.base import BaseService
 
 AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
@@ -84,7 +87,10 @@ class PubpeerService(BaseService):
             prompt_parts.append(f"PubMed ID: {pubmed_id}")
         if doi:
             prompt_parts.append(f"DOI: {doi}")
-        prompt = "请分析以下论文的诚信状况，返回JSON格式：{\"integrity_score\": 0-100, \"retraction_warning\": bool, \"concerns\": [\"...\"], \"flags\": [\"...\"]}\n\n" + "\n".join(prompt_parts)
+        prompt = (
+            '请分析以下论文的诚信状况，返回JSON格式：{"integrity_score": 0-100, "retraction_warning": bool, "concerns": ["..."], "flags": ["..."]}\n\n'
+            + "\n".join(prompt_parts)
+        )
         reply = self._call_llm(auth_header, prompt)
         result = self._parse_ai_reply(reply)
         now = datetime.now(timezone.utc).isoformat()
@@ -102,23 +108,32 @@ class PubpeerService(BaseService):
                 """UPDATE paper_integrity SET integrity_score=?, retraction_warning=?,
                    concerns=?, flags=?, checked_at=?, check_count=check_count+1,
                    updated_at=? WHERE id=?""",
-                (result["integrity_score"], result["retraction_warning"],
-                 result["concerns"], result["flags"], now, now, existing["id"]),
+                (
+                    result["integrity_score"],
+                    result["retraction_warning"],
+                    result["concerns"],
+                    result["flags"],
+                    now,
+                    now,
+                    existing["id"],
+                ),
             )
         else:
-            repo.create({
-                "pubmed_id": pubmed_id,
-                "doi": doi,
-                "integrity_score": result["integrity_score"],
-                "retraction_warning": result["retraction_warning"],
-                "concerns": result["concerns"],
-                "flags": result["flags"],
-                "checked_at": now,
-                "check_count": 1,
-                "created_by": user_id,
-                "created_at": now,
-                "updated_at": now,
-            })
+            repo.create(
+                {
+                    "pubmed_id": pubmed_id,
+                    "doi": doi,
+                    "integrity_score": result["integrity_score"],
+                    "retraction_warning": result["retraction_warning"],
+                    "concerns": result["concerns"],
+                    "flags": result["flags"],
+                    "checked_at": now,
+                    "check_count": 1,
+                    "created_by": user_id,
+                    "created_at": now,
+                    "updated_at": now,
+                }
+            )
         self.db.commit()
         return {
             "pubmed_id": pubmed_id,
@@ -129,7 +144,9 @@ class PubpeerService(BaseService):
             "checked_at": now,
         }
 
-    def check_trail_integrity(self, trail_id: int, auth_header: str, user_id: int) -> dict:
+    def check_trail_integrity(
+        self, trail_id: int, auth_header: str, user_id: int
+    ) -> dict:
         repo = ResearchTrailRepository(self.db)
         trail = dict(repo.get_or_404(trail_id))
         cached = self._check_or_get_cache(trail.get("pubmed_id"), None)
@@ -142,7 +159,9 @@ class PubpeerService(BaseService):
                 "concerns": json.loads(cached.get("concerns") or "[]"),
                 "checked_at": cached["checked_at"],
             }
-        return self._do_check(auth_header, trail.get("pubmed_id"), trail.get("doi"), user_id)
+        return self._do_check(
+            auth_header, trail.get("pubmed_id"), trail.get("doi"), user_id
+        )
 
     def get_trail_integrity(self, trail_id: int) -> Optional[dict]:
         trail = dict(ResearchTrailRepository(self.db).get_or_404(trail_id))
@@ -181,7 +200,11 @@ class PubpeerService(BaseService):
     def list_alerts(self, page: int, page_size: int) -> tuple:
         repo = PaperIntegrityRepository(self.db)
         return repo.paginate(
-            page, page_size,
-            conditions=["(retraction_warning = 1 OR integrity_score < 50)", "is_active = 1"],
+            page,
+            page_size,
+            conditions=[
+                "(retraction_warning = 1 OR integrity_score < 50)",
+                "is_active = 1",
+            ],
             order_by="checked_at DESC",
         )

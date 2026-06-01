@@ -1,4 +1,4 @@
-from typing import Optional, List, Any
+from typing import List
 import sqlite3
 from datetime import datetime, timezone
 

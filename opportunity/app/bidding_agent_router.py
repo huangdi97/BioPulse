@@ -150,7 +150,9 @@ def agent_logs(
     service: BiddingAgentService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse]:
-    items, total, page, page_size, total_pages = service.list_agent_logs(page, page_size)
+    items, total, page, page_size, total_pages = service.list_agent_logs(
+        page, page_size
+    )
     return success(
         data=PaginatedResponse(
             items=[AgentLogOut(**i) for i in items],
@@ -175,9 +177,7 @@ def auto_analyze_bidding(
 
 
 import sqlite3
-from datetime import datetime, timezone
 from opportunity.app.database import DB_PATH
-from opportunity.app.repositories import BiddingAgentConfigRepository, BiddingAgentLogRepository
 from opportunity.app.services.bidding_agent_service import BiddingAgentService
 
 

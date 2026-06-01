@@ -1,6 +1,6 @@
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from starlette import status
@@ -75,8 +75,11 @@ def list_tasks(
 ) -> ApiResponse[PaginatedResponse[TaskOut]]:
     """List tasks with pagination and filtering."""
     total, total_pages, rows = service.list_tasks(
-        page=page, page_size=page_size,
-        hcp_id=hcp_id, status_filter=status_filter, priority=priority,
+        page=page,
+        page_size=page_size,
+        hcp_id=hcp_id,
+        status_filter=status_filter,
+        priority=priority,
     )
     items = [TaskOut(**dict(r)) for r in rows]
     return success(

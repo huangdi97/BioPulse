@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from starlette import status
 
@@ -47,11 +47,16 @@ def create_opportunity(
 ) -> Any:
     user_id = int(current_user["sub"])
     row = service.create_opportunity(
-        customer_id=body.customer_id, name=body.name,
-        description=body.description, stage=body.stage,
-        estimated_value=body.estimated_value, actual_value=body.actual_value,
-        assigned_to=body.assigned_to, close_date=body.close_date,
-        notes=body.notes, user_id=user_id,
+        customer_id=body.customer_id,
+        name=body.name,
+        description=body.description,
+        stage=body.stage,
+        estimated_value=body.estimated_value,
+        actual_value=body.actual_value,
+        assigned_to=body.assigned_to,
+        close_date=body.close_date,
+        notes=body.notes,
+        user_id=user_id,
     )
     return success(data=row)
 
@@ -68,8 +73,12 @@ def list_opportunities(
     service: OpportunityService = Depends(),
 ) -> Any:
     result = service.list_opportunities(
-        stage=stage, assigned_to=assigned_to, customer_id=customer_id,
-        search=search, page=page, page_size=page_size,
+        stage=stage,
+        assigned_to=assigned_to,
+        customer_id=customer_id,
+        search=search,
+        page=page,
+        page_size=page_size,
     )
     return success(data=result)
 
@@ -101,10 +110,15 @@ def update_opportunity(
     service: OpportunityService = Depends(),
 ) -> Any:
     row = service.update_opportunity(
-        opp_id=opp_id, name=body.name, description=body.description,
-        stage=body.stage, estimated_value=body.estimated_value,
-        actual_value=body.actual_value, assigned_to=body.assigned_to,
-        close_date=body.close_date, notes=body.notes,
+        opp_id=opp_id,
+        name=body.name,
+        description=body.description,
+        stage=body.stage,
+        estimated_value=body.estimated_value,
+        actual_value=body.actual_value,
+        assigned_to=body.assigned_to,
+        close_date=body.close_date,
+        notes=body.notes,
     )
     return success(data=row)
 
@@ -127,7 +141,8 @@ def transition_stage(
     service: OpportunityService = Depends(),
 ) -> Any:
     row = service.transition_stage(
-        opp_id=opp_id, stage=body.stage,
+        opp_id=opp_id,
+        stage=body.stage,
         actual_value=body.actual_value,
     )
     return success(data=row)

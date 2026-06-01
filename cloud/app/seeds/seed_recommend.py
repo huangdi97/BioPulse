@@ -1,4 +1,3 @@
-import json
 import sqlite3
 
 
@@ -37,9 +36,39 @@ def seed_recommend(conn: sqlite3.Connection) -> None:
         )
 
     recs = [
-        (1, "content", "新药A最新临床数据", "基于浏览行为和兴趣标签推荐", 0.95, "tag-match", 0, 0, now),
-        (2, "strategy", "竞品B对比策略", "基于竞品分析行为推荐", 0.85, "behavior-match", 0, 0, now),
-        (3, "training", "糖尿病诊疗规范", "基于分析角色推荐", 0.75, "role-match", 1, 0, now),
+        (
+            1,
+            "content",
+            "新药A最新临床数据",
+            "基于浏览行为和兴趣标签推荐",
+            0.95,
+            "tag-match",
+            0,
+            0,
+            now,
+        ),
+        (
+            2,
+            "strategy",
+            "竞品B对比策略",
+            "基于竞品分析行为推荐",
+            0.85,
+            "behavior-match",
+            0,
+            0,
+            now,
+        ),
+        (
+            3,
+            "training",
+            "糖尿病诊疗规范",
+            "基于分析角色推荐",
+            0.75,
+            "role-match",
+            1,
+            0,
+            now,
+        ),
     ]
     for uid, rec_type, title, reason, score, strategy, clk, dis, ts in recs:
         conn.execute(

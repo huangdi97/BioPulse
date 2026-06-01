@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
-from starlette import status
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from typing import Any
 

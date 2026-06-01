@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Batch 19 comprehensive test script."""
+
 import json
 import urllib.request
 import urllib.error
-import sys
 
 BASE = "http://localhost:8000"
 
@@ -24,7 +24,11 @@ def api(method, path, data=None, token=None):
 
 # Step 1: Register + Login
 print("=== Setup ===")
-r = api("POST", "/auth/register", {"username": "admin", "password": "admin123", "role": "admin"})
+r = api(
+    "POST",
+    "/auth/register",
+    {"username": "admin", "password": "admin123", "role": "admin"},
+)
 print(f"Register: {r}")
 
 r = api("POST", "/auth/login", {"username": "admin", "password": "admin123"})
@@ -34,7 +38,12 @@ print(f"Login OK, token: {token[:20]}...")
 # === 19-1: 审计日志 ===
 print("\n=== 19-1: 审计日志 ===")
 
-r = api("POST", "/audit/logs", {"user_id": 1, "action": "login", "entity_type": "user", "source_end": "cloud"}, token)
+r = api(
+    "POST",
+    "/audit/logs",
+    {"user_id": 1, "action": "login", "entity_type": "user", "source_end": "cloud"},
+    token,
+)
 print(f"1. Create audit log: {r}")
 assert r["code"] == 0, f"FAIL: {r}"
 
@@ -51,12 +60,17 @@ print("✅ 19-1 审计日志 全部通过")
 # === 19-2: 通知系统 ===
 print("\n=== 19-2: 通知系统 ===")
 
-r = api("POST", "/notifications/templates", {
-    "name": "compliance_alert",
-    "title_template": "合规检查提醒: {title}",
-    "body_template": "内容 {title} 评分 {score}",
-    "category": "compliance"
-}, token)
+r = api(
+    "POST",
+    "/notifications/templates",
+    {
+        "name": "compliance_alert",
+        "title_template": "合规检查提醒: {title}",
+        "body_template": "内容 {title} 评分 {score}",
+        "category": "compliance",
+    },
+    token,
+)
 print(f"1. Create template: {r}")
 assert r["code"] == 0
 tmpl_id = r["data"]["id"]
@@ -73,11 +87,16 @@ r = api("PATCH", f"/notifications/templates/{tmpl_id}", {"category": "alert"}, t
 print(f"4. Update template: {r}")
 assert r["code"] == 0
 
-r = api("POST", "/notifications/send", {
-    "user_id": 1,
-    "template_name": "compliance_alert",
-    "context": {"title": "测试文章", "score": "0.8"}
-}, token)
+r = api(
+    "POST",
+    "/notifications/send",
+    {
+        "user_id": 1,
+        "template_name": "compliance_alert",
+        "context": {"title": "测试文章", "score": "0.8"},
+    },
+    token,
+)
 print(f"5. Send notification: {r}")
 assert r["code"] == 0
 notif_id = r["data"]["id"]
@@ -99,12 +118,19 @@ print("✅ 19-2 通知系统 全部通过")
 # === 19-3: 通知客户端集成 ===
 print("\n=== 19-3: 通知客户端 ===")
 
-r = api("POST", "/contents/", {
-    "title": "测试违规内容",
-    "body": "这款产品绝对安全，无副作用，可以根治所有疾病",
-    "category": "medical"
-}, token)
-print(f"Create non-compliant content: status={r['data']['status']}, score={r['data']['compliance_score']}")
+r = api(
+    "POST",
+    "/contents/",
+    {
+        "title": "测试违规内容",
+        "body": "这款产品绝对安全，无副作用，可以根治所有疾病",
+        "category": "medical",
+    },
+    token,
+)
+print(
+    f"Create non-compliant content: status={r['data']['status']}, score={r['data']['compliance_score']}"
+)
 assert r["code"] == 0
 assert r["data"]["compliance_score"] < 1.0
 
@@ -135,11 +161,12 @@ r = api("PATCH", f"/boards/{board_id}", {"description": "更新描述"}, token)
 print(f"4. Update board: {r}")
 assert r["code"] == 0
 
-r = api("POST", f"/boards/{board_id}/tasks", {
-    "title": "完成任务1",
-    "priority": "high",
-    "status": "todo"
-}, token)
+r = api(
+    "POST",
+    f"/boards/{board_id}/tasks",
+    {"title": "完成任务1", "priority": "high", "status": "todo"},
+    token,
+)
 print(f"5. Create task: {r}")
 assert r["code"] == 0
 task_id = r["data"]["id"]
@@ -170,7 +197,9 @@ print("✅ 19-4 看板管理 全部通过")
 print("\n=== 19-5: 数据看板 ===")
 
 r = api("GET", "/dashboard/overview", token=token)
-print(f"1. Overview: users={r['data']['users_count']}, contents={r['data']['contents_count']}")
+print(
+    f"1. Overview: users={r['data']['users_count']}, contents={r['data']['contents_count']}"
+)
 assert r["code"] == 0
 
 r = api("GET", "/dashboard/users", token=token)
@@ -191,29 +220,48 @@ print("✅ 19-5 数据看板 全部通过")
 print("\n=== Route Count ===")
 # Count manually
 routes = [
-    "/audit/logs", "/audit/logs/stats",
-    "/notifications/templates", "/notifications/templates/{template_id}",
-    "/notifications/send", "/notifications/", "/notifications/{notification_id}/read",
+    "/audit/logs",
+    "/audit/logs/stats",
+    "/notifications/templates",
+    "/notifications/templates/{template_id}",
+    "/notifications/send",
+    "/notifications/",
+    "/notifications/{notification_id}/read",
     "/notifications/unread-count",
-    "/boards/", "/boards/{board_id}", "/boards/{board_id}/tasks",
-    "/boards/{board_id}/tasks/{task_id}", "/boards/{board_id}/kanban",
+    "/boards/",
+    "/boards/{board_id}",
+    "/boards/{board_id}/tasks",
+    "/boards/{board_id}/tasks/{task_id}",
+    "/boards/{board_id}/kanban",
     "/boards/tasks/my",
-    "/dashboard/overview", "/dashboard/users", "/dashboard/compliance", "/dashboard/contents",
+    "/dashboard/overview",
+    "/dashboard/users",
+    "/dashboard/compliance",
+    "/dashboard/contents",
 ]
 print(f"Batch 19 new routes: {len(routes)}")
-print(f"Expected: 18 (3+9+0+10+4=26 minus sub-routes that overlap)")
+print("Expected: 18 (3+9+0+10+4=26 minus sub-routes that overlap)")
 for r in sorted(routes):
     print(f"  {r}")
 
 # Existing routes
 existing = [
-    "/auth/login", "/auth/register", "/auth/refresh",
-    "/tokens/", "/tokens/{token_id:int}",
-    "/compliance/check", "/compliance/rules", "/compliance/rules/{rule_id:int}",
-    "/users/", "/users/{user_id:int}",
-    "/contents/", "/contents/{content_id:int}",
+    "/auth/login",
+    "/auth/register",
+    "/auth/refresh",
+    "/tokens/",
+    "/tokens/{token_id:int}",
+    "/compliance/check",
+    "/compliance/rules",
+    "/compliance/rules/{rule_id:int}",
+    "/users/",
+    "/users/{user_id:int}",
+    "/contents/",
+    "/contents/{content_id:int}",
     "/ai/chat",
-    "/teams", "/teams/{team_id:int}", "/teams/{team_id:int}/members",
+    "/teams",
+    "/teams/{team_id:int}",
+    "/teams/{team_id:int}/members",
     "/teams/{team_id:int}/members/{user_id:int}",
 ]
 total = len(existing) + len(routes)

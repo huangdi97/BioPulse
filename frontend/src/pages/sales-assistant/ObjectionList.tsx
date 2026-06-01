@@ -1,11 +1,28 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { fetchObjections, type ObjectionItem } from '@/api/sales-assistant-api'
 import { Card, CardContent } from '@/components/ui/card'
 import { FileText } from 'lucide-react'
+import { FilterDropdown } from '@/components/FilterDropdown'
+import { Skeleton } from '@/components/Skeleton'
+
+const CATEGORY_OPTIONS = [
+  { value: '全部', label: '全部分类' },
+  { value: '价格', label: '价格' },
+  { value: '安全', label: '安全' },
+  { value: '习惯', label: '习惯' },
+]
+
+const SORT_OPTIONS = [
+  { value: 'default', label: '默认排序' },
+  { value: 'effectiveness_desc', label: '有效性从高到低' },
+  { value: 'effectiveness_asc', label: '有效性从低到高' },
+]
 
 export default function ObjectionList() {
   const [objections, setObjections] = useState<ObjectionItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [category, setCategory] = useState('全部')
+  const [sort, setSort] = useState('default')
 
   useEffect(() => {
     let cancelled = false
@@ -17,12 +34,42 @@ export default function ObjectionList() {
     return () => { cancelled = true }
   }, [])
 
-  if (loading) return <div className="space-y-3">{[1, 2, 3].map((i) => <Card key={i}><CardContent className="p-4 animate-pulse"><div className="h-24 bg-muted rounded" /></CardContent></Card>)}</div>
+  const filtered = useMemo(() => {
+    let result = objections.filter((o) => {
+      if (category === '全部') return true
+      return o.category === category
+    })
+
+    switch (sort) {
+      case 'effectiveness_desc':
+        result = [...result].sort((a, b) => b.effectiveness - a.effectiveness)
+        break
+      case 'effectiveness_asc':
+        result = [...result].sort((a, b) => a.effectiveness - b.effectiveness)
+        break
+    }
+
+    return result
+  }, [objections, category, sort])
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <Card key={i}><CardContent className="p-4"><Skeleton className="h-24 w-full" /></CardContent></Card>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">异议处理</h2>
-      {objections.map((o) => (
+      <div className="flex gap-2 flex-wrap">
+        <FilterDropdown label="分类" value={category} options={CATEGORY_OPTIONS} onChange={setCategory} />
+        <FilterDropdown label="排序" value={sort} options={SORT_OPTIONS} onChange={setSort} />
+      </div>
+      {filtered.map((o) => (
         <Card key={o.id}>
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
@@ -48,6 +95,9 @@ export default function ObjectionList() {
           </CardContent>
         </Card>
       ))}
+      {!loading && filtered.length === 0 && (
+        <div className="text-center py-12 text-sm text-muted-foreground">没有找到匹配的异议</div>
+      )}
     </div>
   )
 }

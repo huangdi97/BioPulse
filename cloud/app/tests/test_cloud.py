@@ -1,5 +1,4 @@
 import uuid
-import pytest
 
 
 class TestAuthFlow:
@@ -7,11 +6,15 @@ class TestAuthFlow:
         username = f"authuser_{uuid.uuid4().hex[:8]}"
         password = "CHANGE_ME"
 
-        resp = client.post("/auth/register", json={"username": username, "password": password})
+        resp = client.post(
+            "/auth/register", json={"username": username, "password": password}
+        )
         assert resp.status_code == 201
         assert resp.json()["data"]["username"] == username
 
-        resp = client.post("/auth/login", json={"username": username, "password": password})
+        resp = client.post(
+            "/auth/login", json={"username": username, "password": password}
+        )
         assert resp.status_code == 200
         data = resp.json()["data"]
         assert "access_token" in data
@@ -39,7 +42,9 @@ class TestUserCRUD:
     def test_user_crud_flow(self, client, admin_token):
         username = f"cruduser_{uuid.uuid4().hex[:8]}"
 
-        resp = client.post("/auth/register", json={"username": username, "password": "crudpass123"})
+        resp = client.post(
+            "/auth/register", json={"username": username, "password": "crudpass123"}
+        )
         assert resp.status_code == 201
         user_id = resp.json()["data"]["user_id"]
 
@@ -66,7 +71,9 @@ class TestUserCRUD:
         assert len(users) >= 1
 
         another = f"deleteuser_{uuid.uuid4().hex[:8]}"
-        resp = client.post("/auth/register", json={"username": another, "password": "delpass123"})
+        resp = client.post(
+            "/auth/register", json={"username": another, "password": "delpass123"}
+        )
         assert resp.status_code == 201
         del_id = resp.json()["data"]["user_id"]
 
@@ -419,7 +426,9 @@ class TestAuthRequired:
         resp = client.get("/users/")
         assert resp.status_code == 401
 
-        resp = client.post("/audit/logs", json={"user_id": 1, "action": "x", "entity_type": "x"})
+        resp = client.post(
+            "/audit/logs", json={"user_id": 1, "action": "x", "entity_type": "x"}
+        )
         assert resp.status_code == 401
 
     def test_non_admin_returns_403(self, client, auth_token):

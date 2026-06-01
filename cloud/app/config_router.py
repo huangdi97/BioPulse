@@ -1,8 +1,7 @@
 from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from starlette import status
 
 from shared.auth_scope import require_scope
 from shared.base import success

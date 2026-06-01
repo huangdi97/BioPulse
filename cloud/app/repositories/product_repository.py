@@ -25,17 +25,33 @@ class ProductRepository:
         )
         self.db.commit()
 
-    def create(self, name: str, category: str = "", brand: str = "",
-               model: str = "", spec: str = "", unit_price: float = 0.0,
-               keywords: list | None = None,
-               tech_params: dict | None = None,
-               cert_status: str = "") -> int:
+    def create(
+        self,
+        name: str,
+        category: str = "",
+        brand: str = "",
+        model: str = "",
+        spec: str = "",
+        unit_price: float = 0.0,
+        keywords: list | None = None,
+        tech_params: dict | None = None,
+        cert_status: str = "",
+    ) -> int:
         cursor = self.db.execute(
             "INSERT INTO products (name, category, brand, model, spec, "
             "unit_price, keywords, tech_params, cert_status) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (name, category, brand, model, spec, unit_price,
-             json.dumps(keywords or []), json.dumps(tech_params or {}), cert_status),
+            (
+                name,
+                category,
+                brand,
+                model,
+                spec,
+                unit_price,
+                json.dumps(keywords or []),
+                json.dumps(tech_params or {}),
+                cert_status,
+            ),
         )
         self.db.commit()
         return cursor.lastrowid
@@ -49,8 +65,17 @@ class ProductRepository:
         return None
 
     def update(self, product_id: int, **kwargs) -> bool:
-        allowed = {"name", "category", "brand", "model", "spec",
-                   "unit_price", "keywords", "tech_params", "cert_status"}
+        allowed = {
+            "name",
+            "category",
+            "brand",
+            "model",
+            "spec",
+            "unit_price",
+            "keywords",
+            "tech_params",
+            "cert_status",
+        }
         updates = {k: v for k, v in kwargs.items() if k in allowed}
         if not updates:
             return False
@@ -67,7 +92,9 @@ class ProductRepository:
         return cursor.rowcount > 0
 
     def delete(self, product_id: int) -> bool:
-        cursor = self.db.execute("DELETE FROM products WHERE product_id = ?", (product_id,))
+        cursor = self.db.execute(
+            "DELETE FROM products WHERE product_id = ?", (product_id,)
+        )
         self.db.commit()
         return cursor.rowcount > 0
 
@@ -76,7 +103,9 @@ class ProductRepository:
         params = []
         if q:
             pattern = f"%{q}%"
-            conditions.append("(name LIKE ? OR keywords LIKE ? OR brand LIKE ? OR model LIKE ?)")
+            conditions.append(
+                "(name LIKE ? OR keywords LIKE ? OR brand LIKE ? OR model LIKE ?)"
+            )
             params.extend([pattern, pattern, pattern, pattern])
         if category:
             conditions.append("category = ?")
@@ -84,5 +113,7 @@ class ProductRepository:
         where = ""
         if conditions:
             where = " WHERE " + " AND ".join(conditions)
-        rows = self.db.execute(f"SELECT * FROM products{where} ORDER BY product_id DESC", params).fetchall()
+        rows = self.db.execute(
+            f"SELECT * FROM products{where} ORDER BY product_id DESC", params
+        ).fetchall()
         return [dict(r) for r in rows]

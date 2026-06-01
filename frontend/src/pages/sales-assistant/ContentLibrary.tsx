@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchContent, type ContentItem } from '@/api/sales-assistant-api'
 import { Card, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/Skeleton'
 import { FileText, Clock } from 'lucide-react'
 
 const TYPE_ICONS: Record<string, string> = {
@@ -23,7 +24,15 @@ export default function ContentLibrary() {
     return () => { cancelled = true }
   }, [])
 
-  if (loading) return <div className="space-y-3">{[1, 2, 3].map((i) => <Card key={i}><CardContent className="p-4 animate-pulse"><div className="h-16 bg-muted rounded" /></CardContent></Card>)}</div>
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full" /></CardContent></Card>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">

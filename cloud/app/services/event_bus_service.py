@@ -1,12 +1,14 @@
 import json
 import uuid
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.repositories import (
-    EventBusDefinitionsRepository, EventBusMessagesRepository, EventDeliveryLogRepository,
+    EventBusDefinitionsRepository,
+    EventBusMessagesRepository,
+    EventDeliveryLogRepository,
 )
 from cloud.app.services.base import BaseService
 
@@ -22,52 +24,80 @@ def _parse_targets(raw):
 
 
 class EventBusService(BaseService):
-    def create_definition(self, event_type: str, display_name: str, description: str,
-                          source_end: str, target_ends: list, schema_template: dict,
-                          priority: int) -> dict:
+    def create_definition(
+        self,
+        event_type: str,
+        display_name: str,
+        description: str,
+        source_end: str,
+        target_ends: list,
+        schema_template: dict,
+        priority: int,
+    ) -> dict:
         def_repo = EventBusDefinitionsRepository(self.db)
         if def_repo.get_by_event_type(event_type):
-            raise HTTPException(status.HTTP_409_CONFLICT, detail="Event type already exists")
-        def_repo.create({
-            "event_type": event_type, "display_name": display_name,
-            "description": description, "source_end": source_end,
-            "target_ends": json.dumps(target_ends, ensure_ascii=False),
-            "schema_template": json.dumps(schema_template, ensure_ascii=False),
-            "priority": priority,
-        })
+            raise HTTPException(
+                status.HTTP_409_CONFLICT, detail="Event type already exists"
+            )
+        def_repo.create(
+            {
+                "event_type": event_type,
+                "display_name": display_name,
+                "description": description,
+                "source_end": source_end,
+                "target_ends": json.dumps(target_ends, ensure_ascii=False),
+                "schema_template": json.dumps(schema_template, ensure_ascii=False),
+                "priority": priority,
+            }
+        )
         return def_repo.get_by_event_type(event_type)
 
-    def list_definitions(self, source_end: Optional[str] = None,
-                         enabled: Optional[int] = None) -> list:
+    def list_definitions(
+        self, source_end: Optional[str] = None, enabled: Optional[int] = None
+    ) -> list:
         return EventBusDefinitionsRepository(self.db).list_filtered(
-            source_end=source_end, enabled=enabled)
+            source_end=source_end, enabled=enabled
+        )
 
     def toggle_definition(self, event_type: str) -> dict:
         def_repo = EventBusDefinitionsRepository(self.db)
         if not def_repo.get_by_event_type(event_type):
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Event definition not found")
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, detail="Event definition not found"
+            )
         def_repo.toggle_enabled(event_type)
         return def_repo.get_by_event_type(event_type)
 
-    def publish_message(self, event_type: str, source_entity_type: str,
-                        source_entity_id: str, payload: dict,
-                        correlation_id: str) -> dict:
+    def publish_message(
+        self,
+        event_type: str,
+        source_entity_type: str,
+        source_entity_id: str,
+        payload: dict,
+        correlation_id: str,
+    ) -> dict:
         def_repo = EventBusDefinitionsRepository(self.db)
         definition = def_repo.get_by_event_type(event_type)
         if not definition or not definition.get("enabled"):
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Event type not found or disabled")
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, detail="Event type not found or disabled"
+            )
         msg_repo = EventBusMessagesRepository(self.db)
         delivery_repo = EventDeliveryLogRepository(self.db)
         message_id = f"evt:{uuid.uuid4()}"
         targets = _parse_targets(definition["target_ends"])
-        msg_repo.create({
-            "message_id": message_id, "event_type": event_type,
-            "source_end": definition["source_end"],
-            "source_entity_type": source_entity_type,
-            "source_entity_id": source_entity_id,
-            "payload": json.dumps(payload, ensure_ascii=False),
-            "correlation_id": correlation_id, "priority": definition["priority"],
-        })
+        msg_repo.create(
+            {
+                "message_id": message_id,
+                "event_type": event_type,
+                "source_end": definition["source_end"],
+                "source_entity_type": source_entity_type,
+                "source_entity_id": source_entity_id,
+                "payload": json.dumps(payload, ensure_ascii=False),
+                "correlation_id": correlation_id,
+                "priority": definition["priority"],
+            }
+        )
         results = []
         for i, target in enumerate(targets):
             is_delivered = i == 0
@@ -75,23 +105,45 @@ class EventBusService(BaseService):
             resp = "OK: 200 (simulated)" if is_delivered else ""
             err = "" if is_delivered else f"simulated pending for {target}"
             dur = 25 if is_delivered else 0
-            delivery_repo.create({
-                "message_id": message_id, "target_end": target,
-                "delivery_status": status_val, "attempt": 1,
-                "response_summary": resp, "duration_ms": dur, "error_message": err,
-            })
-            results.append({"target_end": target, "delivery_status": status_val, "error_message": err})
+            delivery_repo.create(
+                {
+                    "message_id": message_id,
+                    "target_end": target,
+                    "delivery_status": status_val,
+                    "attempt": 1,
+                    "response_summary": resp,
+                    "duration_ms": dur,
+                    "error_message": err,
+                }
+            )
+            results.append(
+                {
+                    "target_end": target,
+                    "delivery_status": status_val,
+                    "error_message": err,
+                }
+            )
         msg_repo.mark_delivered(message_id)
-        return {"message": msg_repo.get_by_message_id(message_id), "delivery_results": results}
+        return {
+            "message": msg_repo.get_by_message_id(message_id),
+            "delivery_results": results,
+        }
 
-    def list_messages(self, event_type: Optional[str] = None,
-                      status: Optional[str] = None,
-                      source_end: Optional[str] = None,
-                      start_date: Optional[str] = None,
-                      end_date: Optional[str] = None) -> list:
+    def list_messages(
+        self,
+        event_type: Optional[str] = None,
+        status: Optional[str] = None,
+        source_end: Optional[str] = None,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+    ) -> list:
         return EventBusMessagesRepository(self.db).list_filtered(
-            event_type=event_type, status=status, source_end=source_end,
-            start_date=start_date, end_date=end_date)
+            event_type=event_type,
+            status=status,
+            source_end=source_end,
+            start_date=start_date,
+            end_date=end_date,
+        )
 
     def get_message(self, message_id: str) -> dict:
         msg_repo = EventBusMessagesRepository(self.db)
@@ -109,19 +161,27 @@ class EventBusService(BaseService):
         EventDeliveryLogRepository(self.db).reset_pending_by_message(message_id)
         return msg_repo.get_by_message_id(message_id)
 
-    def subscribe(self, target_end: str, event_types: list,
-                  callback_url: str = "") -> dict:
+    def subscribe(
+        self, target_end: str, event_types: list, callback_url: str = ""
+    ) -> dict:
         return {
-            "acknowledged": True, "target_end": target_end,
-            "event_types": event_types, "callback_url": callback_url,
+            "acknowledged": True,
+            "target_end": target_end,
+            "event_types": event_types,
+            "callback_url": callback_url,
         }
 
-    def list_delivery_log(self, message_id: Optional[str] = None,
-                          target_end: Optional[str] = None,
-                          delivery_status: Optional[str] = None) -> list:
+    def list_delivery_log(
+        self,
+        message_id: Optional[str] = None,
+        target_end: Optional[str] = None,
+        delivery_status: Optional[str] = None,
+    ) -> list:
         return EventDeliveryLogRepository(self.db).list_filtered(
-            message_id=message_id, target_end=target_end,
-            delivery_status=delivery_status)
+            message_id=message_id,
+            target_end=target_end,
+            delivery_status=delivery_status,
+        )
 
     def get_dashboard(self) -> dict:
         def_repo = EventBusDefinitionsRepository(self.db)
@@ -141,4 +201,8 @@ class EventBusService(BaseService):
         }
         top_types = msg_repo.top_event_types(5)
         recent = msg_repo.list_recent(5)
-        return {"overview": overview, "top_event_types": top_types, "recent_messages": recent}
+        return {
+            "overview": overview,
+            "top_event_types": top_types,
+            "recent_messages": recent,
+        }

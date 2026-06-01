@@ -10,8 +10,12 @@ class HealthRadarService(BaseService):
         repo = HealthRadarRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()
         row_id = repo.create(
-            {**body.model_dump(exclude_unset=True),
-             "created_by": user_id, "created_at": now, "updated_at": now},
+            {
+                **body.model_dump(exclude_unset=True),
+                "created_by": user_id,
+                "created_at": now,
+                "updated_at": now,
+            },
         )
         return {"id": row_id}
 
@@ -72,9 +76,9 @@ class HealthRadarService(BaseService):
         for r in dist_rows:
             score_distribution[r["risk_level"]] = r["cnt"]
 
-        seven_days_ago = (
-            datetime.now(timezone.utc) - timedelta(days=7)
-        ).strftime("%Y-%m-%d")
+        seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).strftime(
+            "%Y-%m-%d"
+        )
         trend_rows = self.db.execute(
             """SELECT assessment_date,
                       AVG(score) AS avg_score,

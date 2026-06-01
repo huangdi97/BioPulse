@@ -21,16 +21,18 @@ class NoteService(BaseService):
         self._check_schedule_exists(schedule_id)
         now = datetime.now(timezone.utc).isoformat()
         repo = NoteRepository(self.db)
-        return repo.create({
-            "schedule_id": schedule_id,
-            "title": body.title,
-            "content": body.content,
-            "participants": body.participants,
-            "action_items": body.action_items,
-            "created_by": user_id,
-            "created_at": now,
-            "updated_at": now,
-        })
+        return repo.create(
+            {
+                "schedule_id": schedule_id,
+                "title": body.title,
+                "content": body.content,
+                "participants": body.participants,
+                "action_items": body.action_items,
+                "created_by": user_id,
+                "created_at": now,
+                "updated_at": now,
+            }
+        )
 
     def list_notes(self, schedule_id: int, page: int, page_size: int) -> tuple:
         self._check_schedule_exists(schedule_id)

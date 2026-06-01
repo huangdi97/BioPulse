@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette import status
@@ -87,9 +87,12 @@ def list_bidding(
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[BiddingOut]]:
     total, total_pages, rows = service.list_bidding(
-        page, page_size,
-        status_val=status_val, hospital=hospital,
-        department=department, product_category=product_category,
+        page,
+        page_size,
+        status_val=status_val,
+        hospital=hospital,
+        department=department,
+        product_category=product_category,
     )
     items = [BiddingOut(**dict(r)) for r in rows]
     return success(

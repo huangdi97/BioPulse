@@ -43,8 +43,18 @@ def _fetch_json(url: str) -> dict | None:
         try:
             with urllib.request.urlopen(url, timeout=15) as resp:
                 return json.loads(resp.read().decode())
-        except (urllib.error.URLError, urllib.error.HTTPError, OSError, json.JSONDecodeError) as e:
-            logger.warning("PubMed request failed (attempt %d/%d): %s", attempt + 1, _MAX_RETRIES, e)
+        except (
+            urllib.error.URLError,
+            urllib.error.HTTPError,
+            OSError,
+            json.JSONDecodeError,
+        ) as e:
+            logger.warning(
+                "PubMed request failed (attempt %d/%d): %s",
+                attempt + 1,
+                _MAX_RETRIES,
+                e,
+            )
             if attempt < _MAX_RETRIES - 1:
                 time.sleep(_RETRY_DELAY)
     return None
@@ -79,10 +89,14 @@ def _search_ids(keyword: str, max_results: int) -> list[str]:
     Uses NCBI ESearch API with JSON response format.
     Returns a list of PMID strings, or empty list on failure.
     """
-    params = urllib.parse.urlencode({
-        "db": "pubmed", "term": keyword, "retmax": max_results,
-        "retmode": "json",
-    })
+    params = urllib.parse.urlencode(
+        {
+            "db": "pubmed",
+            "term": keyword,
+            "retmax": max_results,
+            "retmode": "json",
+        }
+    )
     data = _fetch_json(f"{ESEARCH_URL}?{params}")
     if not data or "esearchresult" not in data:
         logger.warning("PubMed esearch returned no result for keyword=%s", keyword)
@@ -97,9 +111,13 @@ def _fetch_details(pmids: list[str]) -> list[dict]:
     Uses NCBI ESummary API to retrieve title, authors, journal, and date.
     Returns a list of paper dicts, or empty list on failure.
     """
-    params = urllib.parse.urlencode({
-        "db": "pubmed", "id": ",".join(pmids), "retmode": "json",
-    })
+    params = urllib.parse.urlencode(
+        {
+            "db": "pubmed",
+            "id": ",".join(pmids),
+            "retmode": "json",
+        }
+    )
     data = _fetch_json(f"{ESUMMARY_URL}?{params}")
     if not data or "result" not in data:
         logger.warning("PubMed esummary returned no result for %d IDs", len(pmids))
@@ -110,14 +128,20 @@ def _fetch_details(pmids: list[str]) -> list[dict]:
     for uid in uid_list:
         item = result.get(uid, {})
         authors_list = item.get("authors", [])
-        authors = [a.get("name", "") for a in authors_list] if isinstance(authors_list, list) else []
-        papers.append({
-            "pmid": uid,
-            "title": item.get("title", ""),
-            "authors": authors,
-            "journal": (item.get("source", "") or item.get("fulljournalname", "")),
-            "pub_date": item.get("pubdate", "") or item.get("pubDate", ""),
-            "abstract": "",
-            "doi": "",
-        })
+        authors = (
+            [a.get("name", "") for a in authors_list]
+            if isinstance(authors_list, list)
+            else []
+        )
+        papers.append(
+            {
+                "pmid": uid,
+                "title": item.get("title", ""),
+                "authors": authors,
+                "journal": (item.get("source", "") or item.get("fulljournalname", "")),
+                "pub_date": item.get("pubdate", "") or item.get("pubDate", ""),
+                "abstract": "",
+                "doi": "",
+            }
+        )
     return papers

@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchAssistantHcps, type AssistantHcp } from '@/api/assistant-api'
 import { Card, CardContent } from '@/components/ui/card'
 import { User, Building2, MapPin } from 'lucide-react'
+import { SearchBar } from '@/components/SearchBar'
+import { FilterDropdown } from '@/components/FilterDropdown'
+import { Skeleton } from '@/components/Skeleton'
 
 const PRIORITY_MAP: Record<string, { label: string; color: string }> = {
   high: { label: '高', color: 'bg-red-50 text-red-700' },
@@ -10,10 +13,19 @@ const PRIORITY_MAP: Record<string, { label: string; color: string }> = {
   low: { label: '低', color: 'bg-gray-50 text-gray-500' },
 }
 
+const PRIORITY_OPTIONS = [
+  { value: '全部', label: '全部优先级' },
+  { value: 'high', label: '高优先级' },
+  { value: 'medium', label: '中优先级' },
+  { value: 'low', label: '低优先级' },
+]
+
 export default function HcpList() {
   const navigate = useNavigate()
   const [hcps, setHcps] = useState<AssistantHcp[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [priority, setPriority] = useState('全部')
 
   useEffect(() => {
     let cancelled = false
@@ -25,15 +37,31 @@ export default function HcpList() {
     return () => { cancelled = true }
   }, [])
 
+  const filtered = useMemo(() => {
+    return hcps.filter((h) => {
+      const matchSearch = !search || h.name.includes(search) || h.hospital.includes(search) || h.dept.includes(search)
+      const matchPri = priority === '全部' || h.priority === priority
+      return matchSearch && matchPri
+    })
+  }, [hcps, search, priority])
+
   if (loading) {
-    return <div className="space-y-3">{[1, 2, 3].map((i) => <Card key={i}><CardContent className="p-4 animate-pulse"><div className="h-16 bg-muted rounded" /></CardContent></Card>)}</div>
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full" /></CardContent></Card>
+        ))}
+      </div>
+    )
   }
 
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">HCP 列表</h2>
+      <SearchBar placeholder="搜索姓名、医院或科室..." value={search} onChange={setSearch} />
+      <FilterDropdown label="优先级" value={priority} options={PRIORITY_OPTIONS} onChange={setPriority} />
       <div className="space-y-2">
-        {hcps.map((hcp) => {
+        {filtered.map((hcp) => {
           const prio = PRIORITY_MAP[hcp.priority] ?? PRIORITY_MAP.low
           return (
             <Card
@@ -60,6 +88,9 @@ export default function HcpList() {
           )
         })}
       </div>
+      {!loading && filtered.length === 0 && (
+        <div className="text-center py-12 text-sm text-muted-foreground">没有找到匹配的客户</div>
+      )}
     </div>
   )
 }

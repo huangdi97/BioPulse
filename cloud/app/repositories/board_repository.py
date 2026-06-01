@@ -13,7 +13,8 @@ class TaskBoardsRepository(BaseRepository):
     def get_active_by_id(self, board_id: int):
         placeholders = ", ".join(self.cols)
         row = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE id=? AND is_active=1", (board_id,)
+            f"SELECT {placeholders} FROM {self.table_name} WHERE id=? AND is_active=1",
+            (board_id,),
         ).fetchone()
         return dict(row) if row else None
 
@@ -34,8 +35,13 @@ class BoardTasksRepository(BaseRepository):
         conditions = ["board_id=?", "is_active=1"]
         params = [board_id]
         if status_filter:
-            conditions.append("status=?"); params.append(status_filter)
-        return self.list_all(conditions=conditions, params=params, order_by="sort_order ASC, created_at DESC")
+            conditions.append("status=?")
+            params.append(status_filter)
+        return self.list_all(
+            conditions=conditions,
+            params=params,
+            order_by="sort_order ASC, created_at DESC",
+        )
 
     def list_by_assignee(self, user_id: int):
         placeholders = ", ".join(f"bt.{c}" for c in self.cols)

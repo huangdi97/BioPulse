@@ -19,19 +19,25 @@ async def get_access_strategy(drug_name: str, target_province: str) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        fm_resp = await client.post(f"{CLOUD_API}/pubmed/search", json={
-            "query": drug_name,
-            "limit": 20,
-        })
+        fm_resp = await client.post(
+            f"{CLOUD_API}/pubmed/search",
+            json={
+                "query": drug_name,
+                "limit": 20,
+            },
+        )
         fm_papers = []
         if fm_resp.status_code == 200:
             fm_data = fm_resp.json()
             fm_papers = fm_data.get("data", fm_data.get("papers", []))
 
-        mi_resp = await client.get(f"{CLOUD_API}/market-intel/items", params={
-            "keyword": drug_name,
-            "limit": 20,
-        })
+        mi_resp = await client.get(
+            f"{CLOUD_API}/market-intel/items",
+            params={
+                "keyword": drug_name,
+                "limit": 20,
+            },
+        )
         mi_items = []
         if mi_resp.status_code == 200:
             mi_data = mi_resp.json()
@@ -42,13 +48,15 @@ async def get_access_strategy(drug_name: str, target_province: str) -> dict:
     return result
 
 
-def _generate_strategy(drug_name: str, province: str, papers: list, items: list) -> dict:
+def _generate_strategy(
+    drug_name: str, province: str, papers: list, items: list
+) -> dict:
     """基于论文和市场情报生成准入策略。"""
     pub_count = len(papers)
     news_count = len(items)
 
     if pub_count > 10:
-            strategy = "积极准入"
+        strategy = "积极准入"
     elif pub_count > 3:
         strategy = "选择性准入"
     else:
@@ -71,8 +79,12 @@ def _generate_strategy(drug_name: str, province: str, papers: list, items: list)
         "confidence_score": min(round(0.5 + pub_count * 0.03, 2), 0.95),
         "key_actions": actions,
         "risk_assessment": {
-            "competitive_pressure": "高" if news_count > 10 else ("中" if news_count > 5 else "低"),
-            "evidence_strength": "强" if pub_count > 10 else ("中" if pub_count > 3 else "弱"),
+            "competitive_pressure": "高"
+            if news_count > 10
+            else ("中" if news_count > 5 else "低"),
+            "evidence_strength": "强"
+            if pub_count > 10
+            else ("中" if pub_count > 3 else "弱"),
             "policy_risk": "中",
         },
         "last_updated": datetime.now(timezone.utc).isoformat(),
@@ -91,10 +103,13 @@ async def get_competitor_landscape(drug_name: str) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/market-intel/items", params={
-            "keyword": drug_name,
-            "limit": 30,
-        })
+        resp = await client.get(
+            f"{CLOUD_API}/market-intel/items",
+            params={
+                "keyword": drug_name,
+                "limit": 30,
+            },
+        )
         items = []
         if resp.status_code == 200:
             data = resp.json()
@@ -109,14 +124,21 @@ def _build_landscape(drug_name: str, items: list) -> dict:
     """构建竞品准入 landscape。"""
     competitors = []
     for i, item in enumerate(items[:5]):
-        competitors.append({
-            "name": f"{['竞品A', '竞品B', '竞品C', '竞品D', '竞品E'][i % 5]}",
-            "formulary_status": "已纳入" if i % 3 != 0 else "未纳入",
-            "reimbursement_rate": f"{60 + i * 5}%",
-            "provinces_covered": max(3, 12 - i * 2),
-            "key_advantage": ["品牌认知度高", "价格优势", "临床证据充分",
-                              "渠道覆盖广", "适应症独特"][i % 5],
-        })
+        competitors.append(
+            {
+                "name": f"{['竞品A', '竞品B', '竞品C', '竞品D', '竞品E'][i % 5]}",
+                "formulary_status": "已纳入" if i % 3 != 0 else "未纳入",
+                "reimbursement_rate": f"{60 + i * 5}%",
+                "provinces_covered": max(3, 12 - i * 2),
+                "key_advantage": [
+                    "品牌认知度高",
+                    "价格优势",
+                    "临床证据充分",
+                    "渠道覆盖广",
+                    "适应症独特",
+                ][i % 5],
+            }
+        )
 
     return {
         "drug_name": drug_name,
@@ -139,9 +161,12 @@ async def get_policy_news() -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/market-intel/items", params={
-            "limit": 20,
-        })
+        resp = await client.get(
+            f"{CLOUD_API}/market-intel/items",
+            params={
+                "limit": 20,
+            },
+        )
         items = []
         if resp.status_code == 200:
             data = resp.json()
@@ -149,13 +174,15 @@ async def get_policy_news() -> dict:
 
     policy_list = []
     for item in items:
-        policy_list.append({
-            "title": item.get("title", ""),
-            "summary": item.get("summary", item.get("content", "")[:200]),
-            "date": item.get("collected_at", item.get("date", "")),
-            "source": item.get("source_name", item.get("source", "")),
-            "impact_level": item.get("impact_level", ""),
-        })
+        policy_list.append(
+            {
+                "title": item.get("title", ""),
+                "summary": item.get("summary", item.get("content", "")[:200]),
+                "date": item.get("collected_at", item.get("date", "")),
+                "source": item.get("source_name", item.get("source", "")),
+                "impact_level": item.get("impact_level", ""),
+            }
+        )
 
     result = {
         "total_policy_news": len(policy_list),

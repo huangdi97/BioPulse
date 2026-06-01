@@ -10,8 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from fastapi import Depends, HTTPException
-from starlette import status
+from fastapi import Depends
 
 from cloud.app.database import get_db
 from cloud.app.services.base import BaseService
@@ -126,11 +125,15 @@ class TokenBudgetService(BaseService):
                 "daily_limit": daily_limit,
             }
 
-        usage_ratio = (daily_used + estimated_tokens) / daily_limit if daily_limit > 0 else 0
+        usage_ratio = (
+            (daily_used + estimated_tokens) / daily_limit if daily_limit > 0 else 0
+        )
         nearing_limit = usage_ratio >= alert_threshold
         return {
             "allowed": True,
-            "reason": "ok" if not nearing_limit else f"用量已达 {usage_ratio:.0%}，接近告警阈值 {alert_threshold:.0%}",
+            "reason": "ok"
+            if not nearing_limit
+            else f"用量已达 {usage_ratio:.0%}，接近告警阈值 {alert_threshold:.0%}",
             "daily_used": daily_used,
             "daily_limit": daily_limit,
         }
@@ -161,8 +164,16 @@ class TokenBudgetService(BaseService):
             "  0, ?)",
             (user_id, model, user_id, model, today, now),
         )
-        self.db.execute("DELETE FROM token_budget WHERE rowid NOT IN (SELECT MAX(rowid) FROM token_budget GROUP BY user_id, model)")
-        return {"user_id": user_id, "model": model, "tokens": tokens, "cost": cost, "usage_date": today}
+        self.db.execute(
+            "DELETE FROM token_budget WHERE rowid NOT IN (SELECT MAX(rowid) FROM token_budget GROUP BY user_id, model)"
+        )
+        return {
+            "user_id": user_id,
+            "model": model,
+            "tokens": tokens,
+            "cost": cost,
+            "usage_date": today,
+        }
 
     def get_usage_report(self, user_id: int, days: int = 30) -> list:
         """获取指定用户最近 N 天的使用报告。
@@ -174,7 +185,9 @@ class TokenBudgetService(BaseService):
         Returns:
             每日按模型聚合的使用记录列表。
         """
-        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).strftime(
+            "%Y-%m-%d"
+        )
         rows = self.db.execute(
             "SELECT usage_date, model, SUM(tokens) AS total_tokens, SUM(cost) AS total_cost, "
             "COUNT(*) AS call_count "
@@ -194,9 +207,14 @@ class TokenBudgetService(BaseService):
             results.append(self.get_budget(row["user_id"], row["model"]))
         return results
 
-    def update_budget(self, user_id: int, model: str, max_tokens_per_day: Optional[int] = None,
-                      max_tokens_per_request: Optional[int] = None,
-                      alert_threshold: Optional[float] = None) -> dict:
+    def update_budget(
+        self,
+        user_id: int,
+        model: str,
+        max_tokens_per_day: Optional[int] = None,
+        max_tokens_per_request: Optional[int] = None,
+        alert_threshold: Optional[float] = None,
+    ) -> dict:
         """更新用户模型预算配置（写入 overrides 到 rules 文件）。
 
         Args:

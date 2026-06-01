@@ -2,7 +2,6 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
-from starlette import status
 
 from shared.auth_scope import require_scope
 from shared.base import success
@@ -54,7 +53,9 @@ def create_content(
     service: ContentService = Depends(),
 ) -> Any:
     user_id = int(current_user["sub"])
-    row = service.create_content(body.title, body.body, body.category, body.tags, user_id)
+    row = service.create_content(
+        body.title, body.body, body.category, body.tags, user_id
+    )
     return success(data=row)
 
 
@@ -67,7 +68,12 @@ def list_contents(
     current_user: dict = Depends(require_scope("visit")),
     service: ContentService = Depends(),
 ) -> Any:
-    result = service.list_contents(status_filter=status_param, category_filter=category, page=page, page_size=page_size)
+    result = service.list_contents(
+        status_filter=status_param,
+        category_filter=category,
+        page=page,
+        page_size=page_size,
+    )
     return success(data=result)
 
 

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, field_validator
 from starlette import status
@@ -54,8 +54,11 @@ def leaderboard(
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[ScoreLeaderboardItem]]:
     total, total_pages, rows = service.leaderboard(
-        page=page, page_size=page_size,
-        stage=stage, min_score=min_score, max_score=max_score,
+        page=page,
+        page_size=page_size,
+        stage=stage,
+        min_score=min_score,
+        max_score=max_score,
     )
     items = [ScoreLeaderboardItem(**dict(r)) for r in rows]
     return success(

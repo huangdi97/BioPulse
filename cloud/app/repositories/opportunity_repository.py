@@ -19,9 +19,12 @@ class CustomersRepository(BaseRepository):
         super().__init__(db, "customers", TABLE_CUSTOMERS_COLS)
 
     def exists(self, customer_id: int):
-        return self.db.execute(
-            f"SELECT id FROM {self.table_name} WHERE id=?", (customer_id,)
-        ).fetchone() is not None
+        return (
+            self.db.execute(
+                f"SELECT id FROM {self.table_name} WHERE id=?", (customer_id,)
+            ).fetchone()
+            is not None
+        )
 
 
 class CustomerInteractionsRepository(BaseRepository):
@@ -39,12 +42,18 @@ class CustomerInteractionsRepository(BaseRepository):
     def list_filtered(self, type_=None, conducted_by=None, page=1, page_size=20):
         conditions, params = [], []
         if type_:
-            conditions.append("type=?"); params.append(type_)
+            conditions.append("type=?")
+            params.append(type_)
         if conducted_by is not None:
-            conditions.append("conducted_by=?"); params.append(conducted_by)
-        return self.paginate(page=page, page_size=page_size,
-                             conditions=conditions or None, params=params or None,
-                             order_by="conducted_at DESC")
+            conditions.append("conducted_by=?")
+            params.append(conducted_by)
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conditions or None,
+            params=params or None,
+            order_by="conducted_at DESC",
+        )
 
 
 class HcpInteractionsRepository(BaseRepository):
@@ -67,9 +76,13 @@ class HcpInteractionsRepository(BaseRepository):
     def list_by_hcp_id(self, hcp_id: int, page=1, page_size=20):
         conditions = ["hcp_id=?"]
         params = [hcp_id]
-        return self.paginate(page=page, page_size=page_size,
-                             conditions=conditions, params=params,
-                             order_by="conducted_at DESC")
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conditions,
+            params=params,
+            order_by="conducted_at DESC",
+        )
 
     def get_recent_by_hcp_id(self, hcp_id: int, limit: int = 5):
         placeholders = ", ".join(self.cols)
@@ -87,13 +100,20 @@ class HcpProfilesRepository(BaseRepository):
     def list_filtered(self, tier=None, specialty=None, city=None, page=1, page_size=20):
         conditions, params = [], []
         if tier:
-            conditions.append("tier=?"); params.append(tier)
+            conditions.append("tier=?")
+            params.append(tier)
         if specialty:
-            conditions.append("specialty=?"); params.append(specialty)
+            conditions.append("specialty=?")
+            params.append(specialty)
         if city:
-            conditions.append("city=?"); params.append(city)
-        return self.paginate(page=page, page_size=page_size,
-                             conditions=conditions or None, params=params or None)
+            conditions.append("city=?")
+            params.append(city)
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conditions or None,
+            params=params or None,
+        )
 
     def count_active(self):
         return self.db.execute(
@@ -130,9 +150,15 @@ class HcpSimulationsRepository(BaseRepository):
     def list_filtered(self, hcp_id=None, status_=None, page=1, page_size=20):
         conditions, params = [], []
         if hcp_id is not None:
-            conditions.append("hcp_id=?"); params.append(hcp_id)
+            conditions.append("hcp_id=?")
+            params.append(hcp_id)
         if status_:
-            conditions.append("status=?"); params.append(status_)
-        return self.paginate(page=page, page_size=page_size,
-                             conditions=conditions or None, params=params or None,
-                             order_by="created_at DESC")
+            conditions.append("status=?")
+            params.append(status_)
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conditions or None,
+            params=params or None,
+            order_by="created_at DESC",
+        )

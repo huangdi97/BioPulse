@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 import aiofiles
 from edge_tts import Communicate
 
-from assistant.app.repositories import MediaFileRepository, VisitRecordRepository
+from assistant.app.repositories import MediaFileRepository
 from assistant.app.services.base import BaseService
 
 logger = logging.getLogger(__name__)
@@ -34,15 +34,17 @@ class VoiceService(BaseService):
             await f.write(content)
         now = datetime.now(timezone.utc).isoformat()
         repo = MediaFileRepository(self.db)
-        file_id = repo.create({
-            "file_type": "audio",
-            "original_name": file.filename,
-            "storage_path": filepath,
-            "mime_type": file.content_type or "audio/mpeg",
-            "file_size": len(content),
-            "created_by": user_id,
-            "created_at": now,
-        })
+        file_id = repo.create(
+            {
+                "file_type": "audio",
+                "original_name": file.filename,
+                "storage_path": filepath,
+                "mime_type": file.content_type or "audio/mpeg",
+                "file_size": len(content),
+                "created_by": user_id,
+                "created_at": now,
+            }
+        )
         return {
             "file_id": file_id,
             "original_name": file.filename,
@@ -59,15 +61,17 @@ class VoiceService(BaseService):
             await f.write(content)
         now = datetime.now(timezone.utc).isoformat()
         repo = MediaFileRepository(self.db)
-        file_id = repo.create({
-            "file_type": "audio",
-            "original_name": file.filename,
-            "storage_path": filepath,
-            "mime_type": file.content_type or "audio/mpeg",
-            "file_size": len(content),
-            "created_by": user_id,
-            "created_at": now,
-        })
+        file_id = repo.create(
+            {
+                "file_type": "audio",
+                "original_name": file.filename,
+                "storage_path": filepath,
+                "mime_type": file.content_type or "audio/mpeg",
+                "file_size": len(content),
+                "created_by": user_id,
+                "created_at": now,
+            }
+        )
 
         prompt = context or "用户发送了一段语音，请以专业临床药师的身份回复。"
         reply = ""
@@ -77,10 +81,13 @@ class VoiceService(BaseService):
             logger.warning("AI call failed: %s", e)
             reply = "抱歉，AI服务暂时不可用。"
 
-        repo.update(file_id, {
-            "transcript": prompt,
-            "analysis_result": reply,
-        })
+        repo.update(
+            file_id,
+            {
+                "transcript": prompt,
+                "analysis_result": reply,
+            },
+        )
 
         tts_path = os.path.join(TTS_DIR, f"{file_id}.mp3")
         audio_url = ""
@@ -110,13 +117,17 @@ class VoiceService(BaseService):
         row = repo.get_by_id(file_id)
         if not row or not row["is_active"]:
             from fastapi import HTTPException
+
             raise HTTPException(status_code=404, detail="Audio not found")
         return dict(row)
 
     def _call_llm(self, auth_header: str, prompt: str) -> str:
         req_body = {
             "messages": [
-                {"role": "system", "content": "你是一位资深临床药师，请以专业的角度回答问题。"},
+                {
+                    "role": "system",
+                    "content": "你是一位资深临床药师，请以专业的角度回答问题。",
+                },
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0.3,

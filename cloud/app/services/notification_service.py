@@ -1,12 +1,15 @@
 import json
 import re
 from datetime import datetime
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import HTTPException
 from starlette import status
 
-from cloud.app.repositories import NotificationsRepository, NotificationTemplatesRepository
+from cloud.app.repositories import (
+    NotificationsRepository,
+    NotificationTemplatesRepository,
+)
 from cloud.app.services.base import BaseService
 from shared.base import validate_columns
 from shared.columns import TABLE_NOTIFICATION_TEMPLATES_COLS
@@ -16,6 +19,7 @@ def _render_template(template: str, context: dict) -> str:
     def replacer(match):
         key = match.group(1)
         return str(context.get(key, match.group(0)))
+
     return re.sub(r"\{(\w+)\}", replacer, template)
 
 
@@ -48,14 +52,18 @@ def _notification_to_dict(row) -> dict:
 
 
 class NotificationService(BaseService):
-    def create_template(self, name: str, title_template: str, body_template: str, category: str) -> dict:
+    def create_template(
+        self, name: str, title_template: str, body_template: str, category: str
+    ) -> dict:
         tmpl_repo = NotificationTemplatesRepository(self.db)
-        row_id = tmpl_repo.create({
-            "name": name,
-            "title_template": title_template,
-            "body_template": body_template,
-            "category": category,
-        })
+        row_id = tmpl_repo.create(
+            {
+                "name": name,
+                "title_template": title_template,
+                "body_template": body_template,
+                "category": category,
+            }
+        )
         row = tmpl_repo.get_by_id(row_id)
         return _template_to_dict(row)
 
@@ -82,7 +90,9 @@ class NotificationService(BaseService):
             if val is not None:
                 filtered[field] = val
         if filtered:
-            validate_columns(filtered, 'notification_templates', TABLE_NOTIFICATION_TEMPLATES_COLS)
+            validate_columns(
+                filtered, "notification_templates", TABLE_NOTIFICATION_TEMPLATES_COLS
+            )
             tmpl_repo.update(template_id, filtered)
         row = tmpl_repo.get_by_id(template_id)
         return _template_to_dict(row)
@@ -116,10 +126,13 @@ class NotificationService(BaseService):
             tmpl_repo = NotificationTemplatesRepository(db)
             placeholders = ", ".join(tmpl_repo.cols)
             template = db.execute(
-                f"SELECT {placeholders} FROM {tmpl_repo.table_name} WHERE name=?", (template_name,)
+                f"SELECT {placeholders} FROM {tmpl_repo.table_name} WHERE name=?",
+                (template_name,),
             ).fetchone()
             if not template:
-                raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Template not found")
+                raise HTTPException(
+                    status.HTTP_404_NOT_FOUND, detail="Template not found"
+                )
             ctx = context or {}
             title = _render_template(template["title_template"], ctx)
             body_text = _render_template(template["body_template"], ctx)
@@ -135,21 +148,29 @@ class NotificationService(BaseService):
 
         notif_repo = NotificationsRepository(db)
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        row_id = notif_repo.create({
-            "user_id": user_id,
-            "template_id": template_id,
-            "title": title,
-            "body": body_text,
-            "category": category,
-            "ref_type": ref_type or "",
-            "ref_id": ref_id,
-            "context_json": context_json,
-            "created_at": now,
-        })
+        row_id = notif_repo.create(
+            {
+                "user_id": user_id,
+                "template_id": template_id,
+                "title": title,
+                "body": body_text,
+                "category": category,
+                "ref_type": ref_type or "",
+                "ref_id": ref_id,
+                "context_json": context_json,
+                "created_at": now,
+            }
+        )
         row = notif_repo.get_by_id(row_id)
         return _notification_to_dict(row)
 
-    def list_notifications(self, user_id: int, is_read: Optional[int] = None, page: int = 1, page_size: int = 20) -> dict:
+    def list_notifications(
+        self,
+        user_id: int,
+        is_read: Optional[int] = None,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> dict:
         conditions = ["user_id=?"]
         params = [user_id]
         if is_read is not None:
@@ -158,8 +179,10 @@ class NotificationService(BaseService):
 
         notif_repo = NotificationsRepository(self.db)
         total, _, items = notif_repo.paginate(
-            page=page, page_size=page_size,
-            conditions=conditions, params=params,
+            page=page,
+            page_size=page_size,
+            conditions=conditions,
+            params=params,
             order_by="created_at DESC",
         )
         return {
@@ -178,7 +201,9 @@ class NotificationService(BaseService):
             (notification_id, user_id),
         ).fetchone()
         if not row:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Notification not found")
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, detail="Notification not found"
+            )
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         notif_repo.update(notification_id, {"is_read": 1, "read_at": now})
         row = notif_repo.get_by_id(notification_id)
@@ -186,5 +211,7 @@ class NotificationService(BaseService):
 
     def unread_count(self, user_id: int) -> dict:
         notif_repo = NotificationsRepository(self.db)
-        count = notif_repo.count(conditions=["user_id=?", "is_read=0"], params=[user_id])
+        count = notif_repo.count(
+            conditions=["user_id=?", "is_read=0"], params=[user_id]
+        )
         return {"count": count}

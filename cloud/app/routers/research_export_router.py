@@ -19,7 +19,9 @@ def export_pi(
     current_user: dict = Depends(get_current_user),
 ):
     if format != "csv":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only CSV format supported")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Only CSV format supported"
+        )
     content = export_pi_csv()
     return Response(
         content=content,

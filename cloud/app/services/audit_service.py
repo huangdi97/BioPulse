@@ -1,9 +1,8 @@
-from typing import Any, List, Optional
+from typing import Optional
 from datetime import datetime, timedelta
 
 from cloud.app.repositories import AuditLogsRepository
 from cloud.app.services.base import BaseService
-from shared.base import PaginatedResponse
 
 
 class AuditService(BaseService):
@@ -18,12 +17,17 @@ class AuditService(BaseService):
         ip_address: str = "",
     ) -> None:
         repo = AuditLogsRepository(self.db)
-        repo.create({
-            "user_id": user_id, "action": action,
-            "entity_type": entity_type, "entity_id": entity_id,
-            "detail": detail, "source_end": source_end,
-            "ip_address": ip_address,
-        })
+        repo.create(
+            {
+                "user_id": user_id,
+                "action": action,
+                "entity_type": entity_type,
+                "entity_id": entity_id,
+                "detail": detail,
+                "source_end": source_end,
+                "ip_address": ip_address,
+            }
+        )
 
     def list_logs(
         self,
@@ -49,8 +53,10 @@ class AuditService(BaseService):
             conds.append("user_id=?")
             pars.append(user_id)
         total, total_pages, rows = repo.paginate(
-            page=page, page_size=page_size,
-            conditions=conds or None, params=pars or None,
+            page=page,
+            page_size=page_size,
+            conditions=conds or None,
+            params=pars or None,
             order_by="created_at DESC",
         )
         return {
@@ -71,7 +77,7 @@ class AuditService(BaseService):
             "SELECT DATE(created_at) as day, COUNT(*) as cnt "
             "FROM audit_logs WHERE created_at >= ? "
             "GROUP BY day ORDER BY day",
-            (cutoff,)
+            (cutoff,),
         ).fetchall()
         return {
             "by_action": [dict(r) for r in action_stats],

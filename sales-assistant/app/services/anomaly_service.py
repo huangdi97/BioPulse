@@ -98,17 +98,19 @@ class AnomalyService(BaseService):
         for rule in rules:
             value = self._compute_metric(rule["metric"])
             if self._compare(value, rule["operator"], rule["threshold"]):
-                alert_repo.create({
-                    "rule_id": rule["id"],
-                    "entity_type": "system",
-                    "entity_id": 0,
-                    "detected_value": value,
-                    "severity": rule["severity"],
-                    "message": f"{rule['rule_name']}: {value} {rule['operator']} {rule['threshold']}",
-                    "status": "open",
-                    "detected_at": now,
-                    "created_at": now,
-                })
+                alert_repo.create(
+                    {
+                        "rule_id": rule["id"],
+                        "entity_type": "system",
+                        "entity_id": 0,
+                        "detected_value": value,
+                        "severity": rule["severity"],
+                        "message": f"{rule['rule_name']}: {value} {rule['operator']} {rule['threshold']}",
+                        "status": "open",
+                        "detected_at": now,
+                        "created_at": now,
+                    }
+                )
                 created += 1
         return created
 

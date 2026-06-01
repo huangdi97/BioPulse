@@ -7,16 +7,26 @@ from pharma_intel.app.database import get_cache, set_cache
 CLOUD_API = "http://localhost:8000"
 
 _PHASE_MAP = {
-    "phase1": "I期", "phase i": "I期", "phase 1": "I期",
-    "phase2": "II期", "phase ii": "II期", "phase 2": "II期",
-    "phase3": "III期", "phase iii": "III期", "phase 3": "III期",
-    "launched": "上市", "approved": "上市", "上市": "上市",
-    "preclinical": "临床前", "discovery": "发现",
+    "phase1": "I期",
+    "phase i": "I期",
+    "phase 1": "I期",
+    "phase2": "II期",
+    "phase ii": "II期",
+    "phase 2": "II期",
+    "phase3": "III期",
+    "phase iii": "III期",
+    "phase 3": "III期",
+    "launched": "上市",
+    "approved": "上市",
+    "上市": "上市",
+    "preclinical": "临床前",
+    "discovery": "发现",
 }
+
 
 async def analyze_pipeline(company: str, therapeutic_area: str = "") -> dict:
     """分析指定公司在特定治疗领域的管线。
-    
+
     调用 Cloud PubMed API 和 KG API 聚合管线数据，返回管线总数、
     分期分布、适应症分布及 TOP5 竞争对手。
     """
@@ -26,18 +36,27 @@ async def analyze_pipeline(company: str, therapeutic_area: str = "") -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        pub_resp = await client.post(f"{CLOUD_API}/pubmed/search", json={
-            "query": f"{company} {therapeutic_area}" if therapeutic_area else company,
-            "limit": 100,
-        })
+        pub_resp = await client.post(
+            f"{CLOUD_API}/pubmed/search",
+            json={
+                "query": f"{company} {therapeutic_area}"
+                if therapeutic_area
+                else company,
+                "limit": 100,
+            },
+        )
         papers = []
         if pub_resp.status_code == 200:
             data = pub_resp.json()
             papers = data.get("data", data.get("papers", []))
 
-        kg_resp = await client.get(f"{CLOUD_API}/kg/entities", params={
-            "name": company, "entity_type": "pipeline",
-        })
+        kg_resp = await client.get(
+            f"{CLOUD_API}/kg/entities",
+            params={
+                "name": company,
+                "entity_type": "pipeline",
+            },
+        )
         pipelines = []
         if kg_resp.status_code == 200:
             data = kg_resp.json()
@@ -47,8 +66,10 @@ async def analyze_pipeline(company: str, therapeutic_area: str = "") -> dict:
     set_cache(cache_key, result, ttl=1800)
     return result
 
-def _aggregate_pipeline(company: str, therapeutic_area: str,
-                        papers: list, pipelines: list) -> dict:
+
+def _aggregate_pipeline(
+    company: str, therapeutic_area: str, papers: list, pipelines: list
+) -> dict:
     """聚合管线分析结果。"""
     phase_dist = {"I期": 0, "II期": 0, "III期": 0, "上市": 0}
     indication_dist = {}
@@ -89,9 +110,10 @@ def _aggregate_pipeline(company: str, therapeutic_area: str,
         "last_updated": datetime.now(timezone.utc).isoformat(),
     }
 
+
 async def search_pipeline_by_indication(indication: str) -> dict:
     """按适应症搜索在研管线。
-    
+
     调用 Cloud PubMed API 和 KG API，返回匹配该适应症的管线列表。
     """
     cache_key = f"pipeline:indication:{indication}"
@@ -100,18 +122,25 @@ async def search_pipeline_by_indication(indication: str) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        pub_resp = await client.post(f"{CLOUD_API}/pubmed/search", json={
-            "query": indication,
-            "limit": 50,
-        })
+        pub_resp = await client.post(
+            f"{CLOUD_API}/pubmed/search",
+            json={
+                "query": indication,
+                "limit": 50,
+            },
+        )
         papers = []
         if pub_resp.status_code == 200:
             data = pub_resp.json()
             papers = data.get("data", data.get("papers", []))
 
-        kg_resp = await client.get(f"{CLOUD_API}/kg/entities", params={
-            "entity_type": "pipeline", "indication": indication,
-        })
+        kg_resp = await client.get(
+            f"{CLOUD_API}/kg/entities",
+            params={
+                "entity_type": "pipeline",
+                "indication": indication,
+            },
+        )
         pipelines = []
         if kg_resp.status_code == 200:
             data = kg_resp.json()

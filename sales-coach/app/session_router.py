@@ -77,7 +77,9 @@ def create_session(
     user_id = int(current_user["sub"])
     if body.session_type and body.session_type != "roleplay":
         result = service.create_digital_human_session(
-            module_id, body, user_id,
+            module_id,
+            body,
+            user_id,
             session_type=body.session_type,
             scenario_id=body.scenario_id,
             role=body.role,

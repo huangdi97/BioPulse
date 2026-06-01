@@ -6,14 +6,29 @@ from shared.db import PGCompatConnection
 
 from cloud.app.schema import SCHEMA_SQL
 from cloud.app.seeds import (
-    seed_market_intel, seed_agent_data, seed_decision_intel,
-    seed_compliance_v2, seed_mdt_engine, seed_memory_gates,
-    seed_world_tree, seed_route_rules, seed_hcp_sandbox,
-    seed_training_coach, seed_soap_decision, seed_memory_utility,
+    seed_market_intel,
+    seed_agent_data,
+    seed_decision_intel,
+    seed_compliance_v2,
+    seed_mdt_engine,
+    seed_memory_gates,
+    seed_world_tree,
+    seed_route_rules,
+    seed_hcp_sandbox,
+    seed_training_coach,
+    seed_soap_decision,
+    seed_memory_utility,
     seed_brain_memory,  # seed_identity, seed_privacy,  # ❄️ 冻结
     seed_kg,
-    seed_recommend, seed_collaboration, seed_event_bus,
-    seed_memory_s1, seed_s2, seed_s3, seed_s4, seed_s5, seed_s6,
+    seed_recommend,
+    seed_collaboration,
+    seed_event_bus,
+    seed_memory_s1,
+    seed_s2,
+    seed_s3,
+    seed_s4,
+    seed_s5,
+    seed_s6,
 )
 from cloud.seed_data import seed_products
 
@@ -27,8 +42,11 @@ DATABASE_URL = os.getenv("DATABASE_URL", "")
 
 
 def get_db() -> Generator:
-    if DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://"):
+    if DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith(
+        "postgres://"
+    ):
         import psycopg2
+
         conn = PGCompatConnection(psycopg2.connect(DATABASE_URL))
         try:
             yield conn
@@ -108,7 +126,16 @@ def init_db() -> None:
         seed_s5(conn)
         seed_s6(conn)
         seed_products(conn)
-        conn.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", ("photo_watermark", "off"))
-        conn.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", ("location_mode", "auto"))
-        conn.execute("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)", ("storage_provider", "local"))
+        conn.execute(
+            "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
+            ("photo_watermark", "off"),
+        )
+        conn.execute(
+            "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
+            ("location_mode", "auto"),
+        )
+        conn.execute(
+            "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
+            ("storage_provider", "local"),
+        )
         conn.commit()

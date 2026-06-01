@@ -29,20 +29,35 @@ class RouteLogsRepository(BaseRepository):
     def __init__(self, db):
         super().__init__(db, "route_logs", TABLE_ROUTE_LOGS_COLS)
 
-    def list_filtered(self, role_id=None, source=None, date_from=None, date_to=None,
-                      page=1, page_size=20):
+    def list_filtered(
+        self,
+        role_id=None,
+        source=None,
+        date_from=None,
+        date_to=None,
+        page=1,
+        page_size=20,
+    ):
         conditions, params = [], []
         if role_id is not None:
-            conditions.append("assigned_role_id=?"); params.append(role_id)
+            conditions.append("assigned_role_id=?")
+            params.append(role_id)
         if source is not None:
-            conditions.append("source=?"); params.append(source)
+            conditions.append("source=?")
+            params.append(source)
         if date_from:
-            conditions.append("created_at>=?"); params.append(date_from)
+            conditions.append("created_at>=?")
+            params.append(date_from)
         if date_to:
-            conditions.append("created_at<=?"); params.append(date_to)
-        return self.paginate(page=page, page_size=page_size,
-                             conditions=conditions or None, params=params or None,
-                             order_by="created_at DESC")
+            conditions.append("created_at<=?")
+            params.append(date_to)
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conditions or None,
+            params=params or None,
+            order_by="created_at DESC",
+        )
 
     def role_distribution(self):
         placeholders = ", ".join(self.cols)
@@ -60,7 +75,8 @@ class RouteLogsRepository(BaseRepository):
     def list_recent(self, limit: int = 10):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} ORDER BY created_at DESC LIMIT ?", (limit,)
+            f"SELECT {placeholders} FROM {self.table_name} ORDER BY created_at DESC LIMIT ?",
+            (limit,),
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -71,6 +87,7 @@ class RouteStatsRepository(BaseRepository):
 
     def upsert(self, role_id: int, latency_ms: int, tokens: int, confidence: float):
         from datetime import datetime
+
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         row = self.db.execute(
             f"SELECT * FROM {self.table_name} WHERE role_id=?", (role_id,)
@@ -78,19 +95,29 @@ class RouteStatsRepository(BaseRepository):
         if row:
             total = row["total_routed"] + 1
             n = float(total)
-            avg_confidence = round((row["avg_confidence"] * (n - 1) + confidence) / n, 4)
+            avg_confidence = round(
+                (row["avg_confidence"] * (n - 1) + confidence) / n, 4
+            )
             avg_tokens = round((row["avg_tokens"] * (n - 1) + tokens) / n, 2)
             avg_latency = round((row["avg_latency_ms"] * (n - 1) + latency_ms) / n, 2)
             self.db.execute(
                 f"UPDATE {self.table_name} SET total_routed=?, avg_confidence=?, "
                 "avg_tokens=?, avg_latency_ms=?, last_routed_at=?, updated_at=? WHERE role_id=?",
-                (total, avg_confidence, avg_tokens, avg_latency, now, now, role_id))
+                (total, avg_confidence, avg_tokens, avg_latency, now, now, role_id),
+            )
         else:
             self.db.execute(
                 f"INSERT INTO {self.table_name} (role_id, total_routed, avg_confidence, "
                 "avg_tokens, avg_latency_ms, last_routed_at, updated_at) VALUES (?,1,?,?,?,?,?)",
-                (role_id, round(confidence, 4), round(float(tokens), 2),
-                 round(float(latency_ms), 2), now, now))
+                (
+                    role_id,
+                    round(confidence, 4),
+                    round(float(tokens), 2),
+                    round(float(latency_ms), 2),
+                    now,
+                    now,
+                ),
+            )
         self.db.commit()
 
     def list_with_role_name(self):

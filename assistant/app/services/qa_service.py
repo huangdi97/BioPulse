@@ -2,7 +2,6 @@ import json
 import logging
 import urllib.error
 import urllib.request
-from typing import Any
 
 from assistant.app.services.base import BaseService
 

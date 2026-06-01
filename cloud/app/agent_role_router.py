@@ -37,13 +37,22 @@ class RoleUpdate(BaseModel):
 
 
 def rd(row) -> dict:
-    return {"id": row["id"], "name": row["name"], "role_type": row["role_type"],
-            "description": row["description"], "system_prompt": row["system_prompt"],
-            "input_schema": row["input_schema"], "output_schema": row["output_schema"],
-            "temperature": row["temperature"], "max_tokens": row["max_tokens"],
-            "allowed_tools": row["allowed_tools"], "is_active": row["is_active"],
-            "created_by": row["created_by"], "created_at": row["created_at"],
-            "updated_at": row["updated_at"]}
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "role_type": row["role_type"],
+        "description": row["description"],
+        "system_prompt": row["system_prompt"],
+        "input_schema": row["input_schema"],
+        "output_schema": row["output_schema"],
+        "temperature": row["temperature"],
+        "max_tokens": row["max_tokens"],
+        "allowed_tools": row["allowed_tools"],
+        "is_active": row["is_active"],
+        "created_by": row["created_by"],
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
 
 
 def _404(repo, rid):
@@ -54,18 +63,28 @@ def _404(repo, rid):
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-def create_role(body: RoleCreate, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+def create_role(
+    body: RoleCreate, current_user=Depends(require_scope("visit")), db=Depends(get_db)
+):
     uid = int(current_user["sub"])
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     repo = AgentRolesRepository(db)
-    rid = repo.create({
-        "name": body.name, "role_type": body.role_type,
-        "description": body.description, "system_prompt": body.system_prompt,
-        "input_schema": body.input_schema, "output_schema": body.output_schema,
-        "temperature": body.temperature, "max_tokens": body.max_tokens,
-        "allowed_tools": body.allowed_tools, "created_by": uid,
-        "created_at": now, "updated_at": now,
-    })
+    rid = repo.create(
+        {
+            "name": body.name,
+            "role_type": body.role_type,
+            "description": body.description,
+            "system_prompt": body.system_prompt,
+            "input_schema": body.input_schema,
+            "output_schema": body.output_schema,
+            "temperature": body.temperature,
+            "max_tokens": body.max_tokens,
+            "allowed_tools": body.allowed_tools,
+            "created_by": uid,
+            "created_at": now,
+            "updated_at": now,
+        }
+    )
     row = repo.get_by_id(rid)
     return success(data=rd(row))
 
@@ -74,7 +93,8 @@ def create_role(body: RoleCreate, current_user=Depends(require_scope("visit")), 
 def list_roles(
     role_type: Optional[str] = Query(None),
     is_active: Optional[int] = Query(None),
-    current_user=Depends(require_scope("visit")), db=Depends(get_db),
+    current_user=Depends(require_scope("visit")),
+    db=Depends(get_db),
 ):
     repo = AgentRolesRepository(db)
     conds, pars = [], []
@@ -91,26 +111,43 @@ def list_roles(
 
 
 @router.get("/{role_id}")
-def get_role(role_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+def get_role(
+    role_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)
+):
     repo = AgentRolesRepository(db)
     row = _404(repo, role_id)
     return success(data=rd(row))
 
 
 @router.patch("/{role_id}")
-def update_role(role_id: int, body: RoleUpdate,
-                current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+def update_role(
+    role_id: int,
+    body: RoleUpdate,
+    current_user=Depends(require_scope("visit")),
+    db=Depends(get_db),
+):
     repo = AgentRolesRepository(db)
     _404(repo, role_id)
     updates = {}
-    for f in ["name", "role_type", "description", "system_prompt", "input_schema",
-              "output_schema"]:
+    for f in [
+        "name",
+        "role_type",
+        "description",
+        "system_prompt",
+        "input_schema",
+        "output_schema",
+    ]:
         v = getattr(body, f)
-        if v is not None: updates[f] = v
-    if body.temperature is not None: updates["temperature"] = body.temperature
-    if body.max_tokens is not None: updates["max_tokens"] = body.max_tokens
-    if body.allowed_tools is not None: updates["allowed_tools"] = body.allowed_tools
-    if body.is_active is not None: updates["is_active"] = body.is_active
+        if v is not None:
+            updates[f] = v
+    if body.temperature is not None:
+        updates["temperature"] = body.temperature
+    if body.max_tokens is not None:
+        updates["max_tokens"] = body.max_tokens
+    if body.allowed_tools is not None:
+        updates["allowed_tools"] = body.allowed_tools
+    if body.is_active is not None:
+        updates["is_active"] = body.is_active
     if updates:
         updates["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         repo.update(role_id, updates)
@@ -119,7 +156,9 @@ def update_role(role_id: int, body: RoleUpdate,
 
 
 @router.delete("/{role_id}")
-def delete_role(role_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+def delete_role(
+    role_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)
+):
     repo = AgentRolesRepository(db)
     _404(repo, role_id)
     repo.soft_delete(role_id)

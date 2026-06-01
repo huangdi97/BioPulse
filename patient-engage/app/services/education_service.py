@@ -1,4 +1,5 @@
 """患者教育服务。"""
+
 import httpx
 from datetime import datetime, timezone
 from patient_engage.app.database import get_cache, set_cache
@@ -24,16 +25,22 @@ async def get_education_content(disease: str) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        kg_resp = await client.get(f"{CLOUD_API}/kg/entities", params={
-            "name": disease,
-            "entity_type": "disease",
-        })
+        kg_resp = await client.get(
+            f"{CLOUD_API}/kg/entities",
+            params={
+                "name": disease,
+                "entity_type": "disease",
+            },
+        )
         kg_data = kg_resp.json() if kg_resp.status_code == 200 else {}
 
-        pub_resp = await client.post(f"{CLOUD_API}/pubmed/search", json={
-            "query": f"{disease} patient education treatment",
-            "limit": 10,
-        })
+        pub_resp = await client.post(
+            f"{CLOUD_API}/pubmed/search",
+            json={
+                "query": f"{disease} patient education treatment",
+                "limit": 10,
+            },
+        )
         pub_data = pub_resp.json() if pub_resp.status_code == 200 else {}
 
     result = _build_education_content(disease, kg_data, pub_data)
@@ -123,7 +130,8 @@ def _build_recommended_content(patient_id: str, profile: dict) -> dict:
                 "reason": f"基于您的{cond}诊断",
             }
             for i, cond in enumerate(conditions[:5])
-        ] or [
+        ]
+        or [
             {
                 "content_id": "CONT-0001",
                 "title": "慢性病自我管理指南",
@@ -151,11 +159,14 @@ async def push_content(content_id: str, patient_ids: list[str]) -> dict:
         推送结果的字典。
     """
     async with httpx.AsyncClient() as client:
-        notif_resp = await client.post(f"{CLOUD_API}/notifications/send", json={
-            "content_id": content_id,
-            "recipients": patient_ids,
-            "channel": "education",
-        })
+        notif_resp = await client.post(
+            f"{CLOUD_API}/notifications/send",
+            json={
+                "content_id": content_id,
+                "recipients": patient_ids,
+                "channel": "education",
+            },
+        )
 
     return {
         "content_id": content_id,

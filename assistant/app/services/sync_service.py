@@ -1,11 +1,14 @@
 import json
-import sqlite3
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
 from shared.columns import (
-    TABLE_ASSISTANT_HCP_COLS, TABLE_VISIT_RECORD_COLS, TABLE_TASK_COLS,
-    TABLE_HEALTH_RADAR_COLS, TABLE_SURGERY_REMINDER_COLS, TABLE_KNOWLEDGE_BASE_COLS,
+    TABLE_ASSISTANT_HCP_COLS,
+    TABLE_VISIT_RECORD_COLS,
+    TABLE_TASK_COLS,
+    TABLE_HEALTH_RADAR_COLS,
+    TABLE_SURGERY_REMINDER_COLS,
+    TABLE_KNOWLEDGE_BASE_COLS,
 )
 from assistant.app.repositories import SyncQueueRepository
 from assistant.app.services.base import BaseService
@@ -20,18 +23,31 @@ ENTITY_TABLE_MAP: Dict[str, str] = {
 }
 
 ENTITY_COLUMNS_MAP = {
-    'hcp': TABLE_ASSISTANT_HCP_COLS,
-    'visit': TABLE_VISIT_RECORD_COLS,
-    'task': TABLE_TASK_COLS,
-    'health_radar': TABLE_HEALTH_RADAR_COLS,
-    'surgery_reminder': TABLE_SURGERY_REMINDER_COLS,
-    'knowledge': TABLE_KNOWLEDGE_BASE_COLS,
+    "hcp": TABLE_ASSISTANT_HCP_COLS,
+    "visit": TABLE_VISIT_RECORD_COLS,
+    "task": TABLE_TASK_COLS,
+    "health_radar": TABLE_HEALTH_RADAR_COLS,
+    "surgery_reminder": TABLE_SURGERY_REMINDER_COLS,
+    "knowledge": TABLE_KNOWLEDGE_BASE_COLS,
 }
 
-TABLE_ORDER = ["hcp", "visit_record", "task", "health_radar", "surgery_reminder", "knowledge_base"]
+TABLE_ORDER = [
+    "hcp",
+    "visit_record",
+    "task",
+    "health_radar",
+    "surgery_reminder",
+    "knowledge_base",
+]
 
 TABLES_WITH_UPDATED_AT = {"hcp", "health_radar", "surgery_reminder", "knowledge_base"}
-TABLES_WITH_IS_ACTIVE = {'hcp', 'health_radar', 'surgery_reminder', 'knowledge_base', 'hcp_location'}
+TABLES_WITH_IS_ACTIVE = {
+    "hcp",
+    "health_radar",
+    "surgery_reminder",
+    "knowledge_base",
+    "hcp_location",
+}
 
 
 class SyncService(BaseService):
@@ -121,52 +137,81 @@ class SyncService(BaseService):
                 if allowed_cols:
                     unknown = [k for k in op.payload if k not in allowed_cols]
                     if unknown:
-                        return {"operation_id": 0, "status": "failed", "server_entity_id": None}
-                payload_for_insert = {k: v for k, v in op.payload.items() if k not in ('id', 'created_at')}
+                        return {
+                            "operation_id": 0,
+                            "status": "failed",
+                            "server_entity_id": None,
+                        }
+                payload_for_insert = {
+                    k: v for k, v in op.payload.items() if k not in ("id", "created_at")
+                }
                 cols = ", ".join(payload_for_insert.keys())
                 vals = ", ".join("?" for _ in payload_for_insert)
                 cursor = self.db.execute(
                     f"INSERT INTO {table} ({cols}, created_by, created_at) VALUES ({vals}, ?, ?)",
                     list(payload_for_insert.values()) + [user_id, now],
                 )
-                return {"operation_id": 0, "status": "synced", "server_entity_id": cursor.lastrowid}
+                return {
+                    "operation_id": 0,
+                    "status": "synced",
+                    "server_entity_id": cursor.lastrowid,
+                }
 
             elif op.action == "update" and op.entity_id:
                 if allowed_cols:
                     unknown = [k for k in op.payload if k not in allowed_cols]
                     if unknown:
-                        return {"operation_id": 0, "status": "failed", "server_entity_id": None}
+                        return {
+                            "operation_id": 0,
+                            "status": "failed",
+                            "server_entity_id": None,
+                        }
                 if table in TABLES_WITH_UPDATED_AT:
                     op.payload["updated_at"] = now
-                payload_for_update = {k: v for k, v in op.payload.items() if k != 'id'}
+                payload_for_update = {k: v for k, v in op.payload.items() if k != "id"}
                 set_clause = ", ".join(f"{k} = ?" for k in payload_for_update)
                 self.db.execute(
                     f"UPDATE {table} SET {set_clause} WHERE id = ?",
                     list(payload_for_update.values()) + [op.entity_id],
                 )
-                return {"operation_id": 0, "status": "synced", "server_entity_id": op.entity_id}
+                return {
+                    "operation_id": 0,
+                    "status": "synced",
+                    "server_entity_id": op.entity_id,
+                }
 
             elif op.action == "delete" and op.entity_id:
                 self.db.execute(
                     f"UPDATE {table} SET is_active = 0, updated_at = ? WHERE id = ?",
                     (now, op.entity_id),
                 )
-                return {"operation_id": 0, "status": "synced", "server_entity_id": op.entity_id}
+                return {
+                    "operation_id": 0,
+                    "status": "synced",
+                    "server_entity_id": op.entity_id,
+                }
 
             return {"operation_id": 0, "status": "failed", "server_entity_id": None}
         except Exception:
             return {"operation_id": 0, "status": "failed", "server_entity_id": None}
 
     def _collect_table_changes(self, table: str, since: str) -> dict:
-        has_updated = table in ("hcp", "health_radar", "surgery_reminder", "knowledge_base", "hcp_location")
+        has_updated = table in (
+            "hcp",
+            "health_radar",
+            "surgery_reminder",
+            "knowledge_base",
+            "hcp_location",
+        )
         time_col = "updated_at" if has_updated else "created_at"
-        condition = 'AND is_active = 1' if table in TABLES_WITH_IS_ACTIVE else ''
+        condition = "AND is_active = 1" if table in TABLES_WITH_IS_ACTIVE else ""
         changes = self.db.execute(
             f"SELECT * FROM {table} WHERE {time_col} > ? {condition}", (since,)
         ).fetchall()
         if table in TABLES_WITH_IS_ACTIVE:
             deleted = self.db.execute(
-                f"SELECT id FROM {table} WHERE {time_col} > ? AND is_active = 0", (since,)
+                f"SELECT id FROM {table} WHERE {time_col} > ? AND is_active = 0",
+                (since,),
             ).fetchall()
         else:
             deleted = []

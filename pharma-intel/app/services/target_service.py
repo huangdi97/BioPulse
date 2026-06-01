@@ -7,9 +7,10 @@ from pharma_intel.app.database import get_cache, set_cache
 
 CLOUD_API = "http://localhost:8000"
 
+
 async def analyze_target(target_name: str) -> dict:
     """分析指定靶点的学术研究态势。
-    
+
     调用 Cloud PubMed API 搜索靶点相关论文，聚合返回论文总数、
     月度发文趋势、TOP10 研究机构及相关公司。
     """
@@ -19,10 +20,13 @@ async def analyze_target(target_name: str) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.post(f"{CLOUD_API}/pubmed/search", json={
-            "query": target_name,
-            "limit": 200,
-        })
+        resp = await client.post(
+            f"{CLOUD_API}/pubmed/search",
+            json={
+                "query": target_name,
+                "limit": 200,
+            },
+        )
         papers = []
         if resp.status_code == 200:
             data = resp.json()
@@ -32,13 +36,23 @@ async def analyze_target(target_name: str) -> dict:
     set_cache(cache_key, result, ttl=1800)
     return result
 
+
 def _aggregate_target(name: str, papers: list) -> dict:
     """聚合靶点分析信息。"""
     monthly_counter: Counter = Counter()
     institution_counter: Counter = Counter()
     company_set: set = set()
-    _COMPANY_KEYWORDS = ["inc", "ltd", "limited", "corp", "corporation",
-                         "pharma", "biotech", "therapeutics", "laboratories"]
+    _COMPANY_KEYWORDS = [
+        "inc",
+        "ltd",
+        "limited",
+        "corp",
+        "corporation",
+        "pharma",
+        "biotech",
+        "therapeutics",
+        "laboratories",
+    ]
 
     for p in papers:
         date_str = (p.get("pub_date") or p.get("PubDate") or "").strip()
@@ -78,9 +92,10 @@ def _aggregate_target(name: str, papers: list) -> dict:
         "last_updated": datetime.now(timezone.utc).isoformat(),
     }
 
+
 async def trending_targets(limit: int = 10) -> dict:
     """获取近期活跃靶点列表。
-    
+
     通过分析缓存的靶点数据，返回发文量最多的靶点。
     当前简化版本调用 PubMed 搜索活跃研究方向。
     """
@@ -90,16 +105,31 @@ async def trending_targets(limit: int = 10) -> dict:
         return cached
 
     queries = [
-        "PD-1", "PD-L1", "EGFR", "HER2", "CD3", "CD19", "CTLA-4",
-        "JAK", "BTK", "KRAS", "BCMA", "GPC3", "CLDN18.2", "TROP2",
+        "PD-1",
+        "PD-L1",
+        "EGFR",
+        "HER2",
+        "CD3",
+        "CD19",
+        "CTLA-4",
+        "JAK",
+        "BTK",
+        "KRAS",
+        "BCMA",
+        "GPC3",
+        "CLDN18.2",
+        "TROP2",
     ]
     async with httpx.AsyncClient() as client:
         results = []
         for q in queries[:limit]:
-            resp = await client.post(f"{CLOUD_API}/pubmed/search", json={
-                "query": q,
-                "limit": 10,
-            })
+            resp = await client.post(
+                f"{CLOUD_API}/pubmed/search",
+                json={
+                    "query": q,
+                    "limit": 10,
+                },
+            )
             count = 0
             if resp.status_code == 200:
                 data = resp.json()

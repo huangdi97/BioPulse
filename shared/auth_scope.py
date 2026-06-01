@@ -12,6 +12,7 @@ def require_scope(required_scope: str):
     If the token scope does not match the required scope (and is not "admin"),
     a 403 Forbidden response is returned.
     """
+
     def _checker(token: dict = Depends(get_current_user)):
         token_scope = token.get("scope")
         if token_scope is None:
@@ -25,4 +26,5 @@ def require_scope(required_scope: str):
                 detail="scope mismatch",
             )
         return token
+
     return _checker

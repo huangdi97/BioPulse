@@ -34,14 +34,18 @@ class AgentMarketplaceRepository(BaseRepository):
         placeholders = ", ".join(self.cols)
         conditions, params = [], []
         if category:
-            conditions.append("category = ?"); params.append(category)
+            conditions.append("category = ?")
+            params.append(category)
         if price_model:
-            conditions.append("price_model = ?"); params.append(price_model)
+            conditions.append("price_model = ?")
+            params.append(price_model)
         if enabled is not None:
-            conditions.append("enabled = ?"); params.append(enabled)
+            conditions.append("enabled = ?")
+            params.append(enabled)
         where = "WHERE " + " AND ".join(conditions) if conditions else ""
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY rating DESC", params
+            f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY rating DESC",
+            params,
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -58,7 +62,8 @@ class AgentRolesRepository(BaseRepository):
     def list_active(self, limit: int = 5) -> list:
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 LIMIT ?", (limit,)
+            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 LIMIT ?",
+            (limit,),
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -95,4 +100,6 @@ class PipelineStepsRepository(BaseRepository):
 
 class OrchestrationTemplatesRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(db, "orchestration_templates", TABLE_ORCHESTRATION_TEMPLATES_COLS)
+        super().__init__(
+            db, "orchestration_templates", TABLE_ORCHESTRATION_TEMPLATES_COLS
+        )

@@ -55,7 +55,8 @@ def step_executor(state: PipelineState) -> dict:
             "http://localhost:8000/ai/chat",
             data=json.dumps(payload).encode("utf-8"),
             headers={"Content-Type": "application/json", "Authorization": auth_header},
-            method="POST")
+            method="POST",
+        )
         with urllib.request.urlopen(req, timeout=120) as rp:
             resp = json.loads(rp.read().decode("utf-8"))
             ai_raw = resp.get("data", {}).get("reply", "")
@@ -68,14 +69,16 @@ def step_executor(state: PipelineState) -> dict:
         tokens = 0
         status = "failed"
 
-    new_outputs = state["accumulated_outputs"] + [{
-        "step_order": step.get("step_order", idx),
-        "agent_name": step.get("agent_name", ""),
-        "output": output_data,
-        "status": status,
-        "tokens": tokens,
-        "messages": messages,
-    }]
+    new_outputs = state["accumulated_outputs"] + [
+        {
+            "step_order": step.get("step_order", idx),
+            "agent_name": step.get("agent_name", ""),
+            "output": output_data,
+            "status": status,
+            "tokens": tokens,
+            "messages": messages,
+        }
+    ]
 
     return {
         "current_index": idx + 1,

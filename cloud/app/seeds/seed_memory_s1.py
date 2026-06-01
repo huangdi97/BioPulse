@@ -1,4 +1,3 @@
-import json
 import sqlite3
 
 
@@ -11,6 +10,14 @@ def seed_memory_s1(conn: sqlite3.Connection) -> None:
     conn.execute(
         "INSERT INTO memory_consolidation_log (consolidation_type, item_count, items_promoted, "
         "items_pruned, status, details, created_at) VALUES (?,?,?,?,?,?,?)",
-         ("sleep_consolidation", 50, 8, 3, "completed",
-          '{"cycle":"nightly","mode":"auto"}', now))
+        (
+            "sleep_consolidation",
+            50,
+            8,
+            3,
+            "completed",
+            '{"cycle":"nightly","mode":"auto"}',
+            now,
+        ),
+    )
     conn.commit()

@@ -12,11 +12,14 @@ class ResearchService(BaseService):
     def create_research_trail(self, body, user_id: int) -> int:
         repo = ResearchTrailRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()
-        return repo.create(body.model_dump(), extra={
-            "created_by": user_id,
-            "created_at": now,
-            "updated_at": now,
-        })
+        return repo.create(
+            body.model_dump(),
+            extra={
+                "created_by": user_id,
+                "created_at": now,
+                "updated_at": now,
+            },
+        )
 
     def list_research_trails(
         self,
@@ -45,8 +48,10 @@ class ResearchService(BaseService):
             params.append(relevance_min)
 
         return repo.paginate(
-            page=page, page_size=page_size,
-            conditions=conditions, params=params,
+            page=page,
+            page_size=page_size,
+            conditions=conditions,
+            params=params,
         )
 
     def get_research_trail(self, trail_id: int) -> dict:

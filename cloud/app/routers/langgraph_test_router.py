@@ -12,6 +12,7 @@ class TestRequest(BaseModel):
 @router.post("/test")
 def run_test_graph(body: TestRequest):
     from cloud.langgraph.graph import get_test_graph
+
     graph = get_test_graph()
     thread_id = str(uuid.uuid4())
     config = {"configurable": {"thread_id": thread_id}}

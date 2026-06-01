@@ -1,6 +1,5 @@
 import json
 import uuid
-import pytest
 import sqlite3
 from shared.auth import create_access_token
 from cloud.app.research_database import _get_research_db_path
@@ -8,7 +7,9 @@ from cloud.app.research_database import _get_research_db_path
 
 def _get_research_token(client):
     username = f"research_{uuid.uuid4().hex[:8]}"
-    resp = client.post("/auth/register", json={"username": username, "password": "testpass123"})
+    resp = client.post(
+        "/auth/register", json={"username": username, "password": "testpass123"}
+    )
     assert resp.status_code == 201
     user_id = resp.json()["data"]["user_id"]
     return create_access_token(user_id, "rep", "research")
@@ -32,7 +33,7 @@ class TestResearchE2E:
         pi_id = resp.json()["data"]["pi_id"]
 
         resp = client.get(
-            f"/api/research/pi/search?q=Zhang",
+            "/api/research/pi/search?q=Zhang",
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp.status_code == 200
@@ -64,7 +65,9 @@ class TestResearchE2E:
 
         conn = sqlite3.connect(db_path)
         try:
-            conn.execute("DELETE FROM research_products WHERE product_id = ?", (product_id,))
+            conn.execute(
+                "DELETE FROM research_products WHERE product_id = ?", (product_id,)
+            )
             conn.commit()
         finally:
             conn.close()
@@ -98,7 +101,16 @@ class TestResearchE2E:
             conn.execute(
                 "INSERT INTO research_quotations (template_id, title, customer_name, items_json, total_amount, status, created_by, created_at) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                ("tpl-001", "Test Quotation", "Test Customer", "[]", 1000.0, "draft", "test_user", "2026-05-31T00:00:00"),
+                (
+                    "tpl-001",
+                    "Test Quotation",
+                    "Test Customer",
+                    "[]",
+                    1000.0,
+                    "draft",
+                    "test_user",
+                    "2026-05-31T00:00:00",
+                ),
             )
             conn.commit()
             qid = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
@@ -117,7 +129,9 @@ class TestResearchE2E:
 
         conn = sqlite3.connect(db_path)
         try:
-            conn.execute("DELETE FROM research_quotations WHERE quotation_id = ?", (qid,))
+            conn.execute(
+                "DELETE FROM research_quotations WHERE quotation_id = ?", (qid,)
+            )
             conn.commit()
         finally:
             conn.close()

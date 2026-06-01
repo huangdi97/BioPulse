@@ -26,7 +26,9 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED,
+@router.post(
+    "/register",
+    status_code=status.HTTP_201_CREATED,
     summary="Register a new user account",
     description="Creates a new user with username and password. Returns user_id on success.",
 )
@@ -35,7 +37,8 @@ def register(body: RegisterRequest, service: AuthService = Depends()) -> Any:
     return success(data=result)
 
 
-@router.post("/login",
+@router.post(
+    "/login",
     summary="Authenticate user and get tokens",
     description="Validates credentials and returns access_token and refresh_token.",
 )
@@ -44,7 +47,8 @@ def login(body: LoginRequest, service: AuthService = Depends()) -> Any:
     return success(data=result)
 
 
-@router.post("/refresh",
+@router.post(
+    "/refresh",
     summary="Refresh access token",
     description="Exchange a valid refresh_token for a new access_token.",
 )

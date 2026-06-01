@@ -93,7 +93,11 @@ class MediaService(BaseService):
             raise HTTPException(status_code=404, detail="Media not found")
 
         context = row["transcript"] or ""
-        prompt = f"请分析以下内容并提供专业临床药学的见解。\n\n{context}" if context else "没有可分析的内容"
+        prompt = (
+            f"请分析以下内容并提供专业临床药学的见解。\n\n{context}"
+            if context
+            else "没有可分析的内容"
+        )
         analysis = ""
         try:
             analysis = self._call_llm(auth_header, prompt, context)
@@ -117,7 +121,10 @@ class MediaService(BaseService):
         full_prompt = f"{context}\n\n{prompt}" if context else prompt
         req_body = {
             "messages": [
-                {"role": "system", "content": "你是一位资深临床药师，请以专业的角度分析以下内容。"},
+                {
+                    "role": "system",
+                    "content": "你是一位资深临床药师，请以专业的角度分析以下内容。",
+                },
                 {"role": "user", "content": full_prompt},
             ],
             "temperature": 0.3,

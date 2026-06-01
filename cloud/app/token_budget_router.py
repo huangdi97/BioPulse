@@ -78,13 +78,15 @@ def list_alerts(
         limit_today = cfg["max_tokens_per_day"]
         ratio = daily_used / limit_today if limit_today > 0 else 0
         if ratio >= cfg["alert_threshold"]:
-            alerts.append({
-                "user_id": cfg["user_id"],
-                "model": cfg["model"],
-                "daily_used": daily_used,
-                "daily_limit": limit_today,
-                "usage_ratio": round(ratio, 4),
-                "threshold": cfg["alert_threshold"],
-                "date": today,
-            })
+            alerts.append(
+                {
+                    "user_id": cfg["user_id"],
+                    "model": cfg["model"],
+                    "daily_used": daily_used,
+                    "daily_limit": limit_today,
+                    "usage_ratio": round(ratio, 4),
+                    "threshold": cfg["alert_threshold"],
+                    "date": today,
+                }
+            )
     return success(data=alerts)

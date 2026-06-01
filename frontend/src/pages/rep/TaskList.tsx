@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { fetchTasks, completeTask } from '@/api/tasks'
 import type { Task } from '@/types'
+import { Skeleton } from '@/components/Skeleton'
 import { Check, CheckCircle2, X } from 'lucide-react'
 
 type TabKey = 'all' | 'pending' | 'completed'
@@ -64,9 +65,9 @@ export default function TaskList() {
       </div>
 
       {loading ? (
-        <div className="space-y-3 animate-pulse">
+        <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 bg-muted rounded-lg" />
+            <Skeleton key={i} className="h-16 w-full rounded-lg" />
           ))}
         </div>
       ) : filteredTasks.length === 0 ? (

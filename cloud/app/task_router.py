@@ -41,10 +41,15 @@ def create_task(
     service: TaskService = Depends(),
 ) -> Any:
     row = service.create_task(
-        board_id=board_id, title=body.title, description=body.description,
-        status_filter=body.status, priority=body.priority,
-        assignee_id=body.assignee_id, due_date=body.due_date,
-        sort_order=body.sort_order, user_id=int(current_user["sub"]),
+        board_id=board_id,
+        title=body.title,
+        description=body.description,
+        status_filter=body.status,
+        priority=body.priority,
+        assignee_id=body.assignee_id,
+        due_date=body.due_date,
+        sort_order=body.sort_order,
+        user_id=int(current_user["sub"]),
     )
     return success(data=row)
 
@@ -69,10 +74,14 @@ def update_task(
     service: TaskService = Depends(),
 ) -> Any:
     row = service.update_task(
-        board_id=board_id, task_id=task_id,
-        title=body.title, description=body.description,
-        status_filter=body.status, priority=body.priority,
-        assignee_id=body.assignee_id, due_date=body.due_date,
+        board_id=board_id,
+        task_id=task_id,
+        title=body.title,
+        description=body.description,
+        status_filter=body.status,
+        priority=body.priority,
+        assignee_id=body.assignee_id,
+        due_date=body.due_date,
         sort_order=body.sort_order,
     )
     return success(data=row)

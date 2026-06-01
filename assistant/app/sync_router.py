@@ -1,9 +1,7 @@
-import json
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
-from starlette import status
 
 from shared.auth import get_current_user
 from shared.base import ApiResponse, success
@@ -45,11 +43,13 @@ def sync_push(
 ) -> ApiResponse[SyncPushResponse]:
     user_id = int(current_user["sub"])
     data = service.push(body, user_id)
-    return success(data=SyncPushResponse(
-        synced=data["synced"],
-        failed=data["failed"],
-        server_operations=[SyncPushResult(**r) for r in data["server_operations"]],
-    ))
+    return success(
+        data=SyncPushResponse(
+            synced=data["synced"],
+            failed=data["failed"],
+            server_operations=[SyncPushResult(**r) for r in data["server_operations"]],
+        )
+    )
 
 
 @router.get("/pull")

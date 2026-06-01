@@ -19,10 +19,13 @@ async def get_formulary_status(drug_name: str) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.post(f"{CLOUD_API}/pubmed/search", json={
-            "query": drug_name,
-            "limit": 20,
-        })
+        resp = await client.post(
+            f"{CLOUD_API}/pubmed/search",
+            json={
+                "query": drug_name,
+                "limit": 20,
+            },
+        )
         papers = []
         if resp.status_code == 200:
             data = resp.json()
@@ -66,10 +69,13 @@ async def get_reimbursement_info(drug_name: str) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.post(f"{CLOUD_API}/pubmed/search", json={
-            "query": f"{drug_name} reimbursement",
-            "limit": 20,
-        })
+        resp = await client.post(
+            f"{CLOUD_API}/pubmed/search",
+            json={
+                "query": f"{drug_name} reimbursement",
+                "limit": 20,
+            },
+        )
         papers = []
         if resp.status_code == 200:
             data = resp.json()

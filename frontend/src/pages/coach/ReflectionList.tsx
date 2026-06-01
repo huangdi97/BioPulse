@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchReflections, type Reflection } from '@/api/coach'
 import { Card, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/Skeleton'
 import { BookOpen } from 'lucide-react'
 
 export default function ReflectionList() {
@@ -18,7 +19,13 @@ export default function ReflectionList() {
   }, [])
 
   if (loading) {
-    return <div className="space-y-3">{[1, 2].map((i) => <Card key={i}><CardContent className="p-4 animate-pulse"><div className="h-20 bg-muted rounded" /></CardContent></Card>)}</div>
+    return (
+      <div className="space-y-3">
+        {[1, 2].map((i) => (
+          <Card key={i}><CardContent className="p-4"><Skeleton className="h-20 w-full" /></CardContent></Card>
+        ))}
+      </div>
+    )
   }
 
   return (

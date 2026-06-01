@@ -2,7 +2,6 @@
 
 import sqlite3
 import json
-import os
 
 
 def seed_products(conn: sqlite3.Connection):
@@ -34,12 +33,14 @@ def seed_products(conn: sqlite3.Connection):
             "500ml",
             6800.0,
             json.dumps(["FBS", "胎牛血清", "fetal bovine serum", "细胞培养"]),
-            json.dumps({
-                "origin": "South America",
-                "sterility": "sterile-filtered",
-                "endotoxin": "<10 EU/ml",
-                "hemoglobin": "<25 mg/dl",
-            }),
+            json.dumps(
+                {
+                    "origin": "South America",
+                    "sterility": "sterile-filtered",
+                    "endotoxin": "<10 EU/ml",
+                    "hemoglobin": "<25 mg/dl",
+                }
+            ),
             "CE/IVD",
         ),
     )

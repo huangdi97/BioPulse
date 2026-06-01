@@ -108,7 +108,44 @@ export default function ManagementLayout() {
         </div>
       </aside>
       <div className="flex flex-col flex-1 min-w-0">
-        <header className="flex items-center gap-2 px-4 py-2 bg-white border-b shrink-0">
+        <header className="flex md:hidden items-center justify-between px-4 py-2 bg-slate-900 text-slate-100 shrink-0">
+          <div className="flex items-center gap-2">
+            <Pill className="h-5 w-5" />
+            <span className="font-semibold text-sm">管理后台</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-300">{user?.username}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              className="text-slate-100 hover:bg-slate-700 h-8 w-8"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        </header>
+        <nav className="flex md:hidden border-b bg-background shrink-0 overflow-x-auto">
+          {menu.map((item) => {
+            const Icon = item.icon
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end
+                className={({ isActive: active }) =>
+                  `flex-1 flex flex-col items-center justify-center py-2 min-w-[64px] text-sm transition-colors ${
+                    active ? 'text-primary font-medium' : 'text-muted-foreground hover:text-foreground'
+                  }`
+                }
+              >
+                <Icon className="h-4 w-4" />
+                <span className="text-xs mt-0.5 truncate">{item.label}</span>
+              </NavLink>
+            )
+          })}
+        </nav>
+        <header className="hidden md:flex items-center gap-2 px-4 py-2 bg-white border-b shrink-0">
           {menu.map((item) => {
             if (!isActive(item.to)) return null
             return (

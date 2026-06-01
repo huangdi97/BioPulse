@@ -19,10 +19,13 @@ async def get_bidding_data(drug_name: str) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/market-intel/items", params={
-            "keyword": drug_name,
-            "limit": 30,
-        })
+        resp = await client.get(
+            f"{CLOUD_API}/market-intel/items",
+            params={
+                "keyword": drug_name,
+                "limit": 30,
+            },
+        )
         items = []
         if resp.status_code == 200:
             data = resp.json()
@@ -30,13 +33,15 @@ async def get_bidding_data(drug_name: str) -> dict:
 
     bidding_items = []
     for item in items:
-        bidding_items.append({
-            "title": item.get("title", ""),
-            "summary": item.get("summary", ""),
-            "source": item.get("source_name", item.get("source", "")),
-            "impact_level": item.get("impact_level", ""),
-            "date": item.get("collected_at", item.get("date", "")),
-        })
+        bidding_items.append(
+            {
+                "title": item.get("title", ""),
+                "summary": item.get("summary", ""),
+                "source": item.get("source_name", item.get("source", "")),
+                "impact_level": item.get("impact_level", ""),
+                "date": item.get("collected_at", item.get("date", "")),
+            }
+        )
 
     result = {
         "drug_name": drug_name,
@@ -60,10 +65,13 @@ async def get_price_trend(drug_name: str) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/market-intel/items", params={
-            "keyword": drug_name,
-            "limit": 10,
-        })
+        resp = await client.get(
+            f"{CLOUD_API}/market-intel/items",
+            params={
+                "keyword": drug_name,
+                "limit": 10,
+            },
+        )
         items = []
         if resp.status_code == 200:
             data = resp.json()
@@ -105,10 +113,13 @@ async def get_province_prices(drug_name: str) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/market-intel/items", params={
-            "keyword": drug_name,
-            "limit": 15,
-        })
+        resp = await client.get(
+            f"{CLOUD_API}/market-intel/items",
+            params={
+                "keyword": drug_name,
+                "limit": 15,
+            },
+        )
         items = []
         if resp.status_code == 200:
             data = resp.json()
@@ -123,18 +134,30 @@ async def get_province_prices(drug_name: str) -> dict:
 def _simulate_province_prices(drug_name: str, item_count: int) -> dict:
     """模拟生成各省中标价。"""
     provinces = [
-        "北京", "上海", "广东", "江苏", "浙江", "山东",
-        "河南", "四川", "湖北", "湖南", "河北", "福建",
+        "北京",
+        "上海",
+        "广东",
+        "江苏",
+        "浙江",
+        "山东",
+        "河南",
+        "四川",
+        "湖北",
+        "湖南",
+        "河北",
+        "福建",
     ]
     base = 100.0 + item_count * 2.0
     prices = []
     for i, p in enumerate(provinces):
         adj = base + (i % 7) * 3.0 - (item_count % 3) * 2.0
-        prices.append({
-            "province": p,
-            "bid_price": round(adj, 2),
-            "unit": "元/盒",
-        })
+        prices.append(
+            {
+                "province": p,
+                "bid_price": round(adj, 2),
+                "unit": "元/盒",
+            }
+        )
 
     return {
         "drug_name": drug_name,

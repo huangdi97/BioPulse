@@ -1,6 +1,6 @@
 from enum import IntEnum
 from pydantic import BaseModel
-from typing import Any, Generic, List, Optional, TypeVar
+from typing import Generic, List, Optional, TypeVar
 
 
 class ErrorCode(IntEnum):
@@ -66,14 +66,15 @@ def error(code: ErrorCode, message: str) -> ApiResponse:
 # === SQL注入防护：列名白名单校验 ===
 VALIDATE_COLUMNS_ENABLED = True
 
+
 def validate_columns(updates: dict, table_name: str, allowed: frozenset) -> None:
     """校验更新dict的key是否都在允许的列名集合中。
-    
+
     Args:
         updates: 待校验的 {column_name: value} 字典
         table_name: 表名（仅用于错误消息）
         allowed: 该表允许的列名 frozenset
-        
+
     Raises:
         ValueError: 如果存在不在allowed中的key
     """
@@ -82,6 +83,5 @@ def validate_columns(updates: dict, table_name: str, allowed: frozenset) -> None
     unknown = [k for k in updates if k not in allowed]
     if unknown:
         raise ValueError(
-            f'Invalid columns for {table_name}: {unknown}. '
-            f'Allowed: {sorted(allowed)}'
+            f"Invalid columns for {table_name}: {unknown}. Allowed: {sorted(allowed)}"
         )

@@ -33,7 +33,11 @@ class StatsService(BaseService):
             month = r["created_at"][:7] if r["created_at"] else "unknown"
             monthly[month].append(r["score"])
         return [
-            {"month": m, "avg_score": round(sum(scores) / len(scores), 1), "count": len(scores)}
+            {
+                "month": m,
+                "avg_score": round(sum(scores) / len(scores), 1),
+                "count": len(scores),
+            }
             for m, scores in sorted(monthly.items())
         ]
 
@@ -58,7 +62,7 @@ class StatsService(BaseService):
             "avg": round(avg, 1),
             "max": max(scores),
             "min": min(scores),
-            "std": round(variance ** 0.5, 1),
+            "std": round(variance**0.5, 1),
             "count": len(scores),
         }
 
@@ -76,7 +80,12 @@ class StatsService(BaseService):
             "WHERE created_by = ? AND auto_assessment IS NOT NULL",
             (user_id,),
         ).fetchall()
-        dims = {"product_knowledge": [], "communication": [], "compliance": [], "objection_handling": []}
+        dims = {
+            "product_knowledge": [],
+            "communication": [],
+            "compliance": [],
+            "objection_handling": [],
+        }
         for r in rows:
             try:
                 aa = json.loads(r["auto_assessment"])
@@ -90,10 +99,7 @@ class StatsService(BaseService):
                             dims[k].append(aa[k])
             except (json.JSONDecodeError, TypeError):
                 pass
-        return {
-            k: round(sum(v) / len(v), 1) if v else 0
-            for k, v in dims.items()
-        }
+        return {k: round(sum(v) / len(v), 1) if v else 0 for k, v in dims.items()}
 
     def get_category_performance(self, user_id: int) -> List[dict]:
         """获取各类场景的表现对比。
@@ -117,6 +123,10 @@ class StatsService(BaseService):
             key = r["category"] or r["scenario_title"] or "general"
             grouped[key].append(r["score"])
         return [
-            {"category": cat, "avg_score": round(sum(scores) / len(scores), 1), "count": len(scores)}
+            {
+                "category": cat,
+                "avg_score": round(sum(scores) / len(scores), 1),
+                "count": len(scores),
+            }
             for cat, scores in sorted(grouped.items())
         ]

@@ -36,14 +36,19 @@ class NmpaService(BaseService):
         content_summary = content[:200]
         log_id = f"nmpa:{uuid4()}"
         repo = NmpaComplianceLogsRepository(self.db)
-        row_id = repo.create({
-            "log_id": log_id, "document_type": document_type,
-            "content_summary": content_summary, "check_result": check_result,
-            "violations_found": violations_found,
-            "violation_details": json.dumps(found, ensure_ascii=False),
-            "human_review_required": human_review_required,
-            "created_by": user_id, "created_at": now,
-        })
+        row_id = repo.create(
+            {
+                "log_id": log_id,
+                "document_type": document_type,
+                "content_summary": content_summary,
+                "check_result": check_result,
+                "violations_found": violations_found,
+                "violation_details": json.dumps(found, ensure_ascii=False),
+                "human_review_required": human_review_required,
+                "created_by": user_id,
+                "created_at": now,
+            }
+        )
         row = repo.get_by_id(row_id)
         return _log_to_dict(row)
 
@@ -55,7 +60,8 @@ class NmpaService(BaseService):
     ) -> list:
         repo = NmpaComplianceLogsRepository(self.db)
         rows = repo.list_filtered(
-            document_type=document_type, check_result=check_result,
+            document_type=document_type,
+            check_result=check_result,
             human_review_required=human_review_required,
         )
         return [_log_to_dict(r) for r in rows]

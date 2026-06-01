@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import HTTPException
 from starlette import status
@@ -52,14 +52,18 @@ class BoardService(BaseService):
     def create_board(self, name: str, description: str, owner_id: int) -> dict:
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         boards_repo = TaskBoardsRepository(self.db)
-        board_id = boards_repo.create({
-            "name": name,
-            "description": description,
-            "owner_id": owner_id,
-            "created_at": now,
-            "updated_at": now,
-        })
-        row = self.db.execute("SELECT * FROM task_boards WHERE id=?", (board_id,)).fetchone()
+        board_id = boards_repo.create(
+            {
+                "name": name,
+                "description": description,
+                "owner_id": owner_id,
+                "created_at": now,
+                "updated_at": now,
+            }
+        )
+        row = self.db.execute(
+            "SELECT * FROM task_boards WHERE id=?", (board_id,)
+        ).fetchone()
         return _board_to_dict(row)
 
     def list_boards(self) -> list:
@@ -74,7 +78,12 @@ class BoardService(BaseService):
         row = self._get_board_or_404(board_id)
         return _board_to_dict(row)
 
-    def update_board(self, board_id: int, name: Optional[str] = None, description: Optional[str] = None) -> dict:
+    def update_board(
+        self,
+        board_id: int,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> dict:
         self._get_board_or_404(board_id)
         boards_repo = TaskBoardsRepository(self.db)
         updates = {}
@@ -84,7 +93,7 @@ class BoardService(BaseService):
             updates["description"] = description
         if updates:
             updates["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            validate_columns(updates, 'task_boards', TABLE_TASK_BOARDS_COLS)
+            validate_columns(updates, "task_boards", TABLE_TASK_BOARDS_COLS)
             boards_repo.update(board_id, updates)
         row = self._get_board_or_404(board_id)
         return _board_to_dict(row)

@@ -25,7 +25,9 @@ class MemoryConsolidationService(BaseService):
         if not rows:
             return {"promoted": 0, "pruned": 0, "total": 0}
 
-        scored = [(r, _calc_utility(r["valence"] or 0.0, r["intensity"] or 0.5)) for r in rows]
+        scored = [
+            (r, _calc_utility(r["valence"] or 0.0, r["intensity"] or 0.5)) for r in rows
+        ]
         scored.sort(key=lambda x: x[1], reverse=True)
 
         total = len(scored)
@@ -35,12 +37,18 @@ class MemoryConsolidationService(BaseService):
             item = scored[i][0]
             name = item.get("title") or item.get("event_type") or f"memory:{item['id']}"
             entity_id = f"mem:{uuid.uuid4()}"
-            kg_repo.create({
-                "entity_id": entity_id, "entity_type": "memory", "name": name,
-                "source_table": "episodic_memory", "source_row_id": item["id"],
-                "status": "active", "confidence": 1.0,
-                "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            })
+            kg_repo.create(
+                {
+                    "entity_id": entity_id,
+                    "entity_type": "memory",
+                    "name": name,
+                    "source_table": "episodic_memory",
+                    "source_row_id": item["id"],
+                    "status": "active",
+                    "confidence": 1.0,
+                    "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                }
+            )
             promoted += 1
 
         pruned = 0
@@ -52,14 +60,21 @@ class MemoryConsolidationService(BaseService):
 
         duration_ms = int((datetime.now() - started).total_seconds() * 1000)
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        log_repo.create({
-            "consolidation_type": "sleep_consolidation",
-            "source_table": "episodic_memory",
-            "item_count": total, "items_promoted": promoted, "items_pruned": pruned,
-            "duration_ms": duration_ms, "status": "completed",
-            "details": json.dumps({"triggered_by": triggered_by}, ensure_ascii=False),
-            "created_at": now,
-        })
+        log_repo.create(
+            {
+                "consolidation_type": "sleep_consolidation",
+                "source_table": "episodic_memory",
+                "item_count": total,
+                "items_promoted": promoted,
+                "items_pruned": pruned,
+                "duration_ms": duration_ms,
+                "status": "completed",
+                "details": json.dumps(
+                    {"triggered_by": triggered_by}, ensure_ascii=False
+                ),
+                "created_at": now,
+            }
+        )
         return {"promoted": promoted, "pruned": pruned, "total": total}
 
     def consolidation_status(self) -> list:
@@ -75,7 +90,9 @@ class MemoryConsolidationService(BaseService):
 
         ep_count = ep_repo.count_by_creator(agent_id)
 
-        ret_count = log_repo.count_by_type_since("retrieval_reconsolidation", seven_days_ago)
+        ret_count = log_repo.count_by_type_since(
+            "retrieval_reconsolidation", seven_days_ago
+        )
 
         con_logs = log_repo.count_by_type_since("sleep_consolidation", seven_days_ago)
         con_rate = min(1.0, con_logs / 7.0) if con_logs else 0.0
@@ -98,7 +115,9 @@ class MemoryConsolidationService(BaseService):
 
     def evaluate_trend(self) -> dict:
         log_repo = MemoryConsolidationLogRepository(self.db)
-        seven_days_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d 00:00:00")
+        seven_days_ago = (datetime.now() - timedelta(days=7)).strftime(
+            "%Y-%m-%d 00:00:00"
+        )
         rows = log_repo.trend_since(seven_days_ago)
 
         trend: dict[str, dict[str, int]] = {}

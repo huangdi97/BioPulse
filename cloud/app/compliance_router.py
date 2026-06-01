@@ -1,8 +1,7 @@
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from starlette import status
 
 from shared.auth_scope import require_scope
 from shared.base import success
@@ -54,8 +53,10 @@ def create_rule(
     """Create a new compliance rule."""
     user_id = int(current_user["sub"])
     result = service.create_rule(
-        name=body.name, category=body.category,
-        keyword=body.keyword, max_value=body.max_value,
+        name=body.name,
+        category=body.category,
+        keyword=body.keyword,
+        max_value=body.max_value,
         created_by=user_id,
     )
     return success(data=result)

@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-from typing import Optional
 
 from fastapi import HTTPException
 from starlette import status
@@ -23,17 +22,21 @@ class ContactService(BaseService):
         self._check_opportunity_exists(opportunity_id)
         repo = ContactRecordRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()
-        return repo.create(body.model_dump(), extra={
-            "opportunity_id": opportunity_id,
-            "created_by": user_id,
-            "created_at": now,
-        })
+        return repo.create(
+            body.model_dump(),
+            extra={
+                "opportunity_id": opportunity_id,
+                "created_by": user_id,
+                "created_at": now,
+            },
+        )
 
     def list_contacts(self, opportunity_id: int, page: int, page_size: int) -> tuple:
         self._check_opportunity_exists(opportunity_id)
         repo = ContactRecordRepository(self.db)
         return repo.paginate(
-            page, page_size,
+            page,
+            page_size,
             conditions=["opportunity_id = ?"],
             params=[opportunity_id],
             order_by="id DESC",

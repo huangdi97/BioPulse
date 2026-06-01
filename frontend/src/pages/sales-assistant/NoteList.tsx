@@ -1,11 +1,30 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { fetchNotes, type NoteItem } from '@/api/sales-assistant-api'
 import { Card, CardContent } from '@/components/ui/card'
 import { StickyNote, Clock, User } from 'lucide-react'
+import { SearchBar } from '@/components/SearchBar'
+import { FilterDropdown } from '@/components/FilterDropdown'
+import { Skeleton } from '@/components/Skeleton'
+
+const DATE_OPTIONS = [
+  { value: '全部', label: '全部时间' },
+  { value: 'week', label: '本周' },
+  { value: 'month', label: '本月' },
+  { value: 'older', label: '更早' },
+]
+
+function isWithinDays(dateStr: string, days: number): boolean {
+  const d = new Date(dateStr)
+  const now = new Date()
+  const diff = now.getTime() - d.getTime()
+  return diff <= days * 24 * 60 * 60 * 1000
+}
 
 export default function NoteList() {
   const [notes, setNotes] = useState<NoteItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [dateFilter, setDateFilter] = useState('全部')
 
   useEffect(() => {
     let cancelled = false
@@ -17,12 +36,32 @@ export default function NoteList() {
     return () => { cancelled = true }
   }, [])
 
-  if (loading) return <div className="space-y-3">{[1, 2].map((i) => <Card key={i}><CardContent className="p-4 animate-pulse"><div className="h-24 bg-muted rounded" /></CardContent></Card>)}</div>
+  const filtered = useMemo(() => {
+    return notes.filter((n) => {
+      const matchSearch = !search || n.title.includes(search) || n.content.includes(search) || n.relatedTo.includes(search)
+      let matchDate = true
+      if (dateFilter === 'week') matchDate = isWithinDays(n.createdAt, 7)
+      else if (dateFilter === 'month') matchDate = isWithinDays(n.createdAt, 30)
+      return matchSearch && matchDate
+    })
+  }, [notes, search, dateFilter])
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2].map((i) => (
+          <Card key={i}><CardContent className="p-4"><Skeleton className="h-24 w-full" /></CardContent></Card>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">笔记</h2>
-      {notes.map((note) => (
+      <SearchBar placeholder="搜索标题、内容或相关对象..." value={search} onChange={setSearch} />
+      <FilterDropdown label="时间" value={dateFilter} options={DATE_OPTIONS} onChange={setDateFilter} />
+      {filtered.map((note) => (
         <Card key={note.id}>
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
@@ -41,6 +80,9 @@ export default function NoteList() {
           </CardContent>
         </Card>
       ))}
+      {!loading && filtered.length === 0 && (
+        <div className="text-center py-12 text-sm text-muted-foreground">没有找到匹配的笔记</div>
+      )}
     </div>
   )
 }

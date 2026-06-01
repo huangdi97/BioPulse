@@ -2,7 +2,6 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
-from starlette import status
 
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success, ErrorCode
@@ -78,7 +77,9 @@ def pubpeer_check(
     auth_header = request.headers.get("Authorization", "")
     result = service.pubpeer_check(body, auth_header, user_id)
     if result == "validation_error":
-        return ApiResponse(code=ErrorCode.VALIDATION_ERROR, message="Provide pubmed_id or doi")
+        return ApiResponse(
+            code=ErrorCode.VALIDATION_ERROR, message="Provide pubmed_id or doi"
+        )
     return success(data=IntegrityCheckOut(**result))
 
 
@@ -93,7 +94,10 @@ def pubpeer_alerts(
     items = [IntegrityOut(**dict(r)) for r in rows]
     return success(
         data=PaginatedResponse(
-            items=items, total=total, page=page,
-            page_size=page_size, total_pages=total_pages,
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
         )
     )

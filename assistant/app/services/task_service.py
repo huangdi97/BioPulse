@@ -49,7 +49,10 @@ class TaskService(BaseService):
             params.append(priority)
 
         return repo.paginate(
-            page=page, page_size=page_size, conditions=conditions, params=params,
+            page=page,
+            page_size=page_size,
+            conditions=conditions,
+            params=params,
         )
 
     def get_task(self, task_id: int) -> dict:

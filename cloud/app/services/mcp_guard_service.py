@@ -8,7 +8,10 @@ from starlette import status
 
 from cloud.app.services.base import BaseService
 
-_RULES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "rules")
+_RULES_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    "rules",
+)
 _WHITELIST_PATH = os.path.join(_RULES_DIR, "mcp_whitelist.json")
 
 

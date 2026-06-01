@@ -39,7 +39,11 @@ class KgSearch(BaseModel):
 
 
 @router.post("/entities/create")
-def create_entity(data: KgEntityCreate, user: dict = Depends(require_scope("visit")), service: KgService = Depends()):
+def create_entity(
+    data: KgEntityCreate,
+    user: dict = Depends(require_scope("visit")),
+    service: KgService = Depends(),
+):
     return success(service.create_entity(data, user))
 
 
@@ -51,21 +55,35 @@ def list_entities(
     user: dict = Depends(require_scope("visit")),
     service: KgService = Depends(),
 ):
-    return success(service.list_entities(entity_type=entity_type, name=name, status_=status_))
+    return success(
+        service.list_entities(entity_type=entity_type, name=name, status_=status_)
+    )
 
 
 @router.get("/entities/{entity_id}")
-def get_entity(entity_id: str, user: dict = Depends(require_scope("visit")), service: KgService = Depends()):
+def get_entity(
+    entity_id: str,
+    user: dict = Depends(require_scope("visit")),
+    service: KgService = Depends(),
+):
     return success(service.get_entity(entity_id))
 
 
 @router.delete("/entities/{entity_id}")
-def delete_entity(entity_id: str, user: dict = Depends(require_scope("visit")), service: KgService = Depends()):
+def delete_entity(
+    entity_id: str,
+    user: dict = Depends(require_scope("visit")),
+    service: KgService = Depends(),
+):
     return success(service.delete_entity(entity_id))
 
 
 @router.post("/relations/create")
-def create_relation(data: KgRelationCreate, user: dict = Depends(require_scope("visit")), service: KgService = Depends()):
+def create_relation(
+    data: KgRelationCreate,
+    user: dict = Depends(require_scope("visit")),
+    service: KgService = Depends(),
+):
     return success(service.create_relation(data))
 
 
@@ -77,25 +95,43 @@ def list_relations(
     user: dict = Depends(require_scope("visit")),
     service: KgService = Depends(),
 ):
-    return success(service.list_relations(source=source, target=target, relation_type=relation_type))
+    return success(
+        service.list_relations(
+            source=source, target=target, relation_type=relation_type
+        )
+    )
 
 
 @router.delete("/relations/{relation_id}")
-def delete_relation(relation_id: int, user: dict = Depends(require_scope("visit")), service: KgService = Depends()):
+def delete_relation(
+    relation_id: int,
+    user: dict = Depends(require_scope("visit")),
+    service: KgService = Depends(),
+):
     return success(service.delete_relation(relation_id))
 
 
 @router.post("/search")
-def search_kg(data: KgSearch, user: dict = Depends(require_scope("visit")), service: KgService = Depends()):
+def search_kg(
+    data: KgSearch,
+    user: dict = Depends(require_scope("visit")),
+    service: KgService = Depends(),
+):
     return success(service.search_kg(data))
 
 
 @router.get("/graph/{entity_id}")
-def get_subgraph(entity_id: str, max_depth: int = Query(2),
-                 user: dict = Depends(require_scope("visit")), service: KgService = Depends()):
+def get_subgraph(
+    entity_id: str,
+    max_depth: int = Query(2),
+    user: dict = Depends(require_scope("visit")),
+    service: KgService = Depends(),
+):
     return success(service.get_subgraph(entity_id, max_depth))
 
 
 @router.get("/dashboard")
-def dashboard(user: dict = Depends(require_scope("visit")), service: KgService = Depends()):
+def dashboard(
+    user: dict = Depends(require_scope("visit")), service: KgService = Depends()
+):
     return success(service.dashboard())

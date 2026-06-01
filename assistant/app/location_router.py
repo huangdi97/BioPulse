@@ -1,7 +1,6 @@
-import sqlite3
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette import status
@@ -117,8 +116,10 @@ def optimize_route(
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[RouteResponse]:
     data = service.optimize_route(body)
-    return success(data=RouteResponse(
-        optimized_route=[RouteStop(**s) for s in data["optimized_route"]],
-        total_distance_km=data["total_distance_km"],
-        total_hcps=data["total_hcps"],
-    ))
+    return success(
+        data=RouteResponse(
+            optimized_route=[RouteStop(**s) for s in data["optimized_route"]],
+            total_distance_km=data["total_distance_km"],
+            total_hcps=data["total_hcps"],
+        )
+    )

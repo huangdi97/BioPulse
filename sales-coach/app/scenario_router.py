@@ -114,7 +114,9 @@ def list_scenarios_by_category(
 ) -> ApiResponse:
     """Return all fixed scenarios matching the given category."""
     scenarios = get_scenarios_by_category(category)
-    return success(data={"category": category, "scenarios": scenarios, "count": len(scenarios)})
+    return success(
+        data={"category": category, "scenarios": scenarios, "count": len(scenarios)}
+    )
 
 
 @router.get("/by-difficulty/{difficulty}")
@@ -124,7 +126,9 @@ def list_scenarios_by_difficulty(
 ) -> ApiResponse:
     """Return all fixed scenarios matching the given difficulty level."""
     scenarios = get_scenario_by_difficulty(difficulty)
-    return success(data={"difficulty": difficulty, "scenarios": scenarios, "count": len(scenarios)})
+    return success(
+        data={"difficulty": difficulty, "scenarios": scenarios, "count": len(scenarios)}
+    )
 
 
 @router.get("/{scenario_id}")

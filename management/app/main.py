@@ -1,8 +1,11 @@
 import time
 from fastapi import FastAPI
-from shared.middleware import RequestIDMiddleware
+from shared.request_id_middleware import RequestIDMiddleware
+from shared.structured_logging import setup_logging
 
 START_TIME = time.time()
+
+setup_logging("management")
 
 app = FastAPI(
     title="管理端 · Management Portal",
@@ -20,17 +23,23 @@ app.add_middleware(RequestIDMiddleware)
 @app.on_event("startup")
 def startup():
     from management.app.database import init_cache_db
+
     init_cache_db()
 
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "uptime": int(time.time() - START_TIME), "service": "management"}
+    return {
+        "status": "ok",
+        "uptime": int(time.time() - START_TIME),
+        "service": "management",
+    }
 
 
 from management.app.president_router import router as president_router
 from management.app.manager_router import router as manager_router
 from management.app.employee_router import router as employee_router
+
 app.include_router(president_router, prefix="/api/v1")
 app.include_router(manager_router, prefix="/api/v1")
 app.include_router(employee_router, prefix="/api/v1")

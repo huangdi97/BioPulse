@@ -1,7 +1,6 @@
-import json
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from starlette import status
 
@@ -43,9 +42,14 @@ def create_customer(
 ) -> Any:
     user_id = int(current_user["sub"])
     row = service.create_customer(
-        name=body.name, title=body.title, hospital=body.hospital,
-        department=body.department, specialty=body.specialty,
-        phone=body.phone, email=body.email, tags=body.tags,
+        name=body.name,
+        title=body.title,
+        hospital=body.hospital,
+        department=body.department,
+        specialty=body.specialty,
+        phone=body.phone,
+        email=body.email,
+        tags=body.tags,
         user_id=user_id,
     )
     return success(data=row)
@@ -63,8 +67,12 @@ def list_customers(
     service: CustomerService = Depends(),
 ) -> Any:
     result = service.list_customers(
-        name=name, hospital=hospital, department=department,
-        status=status, page=page, page_size=page_size,
+        name=name,
+        hospital=hospital,
+        department=department,
+        status=status,
+        page=page,
+        page_size=page_size,
     )
     return success(data=result)
 
@@ -87,10 +95,16 @@ def update_customer(
     service: CustomerService = Depends(),
 ) -> Any:
     row = service.update_customer(
-        customer_id=customer_id, name=body.name, title=body.title,
-        hospital=body.hospital, department=body.department,
-        specialty=body.specialty, phone=body.phone, email=body.email,
-        tags=body.tags, status=body.status,
+        customer_id=customer_id,
+        name=body.name,
+        title=body.title,
+        hospital=body.hospital,
+        department=body.department,
+        specialty=body.specialty,
+        phone=body.phone,
+        email=body.email,
+        tags=body.tags,
+        status=body.status,
     )
     return success(data=row)
 

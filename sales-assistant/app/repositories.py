@@ -57,8 +57,13 @@ class ContentRepository(BaseRepository):
                       OR content LIKE ? OR tags LIKE ? OR summary LIKE ?)
                ORDER BY updated_at DESC LIMIT ?""",
             (
-                f"%{keyword}%", f"%{keyword}%", f"%{keyword}%",
-                f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", limit,
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                limit,
             ),
         ).fetchall()
 
@@ -76,9 +81,14 @@ class StrategyRepository(BaseRepository):
                       OR actual_outcome LIKE ? OR reflection LIKE ?)
                ORDER BY updated_at DESC LIMIT ?""",
             (
-                f"%{keyword}%", f"%{keyword}%", f"%{keyword}%",
-                f"%{keyword}%", f"%{keyword}%", f"%{keyword}%",
-                f"%{keyword}%", limit,
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                limit,
             ),
         ).fetchall()
 
@@ -95,8 +105,12 @@ class HcpRepository(BaseRepository):
                       OR specialty LIKE ? OR city LIKE ?)
                ORDER BY updated_at DESC LIMIT ?""",
             (
-                f"%{keyword}%", f"%{keyword}%", f"%{keyword}%",
-                f"%{keyword}%", f"%{keyword}%", limit,
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                limit,
             ),
         ).fetchall()
 
@@ -113,8 +127,11 @@ class ProductRepository(BaseRepository):
                       OR company LIKE ?)
                ORDER BY updated_at DESC LIMIT ?""",
             (
-                f"%{keyword}%", f"%{keyword}%", f"%{keyword}%",
-                f"%{keyword}%", limit,
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                limit,
             ),
         ).fetchall()
 
@@ -158,8 +175,12 @@ class PromptRepository(BaseRepository):
                       OR prompt_template LIKE ? OR category LIKE ?)
                ORDER BY updated_at DESC LIMIT ?""",
             (
-                f"%{keyword}%", f"%{keyword}%", f"%{keyword}%",
-                f"%{keyword}%", f"%{keyword}%", limit,
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                limit,
             ),
         ).fetchall()
 
@@ -175,8 +196,11 @@ class SessionRepository(BaseRepository):
                   OR notes LIKE ?
                ORDER BY created_at DESC LIMIT ?""",
             (
-                f"%{keyword}%", f"%{keyword}%", f"%{keyword}%",
-                f"%{keyword}%", limit,
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                f"%{keyword}%",
+                limit,
             ),
         ).fetchall()
 

@@ -6,9 +6,10 @@ from pharma_intel.app.database import get_cache, set_cache
 
 CLOUD_API = "http://localhost:8000"
 
+
 async def get_competitor_intel(company_name: str) -> dict:
     """获取指定竞争对手的综合情报。
-    
+
     调用 Cloud Market Intel API 获取该公司相关新闻，
     调用 Cloud PubMed API 获取该公司论文动态，
     聚合返回新闻摘要、论文活动和近期事件。
@@ -19,19 +20,25 @@ async def get_competitor_intel(company_name: str) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        news_resp = await client.get(f"{CLOUD_API}/market-intel/items", params={
-            "keyword": company_name,
-            "limit": 20,
-        })
+        news_resp = await client.get(
+            f"{CLOUD_API}/market-intel/items",
+            params={
+                "keyword": company_name,
+                "limit": 20,
+            },
+        )
         news_items = []
         if news_resp.status_code == 200:
             data = news_resp.json()
             news_items = data.get("data", data.get("items", []))
 
-        pub_resp = await client.post(f"{CLOUD_API}/pubmed/search", json={
-            "query": company_name,
-            "limit": 50,
-        })
+        pub_resp = await client.post(
+            f"{CLOUD_API}/pubmed/search",
+            json={
+                "query": company_name,
+                "limit": 50,
+            },
+        )
         papers = []
         if pub_resp.status_code == 200:
             data = pub_resp.json()
@@ -41,6 +48,7 @@ async def get_competitor_intel(company_name: str) -> dict:
     set_cache(cache_key, result, ttl=1800)
     return result
 
+
 def _aggregate_competitor_intel(company: str, news: list, papers: list) -> dict:
     """聚合竞品情报。"""
     recent_events = []
@@ -48,12 +56,14 @@ def _aggregate_competitor_intel(company: str, news: list, papers: list) -> dict:
         title = item.get("title") or item.get("headline") or ""
         date = item.get("date") or item.get("published_at") or ""
         url = item.get("url") or ""
-        recent_events.append({
-            "title": title,
-            "date": date,
-            "url": url,
-            "source": item.get("source", item.get("source_type", "")),
-        })
+        recent_events.append(
+            {
+                "title": title,
+                "date": date,
+                "url": url,
+                "source": item.get("source", item.get("source_type", "")),
+            }
+        )
 
     paper_count = len(papers)
     paper_years = []
@@ -76,9 +86,10 @@ def _aggregate_competitor_intel(company: str, news: list, papers: list) -> dict:
         "last_updated": datetime.now(timezone.utc).isoformat(),
     }
 
+
 async def get_market_news(limit: int = 10) -> dict:
     """获取行业新闻动态。
-    
+
     调用 Cloud Market Intel API 获取最新的行业新闻和动态。
     """
     cache_key = f"market:news:limit:{limit}"
@@ -87,9 +98,12 @@ async def get_market_news(limit: int = 10) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/market-intel/items", params={
-            "limit": limit,
-        })
+        resp = await client.get(
+            f"{CLOUD_API}/market-intel/items",
+            params={
+                "limit": limit,
+            },
+        )
         items = []
         if resp.status_code == 200:
             data = resp.json()
@@ -97,14 +111,16 @@ async def get_market_news(limit: int = 10) -> dict:
 
     news_list = []
     for item in items:
-        news_list.append({
-            "title": item.get("title") or item.get("headline") or "",
-            "summary": item.get("summary") or item.get("content", "")[:200],
-            "date": item.get("date") or item.get("published_at") or "",
-            "source": item.get("source", item.get("source_type", "")),
-            "url": item.get("url") or "",
-            "impact_level": item.get("impact_level") or item.get("ImpactLevel", ""),
-        })
+        news_list.append(
+            {
+                "title": item.get("title") or item.get("headline") or "",
+                "summary": item.get("summary") or item.get("content", "")[:200],
+                "date": item.get("date") or item.get("published_at") or "",
+                "source": item.get("source", item.get("source_type", "")),
+                "url": item.get("url") or "",
+                "impact_level": item.get("impact_level") or item.get("ImpactLevel", ""),
+            }
+        )
 
     result = {
         "total_news": len(news_list),

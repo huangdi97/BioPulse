@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette import status
@@ -61,7 +61,9 @@ def list_contacts(
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[ContactOut]]:
     total, total_pages, rows = service.list_contacts(
-        opportunity_id, page, page_size,
+        opportunity_id,
+        page,
+        page_size,
     )
     items = [ContactOut(**dict(r)) for r in rows]
     return success(

@@ -111,7 +111,10 @@ def list_visits(
         params.append(visit_type)
 
     total, total_pages, rows = repo.paginate(
-        page=page, page_size=page_size, conditions=conditions, params=params,
+        page=page,
+        page_size=page_size,
+        conditions=conditions,
+        params=params,
     )
     items = [VisitOut(**dict(r)) for r in rows]
     return success(

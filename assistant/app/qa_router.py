@@ -1,7 +1,7 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from shared.auth import get_current_user
 from shared.base import ApiResponse, success

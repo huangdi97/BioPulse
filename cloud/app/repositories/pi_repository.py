@@ -26,17 +26,35 @@ class PiRepository:
         )
         self.db.commit()
 
-    def create(self, name: str, institution: str, department: str = "",
-               title: str = "", hcp_id: Optional[int] = None,
-               research_areas: list | None = None,
-               total_papers: int = 0, total_grants: int = 0,
-               h_index: int = 0, last_updated: str = "") -> int:
+    def create(
+        self,
+        name: str,
+        institution: str,
+        department: str = "",
+        title: str = "",
+        hcp_id: Optional[int] = None,
+        research_areas: list | None = None,
+        total_papers: int = 0,
+        total_grants: int = 0,
+        h_index: int = 0,
+        last_updated: str = "",
+    ) -> int:
         cursor = self.db.execute(
             "INSERT INTO pi_profiles (name, hcp_id, institution, department, title, "
             "research_areas, total_papers, total_grants, h_index, last_updated) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (name, hcp_id, institution, department, title,
-             json.dumps(research_areas or []), total_papers, total_grants, h_index, last_updated),
+            (
+                name,
+                hcp_id,
+                institution,
+                department,
+                title,
+                json.dumps(research_areas or []),
+                total_papers,
+                total_grants,
+                h_index,
+                last_updated,
+            ),
         )
         self.db.commit()
         return cursor.lastrowid
@@ -50,8 +68,18 @@ class PiRepository:
         return None
 
     def update(self, pi_id: int, **kwargs) -> bool:
-        allowed = {"name", "hcp_id", "institution", "department", "title",
-                   "research_areas", "total_papers", "total_grants", "h_index", "last_updated"}
+        allowed = {
+            "name",
+            "hcp_id",
+            "institution",
+            "department",
+            "title",
+            "research_areas",
+            "total_papers",
+            "total_grants",
+            "h_index",
+            "last_updated",
+        }
         updates = {k: v for k, v in kwargs.items() if k in allowed}
         if not updates:
             return False
@@ -71,7 +99,9 @@ class PiRepository:
         return cursor.rowcount > 0
 
     def list_all(self) -> list[dict]:
-        return [dict(r) for r in self.db.execute("SELECT * FROM pi_profiles").fetchall()]
+        return [
+            dict(r) for r in self.db.execute("SELECT * FROM pi_profiles").fetchall()
+        ]
 
     def search(self, keyword: str) -> list[dict]:
         pattern = f"%{keyword}%"

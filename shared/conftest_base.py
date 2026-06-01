@@ -16,7 +16,9 @@ def _pg_base() -> str:
 
 def is_pg() -> bool:
     url = os.getenv("DATABASE_URL", "")
-    return bool(url and (url.startswith("postgresql://") or url.startswith("postgres://")))
+    return bool(
+        url and (url.startswith("postgresql://") or url.startswith("postgres://"))
+    )
 
 
 def get_pg_url(test_db_path: str) -> str:
@@ -34,26 +36,26 @@ def get_pg_url(test_db_path: str) -> str:
 
 def convert_schema_to_pg(schema_sql: str) -> str:
     sql = re.sub(
-        r'INTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT',
-        'SERIAL PRIMARY KEY',
+        r"INTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT",
+        "SERIAL PRIMARY KEY",
         schema_sql,
         flags=re.IGNORECASE,
     )
     sql = re.sub(
-        r'CREATE\s+VIRTUAL\s+TABLE[^;]*;',
-        '',
+        r"CREATE\s+VIRTUAL\s+TABLE[^;]*;",
+        "",
         sql,
         flags=re.IGNORECASE | re.DOTALL,
     )
     sql = re.sub(
-        r'CREATE\s+TRIGGER.*?END\s*;',
-        '',
+        r"CREATE\s+TRIGGER.*?END\s*;",
+        "",
         sql,
         flags=re.IGNORECASE | re.DOTALL,
     )
     sql = re.sub(
-        r'PRAGMA[^;]*;',
-        '',
+        r"PRAGMA[^;]*;",
+        "",
         sql,
         flags=re.IGNORECASE,
     )
@@ -62,7 +64,7 @@ def convert_schema_to_pg(schema_sql: str) -> str:
         r"DEFAULT '\1'",
         sql,
     )
-    sql = re.sub(r'\n\s*\n\s*\n', '\n\n', sql)
+    sql = re.sub(r"\n\s*\n\s*\n", "\n\n", sql)
     return sql
 
 
@@ -75,10 +77,13 @@ def setup_test_db(module_db, schema_sql: str, test_db_path: str):
 
     if is_pg():
         import psycopg2
+
         pg_url = get_pg_url(test_db_path)
         conn = psycopg2.connect(pg_url)
         cur = conn.cursor()
-        cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
+        cur.execute(
+            "SELECT table_name FROM information_schema.tables WHERE table_schema='public'"
+        )
         tables = [row[0] for row in cur.fetchall()]
         for t in tables:
             cur.execute(f'DROP TABLE IF EXISTS "{t}" CASCADE')
@@ -103,6 +108,7 @@ def clean_test_tables(tables: list):
     test_db = _current_test_db
     if is_pg():
         import psycopg2
+
         pg_url = get_pg_url(test_db)
         with psycopg2.connect(pg_url) as conn:
             conn.autocommit = True

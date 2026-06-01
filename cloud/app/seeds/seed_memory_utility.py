@@ -1,4 +1,3 @@
-import json
 import sqlite3
 
 
@@ -8,6 +7,7 @@ def seed_memory_utility(conn: sqlite3.Connection) -> None:
     if count > 0:
         return
     from datetime import datetime as _dt
+
     entries = conn.execute(
         "SELECT id, importance, access_count, last_accessed FROM memory_entries ORDER BY id LIMIT 5"
     ).fetchall()

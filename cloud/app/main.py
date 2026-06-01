@@ -2,12 +2,11 @@ import os
 import time
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import traceback
 import sqlite3
-from shared.middleware import RequestIDMiddleware
+from shared.request_id_middleware import RequestIDMiddleware
+from shared.structured_logging import setup_logging
 from shared.rate_limiter import RateLimiterMiddleware
-import logging
+from shared.exception_handlers import register_exception_handlers
 from shared.config import settings
 from cloud.app.database import init_db, DB_PATH
 from cloud.app.research_database import init_research_db as init_research
@@ -42,6 +41,7 @@ from cloud.app.training_coach_router import router as training_coach_router
 from cloud.app.soap_decision_router import router as soap_decision_router
 from cloud.app.memory_utility_router import router as memory_utility_router
 from cloud.app.brain_memory_router import router as brain_memory_router
+
 # from cloud.app.identity_router import router as identity_router  # ❄️ 冻结
 # from cloud.app.privacy_router import router as privacy_router  # ❄️ 冻结
 from cloud.app.kg_router import router as kg_router
@@ -58,6 +58,7 @@ from cloud.app.nmpa_router import router as nmpa_router
 from cloud.app.training_scripts_router import router as training_scripts_router
 from cloud.app.marketplace_router import router as marketplace_router
 from fastapi.staticfiles import StaticFiles
+
 # from cloud.app.edge_router import router as edge_router  # ❄️ 冻结
 from cloud.app.settings_router import router as settings_router
 from cloud.app.visit_router import router as visit_router
@@ -66,19 +67,32 @@ from cloud.app.routers.pi_router import router as pi_router
 from cloud.app.routers.product_router import router as product_router
 from cloud.app.routers.langgraph_test_router import router as langgraph_test_router
 from cloud.app.routers.enforcer_router import router as enforcer_router
-from cloud.app.routers.compliance_dashboard_router import router as compliance_dashboard_router
+from cloud.app.routers.compliance_dashboard_router import (
+    router as compliance_dashboard_router,
+)
 from cloud.app.routers.research_pi_router import router as research_pi_router
 from cloud.app.routers.research_product_router import router as research_product_router
-from cloud.app.routers.research_quotation_router import router as research_quotation_router
-from cloud.app.routers.research_enforcer_router import router as research_enforcer_router
+from cloud.app.routers.research_quotation_router import (
+    router as research_quotation_router,
+)
+from cloud.app.routers.research_enforcer_router import (
+    router as research_enforcer_router,
+)
 from cloud.app.routers.research_export_router import router as research_export_router
-from cloud.app.routers.research_matching_router import router as research_matching_router
+from cloud.app.routers.research_matching_router import (
+    router as research_matching_router,
+)
 from cloud.app.routers.research_route_router import router as research_route_router
-from cloud.app.routers.research_quotation_workflow_router import router as research_quotation_workflow_router
+from cloud.app.routers.research_quotation_workflow_router import (
+    router as research_quotation_workflow_router,
+)
 from cloud.app.routers.switch_router import router as switch_router
 from cloud.app.token_budget_router import router as token_budget_router
+
 # Serve frontend SPA
 START_TIME = time.time()
+
+setup_logging("cloud")
 
 app = FastAPI(
     title="一云四端 · Cloud API",
@@ -101,52 +115,32 @@ app = FastAPI(
         {"name": "配置", "description": "系统配置、个性化设置"},
         {"name": "系统", "description": "健康检查、服务状态"},
         {"name": "Token 管理", "description": "Token 预算配置、用量监控、告警管理"},
-    ]
+    ],
 )
+
 
 @app.middleware("http")
 async def api_path_rewrite(request: Request, call_next):
     path = request.scope["path"]
     if path.startswith("/api/cloud/"):
-        new_path = "/" + path[len("/api/cloud/"):]
+        new_path = "/" + path[len("/api/cloud/") :]
         request.scope["path"] = new_path
         if "raw_path" in request.scope:
             request.scope["raw_path"] = new_path.encode()
     return await call_next(request)
 
+
 app.add_middleware(RequestIDMiddleware)
-
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    code_map = {401: 1, 403: 2, 404: 3, 409: 4, 422: 4, 429: 7}
-    error_code = code_map.get(exc.status_code, 5)
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={'code': error_code, 'message': exc.detail, 'data': None, 'request_id': request.state.request_id}
-    )
-
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    logger = logging.getLogger('app')
-    logger.error(
-        'Unhandled exception',
-        extra={'request_id': request.state.request_id},
-        exc_info=True,
-    )
-    return JSONResponse(
-        status_code=500,
-        content={'code': 5, 'message': 'Internal server error', 'data': None, 'request_id': request.state.request_id}
-    )
+register_exception_handlers(app)
 
 
 _cors_origins = settings.cors_origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_cors_origins.split(',') if _cors_origins != '*' else ['*'],
+    allow_origins=_cors_origins.split(",") if _cors_origins != "*" else ["*"],
     allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*'],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.add_middleware(RateLimiterMiddleware, default_rate=100, window=60)
@@ -217,6 +211,7 @@ app.include_router(research_quotation_workflow_router)
 app.include_router(switch_router)
 app.include_router(token_budget_router)
 
+
 @app.on_event("startup")
 def startup():
     init_db()
@@ -250,9 +245,10 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 async def catch_all(path_name: str):
     if path_name.startswith("api/") or path_name.startswith("assets/"):
         from starlette import status
+
         raise HTTPException(status.HTTP_404_NOT_FOUND)
-    from fastapi.responses import FileResponse
     from starlette.responses import Response
+
     headers = {"Cache-Control": "no-cache, no-store, must-revalidate"}
     return Response(
         content=open("static/index.html", "rb").read(),

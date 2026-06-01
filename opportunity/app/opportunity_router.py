@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from starlette import status
@@ -82,8 +82,11 @@ def list_opportunities(
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[OpportunityOut]]:
     total, total_pages, rows = service.list_opportunities(
-        page=page, page_size=page_size,
-        stage=stage, product=product, hcp_name=hcp_name,
+        page=page,
+        page_size=page_size,
+        stage=stage,
+        product=product,
+        hcp_name=hcp_name,
     )
     items = [OpportunityOut(**dict(r)) for r in rows]
     return success(

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchAssessments, type Assessment } from '@/api/coach'
 import { Card, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/Skeleton'
 import { Star } from 'lucide-react'
 
 export default function AssessmentList() {
@@ -18,7 +19,13 @@ export default function AssessmentList() {
   }, [])
 
   if (loading) {
-    return <div className="space-y-3">{[1, 2].map((i) => <Card key={i}><CardContent className="p-4 animate-pulse"><div className="h-24 bg-muted rounded" /></CardContent></Card>)}</div>
+    return (
+      <div className="space-y-3">
+        {[1, 2].map((i) => (
+          <Card key={i}><CardContent className="p-4"><Skeleton className="h-24 w-full" /></CardContent></Card>
+        ))}
+      </div>
+    )
   }
 
   return (

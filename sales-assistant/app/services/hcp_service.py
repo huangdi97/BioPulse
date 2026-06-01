@@ -1,10 +1,14 @@
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import HTTPException
 from starlette import status
 
-from sales_assistant.app.repositories import HcpRepository, ProductRepository, RelationRepository
+from sales_assistant.app.repositories import (
+    HcpRepository,
+    ProductRepository,
+    RelationRepository,
+)
 from sales_assistant.app.services.base import BaseService
 
 
@@ -106,18 +110,31 @@ class HcpService(BaseService):
         else:
             edges = []
         nodes = [
-            {"id": f"hcp:{h['id']}", "type": "hcp", "label": h["name"],
-             "tier": h["tier"], "hospital": h["hospital"]}
+            {
+                "id": f"hcp:{h['id']}",
+                "type": "hcp",
+                "label": h["name"],
+                "tier": h["tier"],
+                "hospital": h["hospital"],
+            }
             for h in hcps
         ]
         nodes += [
-            {"id": f"product:{p['id']}", "type": "product", "label": p["name"],
-             "company": p["company"]}
+            {
+                "id": f"product:{p['id']}",
+                "type": "product",
+                "label": p["name"],
+                "company": p["company"],
+            }
             for p in prods
         ]
         edge_list = [
-            {"source": f"hcp:{e['hcp_id']}", "target": f"product:{e['product_id']}",
-             "type": e["relation_type"], "strength": e["strength"]}
+            {
+                "source": f"hcp:{e['hcp_id']}",
+                "target": f"product:{e['product_id']}",
+                "type": e["relation_type"],
+                "strength": e["strength"],
+            }
             for e in edges
         ]
         return {"nodes": nodes, "edges": edge_list}

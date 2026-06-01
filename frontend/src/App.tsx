@@ -1,6 +1,9 @@
 import { AuthProvider } from './contexts/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
+import { ToastProvider } from './contexts/ToastContext'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './pages/Login'
+import KeyboardShell from './components/KeyboardShell'
 import ProtectedRoute from './components/ProtectedRoute'
 import RoleRoute from './components/RoleRoute'
 import RepLayout from './pages/rep/RepLayout'
@@ -65,11 +68,14 @@ import ScheduleView from './pages/sales-assistant/ScheduleView'
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
+    <ThemeProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
           <Route path="/login" element={<Login />} />
-          <Route element={<ProtectedRoute />}>
+          <Route element={<KeyboardShell />}>
+            <Route element={<ProtectedRoute />}>
             <Route element={<RoleRoute allowedRoles={['rep', 'admin']} />}>
               <Route path="/rep" element={<RepLayout />}>
                 <Route index element={<Navigate to="dashboard" replace />} />
@@ -158,8 +164,11 @@ export default function App() {
             <Route path="/dashboard" element={<Navigate to="/rep/dashboard" replace />} />
             <Route path="/" element={<Navigate to="/rep/dashboard" replace />} />
           </Route>
+          </Route>
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+      </ToastProvider>
+    </ThemeProvider>
   )
 }

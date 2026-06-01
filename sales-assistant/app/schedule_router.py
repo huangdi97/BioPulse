@@ -3,7 +3,6 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from starlette import status
 
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
@@ -54,7 +53,9 @@ def create_schedule(
 ) -> JSONResponse:
     user_id = int(current_user["sub"])
     new_id = service.create_schedule(body, user_id)
-    return JSONResponse(content=success(data={"id": new_id}).model_dump(), status_code=201)
+    return JSONResponse(
+        content=success(data={"id": new_id}).model_dump(), status_code=201
+    )
 
 
 @router.get("")
@@ -68,7 +69,11 @@ def list_schedules(
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[ScheduleOut]]:
     total, total_pages, rows = service.list_schedules(
-        page, page_size, event_type, start_date, end_date,
+        page,
+        page_size,
+        event_type,
+        start_date,
+        end_date,
     )
     items = [ScheduleOut(**dict(r)) for r in rows]
     return success(

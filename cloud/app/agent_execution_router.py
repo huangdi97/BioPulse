@@ -47,17 +47,26 @@ def _rows(rows):
 
 
 @router.post("/submit", status_code=status.HTTP_201_CREATED)
-def submit_task(body: TaskSubmit, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+def submit_task(
+    body: TaskSubmit, current_user=Depends(require_scope("visit")), db=Depends(get_db)
+):
     repo = AgentExecutionTasksRepository(db)
     task_id = f"aet:{uuid.uuid4()}"
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    repo.create({
-        "task_id": task_id, "source": "internal",
-        "agent_role": body.agent_role, "action_type": body.action_type,
-        "input_data": json.dumps(body.input_data, ensure_ascii=False),
-        "max_retries": body.max_retries, "status": "completed",
-        "created_at": now, "completed_at": now, "duration_ms": 0,
-    })
+    repo.create(
+        {
+            "task_id": task_id,
+            "source": "internal",
+            "agent_role": body.agent_role,
+            "action_type": body.action_type,
+            "input_data": json.dumps(body.input_data, ensure_ascii=False),
+            "max_retries": body.max_retries,
+            "status": "completed",
+            "created_at": now,
+            "completed_at": now,
+            "duration_ms": 0,
+        }
+    )
     row = repo.get_by_task_id(task_id)
     return success(data=_row(row))
 
@@ -77,12 +86,16 @@ def list_tasks(
     if agent_role:
         conds.append("agent_role=?")
         pars.append(agent_role)
-    rows = repo.list_all(conditions=conds or None, params=pars or None, order_by="created_at DESC")
+    rows = repo.list_all(
+        conditions=conds or None, params=pars or None, order_by="created_at DESC"
+    )
     return success(data=_rows(rows))
 
 
 @router.get("/tasks/{task_id}")
-def get_task(task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+def get_task(
+    task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)
+):
     repo = AgentExecutionTasksRepository(db)
     row = repo.get_by_task_id(task_id)
     if not row:
@@ -91,7 +104,9 @@ def get_task(task_id: str, current_user=Depends(require_scope("visit")), db=Depe
 
 
 @router.post("/tasks/{task_id}/retry")
-def retry_task(task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+def retry_task(
+    task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)
+):
     repo = AgentExecutionTasksRepository(db)
     row = repo.get_by_task_id(task_id)
     if not row:
@@ -103,7 +118,9 @@ def retry_task(task_id: str, current_user=Depends(require_scope("visit")), db=De
 
 
 @router.post("/tasks/{task_id}/approve")
-def approve_task(task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+def approve_task(
+    task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)
+):
     repo = AgentExecutionTasksRepository(db)
     row = repo.get_by_task_id(task_id)
     if not row:
@@ -123,15 +140,22 @@ def a2a_card(current_user=Depends(require_scope("visit")), db=Depends(get_db)):
 
 
 @router.post("/a2a/task", status_code=status.HTTP_201_CREATED)
-def a2a_task(body: A2ATask, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+def a2a_task(
+    body: A2ATask, current_user=Depends(require_scope("visit")), db=Depends(get_db)
+):
     repo = AgentExecutionTasksRepository(db)
     task_id = body.task_id or f"aet:{uuid.uuid4()}"
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    repo.create({
-        "task_id": task_id, "source": "a2a",
-        "agent_role": body.agent_role, "action_type": "process",
-        "input_data": json.dumps(body.input_data, ensure_ascii=False),
-        "status": "pending", "created_at": now,
-    })
+    repo.create(
+        {
+            "task_id": task_id,
+            "source": "a2a",
+            "agent_role": body.agent_role,
+            "action_type": "process",
+            "input_data": json.dumps(body.input_data, ensure_ascii=False),
+            "status": "pending",
+            "created_at": now,
+        }
+    )
     row = repo.get_by_task_id(task_id)
     return success(data=_row(row))

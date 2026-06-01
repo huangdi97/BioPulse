@@ -6,7 +6,9 @@ from starlette.testclient import TestClient
 
 from shared.conftest_base import is_pg, get_pg_url, setup_test_db, clean_test_tables
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+BASE_DIR = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 TEST_DB = os.path.join(BASE_DIR, "data", "test_cloud.db")
 TEST_RESEARCH_DB = os.path.join(BASE_DIR, "data", "test_research.db")
 os.makedirs(os.path.dirname(TEST_DB), exist_ok=True)
@@ -16,13 +18,16 @@ os.makedirs(os.path.dirname(TEST_DB), exist_ok=True)
 def app():
     import cloud.app.database as mod_db
     from cloud.app.schema import SCHEMA_SQL
+
     setup_test_db(mod_db, SCHEMA_SQL, TEST_DB)
     import cloud.app.research_database as mod_research
+
     mod_research.set_test_research_db_path(TEST_RESEARCH_DB)
     mod_research.init_research_db()
 
     if not is_pg():
         import sqlite3
+
         with sqlite3.connect(TEST_DB) as conn:
             conn.row_factory = sqlite3.Row
             try:
@@ -32,9 +37,11 @@ def app():
                 pass
 
     import cloud.app.main as mod_main
+
     mod_main.DB_PATH = TEST_DB
 
     from cloud.app.main import app as _app
+
     return _app
 
 
@@ -50,7 +57,9 @@ def db_path():
 
 
 def _register_and_login(client, username, password):
-    resp = client.post("/auth/register", json={"username": username, "password": password})
+    resp = client.post(
+        "/auth/register", json={"username": username, "password": password}
+    )
     assert resp.status_code == 201, resp.text
     resp = client.post("/auth/login", json={"username": username, "password": password})
     assert resp.status_code == 200, resp.text
@@ -74,6 +83,7 @@ def admin_token(client):
     if is_pg():
         import psycopg2
         from psycopg2.extras import RealDictCursor
+
         pg_url = get_pg_url(TEST_DB)
         conn = psycopg2.connect(pg_url, cursor_factory=RealDictCursor)
         conn.autocommit = True
@@ -84,6 +94,7 @@ def admin_token(client):
         conn.close()
     else:
         import sqlite3
+
         with sqlite3.connect(TEST_DB) as conn:
             conn.execute(
                 "INSERT INTO users (username, hashed_password, role) VALUES (?, ?, ?)",
@@ -97,9 +108,17 @@ def admin_token(client):
 
 
 TABLES = [
-    "user_team", "teams", "notifications", "notification_templates",
-    "audit_logs", "board_tasks", "task_boards", "contents",
-    "compliance_rules", "users", "enforcement_log",
+    "user_team",
+    "teams",
+    "notifications",
+    "notification_templates",
+    "audit_logs",
+    "board_tasks",
+    "task_boards",
+    "contents",
+    "compliance_rules",
+    "users",
+    "enforcement_log",
 ]
 
 

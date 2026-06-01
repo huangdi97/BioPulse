@@ -1,13 +1,14 @@
 import uuid
 from datetime import datetime, timedelta, timezone
-import pytest
 from jose import jwt
 from shared.auth import create_access_token, SECRET_KEY, ALGORITHM
 
 
 def _get_token(client, scope):
     username = f"scope_{scope}_{uuid.uuid4().hex[:8]}"
-    resp = client.post("/auth/register", json={"username": username, "password": "testpass123"})
+    resp = client.post(
+        "/auth/register", json={"username": username, "password": "testpass123"}
+    )
     assert resp.status_code == 201
     user_id = resp.json()["data"]["user_id"]
     return create_access_token(user_id, "rep", scope)

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchStrategy, type StrategyAdvice } from '@/api/sales-assistant-api'
 import { Card, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/Skeleton'
 import { Lightbulb, Target, TrendingUp, BarChart3 } from 'lucide-react'
 
 export default function StrategyView() {
@@ -17,7 +18,15 @@ export default function StrategyView() {
     return () => { cancelled = true }
   }, [])
 
-  if (loading) return <div className="space-y-3">{[1, 2].map((i) => <Card key={i}><CardContent className="p-4 animate-pulse"><div className="h-24 bg-muted rounded" /></CardContent></Card>)}</div>
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2].map((i) => (
+          <Card key={i}><CardContent className="p-4"><Skeleton className="h-24 w-full" /></CardContent></Card>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">

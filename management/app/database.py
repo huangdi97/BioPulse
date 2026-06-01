@@ -3,8 +3,11 @@ import os
 import time
 import json
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                       "data", "management_cache.db")
+DB_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    "data",
+    "management_cache.db",
+)
 
 
 def init_cache_db():

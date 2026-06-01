@@ -93,12 +93,20 @@ def list_surgeries(
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[SurgeryOut]]:
     total, total_pages, rows = service.list(
-        page, page_size, patient_name, surgery_status, date_from, date_to,
+        page,
+        page_size,
+        patient_name,
+        surgery_status,
+        date_from,
+        date_to,
     )
     return success(
         data=PaginatedResponse(
             items=[SurgeryOut(**dict(r)) for r in rows],
-            total=total, page=page, page_size=page_size, total_pages=total_pages,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
         )
     )
 
@@ -123,7 +131,10 @@ def upcoming_surgeries(
     return success(
         data=PaginatedResponse(
             items=[SurgeryOut(**dict(r)) for r in rows],
-            total=total, page=page, page_size=page_size, total_pages=total_pages,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
         )
     )
 

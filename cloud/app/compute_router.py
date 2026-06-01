@@ -1,9 +1,8 @@
 # FROZEN — 代码保留不迭代。参见一云四端-整体战略规划-v2.3-final.md 第2章
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
-from starlette import status
 
 from cloud.app.services.compute_service import ComputeService
 from shared.auth_scope import require_scope

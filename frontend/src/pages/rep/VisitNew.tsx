@@ -6,6 +6,7 @@ import ComplianceScanner from '@/components/ComplianceScanner'
 import ViolationDialog from '@/components/ViolationDialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useToast } from '@/contexts/ToastContext'
 import type { ScanResult } from '@/types'
 import {
   ArrowLeft,
@@ -20,6 +21,7 @@ import {
   MapPin,
   Image as ImageIcon,
   Crosshair,
+  AlertCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import PhotoUploader from '@/components/PhotoUploader'
@@ -30,6 +32,7 @@ const VISIT_TYPES = ['实地拜访', '电话拜访', '线上会议', '其他']
 export default function VisitNew() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { toast } = useToast()
   const hcpId = parseInt(searchParams.get('hcpId') ?? '0')
   const hcp = useMemo(() => mockHcps.find((h) => h.id === hcpId) ?? null, [hcpId])
 
@@ -37,6 +40,8 @@ export default function VisitNew() {
   const [content, setContent] = useState('')
   const [typeOpen, setTypeOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const [scanResult, setScanResult] = useState<ScanResult>({
@@ -50,19 +55,49 @@ export default function VisitNew() {
 
   const [photos, setPhotos] = useState<File[]>([]), [location, setLocation] = useState(''), [locationMode, setLocationMode] = useState('auto'), [settings, setSettings] = useState<Record<string,string>>({})
 
-  const handleScanResult = useCallback((result: ScanResult) => {
-    setScanResult(result)
-    setIsScanning(false)
+  const validateField = useCallback((field: string, value: string) => {
+    switch (field) {
+      case 'content':
+        if (!value.trim()) return '请输入拜访内容'
+        if (value.trim().length < 5) return '拜访内容至少需要5个字'
+        return ''
+      case 'visitType':
+        if (!value) return '请选择拜访方式'
+        return ''
+      default:
+        return ''
+    }
   }, [])
 
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(e.target.value)
-    setIsScanning(true)
+  const validateAll = useCallback((): boolean => {
+    const newErrors: Record<string, string> = {}
+    const contentError = validateField('content', content)
+    if (contentError) newErrors.content = contentError
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }, [content, validateField])
 
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value
+    setContent(val)
+    setIsScanning(true)
+    if (touched.content) {
+      setErrors((prev) => ({ ...prev, content: validateField('content', val) }))
+    }
     const ta = e.target
     ta.style.height = 'auto'
     ta.style.height = Math.max(72, ta.scrollHeight) + 'px'
   }
+
+  const handleContentBlur = () => {
+    setTouched((prev) => ({ ...prev, content: true }))
+    setErrors((prev) => ({ ...prev, content: validateField('content', content) }))
+  }
+
+  const handleScanResult = useCallback((result: ScanResult) => {
+    setScanResult(result)
+    setIsScanning(false)
+  }, [])
 
   const uploadPhotos = async () => {
     const urls: string[] = []
@@ -87,22 +122,33 @@ export default function VisitNew() {
   }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!content.trim() || !hcp) return
+    setTouched({ content: true, visitType: true })
+    if (!validateAll()) return
     if (!scanResult.passed) { setShowViolationDialog(true); return }
     setSubmitting(true)
-    const photoUrls = await uploadPhotos()
-    const record = await createVisit({ hcpId: hcp.id, hcpName: hcp.name, content: content.trim(), visitType, evidence_photos: photoUrls, location, location_mode: locationMode })
-    setSubmitting(false)
-    navigate(`/rep/visits/${record.id}`)
+    try {
+      const photoUrls = await uploadPhotos()
+      const record = await createVisit({ hcpId: hcp!.id, hcpName: hcp!.name, content: content.trim(), visitType, evidence_photos: photoUrls, location, location_mode: locationMode })
+      toast.success('拜访记录已成功保存')
+      setTimeout(() => navigate(`/rep/visits/${record.id}`), 300)
+    } catch {
+      toast.error('拜访记录保存失败，请重试')
+      setSubmitting(false)
+    }
   }
   const handleForceSubmit = async () => {
     setShowViolationDialog(false)
     if (!content.trim() || !hcp) return
     setSubmitting(true)
-    const photoUrls = await uploadPhotos()
-    const record = await createVisit({ hcpId: hcp.id, hcpName: hcp.name, content: content.trim(), visitType, evidence_photos: photoUrls, location, location_mode: locationMode })
-    setSubmitting(false)
-    navigate(`/rep/visits/${record.id}`)
+    try {
+      const photoUrls = await uploadPhotos()
+      const record = await createVisit({ hcpId: hcp.id, hcpName: hcp.name, content: content.trim(), visitType, evidence_photos: photoUrls, location, location_mode: locationMode })
+      toast.success('拜访记录已成功保存（已忽略合规警告）')
+      setTimeout(() => navigate(`/rep/visits/${record.id}`), 300)
+    } catch {
+      toast.error('拜访记录保存失败，请重试')
+      setSubmitting(false)
+    }
   }
 
   const complianceIndicator = useMemo(() => {
@@ -188,10 +234,12 @@ export default function VisitNew() {
         </CardContent>
       </Card>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">拜访方式</CardTitle>
+            <CardTitle className="text-base">
+              <span className="text-red-500 mr-1">*</span>拜访方式
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="relative">
@@ -230,7 +278,9 @@ export default function VisitNew() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">拜访内容</CardTitle>
+            <CardTitle className="text-base">
+              <span className="text-red-500 mr-1">*</span>拜访内容
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div
@@ -256,8 +306,12 @@ export default function VisitNew() {
                 ref={textareaRef}
                 value={content}
                 onChange={handleContentChange}
+                onBlur={handleContentBlur}
                 placeholder="请输入拜访内容，描述本次拜访的详细信息..."
-                className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                className={cn(
+                  'w-full resize-none rounded-md border bg-background px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+                  errors.content ? 'border-red-500 focus:ring-red-500' : 'border-input'
+                )}
                 rows={3}
                 style={{ minHeight: '72px' }}
               />
@@ -265,8 +319,16 @@ export default function VisitNew() {
                 {content.length} 字
               </span>
             </div>
+
+            {errors.content && (
+              <div className="flex items-center gap-1 text-xs text-red-500">
+                <AlertCircle className="h-3 w-3" />
+                {errors.content}
+              </div>
+            )}
           </CardContent>
         </Card>
+
         {locationMode !== 'off' && (
           <Card>
             <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><MapPin className="h-4 w-4" />签到定位</CardTitle></CardHeader>
@@ -278,17 +340,20 @@ export default function VisitNew() {
             </CardContent>
           </Card>
         )}
+
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><ImageIcon className="h-4 w-4" />现场照片</CardTitle></CardHeader>
           <CardContent>
             <PhotoUploader photos={photos} onPhotosChange={setPhotos} />
           </CardContent>
         </Card>
+
         <Button
           type="submit"
-          disabled={!content.trim() || submitting}
+          disabled={submitting}
           className="w-full"
           size="lg"
+          loading={submitting}
         >
           <Send className="h-4 w-4 mr-2" />
           {submitting ? '提交中...' : '提 交'}

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
@@ -74,7 +74,12 @@ def list_contents(
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[ContentOut]]:
     total, total_pages, rows = service.list_contents(
-        page, page_size, content_type, category, tag, q,
+        page,
+        page_size,
+        content_type,
+        category,
+        tag,
+        q,
     )
     items = [ContentOut(**dict(r)) for r in rows]
     return success(

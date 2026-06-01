@@ -80,7 +80,9 @@ class BaseRepository:
         where = ""
         if conditions:
             where = " WHERE " + " AND ".join(conditions)
-        query = f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY {order_by}"
+        query = (
+            f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY {order_by}"
+        )
         cursor = self.execute(query, params or [])
         return [dict(row) for row in cursor.fetchall()]
 

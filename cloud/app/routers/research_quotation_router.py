@@ -5,7 +5,10 @@ from starlette import status
 
 from shared.auth import get_current_user
 from shared.auth_scope import require_scope
-from cloud.app.services.quotations_service import QUOTATION_TEMPLATES, generate_quotation
+from cloud.app.services.quotations_service import (
+    QUOTATION_TEMPLATES,
+    generate_quotation,
+)
 
 router = APIRouter(
     prefix="/api/research/quotations",

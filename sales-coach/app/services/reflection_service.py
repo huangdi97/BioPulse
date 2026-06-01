@@ -8,7 +8,9 @@ from typing import Optional
 AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
 
 
-def _calculate_dimension_scores(dialogue_log: list, compliance_violations: int, weights: Optional[dict] = None) -> dict:
+def _calculate_dimension_scores(
+    dialogue_log: list, compliance_violations: int, weights: Optional[dict] = None
+) -> dict:
     """从对话数据计算各维度分数。
 
     Args:
@@ -35,7 +37,9 @@ def _calculate_dimension_scores(dialogue_log: list, compliance_violations: int, 
     }
 
 
-def _generate_improvements(scores: dict, strengths_weaknesses: Optional[dict] = None) -> list:
+def _generate_improvements(
+    scores: dict, strengths_weaknesses: Optional[dict] = None
+) -> list:
     """根据弱项生成改进建议。
 
     Args:
@@ -57,27 +61,33 @@ def _generate_improvements(scores: dict, strengths_weaknesses: Optional[dict] = 
 
     for dim, suggestion, threshold in thresholds:
         if scores.get(dim, 100) < threshold:
-            suggestions.append({
-                "priority": priority,
-                "dimension": dim,
-                "suggestion": suggestion,
-            })
+            suggestions.append(
+                {
+                    "priority": priority,
+                    "dimension": dim,
+                    "suggestion": suggestion,
+                }
+            )
             priority += 1
 
     if not suggestions:
-        suggestions.append({
-            "priority": 1,
-            "dimension": "overall",
-            "suggestion": "整体表现良好，建议保持并挑战更高难度的场景",
-        })
+        suggestions.append(
+            {
+                "priority": 1,
+                "dimension": "overall",
+                "suggestion": "整体表现良好，建议保持并挑战更高难度的场景",
+            }
+        )
 
     if strengths_weaknesses and strengths_weaknesses.get("weaknesses"):
         for w in strengths_weaknesses["weaknesses"]:
-            suggestions.append({
-                "priority": priority,
-                "dimension": "custom",
-                "suggestion": f"针对弱项「{w}」制定专项提升计划",
-            })
+            suggestions.append(
+                {
+                    "priority": priority,
+                    "dimension": "custom",
+                    "suggestion": f"针对弱项「{w}」制定专项提升计划",
+                }
+            )
             priority += 1
 
     return suggestions
@@ -192,26 +202,44 @@ def generate_reflection_report(
         )
         if resp.status_code == 200:
             data = resp.json()
-            ai_content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            ai_content = (
+                data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            )
             if data.get("data") and data["data"].get("choices"):
-                ai_content = data["data"]["choices"][0].get("message", {}).get("content", "")
+                ai_content = (
+                    data["data"]["choices"][0].get("message", {}).get("content", "")
+                )
             ai_suggestions = _parse_ai_response(ai_content)
     except Exception:
         ai_suggestions = {}
 
-    strengths = ai_suggestions.get("strengths", [
-        "能够主动与客户建立沟通" if rounds > 2 else "态度积极",
-        "基本掌握产品核心卖点" if dim_scores.get("product_knowledge", 0) > 60 else "有待提升",
-        "对话流程基本完整",
-    ])
+    strengths = ai_suggestions.get(
+        "strengths",
+        [
+            "能够主动与客户建立沟通" if rounds > 2 else "态度积极",
+            "基本掌握产品核心卖点"
+            if dim_scores.get("product_knowledge", 0) > 60
+            else "有待提升",
+            "对话流程基本完整",
+        ],
+    )
 
-    weaknesses = ai_suggestions.get("weaknesses", [
-        "合规话术不够熟练" if violations > 0 else "无明显违规行为",
-        "异议处理经验不足" if dim_scores.get("objection_handling", 0) < 70 else "异议处理表现良好",
-        "产品知识深度有待加强" if dim_scores.get("product_knowledge", 0) < 75 else "产品知识扎实",
-    ])
+    weaknesses = ai_suggestions.get(
+        "weaknesses",
+        [
+            "合规话术不够熟练" if violations > 0 else "无明显违规行为",
+            "异议处理经验不足"
+            if dim_scores.get("objection_handling", 0) < 70
+            else "异议处理表现良好",
+            "产品知识深度有待加强"
+            if dim_scores.get("product_knowledge", 0) < 75
+            else "产品知识扎实",
+        ],
+    )
 
-    improvements = ai_suggestions.get("improvements", _generate_improvements(dim_scores))
+    improvements = ai_suggestions.get(
+        "improvements", _generate_improvements(dim_scores)
+    )
 
     comparison = _compare_with_history(session_id, dim_scores, None)
 
@@ -260,10 +288,12 @@ def _parse_ai_response(content: str) -> dict:
         elif line.startswith("-") or line.startswith("*") or line[0].isdigit():
             text = line.lstrip("-*0123456789. ")
             if current_section == "improvements":
-                result["improvements"].append({
-                    "priority": priority,
-                    "suggestion": text,
-                })
+                result["improvements"].append(
+                    {
+                        "priority": priority,
+                        "suggestion": text,
+                    }
+                )
                 priority += 1
             elif current_section:
                 result[current_section].append(text)

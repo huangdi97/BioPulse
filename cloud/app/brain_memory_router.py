@@ -1,8 +1,7 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
-from starlette import status
 
 from cloud.app.services.brain_memory_service import BrainMemoryService
 from shared.auth_scope import require_scope
@@ -54,11 +53,12 @@ class MemoryDecay(BaseModel):
 
 
 @router.post("/working/set")
-def working_set(body: WorkingMemorySet,
-                service: BrainMemoryService = Depends()):
+def working_set(body: WorkingMemorySet, service: BrainMemoryService = Depends()):
     result = service.working_set(
-        session_id=body.session_id, slot_key=body.slot_key,
-        slot_value=body.slot_value, slot_type=body.slot_type,
+        session_id=body.session_id,
+        slot_key=body.slot_key,
+        slot_value=body.slot_value,
+        slot_type=body.slot_type,
         ttl_seconds=body.ttl_seconds,
     )
     return success(data=result)
@@ -75,15 +75,13 @@ def working_get(
 
 
 @router.delete("/working/clear/{session_id}")
-def working_clear(session_id: str,
-                  service: BrainMemoryService = Depends()):
+def working_clear(session_id: str, service: BrainMemoryService = Depends()):
     message = service.working_clear(session_id)
     return success(message=message)
 
 
 @router.post("/working/refresh/{session_id}")
-def working_refresh(session_id: str,
-                    service: BrainMemoryService = Depends()):
+def working_refresh(session_id: str, service: BrainMemoryService = Depends()):
     result = service.working_refresh(session_id)
     return success(data=result)
 
@@ -97,10 +95,14 @@ def episodic_store(
 ):
     uid = str(current_user["sub"])
     result = service.episodic_store(
-        event_type=body.event_type, title=body.title,
-        description=body.description, context=body.context,
-        outcome=body.outcome, valence=body.valence,
-        intensity=body.intensity, involved_agents=body.involved_agents,
+        event_type=body.event_type,
+        title=body.title,
+        description=body.description,
+        context=body.context,
+        outcome=body.outcome,
+        valence=body.valence,
+        intensity=body.intensity,
+        involved_agents=body.involved_agents,
         related_entity_type=body.related_entity_type,
         related_entity_id=body.related_entity_id,
         uid=uid,
@@ -119,19 +121,26 @@ def episodic_list(
     service: BrainMemoryService = Depends(),
 ):
     result = service.episodic_list(
-        event_type=event_type, outcome=outcome,
-        date_from=date_from, date_to=date_to,
-        page=page, page_size=page_size,
+        event_type=event_type,
+        outcome=outcome,
+        date_from=date_from,
+        date_to=date_to,
+        page=page,
+        page_size=page_size,
     )
-    return success(data=PaginatedResponse(
-        items=result["items"], total=result["total"], page=result["page"],
-        page_size=result["page_size"], total_pages=result["total_pages"],
-    ))
+    return success(
+        data=PaginatedResponse(
+            items=result["items"],
+            total=result["total"],
+            page=result["page"],
+            page_size=result["page_size"],
+            total_pages=result["total_pages"],
+        )
+    )
 
 
 @router.get("/episodic/{memory_id}")
-def episodic_detail(memory_id: int,
-                    service: BrainMemoryService = Depends()):
+def episodic_detail(memory_id: int, service: BrainMemoryService = Depends()):
     row = service.episodic_detail(memory_id)
     return success(data=row)
 
@@ -154,10 +163,12 @@ def dashboard(service: BrainMemoryService = Depends()):
 
 
 @router.post("/semantic/abstract")
-def semantic_abstract(body: SemanticAbstract, request: Request,
-                      service: BrainMemoryService = Depends()):
+def semantic_abstract(
+    body: SemanticAbstract, request: Request, service: BrainMemoryService = Depends()
+):
     result = service.semantic_abstract(
-        source_type=body.source_type, source_id=body.source_id,
+        source_type=body.source_type,
+        source_id=body.source_id,
         abstraction_level=body.abstraction_level,
         auth_header=request.headers.get("Authorization", ""),
     )
@@ -165,15 +176,17 @@ def semantic_abstract(body: SemanticAbstract, request: Request,
 
 
 @router.get("/semantic/search")
-def semantic_search(query: str = Query(...), limit: int = Query(10, ge=1, le=100),
-                    service: BrainMemoryService = Depends()):
+def semantic_search(
+    query: str = Query(...),
+    limit: int = Query(10, ge=1, le=100),
+    service: BrainMemoryService = Depends(),
+):
     result = service.semantic_search(query=query, limit=limit)
     return success(data=result)
 
 
 @router.post("/procedural/learn")
-def procedural_learn(body: ProceduralLearn,
-                     service: BrainMemoryService = Depends()):
+def procedural_learn(body: ProceduralLearn, service: BrainMemoryService = Depends()):
     result = service.procedural_learn(
         pattern_name=body.pattern_name,
         trigger_conditions=body.trigger_conditions,
@@ -184,8 +197,7 @@ def procedural_learn(body: ProceduralLearn,
 
 
 @router.post("/procedural/recall")
-def procedural_recall(body: ProceduralRecall,
-                      service: BrainMemoryService = Depends()):
+def procedural_recall(body: ProceduralRecall, service: BrainMemoryService = Depends()):
     result = service.procedural_recall(trigger_context=body.trigger_context)
     return success(data=result)
 

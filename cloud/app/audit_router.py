@@ -1,11 +1,10 @@
-from typing import Any, List, Optional
+from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
-from starlette import status
+from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
 
 from shared.auth_scope import require_scope
-from shared.base import success, PaginatedResponse
+from shared.base import success
 from cloud.app.services.audit_service import AuditService
 
 router = APIRouter(prefix="/audit", tags=["审计日志"])
@@ -28,9 +27,12 @@ def create_audit_log(
     service: AuditService = Depends(),
 ) -> Any:
     service.create_log(
-        user_id=body.user_id, action=body.action,
-        entity_type=body.entity_type, entity_id=body.entity_id,
-        detail=body.detail, source_end=body.source_end,
+        user_id=body.user_id,
+        action=body.action,
+        entity_type=body.entity_type,
+        entity_id=body.entity_id,
+        detail=body.detail,
+        source_end=body.source_end,
         ip_address=body.ip_address,
     )
     return success(message="audit log recorded")
@@ -48,9 +50,12 @@ def list_audit_logs(
     service: AuditService = Depends(),
 ) -> Any:
     result = service.list_logs(
-        entity_type=entity_type, entity_id=entity_id,
-        action=action, user_id=user_id,
-        page=page, page_size=page_size,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        action=action,
+        user_id=user_id,
+        page=page,
+        page_size=page_size,
     )
     return success(data=result)
 

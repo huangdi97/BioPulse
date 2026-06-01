@@ -37,7 +37,9 @@ def _row(r):
 
 
 @router.post("/tools/register", status_code=status.HTTP_201_CREATED)
-def register_tool(body: ToolRegister, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+def register_tool(
+    body: ToolRegister, current_user=Depends(require_scope("visit")), db=Depends(get_db)
+):
     uid = int(current_user["sub"])
     role = current_user.get("role", "rep")
 
@@ -50,16 +52,18 @@ def register_tool(body: ToolRegister, current_user=Depends(require_scope("visit"
 
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     repo = McpToolsRepository(db)
-    repo.create({
-        "tool_name": body.tool_name,
-        "description": body.description,
-        "endpoint_url": body.endpoint_url,
-        "input_schema": json.dumps(body.input_schema, ensure_ascii=False),
-        "output_schema": json.dumps(body.output_schema, ensure_ascii=False),
-        "created_by": uid,
-        "created_at": now,
-        "updated_at": now,
-    })
+    repo.create(
+        {
+            "tool_name": body.tool_name,
+            "description": body.description,
+            "endpoint_url": body.endpoint_url,
+            "input_schema": json.dumps(body.input_schema, ensure_ascii=False),
+            "output_schema": json.dumps(body.output_schema, ensure_ascii=False),
+            "created_by": uid,
+            "created_at": now,
+            "updated_at": now,
+        }
+    )
     row = repo.get_by_tool_name(body.tool_name)
     return success(data=_row(row))
 
@@ -79,7 +83,9 @@ def list_tools(
 
 
 @router.patch("/tools/{tool_id}/toggle")
-def toggle_tool(tool_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+def toggle_tool(
+    tool_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)
+):
     role = current_user.get("role", "rep")
     McpGuardService.check_tool_access("pubmed_search", role)
 
@@ -93,7 +99,9 @@ def toggle_tool(tool_id: int, current_user=Depends(require_scope("visit")), db=D
 
 
 @router.delete("/tools/{tool_id}", status_code=status.HTTP_200_OK)
-def delete_tool(tool_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+def delete_tool(
+    tool_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)
+):
     role = current_user.get("role", "rep")
     McpGuardService.check_tool_access("market_intel", role)
 

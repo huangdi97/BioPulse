@@ -9,7 +9,7 @@ Provides ready-to-use graph builders for:
 
 import random
 from typing import TypedDict
-from langgraph.graph import StateGraph, END
+from langgraph.graph import StateGraph
 from langgraph.checkpoint.memory import MemorySaver
 from cloud.langgraph.checkpointer import get_sqlite_checkpointer
 from cloud.langgraph.retry import default_retry_policy
@@ -25,6 +25,7 @@ class AgentState(TypedDict):
         metadata: Arbitrary metadata dict for cross-node context.
         needs_review: Flag indicating whether human review is required.
     """
+
     messages: list
     next_agent: str
     metadata: dict

@@ -121,7 +121,9 @@ def list_hcp(
     service: HcpService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[HcpOut]]:
-    total, total_pages, rows = service.list_hcps(page, page_size, name, hospital, department)
+    total, total_pages, rows = service.list_hcps(
+        page, page_size, name, hospital, department
+    )
     return success(
         data=PaginatedResponse(
             items=[HcpOut(**dict(r)) for r in rows],

@@ -36,13 +36,16 @@ def check_reminders() -> int:
     count = 0
     for row in rows:
         r = dict(row)
-        _send_ws(r["created_by"], {
-            "type": "surgery_reminder",
-            "title": "手术提醒",
-            "body": f"{r['patient_name']} · {r.get('surgery_type', '手术')} · {r.get('hospital', '')}",
-            "surgery_id": r["id"],
-            "surgery_date": r.get("surgery_date", ""),
-        })
+        _send_ws(
+            r["created_by"],
+            {
+                "type": "surgery_reminder",
+                "title": "手术提醒",
+                "body": f"{r['patient_name']} · {r.get('surgery_type', '手术')} · {r.get('hospital', '')}",
+                "surgery_id": r["id"],
+                "surgery_date": r.get("surgery_date", ""),
+            },
+        )
         conn.execute(
             "UPDATE surgery_reminder SET last_notified_at=?, notification_status=? WHERE id=?",
             (now, "sent", r["id"]),

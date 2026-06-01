@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from starlette import status
 
@@ -23,9 +23,11 @@ class OrchestrateRun(BaseModel):
 
 
 @router.post("/templates/create", status_code=status.HTTP_201_CREATED)
-def create_template(body: TemplateCreate,
-                    current_user=Depends(require_scope("visit")),
-                    service: OrchestrateService = Depends()):
+def create_template(
+    body: TemplateCreate,
+    current_user=Depends(require_scope("visit")),
+    service: OrchestrateService = Depends(),
+):
     uid = int(current_user["sub"])
     row = service.create_template(
         template_name=body.template_name,
@@ -47,9 +49,11 @@ def list_templates(
 
 
 @router.post("/run", status_code=status.HTTP_201_CREATED)
-def run_orchestration(body: OrchestrateRun,
-                      current_user=Depends(require_scope("visit")),
-                      service: OrchestrateService = Depends()):
+def run_orchestration(
+    body: OrchestrateRun,
+    current_user=Depends(require_scope("visit")),
+    service: OrchestrateService = Depends(),
+):
     result = service.run_orchestration(
         template_name=body.template_name,
         context=body.context,

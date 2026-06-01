@@ -29,9 +29,14 @@ def check_compliance(text: str) -> dict:
 
     suggestions = {}
     for kw in hits:
-        suggestions[kw] = STANDARD_SUGGESTIONS.get(kw, f"建议避免使用'%s'等绝对化用语" % kw)
+        suggestions[kw] = STANDARD_SUGGESTIONS.get(
+            kw, "建议避免使用'%s'等绝对化用语" % kw
+        )
 
-    warning = "合规警告：检测到%d处绝对化/夸大表述，请修改后再发送。标准话术建议如下。" % len(hits)
+    warning = (
+        "合规警告：检测到%d处绝对化/夸大表述，请修改后再发送。标准话术建议如下。"
+        % len(hits)
+    )
 
     return {
         "passed": False,
@@ -54,7 +59,9 @@ def check_compliance_stream(utterance: str) -> dict:
     }
 
 
-def simulate_dialogue(role: str, context: list, user_input: str, ai_gateway_url: str) -> dict:
+def simulate_dialogue(
+    role: str, context: list, user_input: str, ai_gateway_url: str
+) -> dict:
     """Simulate a dialogue round with the given role through AI Gateway.
 
     Constructs a prompt for the AI to play the specified role, sends it along
@@ -62,7 +69,9 @@ def simulate_dialogue(role: str, context: list, user_input: str, ai_gateway_url:
     compliance check on user input, and returns the AI reply.
     """
     role_desc = ROLES.get(role, f"扮演{role}角色")
-    system_prompt = f"你现在正在{role_desc}。请以该角色的身份和语言风格回复。保持专业、自然。"
+    system_prompt = (
+        f"你现在正在{role_desc}。请以该角色的身份和语言风格回复。保持专业、自然。"
+    )
 
     messages = [{"role": "system", "content": system_prompt}]
     messages.extend(context)
@@ -72,7 +81,10 @@ def simulate_dialogue(role: str, context: list, user_input: str, ai_gateway_url:
     with httpx.Client(timeout=30.0) as client:
         resp = client.post(ai_gateway_url, json=payload)
         resp.raise_for_status()
-        reply = resp.json().get("reply", resp.json().get("choices", [{}])[0].get("message", {}).get("content", ""))
+        reply = resp.json().get(
+            "reply",
+            resp.json().get("choices", [{}])[0].get("message", {}).get("content", ""),
+        )
 
     compliance_result = check_compliance(user_input)
     round_number = len([m for m in context if m["role"] == "user"]) + 1

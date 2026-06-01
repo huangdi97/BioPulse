@@ -1,4 +1,5 @@
 """本地缓存数据库。缓存 Cloud API 响应，TTL 600 秒。"""
+
 import sqlite3
 import os
 import time
@@ -6,7 +7,8 @@ import json
 
 DB_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-    "data", "patient_engage_cache.db",
+    "data",
+    "patient_engage_cache.db",
 )
 
 CACHE_TTL = 600
@@ -16,14 +18,17 @@ def init_cache_db():
     """初始化缓存数据库，创建 api_cache 表。"""
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
-    conn.execute("""
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS api_cache (
             cache_key TEXT PRIMARY KEY,
             response TEXT,
             cached_at REAL,
             ttl INTEGER DEFAULT ?
         )
-    """, (CACHE_TTL,))
+    """,
+        (CACHE_TTL,),
+    )
     conn.commit()
     conn.close()
 

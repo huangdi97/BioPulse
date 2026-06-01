@@ -177,7 +177,9 @@ CREATE TABLE IF NOT EXISTS media_file (
 
 
 def get_db() -> Generator:
-    if DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://"):
+    if DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith(
+        "postgres://"
+    ):
         conn = PGCompatConnection(psycopg2.connect(DATABASE_URL))
         try:
             yield conn

@@ -27,8 +27,8 @@ class MemoryEntriesRepository(BaseRepository):
     def find_active_by_id(self, entry_id):
         placeholders = ", ".join(self.cols)
         row = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} "
-            "WHERE id=? AND is_active=1", (entry_id,)
+            f"SELECT {placeholders} FROM {self.table_name} WHERE id=? AND is_active=1",
+            (entry_id,),
         ).fetchone()
         return dict(row) if row else None
 
@@ -41,8 +41,9 @@ class MemoryEntriesRepository(BaseRepository):
         ).fetchone()
         return dict(row) if row else None
 
-    def list_filtered(self, memory_type=None, importance_min=None, keyword=None,
-                      page=1, page_size=20):
+    def list_filtered(
+        self, memory_type=None, importance_min=None, keyword=None, page=1, page_size=20
+    ):
         conditions, params = ["is_active = 1"], []
         if memory_type:
             conditions.append("memory_type = ?")
@@ -54,9 +55,13 @@ class MemoryEntriesRepository(BaseRepository):
             conditions.append("(title LIKE ? OR content LIKE ?)")
             kw = f"%{keyword}%"
             params.extend([kw, kw])
-        return self.paginate(page=page, page_size=page_size,
-                             conditions=conditions, params=params,
-                             order_by="importance DESC")
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conditions,
+            params=params,
+            order_by="importance DESC",
+        )
 
     def count_active(self):
         return self.db.execute(
@@ -87,7 +92,7 @@ class MemoryEntriesRepository(BaseRepository):
     def find_similar_by_title(self, prefix, exclude_id, min_utility=0.8):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT me2.id FROM memory_entries me2 "
+            "SELECT me2.id FROM memory_entries me2 "
             "JOIN memory_utility_scores mus2 ON me2.id=mus2.memory_entry_id "
             "WHERE me2.id!=? AND me2.is_active=1 AND me2.title LIKE ? "
             "AND mus2.utility_score >= ?",
@@ -129,7 +134,8 @@ class MemoryGatesRepository(BaseRepository):
         placeholders = ", ".join(self.cols)
         row = self.db.execute(
             f"SELECT {placeholders} FROM {self.table_name} "
-            "WHERE source_type=? AND is_active=1", (source_type,)
+            "WHERE source_type=? AND is_active=1",
+            (source_type,),
         ).fetchone()
         return dict(row) if row else None
 
@@ -149,7 +155,9 @@ class MemoryRecallLogRepository(BaseRepository):
 
 class MemoryConsolidationLogRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(db, "memory_consolidation_log", TABLE_MEMORY_CONSOLIDATION_LOG_COLS)
+        super().__init__(
+            db, "memory_consolidation_log", TABLE_MEMORY_CONSOLIDATION_LOG_COLS
+        )
 
     def list_recent(self, limit=5):
         placeholders = ", ".join(self.cols)
@@ -182,11 +190,14 @@ class MemoryUtilityScoresRepository(BaseRepository):
         super().__init__(db, "memory_utility_scores", TABLE_MEMORY_UTILITY_SCORES_COLS)
 
     def upsert_score(self, data):
-        cols_str = ", ".join(data.keys())
-        placeholders = ", ".join(["?"] * len(data))
+        filtered = {k: v for k, v in data.items() if k in self.cols}
+        if not filtered:
+            return
+        cols_str = ", ".join(filtered.keys())
+        placeholders = ", ".join(["?"] * len(filtered))
         self.db.execute(
             f"INSERT OR REPLACE INTO {self.table_name} ({cols_str}) VALUES ({placeholders})",
-            list(data.values()),
+            list(filtered.values()),
         )
 
     def list_ranked(self, min_utility=0.0, limit=20):
@@ -203,8 +214,8 @@ class MemoryUtilityScoresRepository(BaseRepository):
     def find_by_memory(self, memory_entry_id):
         placeholders = ", ".join(self.cols)
         row = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} "
-            "WHERE memory_entry_id=?", (memory_entry_id,)
+            f"SELECT {placeholders} FROM {self.table_name} WHERE memory_entry_id=?",
+            (memory_entry_id,),
         ).fetchone()
         return dict(row) if row else None
 
@@ -249,7 +260,9 @@ class NodeMemoryLinksRepository(BaseRepository):
         if not node_ids:
             return
         ph = ",".join("?" for _ in node_ids)
-        self.db.execute(f"DELETE FROM {self.table_name} WHERE node_id IN ({ph})", node_ids)
+        self.db.execute(
+            f"DELETE FROM {self.table_name} WHERE node_id IN ({ph})", node_ids
+        )
 
     def memory_ids_for_nodes(self, node_ids):
         if not node_ids:
@@ -258,7 +271,8 @@ class NodeMemoryLinksRepository(BaseRepository):
         rows = self.db.execute(
             f"SELECT DISTINCT me.id, me.title FROM memory_entries me "
             f"JOIN {self.table_name} nml ON me.id=nml.memory_entry_id "
-            f"WHERE nml.node_id IN ({ph}) AND me.is_active=1", node_ids
+            f"WHERE nml.node_id IN ({ph}) AND me.is_active=1",
+            node_ids,
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -269,14 +283,15 @@ class NodeMemoryLinksRepository(BaseRepository):
         rows = self.db.execute(
             f"SELECT me.importance FROM memory_entries me "
             f"JOIN {self.table_name} nml ON me.id=nml.memory_entry_id "
-            f"WHERE nml.node_id IN ({ph})", node_ids
+            f"WHERE nml.node_id IN ({ph})",
+            node_ids,
         ).fetchall()
         return [dict(r) for r in rows]
 
     def memory_entries_with_utility(self):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT me.id, me.title, me.content, me.importance, me.access_count, "
+            "SELECT me.id, me.title, me.content, me.importance, me.access_count, "
             "me.last_accessed, me.is_active, mus.utility_score "
             "FROM memory_entries me "
             "JOIN memory_utility_scores mus ON me.id=mus.memory_entry_id "
@@ -287,7 +302,9 @@ class NodeMemoryLinksRepository(BaseRepository):
 
 class SleepConsolidationLogsRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(db, "sleep_consolidation_logs", TABLE_SLEEP_CONSOLIDATION_LOGS_COLS)
+        super().__init__(
+            db, "sleep_consolidation_logs", TABLE_SLEEP_CONSOLIDATION_LOGS_COLS
+        )
 
     def list_recent(self, limit=10):
         placeholders = ", ".join(self.cols)

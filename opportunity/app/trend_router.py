@@ -2,7 +2,6 @@ from typing import Optional, List
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
-from starlette import status
 
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
@@ -53,16 +52,22 @@ class TrendAnalysisOut(BaseModel):
 @router.get("/trends/by-topic")
 def trends_by_topic(
     topic: str = Query(..., description="Research topic"),
-    period: str = Query("monthly", description="Aggregation period: monthly/quarterly/yearly"),
+    period: str = Query(
+        "monthly", description="Aggregation period: monthly/quarterly/yearly"
+    ),
     service: TrendService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
     data = service.get_trends_by_topic(topic, period)
     data_points = [TrendPoint(**p) for p in data["data_points"]]
-    return success(data=TrendByTopicOut(
-        topic=data["topic"], period=data["period"],
-        data_points=data_points, total=data["total"],
-    ))
+    return success(
+        data=TrendByTopicOut(
+            topic=data["topic"],
+            period=data["period"],
+            data_points=data_points,
+            total=data["total"],
+        )
+    )
 
 
 @router.post("/trends/predict")
@@ -89,7 +94,10 @@ def trend_history(
     items = [TrendAnalysisOut(**dict(r)) for r in rows]
     return success(
         data=PaginatedResponse(
-            items=items, total=total, page=page,
-            page_size=page_size, total_pages=total_pages,
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
         )
     )

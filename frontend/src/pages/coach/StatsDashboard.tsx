@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { fetchCoachStats } from '@/api/coach'
 import StatCard from '@/components/StatCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Play, CheckCircle2, Star, TrendingUp } from 'lucide-react'
+import { Play, CheckCircle2, Star, TrendingUp, Download } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/Skeleton'
+import { exportToJSON } from '@/utils/export'
 
 export default function StatsDashboard() {
   const [stats, setStats] = useState<Record<string, unknown>>({})
@@ -18,13 +21,35 @@ export default function StatsDashboard() {
     return () => { cancelled = true }
   }, [])
 
+  const exportData = useMemo(() => [{
+    总演练场次: stats.totalSessions,
+    完成场次: stats.completedSessions,
+    平均得分: stats.averageScore,
+    技能提升率: `${stats.improvementRate}%`,
+    累计练习时长: `${stats.totalDuration}分钟`,
+  }], [stats])
+
   if (loading) {
-    return <div className="space-y-4 animate-pulse"><div className="flex gap-4">{[1, 2, 3].map((i) => <div key={i} className="flex-1 h-24 bg-muted rounded-xl" />)}</div></div>
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-24" />
+        <div className="flex gap-4">
+          {[1, 2, 3].map((i) => <Skeleton key={i} className="flex-1 h-24 rounded-xl" />)}
+        </div>
+        <Skeleton className="h-32 rounded-xl" />
+      </div>
+    )
   }
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">数据统计</h2>
+      <div className="flex items-center gap-2">
+        <h2 className="text-lg font-semibold">数据统计</h2>
+        <div className="flex-1" />
+        <Button variant="outline" size="sm" onClick={() => exportToJSON(exportData, '演练统计.json')}>
+          <Download className="h-4 w-4 mr-1" />导出JSON
+        </Button>
+      </div>
       <div className="flex gap-4">
         <StatCard icon={<Play className="h-5 w-5 text-blue-600" />} label="总演练场次" value={(stats.totalSessions as number) ?? 0} />
         <StatCard icon={<CheckCircle2 className="h-5 w-5 text-green-600" />} label="完成场次" value={(stats.completedSessions as number) ?? 0} />

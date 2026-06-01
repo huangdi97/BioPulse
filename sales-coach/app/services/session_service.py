@@ -20,8 +20,12 @@ class SessionService(BaseService):
         return {"id": session_id}
 
     def create_digital_human_session(
-        self, module_id: int, body, user_id: int,
-        session_type: str = "roleplay", scenario_id: int = None,
+        self,
+        module_id: int,
+        body,
+        user_id: int,
+        session_type: str = "roleplay",
+        scenario_id: int = None,
         role: str = None,
     ) -> dict:
         """Create a digital human coach session with extended fields."""

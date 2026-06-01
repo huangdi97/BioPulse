@@ -69,7 +69,15 @@ def list_knowledge(
 ) -> ApiResponse[PaginatedResponse[KnowledgeOut]]:
     total, total_pages, rows = service.list(page, page_size, category, difficulty)
     items = [KnowledgeOut(**dict(r)) for r in rows]
-    return success(data=PaginatedResponse(items=items, total=total, page=page, page_size=page_size, total_pages=total_pages))
+    return success(
+        data=PaginatedResponse(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )
+    )
 
 
 @router.get("/categories")
@@ -91,7 +99,15 @@ def search_knowledge(
 ) -> ApiResponse[PaginatedResponse[KnowledgeOut]]:
     total, total_pages, rows = service.search(q, page, page_size)
     items = [KnowledgeOut(**dict(r)) for r in rows]
-    return success(data=PaginatedResponse(items=items, total=total, page=page, page_size=page_size, total_pages=total_pages))
+    return success(
+        data=PaginatedResponse(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )
+    )
 
 
 @router.get("/{knowledge_id}")

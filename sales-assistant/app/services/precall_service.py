@@ -4,7 +4,11 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-from sales_assistant.app.repositories import HcpRepository, ScheduleRepository, VisitRepository
+from sales_assistant.app.repositories import (
+    HcpRepository,
+    ScheduleRepository,
+    VisitRepository,
+)
 from sales_assistant.app.services.base import BaseService
 
 AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
@@ -46,7 +50,9 @@ class PrecallService(BaseService):
             "suggested_approach": "以学术交流为主，建立专业信任关系，先了解客户实际需求再推荐产品。",
         }
 
-    def _gather_db_context(self, customer_name: str, hospital: str | None = None) -> str:
+    def _gather_db_context(
+        self, customer_name: str, hospital: str | None = None
+    ) -> str:
         parts: list[str] = []
         hcp_repo = HcpRepository(self.db)
         visit_repo = VisitRepository(self.db)
@@ -82,7 +88,9 @@ class PrecallService(BaseService):
 
         return "\n".join(parts)
 
-    def _call_ai_gateway(self, auth_header: str, body, db_context: str = "") -> dict[str, Any]:
+    def _call_ai_gateway(
+        self, auth_header: str, body, db_context: str = ""
+    ) -> dict[str, Any]:
         req_body = {
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
@@ -133,7 +141,11 @@ class PrecallService(BaseService):
             logger.exception("Unexpected error calling AI gateway")
             reply = ""
 
-        brief = self._parse_brief(reply, body) if reply else self._build_fallback_brief(body)
+        brief = (
+            self._parse_brief(reply, body)
+            if reply
+            else self._build_fallback_brief(body)
+        )
         return {
             "customer_name": body.customer_name,
             "hospital": body.hospital,

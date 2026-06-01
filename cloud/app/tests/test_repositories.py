@@ -1,6 +1,4 @@
-from unittest.mock import MagicMock, patch
-
-from cloud.shared.repository import BaseRepository
+from unittest.mock import MagicMock
 
 
 class TestUsersRepository:
@@ -11,7 +9,9 @@ class TestUsersRepository:
         from cloud.app.repositories import UsersRepository
 
         repo = UsersRepository(mock_db)
-        result = repo.create({"username": "testuser", "role": "user", "hashed_password": "hash"})
+        result = repo.create(
+            {"username": "testuser", "role": "user", "hashed_password": "hash"}
+        )
 
         mock_db.execute.assert_called_once()
         call_args = mock_db.execute.call_args[0]
@@ -66,7 +66,8 @@ class TestUsersRepository:
     def test_list_all(self):
         mock_db = MagicMock()
         mock_db.execute.return_value.fetchall.return_value = [
-            {"id": 1, "username": "u1"}, {"id": 2, "username": "u2"}
+            {"id": 1, "username": "u1"},
+            {"id": 2, "username": "u2"},
         ]
         from cloud.app.repositories import UsersRepository
 
@@ -109,7 +110,8 @@ class TestContentsRepository:
         mock_db = MagicMock()
         mock_db.execute.return_value.fetchone.return_value = [25]
         mock_db.execute.return_value.fetchall.return_value = [
-            {"id": 1, "title": "Item1"}, {"id": 2, "title": "Item2"}
+            {"id": 1, "title": "Item1"},
+            {"id": 2, "title": "Item2"},
         ]
         from cloud.app.repositories import ContentsRepository
 
@@ -130,10 +132,15 @@ class TestAuditLogsRepository:
         from cloud.app.repositories import AuditLogsRepository
 
         repo = AuditLogsRepository(mock_db)
-        result = repo.create({
-            "user_id": 1, "action": "test", "entity_type": "tests",
-            "entity_id": 42, "detail": "test entry",
-        })
+        result = repo.create(
+            {
+                "user_id": 1,
+                "action": "test",
+                "entity_type": "tests",
+                "entity_id": 42,
+                "detail": "test entry",
+            }
+        )
 
         call_args = mock_db.execute.call_args[0]
         assert "INSERT INTO audit_logs" in call_args[0]
@@ -143,7 +150,8 @@ class TestAuditLogsRepository:
         mock_db = MagicMock()
         mock_db.execute.return_value.fetchone.return_value = [10]
         mock_db.execute.return_value.fetchall.return_value = [
-            {"id": 1, "action": "create"}, {"id": 2, "action": "update"}
+            {"id": 1, "action": "create"},
+            {"id": 2, "action": "update"},
         ]
         from cloud.app.repositories import AuditLogsRepository
 
@@ -162,8 +170,10 @@ class TestAuditLogsRepository:
 
         repo = AuditLogsRepository(mock_db)
         total, pages, items = repo.paginate(
-            page=1, page_size=20,
-            conditions=["action = ?"], params=["test_create"],
+            page=1,
+            page_size=20,
+            conditions=["action = ?"],
+            params=["test_create"],
         )
 
         call_args = mock_db.execute.call_args[0]
@@ -179,10 +189,14 @@ class TestNotificationsRepository:
         from cloud.app.repositories import NotificationsRepository
 
         repo = NotificationsRepository(mock_db)
-        result = repo.create({
-            "user_id": 1, "title": "Hello", "body": "World",
-            "category": "system",
-        })
+        result = repo.create(
+            {
+                "user_id": 1,
+                "title": "Hello",
+                "body": "World",
+                "category": "system",
+            }
+        )
 
         call_args = mock_db.execute.call_args[0]
         assert "INSERT INTO notifications" in call_args[0]
@@ -196,8 +210,12 @@ class TestNotificationsRepository:
 
         repo = NotificationsRepository(mock_db)
         result = repo.create_notification(
-            user_id=5, title="Alert", body_text="New message",
-            category="system", ref_type="task", ref_id=10,
+            user_id=5,
+            title="Alert",
+            body_text="New message",
+            category="system",
+            ref_type="task",
+            ref_id=10,
         )
 
         call_args = mock_db.execute.call_args[0]
@@ -207,7 +225,9 @@ class TestNotificationsRepository:
     def test_get_by_id(self):
         mock_db = MagicMock()
         mock_db.execute.return_value.fetchone.return_value = {
-            "id": 1, "title": "Note", "is_read": 0
+            "id": 1,
+            "title": "Note",
+            "is_read": 0,
         }
         from cloud.app.repositories import NotificationsRepository
 
@@ -251,10 +271,13 @@ class TestTaskBoardsRepository:
         from cloud.app.repositories import TaskBoardsRepository
 
         repo = TaskBoardsRepository(mock_db)
-        result = repo.create({
-            "name": "Sprint Board", "description": "Active sprint",
-            "owner_id": 1,
-        })
+        result = repo.create(
+            {
+                "name": "Sprint Board",
+                "description": "Active sprint",
+                "owner_id": 1,
+            }
+        )
 
         call_args = mock_db.execute.call_args[0]
         assert "INSERT INTO task_boards" in call_args[0]
@@ -263,7 +286,8 @@ class TestTaskBoardsRepository:
     def test_get_by_id(self):
         mock_db = MagicMock()
         mock_db.execute.return_value.fetchone.return_value = {
-            "id": 9, "name": "Dev Board"
+            "id": 9,
+            "name": "Dev Board",
         }
         from cloud.app.repositories import TaskBoardsRepository
 
@@ -275,7 +299,9 @@ class TestTaskBoardsRepository:
     def test_get_active_by_id(self):
         mock_db = MagicMock()
         mock_db.execute.return_value.fetchone.return_value = {
-            "id": 3, "name": "Active Board", "is_active": 1
+            "id": 3,
+            "name": "Active Board",
+            "is_active": 1,
         }
         from cloud.app.repositories import TaskBoardsRepository
 
@@ -290,7 +316,8 @@ class TestTaskBoardsRepository:
         mock_db = MagicMock()
         mock_db.execute.return_value.fetchone.return_value = [2]
         mock_db.execute.return_value.fetchall.return_value = [
-            {"id": 1, "name": "Board1"}, {"id": 2, "name": "Board2"}
+            {"id": 1, "name": "Board1"},
+            {"id": 2, "name": "Board2"},
         ]
         from cloud.app.repositories import TaskBoardsRepository
 

@@ -7,6 +7,7 @@ from shared.base import success
 
 router = APIRouter(prefix="/api/pipeline", tags=["管线竞争分析"])
 
+
 @router.get("/by-company")
 async def pipeline_by_company(
     company: str = Query(..., description="公司名称"),
@@ -16,6 +17,7 @@ async def pipeline_by_company(
     result = await analyze_pipeline(company, therapeutic_area)
     return success(data=result)
 
+
 @router.get("/by-indication")
 async def pipeline_by_indication(
     indication: str = Query(..., description="适应症名称"),
@@ -24,13 +26,16 @@ async def pipeline_by_indication(
     result = await search_pipeline_by_indication(indication)
     return success(data=result)
 
+
 @router.get("/trending")
 async def trending_pipelines(
     limit: int = Query(10, ge=1, le=50),
 ):
     """获取近期活跃管线列表。当前简化版本返回说明信息。"""
-    return success(data={
-        "message": "Trending pipelines feature requires full KG integration. "
-                   "Use /api/pipeline/by-company or /api/pipeline/by-indication for targeted search.",
-        "limit": limit,
-    })
+    return success(
+        data={
+            "message": "Trending pipelines feature requires full KG integration. "
+            "Use /api/pipeline/by-company or /api/pipeline/by-indication for targeted search.",
+            "limit": limit,
+        }
+    )

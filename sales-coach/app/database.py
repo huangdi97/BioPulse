@@ -78,7 +78,9 @@ CREATE TABLE IF NOT EXISTS education_assessment (
 
 
 def get_db() -> Generator:
-    if DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://"):
+    if DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith(
+        "postgres://"
+    ):
         conn = PGCompatConnection(psycopg2.connect(DATABASE_URL))
         try:
             yield conn
@@ -108,7 +110,9 @@ _NEW_COACH_SESSION_COLS = [
 
 
 def _migrate_coach_session(conn: sqlite3.Connection) -> None:
-    existing = {row[1] for row in conn.execute("PRAGMA table_info(coach_session)").fetchall()}
+    existing = {
+        row[1] for row in conn.execute("PRAGMA table_info(coach_session)").fetchall()
+    }
     for col_name, col_def in _NEW_COACH_SESSION_COLS:
         if col_name not in existing:
             conn.execute(f"ALTER TABLE coach_session ADD COLUMN {col_name} {col_def}")

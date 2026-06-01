@@ -23,7 +23,6 @@ from cloud.shared.columns import (
     TABLE_CUSTOMERS_COLS,
     TABLE_DATA_MASKING_RULES_COLS,
     TABLE_DECISION_CASES_COLS,
-    TABLE_DID_REGISTRY_COLS,
     TABLE_DP_AUDIT_LOG_COLS,
     TABLE_EFFECT_METRICS_COLS,
     TABLE_EPISODIC_MEMORY_COLS,
@@ -64,12 +63,9 @@ from cloud.shared.columns import (
     TABLE_ROUTE_LOGS_COLS,
     TABLE_ROUTE_RULES_COLS,
     TABLE_ROUTE_STATS_COLS,
-    TABLE_SENSOR_SESSIONS_COLS,
     TABLE_SLEEP_CONSOLIDATION_LOGS_COLS,
     TABLE_SOAP_DECISIONS_COLS,
     TABLE_SOAP_TEMPLATES_COLS,
-    TABLE_SUPPLY_CHAIN_ITEMS_COLS,
-    TABLE_SYSTEM_CONFIGS_COLS,
     TABLE_TASK_BOARDS_COLS,
     TABLE_TEAMS_COLS,
     TABLE_TRAINING_ATTRIBUTIONS_COLS,
@@ -82,7 +78,6 @@ from cloud.shared.columns import (
     TABLE_USER_PROFILES_COLS,
     TABLE_USER_TEAM_COLS,
     TABLE_USERS_COLS,
-    TABLE_VC_CREDENTIALS_COLS,
     TABLE_WORKING_MEMORY_COLS,
     TABLE_WORLD_TREE_NODES_COLS,
     TABLE_WORLD_TREE_SNAPSHOTS_COLS,
@@ -111,14 +106,18 @@ class AgentMarketplaceRepository(BaseRepository):
         placeholders = ", ".join(self.cols)
         conditions, params = [], []
         if category:
-            conditions.append("category = ?"); params.append(category)
+            conditions.append("category = ?")
+            params.append(category)
         if price_model:
-            conditions.append("price_model = ?"); params.append(price_model)
+            conditions.append("price_model = ?")
+            params.append(price_model)
         if enabled is not None:
-            conditions.append("enabled = ?"); params.append(enabled)
+            conditions.append("enabled = ?")
+            params.append(enabled)
         where = "WHERE " + " AND ".join(conditions) if conditions else ""
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY rating DESC", params
+            f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY rating DESC",
+            params,
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -135,7 +134,8 @@ class AgentRolesRepository(BaseRepository):
     def list_active(self, limit: int = 5) -> list:
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 LIMIT ?", (limit,)
+            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 LIMIT ?",
+            (limit,),
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -193,7 +193,8 @@ class BenchmarkReportsRepository(BaseRepository):
             where = "WHERE report_type = ?"
             params.append(report_type)
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY created_at DESC", params
+            f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY created_at DESC",
+            params,
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -214,8 +215,13 @@ class BoardTasksRepository(BaseRepository):
         conditions = ["board_id=?", "is_active=1"]
         params = [board_id]
         if status_filter:
-            conditions.append("status=?"); params.append(status_filter)
-        return self.list_all(conditions=conditions, params=params, order_by="sort_order ASC, created_at DESC")
+            conditions.append("status=?")
+            params.append(status_filter)
+        return self.list_all(
+            conditions=conditions,
+            params=params,
+            order_by="sort_order ASC, created_at DESC",
+        )
 
     def list_by_assignee(self, user_id: int):
         placeholders = ", ".join(f"bt.{c}" for c in self.cols)
@@ -237,7 +243,8 @@ class CausalAnalysesRepository(BaseRepository):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
             f"SELECT {placeholders} FROM {self.table_name} WHERE case_id=? ORDER BY created_at DESC",
-            (case_id,)).fetchall()
+            (case_id,),
+        ).fetchall()
         return [dict(r) for r in rows]
 
     def count_distinct_case_ids(self):
@@ -254,7 +261,9 @@ class CausalGraphsRepository(BaseRepository):
 
 class CollaborationSessionsRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(db, "collaboration_sessions", TABLE_COLLABORATION_SESSIONS_COLS)
+        super().__init__(
+            db, "collaboration_sessions", TABLE_COLLABORATION_SESSIONS_COLS
+        )
 
 
 class CollaborationStepsRepository(BaseRepository):
@@ -264,7 +273,9 @@ class CollaborationStepsRepository(BaseRepository):
 
 class ComplianceAuditRecordsRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(db, "compliance_audit_records", TABLE_COMPLIANCE_AUDIT_RECORDS_COLS)
+        super().__init__(
+            db, "compliance_audit_records", TABLE_COMPLIANCE_AUDIT_RECORDS_COLS
+        )
 
 
 class ComplianceRulesRepository(BaseRepository):
@@ -279,43 +290,55 @@ class ContentsRepository(BaseRepository):
 
 class CounterfactualScenariosRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(db, "counterfactual_scenarios", TABLE_COUNTERFACTUAL_SCENARIOS_COLS)
+        super().__init__(
+            db, "counterfactual_scenarios", TABLE_COUNTERFACTUAL_SCENARIOS_COLS
+        )
 
 
 class CrossCaseInsightsRepository(BaseRepository):
     def __init__(self, db):
         super().__init__(db, "cross_case_insights", TABLE_CROSS_CASE_INSIGHTS_COLS)
 
-    def list_filtered(self, insight_type=None, confidence_min=None,
-                      page=1, page_size=20):
+    def list_filtered(
+        self, insight_type=None, confidence_min=None, page=1, page_size=20
+    ):
         conditions = ["is_active=1"]
         params = []
         if insight_type:
-            conditions.append("insight_type=?"); params.append(insight_type)
+            conditions.append("insight_type=?")
+            params.append(insight_type)
         if confidence_min is not None:
-            conditions.append("confidence >= ?"); params.append(confidence_min)
-        return self.paginate(page=page, page_size=page_size,
-                             conditions=conditions, params=params or None,
-                             order_by="confidence DESC")
+            conditions.append("confidence >= ?")
+            params.append(confidence_min)
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conditions,
+            params=params or None,
+            order_by="confidence DESC",
+        )
 
     def get_active_by_id(self, insight_id: int):
         placeholders = ", ".join(self.cols)
         row = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE id=? AND is_active=1", (insight_id,)
+            f"SELECT {placeholders} FROM {self.table_name} WHERE id=? AND is_active=1",
+            (insight_id,),
         ).fetchone()
         return dict(row) if row else None
 
     def count_by_type(self):
         rows = self.db.execute(
             f"SELECT insight_type, COUNT(*) AS cnt FROM {self.table_name} WHERE is_active=1 "
-            "GROUP BY insight_type").fetchall()
+            "GROUP BY insight_type"
+        ).fetchall()
         return [{"type": r["insight_type"], "count": r["cnt"]} for r in rows]
 
     def top_by_confidence(self, limit=5):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
             f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY confidence DESC LIMIT ?",
-            (limit,)).fetchall()
+            (limit,),
+        ).fetchall()
         return [dict(r) for r in rows]
 
 
@@ -334,12 +357,18 @@ class CustomerInteractionsRepository(BaseRepository):
     def list_filtered(self, type_=None, conducted_by=None, page=1, page_size=20):
         conditions, params = [], []
         if type_:
-            conditions.append("type=?"); params.append(type_)
+            conditions.append("type=?")
+            params.append(type_)
         if conducted_by is not None:
-            conditions.append("conducted_by=?"); params.append(conducted_by)
-        return self.paginate(page=page, page_size=page_size,
-                             conditions=conditions or None, params=params or None,
-                             order_by="conducted_at DESC")
+            conditions.append("conducted_by=?")
+            params.append(conducted_by)
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conditions or None,
+            params=params or None,
+            order_by="conducted_at DESC",
+        )
 
 
 class CustomersRepository(BaseRepository):
@@ -347,9 +376,12 @@ class CustomersRepository(BaseRepository):
         super().__init__(db, "customers", TABLE_CUSTOMERS_COLS)
 
     def exists(self, customer_id: int):
-        return self.db.execute(
-            f"SELECT id FROM {self.table_name} WHERE id=?", (customer_id,)
-        ).fetchone() is not None
+        return (
+            self.db.execute(
+                f"SELECT id FROM {self.table_name} WHERE id=?", (customer_id,)
+            ).fetchone()
+            is not None
+        )
 
 
 class DataMaskingRulesRepository(BaseRepository):
@@ -364,33 +396,51 @@ class DecisionCasesRepository(BaseRepository):
     def get_active_by_id(self, case_id: int):
         placeholders = ", ".join(self.cols)
         row = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE id=? AND is_active=1", (case_id,)
+            f"SELECT {placeholders} FROM {self.table_name} WHERE id=? AND is_active=1",
+            (case_id,),
         ).fetchone()
         return dict(row) if row else None
 
-    def list_filtered(self, outcome_score_min=None, outcome_score_max=None,
-                      tag=None, search=None, page=1, page_size=20):
+    def list_filtered(
+        self,
+        outcome_score_min=None,
+        outcome_score_max=None,
+        tag=None,
+        search=None,
+        page=1,
+        page_size=20,
+    ):
         conditions = ["is_active=1"]
         params = []
         if outcome_score_min is not None:
-            conditions.append("outcome_score >= ?"); params.append(outcome_score_min)
+            conditions.append("outcome_score >= ?")
+            params.append(outcome_score_min)
         if outcome_score_max is not None:
-            conditions.append("outcome_score <= ?"); params.append(outcome_score_max)
+            conditions.append("outcome_score <= ?")
+            params.append(outcome_score_max)
         if tag:
-            conditions.append("tags LIKE ?"); params.append(f"%{tag}%")
+            conditions.append("tags LIKE ?")
+            params.append(f"%{tag}%")
         if search:
             conditions.append("(name LIKE ? OR description LIKE ?)")
             params.extend([f"%{search}%", f"%{search}%"])
-        return self.paginate(page=page, page_size=page_size,
-                             conditions=conditions, params=params or None,
-                             order_by="created_at DESC")
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conditions,
+            params=params or None,
+            order_by="created_at DESC",
+        )
 
     def soft_delete_with_causal(self, case_id: int):
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.db.execute(
-            f"UPDATE {self.table_name} SET is_active=0, updated_at=? WHERE id=?", (now, case_id))
+            f"UPDATE {self.table_name} SET is_active=0, updated_at=? WHERE id=?",
+            (now, case_id),
+        )
         self.db.execute(
-            "UPDATE causal_analyses SET case_id=-case_id WHERE case_id=?", (case_id,))
+            "UPDATE causal_analyses SET case_id=-case_id WHERE case_id=?", (case_id,)
+        )
         self.db.commit()
 
     def list_success_cases(self, limit=5, filter_tags=None):
@@ -404,7 +454,8 @@ class DecisionCasesRepository(BaseRepository):
         where = " WHERE " + " AND ".join(conditions)
         rows = self.db.execute(
             f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY outcome_score DESC LIMIT ?",
-            params + [limit]).fetchall()
+            params + [limit],
+        ).fetchall()
         return [dict(r) for r in rows]
 
     def list_fail_cases(self, limit=5, filter_tags=None):
@@ -418,12 +469,14 @@ class DecisionCasesRepository(BaseRepository):
         where = " WHERE " + " AND ".join(conditions)
         rows = self.db.execute(
             f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY outcome_score ASC LIMIT ?",
-            params + [limit]).fetchall()
+            params + [limit],
+        ).fetchall()
         return [dict(r) for r in rows]
 
     def count_active(self):
         return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1").fetchone()[0]
+            f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1"
+        ).fetchone()[0]
 
     def score_distribution(self):
         rows = self.db.execute(
@@ -454,7 +507,7 @@ class EffectMetricsRepository(BaseRepository):
         rows = self.db.execute(
             f"SELECT agent_role, metric_type, SUM(metric_value) AS total, AVG(metric_value) AS avg_value "
             f"FROM {self.table_name} {where} GROUP BY agent_role, metric_type ORDER BY agent_role, metric_type",
-            params
+            params,
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -485,7 +538,8 @@ class EventBusDefinitionsRepository(BaseRepository):
     def get_by_event_type(self, event_type: str):
         placeholders = ", ".join(self.cols)
         row = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE event_type=?", (event_type,)
+            f"SELECT {placeholders} FROM {self.table_name} WHERE event_type=?",
+            (event_type,),
         ).fetchone()
         return dict(row) if row else None
 
@@ -493,20 +547,24 @@ class EventBusDefinitionsRepository(BaseRepository):
         conditions = ["1=1"]
         params = []
         if source_end:
-            conditions.append("source_end=?"); params.append(source_end)
+            conditions.append("source_end=?")
+            params.append(source_end)
         if enabled is not None:
-            conditions.append("enabled=?"); params.append(enabled)
+            conditions.append("enabled=?")
+            params.append(enabled)
         placeholders = ", ".join(self.cols)
         where = " AND ".join(conditions)
         rows = self.db.execute(
             f"SELECT {placeholders} FROM {self.table_name} WHERE {where} ORDER BY priority ASC",
-            params).fetchall()
+            params,
+        ).fetchall()
         return [dict(r) for r in rows]
 
     def toggle_enabled(self, event_type: str):
         self.db.execute(
             "UPDATE event_bus_definitions SET enabled = CASE WHEN enabled=1 THEN 0 ELSE 1 END WHERE event_type=?",
-            (event_type,))
+            (event_type,),
+        )
         self.db.commit()
 
     def count_all(self):
@@ -520,48 +578,69 @@ class EventBusMessagesRepository(BaseRepository):
     def get_by_message_id(self, message_id: str):
         placeholders = ", ".join(self.cols)
         row = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE message_id=?", (message_id,)
+            f"SELECT {placeholders} FROM {self.table_name} WHERE message_id=?",
+            (message_id,),
         ).fetchone()
         return dict(row) if row else None
 
-    def list_filtered(self, event_type=None, status=None, source_end=None,
-                      start_date=None, end_date=None):
+    def list_filtered(
+        self,
+        event_type=None,
+        status=None,
+        source_end=None,
+        start_date=None,
+        end_date=None,
+    ):
         conditions = ["1=1"]
         params = []
         if event_type:
-            conditions.append("event_type=?"); params.append(event_type)
+            conditions.append("event_type=?")
+            params.append(event_type)
         if status:
-            conditions.append("status=?"); params.append(status)
+            conditions.append("status=?")
+            params.append(status)
         if source_end:
-            conditions.append("source_end=?"); params.append(source_end)
+            conditions.append("source_end=?")
+            params.append(source_end)
         if start_date:
-            conditions.append("created_at >= ?"); params.append(start_date)
+            conditions.append("created_at >= ?")
+            params.append(start_date)
         if end_date:
-            conditions.append("created_at <= ?"); params.append(end_date)
+            conditions.append("created_at <= ?")
+            params.append(end_date)
         placeholders = ", ".join(self.cols)
         where = " AND ".join(conditions)
         rows = self.db.execute(
             f"SELECT {placeholders} FROM {self.table_name} WHERE {where} ORDER BY created_at DESC",
-            params).fetchall()
+            params,
+        ).fetchall()
         return [dict(r) for r in rows]
 
     def mark_delivered(self, message_id: str):
         self.db.execute(
             "UPDATE event_bus_messages SET status='delivered', delivered_at=CURRENT_TIMESTAMP WHERE message_id=?",
-            (message_id,))
+            (message_id,),
+        )
         self.db.commit()
 
     def mark_pending_with_retry(self, message_id: str):
         self.db.execute(
             "UPDATE event_bus_messages SET status='pending', retry_count=retry_count+1 WHERE message_id=?",
-            (message_id,))
+            (message_id,),
+        )
         self.db.commit()
 
     def count_by_status(self):
         return {
-            "pending": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='pending'").fetchone()[0],
-            "delivered": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='delivered'").fetchone()[0],
-            "failed": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='failed'").fetchone()[0],
+            "pending": self.db.execute(
+                f"SELECT COUNT(*) FROM {self.table_name} WHERE status='pending'"
+            ).fetchone()[0],
+            "delivered": self.db.execute(
+                f"SELECT COUNT(*) FROM {self.table_name} WHERE status='delivered'"
+            ).fetchone()[0],
+            "failed": self.db.execute(
+                f"SELECT COUNT(*) FROM {self.table_name} WHERE status='failed'"
+            ).fetchone()[0],
         }
 
     def count_all(self):
@@ -571,14 +650,17 @@ class EventBusMessagesRepository(BaseRepository):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
             f"SELECT event_type, COUNT(*) as cnt FROM {self.table_name} "
-            "GROUP BY event_type ORDER BY cnt DESC LIMIT ?", (limit,)).fetchall()
+            "GROUP BY event_type ORDER BY cnt DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
         return [dict(r) for r in rows]
 
     def list_recent(self, limit=5):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
             f"SELECT {placeholders} FROM {self.table_name} ORDER BY created_at DESC LIMIT ?",
-            (limit,)).fetchall()
+            (limit,),
+        ).fetchall()
         return [dict(r) for r in rows]
 
 
@@ -590,29 +672,36 @@ class EventDeliveryLogRepository(BaseRepository):
         conditions = ["1=1"]
         params = []
         if message_id:
-            conditions.append("message_id=?"); params.append(message_id)
+            conditions.append("message_id=?")
+            params.append(message_id)
         if target_end:
-            conditions.append("target_end=?"); params.append(target_end)
+            conditions.append("target_end=?")
+            params.append(target_end)
         if delivery_status:
-            conditions.append("delivery_status=?"); params.append(delivery_status)
+            conditions.append("delivery_status=?")
+            params.append(delivery_status)
         placeholders = ", ".join(self.cols)
         where = " AND ".join(conditions)
         rows = self.db.execute(
             f"SELECT {placeholders} FROM {self.table_name} WHERE {where} ORDER BY id",
-            params).fetchall()
+            params,
+        ).fetchall()
         return [dict(r) for r in rows]
 
     def list_by_message_id(self, message_id: str):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
             f"SELECT {placeholders} FROM {self.table_name} WHERE message_id=? ORDER BY id",
-            (message_id,)).fetchall()
+            (message_id,),
+        ).fetchall()
         return [dict(r) for r in rows]
 
     def reset_pending_by_message(self, message_id: str):
         self.db.execute(
             "UPDATE event_delivery_log SET delivery_status='pending', error_message='', "
-            "response_summary='', attempt=attempt+1 WHERE message_id=?", (message_id,))
+            "response_summary='', attempt=attempt+1 WHERE message_id=?",
+            (message_id,),
+        )
         self.db.commit()
 
     def count_all(self):
@@ -631,17 +720,28 @@ class EventDeliveryLogRepository(BaseRepository):
 
 class FedAuditContributionsRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(db, "fed_audit_contributions", TABLE_FED_AUDIT_CONTRIBUTIONS_COLS)
+        super().__init__(
+            db, "fed_audit_contributions", TABLE_FED_AUDIT_CONTRIBUTIONS_COLS
+        )
 
-    def list_filtered(self, contributor_did=None, contribution_type=None, verified=None):
+    def list_filtered(
+        self, contributor_did=None, contribution_type=None, verified=None
+    ):
         conditions, params = [], []
         if contributor_did:
-            conditions.append("contributor_did=?"); params.append(contributor_did)
+            conditions.append("contributor_did=?")
+            params.append(contributor_did)
         if contribution_type:
-            conditions.append("contribution_type=?"); params.append(contribution_type)
+            conditions.append("contribution_type=?")
+            params.append(contribution_type)
         if verified is not None:
-            conditions.append("verified=?"); params.append(verified)
-        return self.list_all(conditions=conditions or None, params=params or None, order_by="created_at DESC")
+            conditions.append("verified=?")
+            params.append(verified)
+        return self.list_all(
+            conditions=conditions or None,
+            params=params or None,
+            order_by="created_at DESC",
+        )
 
     def get_latest_by_did_and_type(self, contributor_did: str, contribution_type: str):
         row = self.db.execute(
@@ -688,9 +788,13 @@ class HcpInteractionsRepository(BaseRepository):
     def list_by_hcp_id(self, hcp_id: int, page=1, page_size=20):
         conditions = ["hcp_id=?"]
         params = [hcp_id]
-        return self.paginate(page=page, page_size=page_size,
-                             conditions=conditions, params=params,
-                             order_by="conducted_at DESC")
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conditions,
+            params=params,
+            order_by="conducted_at DESC",
+        )
 
     def get_recent_by_hcp_id(self, hcp_id: int, limit: int = 5):
         placeholders = ", ".join(self.cols)
@@ -708,13 +812,20 @@ class HcpProfilesRepository(BaseRepository):
     def list_filtered(self, tier=None, specialty=None, city=None, page=1, page_size=20):
         conditions, params = [], []
         if tier:
-            conditions.append("tier=?"); params.append(tier)
+            conditions.append("tier=?")
+            params.append(tier)
         if specialty:
-            conditions.append("specialty=?"); params.append(specialty)
+            conditions.append("specialty=?")
+            params.append(specialty)
         if city:
-            conditions.append("city=?"); params.append(city)
-        return self.paginate(page=page, page_size=page_size,
-                             conditions=conditions or None, params=params or None)
+            conditions.append("city=?")
+            params.append(city)
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conditions or None,
+            params=params or None,
+        )
 
     def count_active(self):
         return self.db.execute(
@@ -751,12 +862,18 @@ class HcpSimulationsRepository(BaseRepository):
     def list_filtered(self, hcp_id=None, status_=None, page=1, page_size=20):
         conditions, params = [], []
         if hcp_id is not None:
-            conditions.append("hcp_id=?"); params.append(hcp_id)
+            conditions.append("hcp_id=?")
+            params.append(hcp_id)
         if status_:
-            conditions.append("status=?"); params.append(status_)
-        return self.paginate(page=page, page_size=page_size,
-                             conditions=conditions or None, params=params or None,
-                             order_by="created_at DESC")
+            conditions.append("status=?")
+            params.append(status_)
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conditions or None,
+            params=params or None,
+            order_by="created_at DESC",
+        )
 
 
 class KgEntitiesRepository(BaseRepository):
@@ -765,24 +882,35 @@ class KgEntitiesRepository(BaseRepository):
 
     def get_by_entity_id(self, entity_id: str):
         row = self.db.execute(
-            f"SELECT {', '.join(self.cols)} FROM {self.table_name} WHERE entity_id=?", (entity_id,)
+            f"SELECT {', '.join(self.cols)} FROM {self.table_name} WHERE entity_id=?",
+            (entity_id,),
         ).fetchone()
         return dict(row) if row else None
 
     def exists_entity_id(self, entity_id: str):
-        return self.db.execute(
-            f"SELECT id FROM {self.table_name} WHERE entity_id=?", (entity_id,)
-        ).fetchone() is not None
+        return (
+            self.db.execute(
+                f"SELECT id FROM {self.table_name} WHERE entity_id=?", (entity_id,)
+            ).fetchone()
+            is not None
+        )
 
     def list_filtered(self, entity_type=None, name=None, status_="active"):
         conditions, params = [], []
         if entity_type:
-            conditions.append("entity_type=?"); params.append(entity_type)
+            conditions.append("entity_type=?")
+            params.append(entity_type)
         if name:
-            conditions.append("name LIKE ?"); params.append(f"%{name}%")
+            conditions.append("name LIKE ?")
+            params.append(f"%{name}%")
         if status_:
-            conditions.append("status=?"); params.append(status_)
-        return self.list_all(conditions=conditions or None, params=params or None, order_by="created_at DESC")
+            conditions.append("status=?")
+            params.append(status_)
+        return self.list_all(
+            conditions=conditions or None,
+            params=params or None,
+            order_by="created_at DESC",
+        )
 
     def search_by_name_and_types(self, query: str, entity_types=None, limit: int = 20):
         conditions = ["status='active'", "name LIKE ?"]
@@ -822,7 +950,8 @@ class KgEntitiesRepository(BaseRepository):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
             f"SELECT {placeholders} FROM {self.table_name} "
-            "WHERE status='active' ORDER BY confidence DESC LIMIT ?", (limit,)
+            "WHERE status='active' ORDER BY confidence DESC LIMIT ?",
+            (limit,),
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -842,12 +971,19 @@ class KgRelationsRepository(BaseRepository):
     def list_filtered(self, source=None, target=None, relation_type=None):
         conditions, params = [], []
         if source:
-            conditions.append("source_entity_id=?"); params.append(source)
+            conditions.append("source_entity_id=?")
+            params.append(source)
         if target:
-            conditions.append("target_entity_id=?"); params.append(target)
+            conditions.append("target_entity_id=?")
+            params.append(target)
         if relation_type:
-            conditions.append("relation_type=?"); params.append(relation_type)
-        return self.list_all(conditions=conditions or None, params=params or None, order_by="created_at DESC")
+            conditions.append("relation_type=?")
+            params.append(relation_type)
+        return self.list_all(
+            conditions=conditions or None,
+            params=params or None,
+            order_by="created_at DESC",
+        )
 
     def list_by_entity_ids_batch(self, entity_ids):
         if not entity_ids:
@@ -876,7 +1012,10 @@ class KgRelationsRepository(BaseRepository):
                 WHERE e.status='active' GROUP BY e.entity_id ORDER BY degree DESC LIMIT ?""",
             (limit,),
         ).fetchall()
-        return [{"name": r["name"], "type": r["entity_type"], "degree": r["degree"]} for r in rows]
+        return [
+            {"name": r["name"], "type": r["entity_type"], "degree": r["degree"]}
+            for r in rows
+        ]
 
 
 class KgSearchCacheRepository(BaseRepository):
@@ -892,11 +1031,12 @@ class MarketIntelItemsRepository(BaseRepository):
         super().__init__(db, "market_intel_items", TABLE_MARKET_INTEL_ITEMS_COLS)
 
     def count_by_field(self, field: str) -> dict:
+        if field not in self.cols:
+            return {}
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
             f"SELECT {field}, COUNT(*) as cnt FROM {self.table_name} GROUP BY {field}"
         ).fetchall()
-        return {r[field]: r["cnt"] for r in rows}
 
     def count_recent_critical(self, limit: int = 10) -> list:
         placeholders = ", ".join(self.cols)
@@ -908,18 +1048,26 @@ class MarketIntelItemsRepository(BaseRepository):
 
     def count_by_date_range(self, days: int = 7) -> list:
         from datetime import datetime, timedelta
+
         result = []
         placeholders = ", ".join(self.cols)
         for i in range(days, -1, -1):
             day = (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d")
             cnt = self.db.execute(
-                f"SELECT COUNT(*) FROM {self.table_name} WHERE date(collected_at)=?", (day,)
+                f"SELECT COUNT(*) FROM {self.table_name} WHERE date(collected_at)=?",
+                (day,),
             ).fetchone()[0]
             result.append({"date": day, "count": cnt})
         return result
 
-    def list_with_source(self, conditions=None, params=None, order_by="mi.collected_at DESC",
-                         page=1, page_size=20):
+    def list_with_source(
+        self,
+        conditions=None,
+        params=None,
+        order_by="mi.collected_at DESC",
+        page=1,
+        page_size=20,
+    ):
         placeholders = ", ".join(f"mi.{c}" for c in self.cols)
         where = ""
         if conditions:
@@ -937,21 +1085,32 @@ class MarketIntelItemsRepository(BaseRepository):
         return total, [dict(r) for r in rows]
 
     def create_raw(self, data: dict) -> int:
-        cols_str = ", ".join(data.keys())
-        placeholders = ", ".join(["?"] * len(data))
-        values = list(data.values())
+        filtered = {k: v for k, v in data.items() if k in self.cols}
+        if not filtered:
+            return 0
+        cols_str = ", ".join(filtered.keys())
+        placeholders = ", ".join(["?"] * len(filtered))
+        values = list(filtered.values())
         cursor = self.db.execute(
-            f"INSERT INTO {self.table_name} ({cols_str}) VALUES ({placeholders})", values
+            f"INSERT INTO {self.table_name} ({cols_str}) VALUES ({placeholders})",
+            values,
         )
         return cursor.lastrowid
 
     def delete_by_source(self, source_id: int):
-        self.db.execute(f"DELETE FROM {self.table_name} WHERE source_id=?", (source_id,))
+        self.db.execute(
+            f"DELETE FROM {self.table_name} WHERE source_id=?", (source_id,)
+        )
 
     def update_fields(self, record_id: int, data: dict) -> bool:
-        set_clause = ", ".join(f"{k}=?" for k in data.keys())
-        values = list(data.values()) + [record_id]
-        cursor = self.db.execute(f"UPDATE {self.table_name} SET {set_clause} WHERE id=?", values)
+        filtered = {k: v for k, v in data.items() if k in self.cols and k != "id"}
+        if not filtered:
+            return False
+        set_clause = ", ".join(f"{k}=?" for k in filtered.keys())
+        values = list(filtered.values()) + [record_id]
+        cursor = self.db.execute(
+            f"UPDATE {self.table_name} SET {set_clause} WHERE id=?", values
+        )
         return cursor.rowcount > 0
 
 
@@ -960,9 +1119,14 @@ class MarketIntelSourcesRepository(BaseRepository):
         super().__init__(db, "market_intel_sources", TABLE_MARKET_INTEL_SOURCES_COLS)
 
     def update_fields(self, record_id: int, data: dict) -> bool:
-        set_clause = ", ".join(f"{k}=?" for k in data.keys())
-        values = list(data.values()) + [record_id]
-        cursor = self.db.execute(f"UPDATE {self.table_name} SET {set_clause} WHERE id=?", values)
+        filtered = {k: v for k, v in data.items() if k in self.cols and k != "id"}
+        if not filtered:
+            return False
+        set_clause = ", ".join(f"{k}=?" for k in filtered.keys())
+        values = list(filtered.values()) + [record_id]
+        cursor = self.db.execute(
+            f"UPDATE {self.table_name} SET {set_clause} WHERE id=?", values
+        )
         self.db.commit()
         return cursor.rowcount > 0
 
@@ -987,15 +1151,18 @@ class McpToolsRepository(BaseRepository):
         placeholders = ", ".join(self.cols)
         conditions, params = [], []
         if enabled is not None:
-            conditions.append("enabled=?"); params.append(enabled)
+            conditions.append("enabled=?")
+            params.append(enabled)
         where = "WHERE " + " AND ".join(conditions) if conditions else ""
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY created_at DESC", params
+            f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY created_at DESC",
+            params,
         ).fetchall()
         return [dict(r) for r in rows]
 
     def toggle_enabled(self, record_id: int) -> bool:
         from datetime import datetime
+
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         cursor = self.db.execute(
             f"UPDATE {self.table_name} SET enabled = NOT enabled, updated_at=? WHERE id=?",
@@ -1007,7 +1174,8 @@ class McpToolsRepository(BaseRepository):
     def get_by_tool_name(self, tool_name: str):
         placeholders = ", ".join(self.cols)
         row = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE tool_name=?", (tool_name,)
+            f"SELECT {placeholders} FROM {self.table_name} WHERE tool_name=?",
+            (tool_name,),
         ).fetchone()
         return dict(row) if row else None
 
@@ -1025,7 +1193,8 @@ class MdtOpinionsRepository(BaseRepository):
             params.append(round_number)
         where = "WHERE " + " AND ".join(conditions)
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY round_number ASC, id ASC", params
+            f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY round_number ASC, id ASC",
+            params,
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -1052,15 +1221,22 @@ class MdtOpinionsRepository(BaseRepository):
             f"SELECT {placeholders}, p.role_name FROM {self.table_name} o "
             f"JOIN mdt_participants p ON p.id=o.participant_id "
             f"WHERE o.session_id=? AND o.round_number=?",
-            (session_id, round_num)
+            (session_id, round_num),
         ).fetchall()
-        return "\n".join(f"- {r['role_name']}: {r['summary']}" for r in rows if r.get("summary"))
+        return "\n".join(
+            f"- {r['role_name']}: {r['summary']}" for r in rows if r.get("summary")
+        )
 
     def create_raw(self, data: dict) -> int:
-        cols_str = ", ".join(data.keys())
-        placeholders = ", ".join(["?"] * len(data))
+        filtered = {k: v for k, v in data.items() if k in self.cols}
+        if not filtered:
+            return 0
+        cols_str = ", ".join(filtered.keys())
+        placeholders = ", ".join(["?"] * len(filtered))
+        values = list(filtered.values())
         cursor = self.db.execute(
-            f"INSERT INTO {self.table_name} ({cols_str}) VALUES ({placeholders})", list(data.values())
+            f"INSERT INTO {self.table_name} ({cols_str}) VALUES ({placeholders})",
+            values,
         )
         return cursor.lastrowid
 
@@ -1084,10 +1260,15 @@ class MdtParticipantsRepository(BaseRepository):
         ).fetchone()[0]
 
     def create_raw(self, data: dict) -> int:
-        cols_str = ", ".join(data.keys())
-        placeholders = ", ".join(["?"] * len(data))
+        filtered = {k: v for k, v in data.items() if k in self.cols}
+        if not filtered:
+            return 0
+        cols_str = ", ".join(filtered.keys())
+        placeholders = ", ".join(["?"] * len(filtered))
+        values = list(filtered.values())
         cursor = self.db.execute(
-            f"INSERT INTO {self.table_name} ({cols_str}) VALUES ({placeholders})", list(data.values())
+            f"INSERT INTO {self.table_name} ({cols_str}) VALUES ({placeholders})",
+            values,
         )
         return cursor.lastrowid
 
@@ -1116,14 +1297,17 @@ class MdtSessionsRepository(BaseRepository):
     def list_recent(self, limit: int = 5) -> list:
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} ORDER BY created_at DESC LIMIT ?", (limit,)
+            f"SELECT {placeholders} FROM {self.table_name} ORDER BY created_at DESC LIMIT ?",
+            (limit,),
         ).fetchall()
         return [dict(r) for r in rows]
 
 
 class MemoryConsolidationLogRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(db, "memory_consolidation_log", TABLE_MEMORY_CONSOLIDATION_LOG_COLS)
+        super().__init__(
+            db, "memory_consolidation_log", TABLE_MEMORY_CONSOLIDATION_LOG_COLS
+        )
 
     def list_recent(self, limit=5):
         placeholders = ", ".join(self.cols)
@@ -1166,8 +1350,8 @@ class MemoryEntriesRepository(BaseRepository):
     def find_active_by_id(self, entry_id):
         placeholders = ", ".join(self.cols)
         row = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} "
-            "WHERE id=? AND is_active=1", (entry_id,)
+            f"SELECT {placeholders} FROM {self.table_name} WHERE id=? AND is_active=1",
+            (entry_id,),
         ).fetchone()
         return dict(row) if row else None
 
@@ -1180,8 +1364,9 @@ class MemoryEntriesRepository(BaseRepository):
         ).fetchone()
         return dict(row) if row else None
 
-    def list_filtered(self, memory_type=None, importance_min=None, keyword=None,
-                      page=1, page_size=20):
+    def list_filtered(
+        self, memory_type=None, importance_min=None, keyword=None, page=1, page_size=20
+    ):
         conditions, params = ["is_active = 1"], []
         if memory_type:
             conditions.append("memory_type = ?")
@@ -1193,9 +1378,13 @@ class MemoryEntriesRepository(BaseRepository):
             conditions.append("(title LIKE ? OR content LIKE ?)")
             kw = f"%{keyword}%"
             params.extend([kw, kw])
-        return self.paginate(page=page, page_size=page_size,
-                             conditions=conditions, params=params,
-                             order_by="importance DESC")
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conditions,
+            params=params,
+            order_by="importance DESC",
+        )
 
     def count_active(self):
         return self.db.execute(
@@ -1226,7 +1415,7 @@ class MemoryEntriesRepository(BaseRepository):
     def find_similar_by_title(self, prefix, exclude_id, min_utility=0.8):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT me2.id FROM memory_entries me2 "
+            "SELECT me2.id FROM memory_entries me2 "
             "JOIN memory_utility_scores mus2 ON me2.id=mus2.memory_entry_id "
             "WHERE me2.id!=? AND me2.is_active=1 AND me2.title LIKE ? "
             "AND mus2.utility_score >= ?",
@@ -1268,7 +1457,8 @@ class MemoryGatesRepository(BaseRepository):
         placeholders = ", ".join(self.cols)
         row = self.db.execute(
             f"SELECT {placeholders} FROM {self.table_name} "
-            "WHERE source_type=? AND is_active=1", (source_type,)
+            "WHERE source_type=? AND is_active=1",
+            (source_type,),
         ).fetchone()
         return dict(row) if row else None
 
@@ -1291,11 +1481,14 @@ class MemoryUtilityScoresRepository(BaseRepository):
         super().__init__(db, "memory_utility_scores", TABLE_MEMORY_UTILITY_SCORES_COLS)
 
     def upsert_score(self, data):
-        cols_str = ", ".join(data.keys())
-        placeholders = ", ".join(["?"] * len(data))
+        filtered = {k: v for k, v in data.items() if k in self.cols}
+        if not filtered:
+            return
+        cols_str = ", ".join(filtered.keys())
+        placeholders = ", ".join(["?"] * len(filtered))
         self.db.execute(
             f"INSERT OR REPLACE INTO {self.table_name} ({cols_str}) VALUES ({placeholders})",
-            list(data.values()),
+            list(filtered.values()),
         )
 
     def list_ranked(self, min_utility=0.0, limit=20):
@@ -1312,8 +1505,8 @@ class MemoryUtilityScoresRepository(BaseRepository):
     def find_by_memory(self, memory_entry_id):
         placeholders = ", ".join(self.cols)
         row = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} "
-            "WHERE memory_entry_id=?", (memory_entry_id,)
+            f"SELECT {placeholders} FROM {self.table_name} WHERE memory_entry_id=?",
+            (memory_entry_id,),
         ).fetchone()
         return dict(row) if row else None
 
@@ -1322,16 +1515,24 @@ class NmpaComplianceLogsRepository(BaseRepository):
     def __init__(self, db):
         super().__init__(db, "nmpa_compliance_logs", TABLE_NMPA_COMPLIANCE_LOGS_COLS)
 
-    def list_filtered(self, document_type=None, check_result=None, human_review_required=None):
+    def list_filtered(
+        self, document_type=None, check_result=None, human_review_required=None
+    ):
         conditions, params = [], []
         if document_type:
-            conditions.append("document_type=?"); params.append(document_type)
+            conditions.append("document_type=?")
+            params.append(document_type)
         if check_result:
-            conditions.append("check_result=?"); params.append(check_result)
+            conditions.append("check_result=?")
+            params.append(check_result)
         if human_review_required is not None:
-            conditions.append("human_review_required=?"); params.append(human_review_required)
-        return self.list_all(conditions=conditions or None, params=params or None,
-                             order_by="created_at DESC")
+            conditions.append("human_review_required=?")
+            params.append(human_review_required)
+        return self.list_all(
+            conditions=conditions or None,
+            params=params or None,
+            order_by="created_at DESC",
+        )
 
 
 class NodeMemoryLinksRepository(BaseRepository):
@@ -1350,7 +1551,9 @@ class NodeMemoryLinksRepository(BaseRepository):
         if not node_ids:
             return
         ph = ",".join("?" for _ in node_ids)
-        self.db.execute(f"DELETE FROM {self.table_name} WHERE node_id IN ({ph})", node_ids)
+        self.db.execute(
+            f"DELETE FROM {self.table_name} WHERE node_id IN ({ph})", node_ids
+        )
 
     def memory_ids_for_nodes(self, node_ids):
         if not node_ids:
@@ -1359,7 +1562,8 @@ class NodeMemoryLinksRepository(BaseRepository):
         rows = self.db.execute(
             f"SELECT DISTINCT me.id, me.title FROM memory_entries me "
             f"JOIN {self.table_name} nml ON me.id=nml.memory_entry_id "
-            f"WHERE nml.node_id IN ({ph}) AND me.is_active=1", node_ids
+            f"WHERE nml.node_id IN ({ph}) AND me.is_active=1",
+            node_ids,
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -1370,14 +1574,15 @@ class NodeMemoryLinksRepository(BaseRepository):
         rows = self.db.execute(
             f"SELECT me.importance FROM memory_entries me "
             f"JOIN {self.table_name} nml ON me.id=nml.memory_entry_id "
-            f"WHERE nml.node_id IN ({ph})", node_ids
+            f"WHERE nml.node_id IN ({ph})",
+            node_ids,
         ).fetchall()
         return [dict(r) for r in rows]
 
     def memory_entries_with_utility(self):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT me.id, me.title, me.content, me.importance, me.access_count, "
+            "SELECT me.id, me.title, me.content, me.importance, me.access_count, "
             "me.last_accessed, me.is_active, mus.utility_score "
             "FROM memory_entries me "
             "JOIN memory_utility_scores mus ON me.id=mus.memory_entry_id "
@@ -1388,22 +1593,38 @@ class NodeMemoryLinksRepository(BaseRepository):
 
 class NotificationTemplatesRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(db, "notification_templates", TABLE_NOTIFICATION_TEMPLATES_COLS)
+        super().__init__(
+            db, "notification_templates", TABLE_NOTIFICATION_TEMPLATES_COLS
+        )
 
 
 class NotificationsRepository(BaseRepository):
     def __init__(self, db):
         super().__init__(db, "notifications", TABLE_NOTIFICATIONS_COLS)
 
-    def create_notification(self, user_id: int, title: str, body_text: str,
-                            category: str, ref_type: str, ref_id: int):
+    def create_notification(
+        self,
+        user_id: int,
+        title: str,
+        body_text: str,
+        category: str,
+        ref_type: str,
+        ref_id: int,
+    ):
         from datetime import datetime
+
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        return self.create({
-            "user_id": user_id, "title": title, "body": body_text,
-            "category": category, "ref_type": ref_type, "ref_id": ref_id,
-            "created_at": now,
-        })
+        return self.create(
+            {
+                "user_id": user_id,
+                "title": title,
+                "body": body_text,
+                "category": category,
+                "ref_type": ref_type,
+                "ref_id": ref_id,
+                "created_at": now,
+            }
+        )
 
 
 class OpportunitiesRepository(BaseRepository):
@@ -1413,7 +1634,9 @@ class OpportunitiesRepository(BaseRepository):
 
 class OrchestrationTemplatesRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(db, "orchestration_templates", TABLE_ORCHESTRATION_TEMPLATES_COLS)
+        super().__init__(
+            db, "orchestration_templates", TABLE_ORCHESTRATION_TEMPLATES_COLS
+        )
 
 
 class PipelineRunsRepository(BaseRepository):
@@ -1449,10 +1672,14 @@ class RecommendationsRepository(BaseRepository):
         return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name}").fetchone()[0]
 
     def count_clicked(self):
-        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE clicked=1").fetchone()[0]
+        return self.db.execute(
+            f"SELECT COUNT(*) FROM {self.table_name} WHERE clicked=1"
+        ).fetchone()[0]
 
     def count_dismissed(self):
-        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE dismissed=1").fetchone()[0]
+        return self.db.execute(
+            f"SELECT COUNT(*) FROM {self.table_name} WHERE dismissed=1"
+        ).fetchone()[0]
 
     def count_by_rec_type(self):
         rows = self.db.execute(
@@ -1460,27 +1687,47 @@ class RecommendationsRepository(BaseRepository):
         ).fetchall()
         return [dict(r) for r in rows]
 
-    def list_filtered(self, user_id=None, rec_type=None, clicked=None, dismissed=None,
-                      limit=50, offset=0):
+    def list_filtered(
+        self,
+        user_id=None,
+        rec_type=None,
+        clicked=None,
+        dismissed=None,
+        limit=50,
+        offset=0,
+    ):
         conditions, params = [], []
         if user_id is not None:
-            conditions.append("user_id=?"); params.append(user_id)
+            conditions.append("user_id=?")
+            params.append(user_id)
         if rec_type is not None:
-            conditions.append("rec_type=?"); params.append(rec_type)
+            conditions.append("rec_type=?")
+            params.append(rec_type)
         if clicked is not None:
-            conditions.append("clicked=?"); params.append(clicked)
+            conditions.append("clicked=?")
+            params.append(clicked)
         if dismissed is not None:
-            conditions.append("dismissed=?"); params.append(dismissed)
-        return self.paginate(page=1, page_size=limit, conditions=conditions or None,
-                             params=params or None, order_by="created_at DESC")
+            conditions.append("dismissed=?")
+            params.append(dismissed)
+        return self.paginate(
+            page=1,
+            page_size=limit,
+            conditions=conditions or None,
+            params=params or None,
+            order_by="created_at DESC",
+        )
 
     def mark_clicked(self, rec_id: int) -> bool:
-        cursor = self.db.execute(f"UPDATE {self.table_name} SET clicked=1 WHERE id=?", (rec_id,))
+        cursor = self.db.execute(
+            f"UPDATE {self.table_name} SET clicked=1 WHERE id=?", (rec_id,)
+        )
         self.db.commit()
         return cursor.rowcount > 0
 
     def mark_dismissed(self, rec_id: int) -> bool:
-        cursor = self.db.execute(f"UPDATE {self.table_name} SET dismissed=1 WHERE id=?", (rec_id,))
+        cursor = self.db.execute(
+            f"UPDATE {self.table_name} SET dismissed=1 WHERE id=?", (rec_id,)
+        )
         self.db.commit()
         return cursor.rowcount > 0
 
@@ -1489,20 +1736,35 @@ class RouteLogsRepository(BaseRepository):
     def __init__(self, db):
         super().__init__(db, "route_logs", TABLE_ROUTE_LOGS_COLS)
 
-    def list_filtered(self, role_id=None, source=None, date_from=None, date_to=None,
-                      page=1, page_size=20):
+    def list_filtered(
+        self,
+        role_id=None,
+        source=None,
+        date_from=None,
+        date_to=None,
+        page=1,
+        page_size=20,
+    ):
         conditions, params = [], []
         if role_id is not None:
-            conditions.append("assigned_role_id=?"); params.append(role_id)
+            conditions.append("assigned_role_id=?")
+            params.append(role_id)
         if source is not None:
-            conditions.append("source=?"); params.append(source)
+            conditions.append("source=?")
+            params.append(source)
         if date_from:
-            conditions.append("created_at>=?"); params.append(date_from)
+            conditions.append("created_at>=?")
+            params.append(date_from)
         if date_to:
-            conditions.append("created_at<=?"); params.append(date_to)
-        return self.paginate(page=page, page_size=page_size,
-                             conditions=conditions or None, params=params or None,
-                             order_by="created_at DESC")
+            conditions.append("created_at<=?")
+            params.append(date_to)
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conditions or None,
+            params=params or None,
+            order_by="created_at DESC",
+        )
 
     def role_distribution(self):
         placeholders = ", ".join(self.cols)
@@ -1520,7 +1782,8 @@ class RouteLogsRepository(BaseRepository):
     def list_recent(self, limit: int = 10):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} ORDER BY created_at DESC LIMIT ?", (limit,)
+            f"SELECT {placeholders} FROM {self.table_name} ORDER BY created_at DESC LIMIT ?",
+            (limit,),
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -1550,6 +1813,7 @@ class RouteStatsRepository(BaseRepository):
 
     def upsert(self, role_id: int, latency_ms: int, tokens: int, confidence: float):
         from datetime import datetime
+
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         row = self.db.execute(
             f"SELECT * FROM {self.table_name} WHERE role_id=?", (role_id,)
@@ -1557,19 +1821,29 @@ class RouteStatsRepository(BaseRepository):
         if row:
             total = row["total_routed"] + 1
             n = float(total)
-            avg_confidence = round((row["avg_confidence"] * (n - 1) + confidence) / n, 4)
+            avg_confidence = round(
+                (row["avg_confidence"] * (n - 1) + confidence) / n, 4
+            )
             avg_tokens = round((row["avg_tokens"] * (n - 1) + tokens) / n, 2)
             avg_latency = round((row["avg_latency_ms"] * (n - 1) + latency_ms) / n, 2)
             self.db.execute(
                 f"UPDATE {self.table_name} SET total_routed=?, avg_confidence=?, "
                 "avg_tokens=?, avg_latency_ms=?, last_routed_at=?, updated_at=? WHERE role_id=?",
-                (total, avg_confidence, avg_tokens, avg_latency, now, now, role_id))
+                (total, avg_confidence, avg_tokens, avg_latency, now, now, role_id),
+            )
         else:
             self.db.execute(
                 f"INSERT INTO {self.table_name} (role_id, total_routed, avg_confidence, "
                 "avg_tokens, avg_latency_ms, last_routed_at, updated_at) VALUES (?,1,?,?,?,?,?)",
-                (role_id, round(confidence, 4), round(float(tokens), 2),
-                 round(float(latency_ms), 2), now, now))
+                (
+                    role_id,
+                    round(confidence, 4),
+                    round(float(tokens), 2),
+                    round(float(latency_ms), 2),
+                    now,
+                    now,
+                ),
+            )
         self.db.commit()
 
     def list_with_role_name(self):
@@ -1583,7 +1857,9 @@ class RouteStatsRepository(BaseRepository):
 
 class SleepConsolidationLogsRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(db, "sleep_consolidation_logs", TABLE_SLEEP_CONSOLIDATION_LOGS_COLS)
+        super().__init__(
+            db, "sleep_consolidation_logs", TABLE_SLEEP_CONSOLIDATION_LOGS_COLS
+        )
 
     def list_recent(self, limit=10):
         placeholders = ", ".join(self.cols)
@@ -1598,19 +1874,27 @@ class SoapDecisionsRepository(BaseRepository):
     def __init__(self, db):
         super().__init__(db, "soap_decisions", TABLE_SOAP_DECISIONS_COLS)
 
-    def list_active_filtered(self, status=None, priority=None, tag=None,
-                             page=1, page_size=20):
+    def list_active_filtered(
+        self, status=None, priority=None, tag=None, page=1, page_size=20
+    ):
         conditions = ["is_active=1"]
         params = []
         if status:
-            conditions.append("status=?"); params.append(status)
+            conditions.append("status=?")
+            params.append(status)
         if priority:
-            conditions.append("priority=?"); params.append(priority)
+            conditions.append("priority=?")
+            params.append(priority)
         if tag:
-            conditions.append("tags LIKE ?"); params.append(f"%{tag}%")
-        return self.paginate(page=page, page_size=page_size,
-                             conditions=conditions, params=params or None,
-                             order_by="created_at DESC")
+            conditions.append("tags LIKE ?")
+            params.append(f"%{tag}%")
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conditions,
+            params=params or None,
+            order_by="created_at DESC",
+        )
 
     def count_active(self):
         return self.db.execute(
@@ -1633,7 +1917,8 @@ class SoapDecisionsRepository(BaseRepository):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
             f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 "
-            "ORDER BY created_at DESC LIMIT ?", (limit,)
+            "ORDER BY created_at DESC LIMIT ?",
+            (limit,),
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -1646,8 +1931,11 @@ class SoapTemplatesRepository(BaseRepository):
         conditions = ["is_active=1"]
         params = []
         if category:
-            conditions.append("category=?"); params.append(category)
-        return self.list_all(conditions=conditions, params=params or None, order_by="id ASC")
+            conditions.append("category=?")
+            params.append(category)
+        return self.list_all(
+            conditions=conditions, params=params or None, order_by="id ASC"
+        )
 
 
 class TaskBoardsRepository(BaseRepository):
@@ -1657,7 +1945,8 @@ class TaskBoardsRepository(BaseRepository):
     def get_active_by_id(self, board_id: int):
         placeholders = ", ".join(self.cols)
         row = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE id=? AND is_active=1", (board_id,)
+            f"SELECT {placeholders} FROM {self.table_name} WHERE id=? AND is_active=1",
+            (board_id,),
         ).fetchone()
         return dict(row) if row else None
 
@@ -1714,7 +2003,9 @@ class UserBehaviorsRepository(BaseRepository):
         ).fetchone()
         return dict(row) if row else None
 
-    def top_targets_by_user_action(self, user_id: int, action_type: str, limit: int = 5):
+    def top_targets_by_user_action(
+        self, user_id: int, action_type: str, limit: int = 5
+    ):
         rows = self.db.execute(
             f"SELECT target_id, target_type, COUNT(*) AS cnt FROM {self.table_name} "
             "WHERE user_id=? AND action_type=? GROUP BY target_id, target_type "
@@ -1723,23 +2014,33 @@ class UserBehaviorsRepository(BaseRepository):
         ).fetchall()
         return [dict(r) for r in rows]
 
-    def list_filtered(self, user_id=None, action_type=None, target_type=None,
-                      limit=50, offset=0):
+    def list_filtered(
+        self, user_id=None, action_type=None, target_type=None, limit=50, offset=0
+    ):
         conditions, params = [], []
         if user_id is not None:
-            conditions.append("user_id=?"); params.append(user_id)
+            conditions.append("user_id=?")
+            params.append(user_id)
         if action_type is not None:
-            conditions.append("action_type=?"); params.append(action_type)
+            conditions.append("action_type=?")
+            params.append(action_type)
         if target_type is not None:
-            conditions.append("target_type=?"); params.append(target_type)
-        return self.paginate(page=1, page_size=limit, conditions=conditions or None,
-                             params=params or None, order_by="created_at DESC")
+            conditions.append("target_type=?")
+            params.append(target_type)
+        return self.paginate(
+            page=1,
+            page_size=limit,
+            conditions=conditions or None,
+            params=params or None,
+            order_by="created_at DESC",
+        )
 
     def top_actions_global(self, limit: int = 10):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
             f"SELECT action_type, COUNT(*) AS cnt FROM {self.table_name} "
-            "GROUP BY action_type ORDER BY cnt DESC LIMIT ?", (limit,)
+            "GROUP BY action_type ORDER BY cnt DESC LIMIT ?",
+            (limit,),
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -1750,12 +2051,20 @@ class UserProfilesRepository(BaseRepository):
 
     def get_by_user_id(self, user_id: int):
         row = self.db.execute(
-            f"SELECT {', '.join(self.cols)} FROM {self.table_name} WHERE user_id=?", (user_id,)
+            f"SELECT {', '.join(self.cols)} FROM {self.table_name} WHERE user_id=?",
+            (user_id,),
         ).fetchone()
         return dict(row) if row else None
 
-    def upsert_profile(self, user_id: int, persona_type: str, specialization: str,
-                       experience_level: str, preferred_content_types: str, custom_tags: str):
+    def upsert_profile(
+        self,
+        user_id: int,
+        persona_type: str,
+        specialization: str,
+        experience_level: str,
+        preferred_content_types: str,
+        custom_tags: str,
+    ):
         self.db.execute(
             f"INSERT INTO {self.table_name} (user_id, persona_type, specialization, experience_level, "
             "preferred_content_types, custom_tags, updated_at) "
@@ -1764,7 +2073,14 @@ class UserProfilesRepository(BaseRepository):
             "specialization=excluded.specialization, experience_level=excluded.experience_level, "
             "preferred_content_types=excluded.preferred_content_types, "
             "custom_tags=excluded.custom_tags, updated_at=datetime('now')",
-            (user_id, persona_type, specialization, experience_level, preferred_content_types, custom_tags),
+            (
+                user_id,
+                persona_type,
+                specialization,
+                experience_level,
+                preferred_content_types,
+                custom_tags,
+            ),
         )
         self.db.commit()
         return self.get_by_user_id(user_id)
@@ -1793,9 +2109,12 @@ class WorldTreeNodesRepository(BaseRepository):
         super().__init__(db, "world_tree_nodes", TABLE_WORLD_TREE_NODES_COLS)
 
     def exists_by_id(self, node_id):
-        return self.db.execute(
-            f"SELECT id FROM {self.table_name} WHERE id=?", (node_id,)
-        ).fetchone() is not None
+        return (
+            self.db.execute(
+                f"SELECT id FROM {self.table_name} WHERE id=?", (node_id,)
+            ).fetchone()
+            is not None
+        )
 
     def list_active_sorted(self):
         placeholders = ", ".join(self.cols)
@@ -1810,9 +2129,12 @@ class WorldTreeNodesRepository(BaseRepository):
         while stack:
             cur = stack.pop()
             ids.append(cur)
-            stack.extend(c["id"] for c in self.db.execute(
-                f"SELECT id FROM {self.table_name} WHERE parent_id=?", (cur,)
-            ).fetchall())
+            stack.extend(
+                c["id"]
+                for c in self.db.execute(
+                    f"SELECT id FROM {self.table_name} WHERE parent_id=?", (cur,)
+                ).fetchall()
+            )
         return ids
 
     def update_parent(self, node_id, parent_id, now):
@@ -1850,4 +2172,6 @@ class WorldTreeSnapshotsRepository(BaseRepository):
         if not node_ids:
             return
         ph = ",".join("?" for _ in node_ids)
-        self.db.execute(f"DELETE FROM {self.table_name} WHERE node_id IN ({ph})", node_ids)
+        self.db.execute(
+            f"DELETE FROM {self.table_name} WHERE node_id IN ({ph})", node_ids
+        )

@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Optional
 
 from fastapi import HTTPException
 from starlette import status
@@ -32,19 +32,25 @@ class TeamService(BaseService):
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Team not found")
         return row
 
-    def create_team(self, name: str, description: Optional[str], created_by: int) -> dict:
+    def create_team(
+        self, name: str, description: Optional[str], created_by: int
+    ) -> dict:
         teams_repo, _ = self._get_repos()
-        team_id = teams_repo.create({
-            "name": name,
-            "description": description,
-            "created_by": created_by,
-            "created_at": "CURRENT_TIMESTAMP",
-            "updated_at": "CURRENT_TIMESTAMP",
-        })
+        team_id = teams_repo.create(
+            {
+                "name": name,
+                "description": description,
+                "created_by": created_by,
+                "created_at": "CURRENT_TIMESTAMP",
+                "updated_at": "CURRENT_TIMESTAMP",
+            }
+        )
         row = teams_repo.get_by_id(team_id)
         return _row_to_team_out(row)
 
-    def list_teams(self, name: Optional[str] = None, page: int = 1, page_size: int = 20) -> dict:
+    def list_teams(
+        self, name: Optional[str] = None, page: int = 1, page_size: int = 20
+    ) -> dict:
         teams_repo, _ = self._get_repos()
         conditions = ["is_active=1"]
         params = []
@@ -53,8 +59,10 @@ class TeamService(BaseService):
             params.append(f"%{name}%")
 
         total, total_pages, rows = teams_repo.paginate(
-            page=page, page_size=page_size,
-            conditions=conditions, params=params,
+            page=page,
+            page_size=page_size,
+            conditions=conditions,
+            params=params,
             order_by="id DESC",
         )
         items = [_row_to_team_out(r) for r in rows]
@@ -92,7 +100,13 @@ class TeamService(BaseService):
         data["members"] = members
         return data
 
-    def update_team(self, team_id: int, name: Optional[str] = None, description: Optional[str] = None, is_active: Optional[int] = None) -> dict:
+    def update_team(
+        self,
+        team_id: int,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        is_active: Optional[int] = None,
+    ) -> dict:
         teams_repo, _ = self._get_repos()
         self._get_team_or_404(team_id)
 
@@ -109,7 +123,7 @@ class TeamService(BaseService):
             return _row_to_team_out(row)
 
         updates["updated_at"] = "CURRENT_TIMESTAMP"
-        validate_columns({k: True for k in updates}, 'teams', TABLE_TEAMS_COLS)
+        validate_columns({k: True for k in updates}, "teams", TABLE_TEAMS_COLS)
         teams_repo.update(team_id, updates)
 
         row = teams_repo.get_by_id(team_id)
@@ -125,12 +139,14 @@ class TeamService(BaseService):
         self._get_team_or_404(team_id)
 
         try:
-            user_team_repo.create({
-                "user_id": user_id,
-                "team_id": team_id,
-                "role": role,
-                "created_at": "CURRENT_TIMESTAMP",
-            })
+            user_team_repo.create(
+                {
+                    "user_id": user_id,
+                    "team_id": team_id,
+                    "role": role,
+                    "created_at": "CURRENT_TIMESTAMP",
+                }
+            )
         except Exception:
             raise HTTPException(
                 status.HTTP_409_CONFLICT,
@@ -148,4 +164,6 @@ class TeamService(BaseService):
         self.db.commit()
 
         if cur.rowcount == 0:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Member not found in team")
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND, detail="Member not found in team"
+            )

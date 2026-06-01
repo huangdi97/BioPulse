@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import client from '@/api/client'
-import { Save, Loader2 } from 'lucide-react'
+import { Save, Loader2, Moon, Sun } from 'lucide-react'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface SystemSettings {
   watermark_enabled: boolean
@@ -17,6 +18,7 @@ export default function Settings() {
   const [settings, setSettings] = useState<SystemSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const { dark, toggle } = useTheme()
 
   useEffect(() => {
     client.get('/api/cloud/admin/settings').then((res) => {
@@ -118,6 +120,27 @@ export default function Settings() {
               </Label>
             </div>
           </RadioGroup>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>外观</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {dark ? (
+                <Moon className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <Sun className="h-4 w-4 text-amber-500" />
+              )}
+              <span className="text-sm text-muted-foreground">
+                {dark ? '暗色模式' : '亮色模式'}
+              </span>
+            </div>
+            <Switch checked={dark} onCheckedChange={toggle} />
+          </div>
         </CardContent>
       </Card>
 

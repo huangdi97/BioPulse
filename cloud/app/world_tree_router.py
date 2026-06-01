@@ -1,6 +1,6 @@
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from cloud.app.services.world_tree_service import WorldTreeService
@@ -12,9 +12,9 @@ router = APIRouter(prefix="/world-tree", tags=["记忆系统"])
 
 class NodeCreate(BaseModel):
     name: str
-    description: str = ''
+    description: str = ""
     parent_id: Optional[int] = None
-    node_type: str = 'tag'
+    node_type: str = "tag"
     sort_order: int = 0
     metadata: dict = {}
 
@@ -29,13 +29,20 @@ class NodeUpdate(BaseModel):
 
 # 1
 @router.post("/nodes")
-def create_node(body: NodeCreate, current_user: dict = Depends(require_scope("visit")),
-                service: WorldTreeService = Depends()):
+def create_node(
+    body: NodeCreate,
+    current_user: dict = Depends(require_scope("visit")),
+    service: WorldTreeService = Depends(),
+):
     uid = int(current_user["sub"])
     row = service.create_node(
-        name=body.name, description=body.description,
-        parent_id=body.parent_id, node_type=body.node_type,
-        sort_order=body.sort_order, metadata=body.metadata, uid=uid,
+        name=body.name,
+        description=body.description,
+        parent_id=body.parent_id,
+        node_type=body.node_type,
+        sort_order=body.sort_order,
+        metadata=body.metadata,
+        uid=uid,
     )
     return success(data=row)
 
@@ -60,11 +67,18 @@ def get_node(node_id: int, service: WorldTreeService = Depends()):
 
 # 4
 @router.patch("/nodes/{node_id}")
-def update_node(node_id: int, body: NodeUpdate, current_user: dict = Depends(require_scope("visit")),
-                service: WorldTreeService = Depends()):
+def update_node(
+    node_id: int,
+    body: NodeUpdate,
+    current_user: dict = Depends(require_scope("visit")),
+    service: WorldTreeService = Depends(),
+):
     row = service.update_node(
-        node_id=node_id, name=body.name, description=body.description,
-        node_type=body.node_type, sort_order=body.sort_order,
+        node_id=node_id,
+        name=body.name,
+        description=body.description,
+        node_type=body.node_type,
+        sort_order=body.sort_order,
         metadata=body.metadata,
     )
     return success(data=row)
@@ -93,16 +107,14 @@ def get_ancestors(node_id: int, service: WorldTreeService = Depends()):
 
 # 8
 @router.post("/nodes/{node_id}/link/{memory_id}")
-def link_memory(node_id: int, memory_id: int,
-                service: WorldTreeService = Depends()):
+def link_memory(node_id: int, memory_id: int, service: WorldTreeService = Depends()):
     service.link_memory(node_id, memory_id)
     return success(message="Linked")
 
 
 # 9
 @router.delete("/nodes/{node_id}/link/{memory_id}")
-def unlink_memory(node_id: int, memory_id: int,
-                  service: WorldTreeService = Depends()):
+def unlink_memory(node_id: int, memory_id: int, service: WorldTreeService = Depends()):
     service.unlink_memory(node_id, memory_id)
     return success(message="Unlinked")
 

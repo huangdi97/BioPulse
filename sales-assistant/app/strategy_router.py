@@ -1,6 +1,6 @@
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette import status
@@ -91,7 +91,11 @@ def list_strategies(
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[StrategyOut]]:
     total, total_pages, rows = service.list_strategies(
-        page, page_size, hcp_name, status, goal,
+        page,
+        page_size,
+        hcp_name,
+        status,
+        goal,
     )
     items = [StrategyOut(**dict(r)) for r in rows]
     return success(
@@ -161,14 +165,16 @@ def compare_strategies(
     effs = [r["effectiveness"] for r in rows if r["effectiveness"] is not None]
     goals = list(set(r["goal"] for r in rows if r["goal"]))
     approaches = list(set(r["approach"] for r in rows if r["approach"]))
-    return success(data={
-        "strategies": [s.model_dump() for s in strategies],
-        "comparison": {
-            "effectiveness_range": f"{min(effs)}-{max(effs)}" if effs else "N/A",
-            "common_goals": goals,
-            "common_approaches": approaches,
-        },
-    })
+    return success(
+        data={
+            "strategies": [s.model_dump() for s in strategies],
+            "comparison": {
+                "effectiveness_range": f"{min(effs)}-{max(effs)}" if effs else "N/A",
+                "common_goals": goals,
+                "common_approaches": approaches,
+            },
+        }
+    )
 
 
 @router.post("/simulate")

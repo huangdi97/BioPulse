@@ -24,7 +24,8 @@ class SensorSessionsRepository(BaseRepository):
     def get_by_session_id(self, session_id: str):
         placeholders = ", ".join(self.cols)
         row = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE session_id=?", (session_id,)
+            f"SELECT {placeholders} FROM {self.table_name} WHERE session_id=?",
+            (session_id,),
         ).fetchone()
         return dict(row) if row else None
 
@@ -43,6 +44,6 @@ class EffectMetricsRepository(BaseRepository):
         rows = self.db.execute(
             f"SELECT agent_role, metric_type, SUM(metric_value) AS total, AVG(metric_value) AS avg_value "
             f"FROM {self.table_name} {where} GROUP BY agent_role, metric_type ORDER BY agent_role, metric_type",
-            params
+            params,
         ).fetchall()
         return [dict(r) for r in rows]

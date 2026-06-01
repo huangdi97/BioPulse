@@ -35,7 +35,11 @@ MOCK_CONFERENCES = [
         "topic": "肿瘤学",
         "attendees_count": 33000,
         "hot_topics": ["免疫联合疗法", "液体活检", "靶向耐药", "个体化疫苗"],
-        "key_kols": ["Dr. Solange Peters", "Dr. Fabrice Barlesi", "Dr. Josep Tabernero"],
+        "key_kols": [
+            "Dr. Solange Peters",
+            "Dr. Fabrice Barlesi",
+            "Dr. Josep Tabernero",
+        ],
     },
     {
         "id": "ash-2026",
@@ -54,7 +58,12 @@ MOCK_CONFERENCES = [
         "location": "Orlando, FL",
         "topic": "皮肤病学",
         "attendees_count": 12000,
-        "hot_topics": ["银屑病生物制剂", "特应性皮炎JAK抑制剂", "脱发治疗", "AI皮肤诊断"],
+        "hot_topics": [
+            "银屑病生物制剂",
+            "特应性皮炎JAK抑制剂",
+            "脱发治疗",
+            "AI皮肤诊断",
+        ],
         "key_kols": ["Dr. Mark Lebwohl", "Dr. Emma Guttman-Yassky", "Dr. Brett King"],
     },
     {
@@ -65,7 +74,11 @@ MOCK_CONFERENCES = [
         "topic": "心血管学",
         "attendees_count": 18000,
         "hot_topics": ["PCSK9抑制剂", "心衰新药", "TAVR长期数据", "脂蛋白(a)"],
-        "key_kols": ["Dr. Deepak Bhatt", "Dr. Roxana Mehran", "Dr. Christopher O'Connor"],
+        "key_kols": [
+            "Dr. Deepak Bhatt",
+            "Dr. Roxana Mehran",
+            "Dr. Christopher O'Connor",
+        ],
     },
     {
         "id": "ada-2026",
@@ -94,7 +107,12 @@ MOCK_CONFERENCES = [
         "location": "Houston, TX",
         "topic": "神经肿瘤学",
         "attendees_count": 4500,
-        "hot_topics": ["胶质母细胞瘤疫苗", "TTFields联合免疫", "脑转移靶向治疗", "液体活检CNS"],
+        "hot_topics": [
+            "胶质母细胞瘤疫苗",
+            "TTFields联合免疫",
+            "脑转移靶向治疗",
+            "液体活检CNS",
+        ],
         "key_kols": ["Dr. Michael Weller", "Dr. Susan Chang", "Dr. Roger Stupp"],
     },
     {
@@ -112,27 +130,69 @@ MOCK_CONFERENCES = [
 MOCK_DETAILS = {
     "asco-2026": {
         "agenda": [
-            {"day": "2026-06-04", "sessions": ["全体大会: 免疫治疗前沿", "专题研讨: ADC药物临床进展"]},
-            {"day": "2026-06-05", "sessions": ["口头报告: 双特异性抗体", "教育专场: 生物标志物指导治疗"]},
-            {"day": "2026-06-06", "sessions": [" poster 专场: 精准肿瘤学", "闭幕演讲: 癌症治愈之路"]},
+            {
+                "day": "2026-06-04",
+                "sessions": ["全体大会: 免疫治疗前沿", "专题研讨: ADC药物临床进展"],
+            },
+            {
+                "day": "2026-06-05",
+                "sessions": ["口头报告: 双特异性抗体", "教育专场: 生物标志物指导治疗"],
+            },
+            {
+                "day": "2026-06-06",
+                "sessions": [" poster 专场: 精准肿瘤学", "闭幕演讲: 癌症治愈之路"],
+            },
         ],
         "speakers": [
-            {"name": "Dr. James Allison", "affiliation": "MD Anderson", "topic": "免疫检查点抑制剂的过去与未来"},
-            {"name": "Dr. Carl June", "affiliation": "UPenn", "topic": "CAR-T细胞治疗20年"},
-            {"name": "Dr. Padmanee Sharma", "affiliation": "MD Anderson", "topic": "免疫联合疗法的生物标志物"},
+            {
+                "name": "Dr. James Allison",
+                "affiliation": "MD Anderson",
+                "topic": "免疫检查点抑制剂的过去与未来",
+            },
+            {
+                "name": "Dr. Carl June",
+                "affiliation": "UPenn",
+                "topic": "CAR-T细胞治疗20年",
+            },
+            {
+                "name": "Dr. Padmanee Sharma",
+                "affiliation": "MD Anderson",
+                "topic": "免疫联合疗法的生物标志物",
+            },
         ],
         "related_papers_count": 2800,
     },
     "aacr-2026": {
         "agenda": [
-            {"day": "2026-04-18", "sessions": ["全体大会: 癌症生物学新范式", "专题: KRAS药物十年征程"]},
-            {"day": "2026-04-19", "sessions": ["口头报告: PROTAC技术突破", "教育专场: 肿瘤微环境调控"]},
-            {"day": "2026-04-20", "sessions": [" poster 专场: 早筛与液体活检", "闭幕: 精准预防策略"]},
+            {
+                "day": "2026-04-18",
+                "sessions": ["全体大会: 癌症生物学新范式", "专题: KRAS药物十年征程"],
+            },
+            {
+                "day": "2026-04-19",
+                "sessions": ["口头报告: PROTAC技术突破", "教育专场: 肿瘤微环境调控"],
+            },
+            {
+                "day": "2026-04-20",
+                "sessions": [" poster 专场: 早筛与液体活检", "闭幕: 精准预防策略"],
+            },
         ],
         "speakers": [
-            {"name": "Dr. Margaret Foti", "affiliation": "AACR", "topic": "癌症研究的未来方向"},
-            {"name": "Dr. Charles Sawyers", "affiliation": "MSKCC", "topic": "靶向治疗的耐药机制"},
-            {"name": "Dr. Elaine Mardis", "affiliation": "Nationwide Children's", "topic": "基因组学驱动的精准医疗"},
+            {
+                "name": "Dr. Margaret Foti",
+                "affiliation": "AACR",
+                "topic": "癌症研究的未来方向",
+            },
+            {
+                "name": "Dr. Charles Sawyers",
+                "affiliation": "MSKCC",
+                "topic": "靶向治疗的耐药机制",
+            },
+            {
+                "name": "Dr. Elaine Mardis",
+                "affiliation": "Nationwide Children's",
+                "topic": "基因组学驱动的精准医疗",
+            },
         ],
         "related_papers_count": 6500,
     },
@@ -158,10 +218,13 @@ async def get_upcoming_conferences(limit: int = 10) -> list[dict]:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.post(f"{CLOUD_API}/pubmed/search", json={
-            "query": "clinical trial conference 2026",
-            "limit": 20,
-        })
+        resp = await client.post(
+            f"{CLOUD_API}/pubmed/search",
+            json={
+                "query": "clinical trial conference 2026",
+                "limit": 20,
+            },
+        )
         if resp.status_code == 200:
             data = resp.json()
             papers = data.get("data", data.get("papers", []))
@@ -169,7 +232,9 @@ async def get_upcoming_conferences(limit: int = 10) -> list[dict]:
     conferences = MOCK_CONFERENCES[:limit]
     if papers:
         for conf in conferences:
-            conf["related_papers"] = [p.get("title", "") for p in papers[:5]] if papers else []
+            conf["related_papers"] = (
+                [p.get("title", "") for p in papers[:5]] if papers else []
+            )
 
     set_cache(cache_key, conferences, ttl=1800)
     return conferences
@@ -197,10 +262,13 @@ async def get_conference_detail(conference_id: str) -> dict | None:
         return None
 
     async with httpx.AsyncClient() as client:
-        resp = await client.post(f"{CLOUD_API}/pubmed/search", json={
-            "query": conference_id.replace("-", " "),
-            "limit": 10,
-        })
+        resp = await client.post(
+            f"{CLOUD_API}/pubmed/search",
+            json={
+                "query": conference_id.replace("-", " "),
+                "limit": 10,
+            },
+        )
         if resp.status_code == 200:
             data = resp.json()
             papers = data.get("data", data.get("papers", []))

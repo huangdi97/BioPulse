@@ -5,7 +5,7 @@ and loaded at runtime. Adding a new rule only requires editing the JSON file,
 not modifying Python code.
 """
 
-from dataclasses import dataclass, asdict, field
+from dataclasses import dataclass, field
 from typing import List
 import json
 import sqlite3
@@ -22,6 +22,7 @@ from cloud.rules.loader import (
 @dataclass
 class Violation:
     """A single compliance rule violation."""
+
     rule_code: str
     rule_name: str
     severity: str
@@ -32,6 +33,7 @@ class Violation:
 @dataclass
 class DetectionRule:
     """A parsed detection rule with its matching logic."""
+
     code: str
     name: str
     level: str
@@ -229,8 +231,13 @@ class ComplianceEnforcer:
                 "level": "L1",
                 "action": "block",
                 "violations": [
-                    {"rule_code": v.rule_code, "rule_name": v.rule_name,
-                     "severity": v.severity, "action": v.action, "detail": v.detail}
+                    {
+                        "rule_code": v.rule_code,
+                        "rule_name": v.rule_name,
+                        "severity": v.severity,
+                        "action": v.action,
+                        "detail": v.detail,
+                    }
                     for v in l1_violations
                 ],
             }
@@ -269,20 +276,26 @@ class ComplianceEnforcer:
             field = condition.get("field")
             expected = condition.get("expected")
             if visit_data.get(field) != expected:
-                return self._build_l2_violation(rule, f"字段[{field}]期望值[{expected}]，实际[{visit_data.get(field)}]")
+                return self._build_l2_violation(
+                    rule,
+                    f"字段[{field}]期望值[{expected}]，实际[{visit_data.get(field)}]",
+                )
         elif check_type == "frequency_count":
             field = condition.get("field")
             window_days = condition.get("window_days", 7)
             entity_id = visit_data.get(field)
             if entity_id is not None:
                 from datetime import datetime, timedelta
+
                 since = (datetime.now() - timedelta(days=window_days)).isoformat()
                 count = self.db.execute(
                     f"SELECT COUNT(*) AS c FROM visits WHERE {field} = ? AND created_at >= ?",
                     (entity_id, since),
                 ).fetchone()["c"]
                 if count >= int(threshold):
-                    return self._build_l2_violation(rule, f"实体[{entity_id}]在{window_days}天内拜访{count}次")
+                    return self._build_l2_violation(
+                        rule, f"实体[{entity_id}]在{window_days}天内拜访{count}次"
+                    )
         elif check_type == "concentration_check":
             field = condition.get("field")
             ratio_threshold = condition.get("ratio_threshold", 0.8)
@@ -290,6 +303,7 @@ class ComplianceEnforcer:
             dept_val = visit_data.get(field)
             if dept_val is not None:
                 from datetime import datetime, timedelta
+
                 since = (datetime.now() - timedelta(days=window_days)).isoformat()
                 total = self.db.execute(
                     "SELECT COUNT(*) AS c FROM visits WHERE created_at >= ?", (since,)
@@ -301,7 +315,9 @@ class ComplianceEnforcer:
                     ).fetchone()["c"]
                     ratio = dept_count / total
                     if ratio >= ratio_threshold:
-                        return self._build_l2_violation(rule, f"值[{dept_val}]占比{ratio:.1%}")
+                        return self._build_l2_violation(
+                            rule, f"值[{dept_val}]占比{ratio:.1%}"
+                        )
         return None
 
     def _build_l2_violation(self, rule: dict, detail: str = "") -> dict:
@@ -315,16 +331,25 @@ class ComplianceEnforcer:
 
     def _log_l2_batch(self, violations: list, visit_data: dict):
         from datetime import datetime, timezone
+
         now = datetime.now(timezone.utc).isoformat()
         for v in violations:
             self.db.execute(
                 "INSERT INTO compliance_l2_log (rule_id, rule_name, severity, check_type, visit_data_json, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-                (v["rule_id"], v["rule_name"], v["severity"], v["check_type"], json.dumps(visit_data, ensure_ascii=False), now),
+                (
+                    v["rule_id"],
+                    v["rule_name"],
+                    v["severity"],
+                    v["check_type"],
+                    json.dumps(visit_data, ensure_ascii=False),
+                    now,
+                ),
             )
         self.db.commit()
 
     def _log_l3(self, visit_data: dict):
         from datetime import datetime, timezone
+
         now = datetime.now(timezone.utc).isoformat()
         self.db.execute(
             "INSERT INTO compliance_l3_log (visit_data_json, created_at) VALUES (?, ?)",

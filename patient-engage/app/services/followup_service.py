@@ -1,4 +1,5 @@
 """随访管理服务。"""
+
 import httpx
 from datetime import datetime, timezone, timedelta
 from patient_engage.app.database import get_cache, set_cache
@@ -20,15 +21,20 @@ async def create_followup_plan(patient_id: str, plan: dict) -> dict:
         创建的随访计划信息。
     """
     async with httpx.AsyncClient() as client:
-        resp = await client.post(f"{CLOUD_API}/notifications/schedule", json={
-            "patient_id": patient_id,
-            "plan": plan,
-            "type": "followup",
-        })
+        resp = await client.post(
+            f"{CLOUD_API}/notifications/schedule",
+            json={
+                "patient_id": patient_id,
+                "plan": plan,
+                "type": "followup",
+            },
+        )
 
     schedule_data = resp.json() if resp.status_code == 200 else {}
     return {
-        "plan_id": schedule_data.get("data", schedule_data).get("plan_id", f"FLW-{patient_id}-{int(datetime.now().timestamp())}"),
+        "plan_id": schedule_data.get("data", schedule_data).get(
+            "plan_id", f"FLW-{patient_id}-{int(datetime.now().timestamp())}"
+        ),
         "patient_id": patient_id,
         "plan": plan,
         "status": "active",
@@ -54,9 +60,12 @@ async def get_followup_status(patient_id: str) -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/notifications/schedule", params={
-            "patient_id": patient_id,
-        })
+        resp = await client.get(
+            f"{CLOUD_API}/notifications/schedule",
+            params={
+                "patient_id": patient_id,
+            },
+        )
         schedules = []
         if resp.status_code == 200:
             sdata = resp.json()
@@ -82,10 +91,24 @@ def _build_followup_status(patient_id: str, schedules: list) -> dict:
             "in_progress": in_progress,
             "pending": pending,
         },
-        "recent_followups": schedules[:5] if schedules else [
-            {"type": "电话随访", "date": (datetime.now() - timedelta(days=7)).isoformat(), "status": "completed"},
-            {"type": "门诊复查", "date": (datetime.now() - timedelta(days=14)).isoformat(), "status": "completed"},
-            {"type": "上门随访", "date": (datetime.now() + timedelta(days=3)).isoformat(), "status": "pending"},
+        "recent_followups": schedules[:5]
+        if schedules
+        else [
+            {
+                "type": "电话随访",
+                "date": (datetime.now() - timedelta(days=7)).isoformat(),
+                "status": "completed",
+            },
+            {
+                "type": "门诊复查",
+                "date": (datetime.now() - timedelta(days=14)).isoformat(),
+                "status": "completed",
+            },
+            {
+                "type": "上门随访",
+                "date": (datetime.now() + timedelta(days=3)).isoformat(),
+                "status": "pending",
+            },
         ],
         "last_updated": datetime.now(timezone.utc).isoformat(),
     }
@@ -106,9 +129,12 @@ async def get_pending_followups() -> dict:
         return cached
 
     async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/notifications/schedule", params={
-            "status": "pending",
-        })
+        resp = await client.get(
+            f"{CLOUD_API}/notifications/schedule",
+            params={
+                "status": "pending",
+            },
+        )
         pending = []
         if resp.status_code == 200:
             pdata = resp.json()
@@ -123,7 +149,9 @@ def _build_pending_followups(pending: list) -> dict:
     """构建待随访列表。"""
     return {
         "total_pending": len(pending) or 8,
-        "pending_followups": pending if pending else [
+        "pending_followups": pending
+        if pending
+        else [
             {
                 "patient_id": f"PAT-{i:04d}",
                 "patient_name": f"患者{i}",

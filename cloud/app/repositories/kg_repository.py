@@ -12,24 +12,35 @@ class KgEntitiesRepository(BaseRepository):
 
     def get_by_entity_id(self, entity_id: str):
         row = self.db.execute(
-            f"SELECT {', '.join(self.cols)} FROM {self.table_name} WHERE entity_id=?", (entity_id,)
+            f"SELECT {', '.join(self.cols)} FROM {self.table_name} WHERE entity_id=?",
+            (entity_id,),
         ).fetchone()
         return dict(row) if row else None
 
     def exists_entity_id(self, entity_id: str):
-        return self.db.execute(
-            f"SELECT id FROM {self.table_name} WHERE entity_id=?", (entity_id,)
-        ).fetchone() is not None
+        return (
+            self.db.execute(
+                f"SELECT id FROM {self.table_name} WHERE entity_id=?", (entity_id,)
+            ).fetchone()
+            is not None
+        )
 
     def list_filtered(self, entity_type=None, name=None, status_="active"):
         conditions, params = [], []
         if entity_type:
-            conditions.append("entity_type=?"); params.append(entity_type)
+            conditions.append("entity_type=?")
+            params.append(entity_type)
         if name:
-            conditions.append("name LIKE ?"); params.append(f"%{name}%")
+            conditions.append("name LIKE ?")
+            params.append(f"%{name}%")
         if status_:
-            conditions.append("status=?"); params.append(status_)
-        return self.list_all(conditions=conditions or None, params=params or None, order_by="created_at DESC")
+            conditions.append("status=?")
+            params.append(status_)
+        return self.list_all(
+            conditions=conditions or None,
+            params=params or None,
+            order_by="created_at DESC",
+        )
 
     def search_by_name_and_types(self, query: str, entity_types=None, limit: int = 20):
         conditions = ["status='active'", "name LIKE ?"]
@@ -69,7 +80,8 @@ class KgEntitiesRepository(BaseRepository):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
             f"SELECT {placeholders} FROM {self.table_name} "
-            "WHERE status='active' ORDER BY confidence DESC LIMIT ?", (limit,)
+            "WHERE status='active' ORDER BY confidence DESC LIMIT ?",
+            (limit,),
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -89,12 +101,19 @@ class KgRelationsRepository(BaseRepository):
     def list_filtered(self, source=None, target=None, relation_type=None):
         conditions, params = [], []
         if source:
-            conditions.append("source_entity_id=?"); params.append(source)
+            conditions.append("source_entity_id=?")
+            params.append(source)
         if target:
-            conditions.append("target_entity_id=?"); params.append(target)
+            conditions.append("target_entity_id=?")
+            params.append(target)
         if relation_type:
-            conditions.append("relation_type=?"); params.append(relation_type)
-        return self.list_all(conditions=conditions or None, params=params or None, order_by="created_at DESC")
+            conditions.append("relation_type=?")
+            params.append(relation_type)
+        return self.list_all(
+            conditions=conditions or None,
+            params=params or None,
+            order_by="created_at DESC",
+        )
 
     def list_by_entity_ids_batch(self, entity_ids):
         if not entity_ids:
@@ -123,7 +142,10 @@ class KgRelationsRepository(BaseRepository):
                 WHERE e.status='active' GROUP BY e.entity_id ORDER BY degree DESC LIMIT ?""",
             (limit,),
         ).fetchall()
-        return [{"name": r["name"], "type": r["entity_type"], "degree": r["degree"]} for r in rows]
+        return [
+            {"name": r["name"], "type": r["entity_type"], "degree": r["degree"]}
+            for r in rows
+        ]
 
 
 class KgSearchCacheRepository(BaseRepository):

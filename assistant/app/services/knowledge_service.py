@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Optional
 
 from assistant.app.repositories import KnowledgeBaseRepository
 from assistant.app.services.base import BaseService
@@ -10,8 +10,12 @@ class KnowledgeService(BaseService):
         repo = KnowledgeBaseRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()
         row_id = repo.create(
-            {**body.model_dump(),
-             "created_by": user_id, "created_at": now, "updated_at": now},
+            {
+                **body.model_dump(),
+                "created_by": user_id,
+                "created_at": now,
+                "updated_at": now,
+            },
         )
         return {"id": row_id}
 

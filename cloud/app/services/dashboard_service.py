@@ -1,6 +1,8 @@
-from typing import Any
-
-from cloud.app.repositories import AuditLogsRepository, ContentsRepository, UsersRepository
+from cloud.app.repositories import (
+    AuditLogsRepository,
+    ContentsRepository,
+    UsersRepository,
+)
 from cloud.app.services.base import BaseService
 
 
@@ -16,7 +18,9 @@ class DashboardService(BaseService):
         passed_checks = contents_repo.count(
             conditions=["compliance_score IS NOT NULL", "compliance_score >= 1.0"]
         )
-        compliance_rate = round(passed_checks / total_checks * 100, 1) if total_checks > 0 else 0.0
+        compliance_rate = (
+            round(passed_checks / total_checks * 100, 1) if total_checks > 0 else 0.0
+        )
 
         recent_logs = audit_repo.list_all(order_by="created_at DESC")[:10]
         recent_activity = [

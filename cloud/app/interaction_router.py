@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from starlette import status
 
@@ -27,7 +27,9 @@ class InteractionUpdate(BaseModel):
     conducted_at: Optional[str] = None
 
 
-@router.post("/customers/{customer_id}/interactions", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/customers/{customer_id}/interactions", status_code=status.HTTP_201_CREATED
+)
 def create_interaction(
     customer_id: int,
     body: InteractionCreate,
@@ -36,9 +38,12 @@ def create_interaction(
 ) -> Any:
     user_id = int(current_user["sub"])
     result = service.create_interaction(
-        customer_id=customer_id, type_=body.type,
-        summary=body.summary, outcome=body.outcome,
-        conducted_by=body.conducted_by, conducted_at=body.conducted_at,
+        customer_id=customer_id,
+        type_=body.type,
+        summary=body.summary,
+        outcome=body.outcome,
+        conducted_by=body.conducted_by,
+        conducted_at=body.conducted_at,
         user_id=user_id,
     )
     return success(data=result)
@@ -64,8 +69,10 @@ def list_interactions(
     service: InteractionService = Depends(),
 ) -> Any:
     result = service.list_interactions(
-        type_=type, conducted_by=conducted_by,
-        page=page, page_size=page_size,
+        type_=type,
+        conducted_by=conducted_by,
+        page=page,
+        page_size=page_size,
     )
     return success(data=result)
 
@@ -77,9 +84,17 @@ def update_interaction(
     current_user: dict = Depends(require_scope("visit")),
     service: InteractionService = Depends(),
 ) -> Any:
-    updates = {k: v for k, v in {"type": body.type, "summary": body.summary,
-                                  "outcome": body.outcome, "conducted_by": body.conducted_by,
-                                  "conducted_at": body.conducted_at}.items() if v is not None}
+    updates = {
+        k: v
+        for k, v in {
+            "type": body.type,
+            "summary": body.summary,
+            "outcome": body.outcome,
+            "conducted_by": body.conducted_by,
+            "conducted_at": body.conducted_at,
+        }.items()
+        if v is not None
+    }
     result = service.update_interaction(interaction_id, updates)
     return success(data=result)
 

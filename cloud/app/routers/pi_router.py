@@ -1,16 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from typing import Optional
-from starlette import status
+
 from shared.auth import get_current_user
-from cloud.app.dependencies import get_db
-from cloud.app.repositories.pi_repository import PiRepository
+from cloud.app.services.pi_service import PiService
 
 router = APIRouter(prefix="/api/pi", tags=["pi"])
 
 
 class PiCreate(BaseModel):
-    """Request body for creating a new PI profile."""
     name: str
     institution: str
     department: str = ""
@@ -23,7 +21,6 @@ class PiCreate(BaseModel):
 
 
 class PiUpdate(BaseModel):
-    """Request body for updating an existing PI profile."""
     name: Optional[str] = None
     institution: Optional[str] = None
     department: Optional[str] = None
@@ -36,51 +33,52 @@ class PiUpdate(BaseModel):
 
 
 @router.get("/search")
-def search_pi(q: str = Query("", description="Search keyword"),
-              current_user: dict = Depends(get_current_user),
-              db=Depends(get_db)):
-    """Search PI profiles by name, institution, or research area."""
-    repo = PiRepository(db)
-    results = repo.search(q)
+def search_pi(
+    q: str = Query("", description="Search keyword"),
+    current_user: dict = Depends(get_current_user),
+    service: PiService = Depends(),
+):
+    results = service.search(q)
     return {"code": 0, "data": results, "message": "success"}
 
 
 @router.get("/{pi_id}")
-def get_pi(pi_id: int, current_user: dict = Depends(get_current_user),
-           db=Depends(get_db)):
-    """Get a single PI profile by ID."""
-    repo = PiRepository(db)
-    pi = repo.get_by_id(pi_id)
-    if not pi:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PI not found")
+def get_pi(
+    pi_id: int,
+    current_user: dict = Depends(get_current_user),
+    service: PiService = Depends(),
+):
+    pi = service.get_by_id(pi_id)
     return {"code": 0, "data": pi, "message": "success"}
 
 
 @router.post("", status_code=201)
-def create_pi(body: PiCreate, current_user: dict = Depends(get_current_user),
-              db=Depends(get_db)):
-    """Create a new PI profile."""
-    repo = PiRepository(db)
-    pi_id = repo.create(
-        name=body.name, institution=body.institution,
-        department=body.department, title=body.title,
-        hcp_id=body.hcp_id, research_areas=body.research_areas,
-        total_papers=body.total_papers, total_grants=body.total_grants,
+def create_pi(
+    body: PiCreate,
+    current_user: dict = Depends(get_current_user),
+    service: PiService = Depends(),
+):
+    pi = service.create(
+        name=body.name,
+        institution=body.institution,
+        department=body.department,
+        title=body.title,
+        hcp_id=body.hcp_id,
+        research_areas=body.research_areas,
+        total_papers=body.total_papers,
+        total_grants=body.total_grants,
         h_index=body.h_index,
     )
-    pi = repo.get_by_id(pi_id)
     return {"code": 0, "data": pi, "message": "success"}
 
 
 @router.put("/{pi_id}")
-def update_pi(pi_id: int, body: PiUpdate,
-              current_user: dict = Depends(get_current_user),
-              db=Depends(get_db)):
-    """Update an existing PI profile. Only provided fields will be updated."""
-    repo = PiRepository(db)
+def update_pi(
+    pi_id: int,
+    body: PiUpdate,
+    current_user: dict = Depends(get_current_user),
+    service: PiService = Depends(),
+):
     kwargs = {k: v for k, v in body.model_dump().items() if v is not None}
-    if not kwargs:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No fields to update")
-    repo.update(pi_id, **kwargs)
-    pi = repo.get_by_id(pi_id)
+    pi = service.update(pi_id, **kwargs)
     return {"code": 0, "data": pi, "message": "success"}

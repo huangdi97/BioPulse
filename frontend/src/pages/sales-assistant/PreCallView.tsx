@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { fetchPreCall, type PreCallInfo } from '@/api/sales-assistant-api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Phone, User, Building2, Lightbulb, ListChecks } from 'lucide-react'
+import { Skeleton } from '@/components/Skeleton'
+import { User, Building2, Lightbulb, ListChecks } from 'lucide-react'
 
 export default function PreCallView() {
   const [info, setInfo] = useState<PreCallInfo | null>(null)
@@ -17,7 +18,14 @@ export default function PreCallView() {
     return () => { cancelled = true }
   }, [])
 
-  if (loading) return <div className="space-y-4 animate-pulse"><div className="h-40 bg-muted rounded-xl" /><div className="h-32 bg-muted rounded-xl" /></div>
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-40 w-full rounded-xl" />
+        <Skeleton className="h-32 w-full rounded-xl" />
+      </div>
+    )
+  }
   if (!info) return <p className="text-muted-foreground">暂无数据</p>
 
   return (

@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from starlette import status
 
@@ -34,7 +34,11 @@ def create_team(
     service: TeamService = Depends(),
 ) -> Any:
     """Create a new team."""
-    result = service.create_team(name=body.name, description=body.description, created_by=int(current_user["sub"]))
+    result = service.create_team(
+        name=body.name,
+        description=body.description,
+        created_by=int(current_user["sub"]),
+    )
     return success(data=result)
 
 
@@ -70,7 +74,10 @@ def update_team(
 ) -> Any:
     """Update team fields dynamically."""
     result = service.update_team(
-        team_id, name=body.name, description=body.description, is_active=body.is_active,
+        team_id,
+        name=body.name,
+        description=body.description,
+        is_active=body.is_active,
     )
     return success(data=result)
 

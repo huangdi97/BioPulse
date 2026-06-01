@@ -8,7 +8,6 @@ from starlette import status
 from shared.auth import get_current_user
 from shared.base import ApiResponse, success
 from sales_coach.app.database import get_db
-from sales_coach.app.services.assessment_service import AssessmentService
 from sales_coach.app.services.reflection_service import generate_reflection_report
 from sales_coach.app.services.session_service import SessionService
 
@@ -58,7 +57,9 @@ def get_reflection(
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Session not found")
     report_raw = session.get("reflection_report")
     if not report_raw:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Reflection not found for this session")
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, detail="Reflection not found for this session"
+        )
     report = json.loads(report_raw)
     return success(data=report)
 
@@ -75,7 +76,9 @@ def get_reflection_summary(
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Session not found")
     report_raw = session.get("reflection_report")
     if not report_raw:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Reflection not found for this session")
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, detail="Reflection not found for this session"
+        )
     report = json.loads(report_raw)
     summary = {
         "session_id": report.get("session_id"),

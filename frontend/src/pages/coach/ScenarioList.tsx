@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchScenarios, type Scenario } from '@/api/coach'
 import { Card, CardContent } from '@/components/ui/card'
 import { Play, Clock, BarChart3 } from 'lucide-react'
+import { SearchBar } from '@/components/SearchBar'
+import { FilterDropdown } from '@/components/FilterDropdown'
+import { Skeleton } from '@/components/Skeleton'
 
 const DIFFICULTY_MAP: Record<Scenario['difficulty'], { label: string; color: string }> = {
   easy: { label: '简单', color: 'bg-green-50 text-green-700' },
@@ -10,10 +13,15 @@ const DIFFICULTY_MAP: Record<Scenario['difficulty'], { label: string; color: str
   hard: { label: '困难', color: 'bg-red-50 text-red-700' },
 }
 
+const DIFFICULTY_OPTIONS = ['全部', 'easy', 'medium', 'hard']
+const DIFFICULTY_LABELS: Record<string, string> = { '全部': '全部', easy: '简单', medium: '中等', hard: '困难' }
+
 export default function ScenarioList() {
   const navigate = useNavigate()
   const [scenarios, setScenarios] = useState<Scenario[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [difficulty, setDifficulty] = useState('全部')
 
   useEffect(() => {
     let cancelled = false
@@ -25,11 +33,19 @@ export default function ScenarioList() {
     return () => { cancelled = true }
   }, [])
 
+  const filtered = useMemo(() => {
+    return scenarios.filter((s) => {
+      const matchSearch = !search || s.name.includes(search) || s.description.includes(search) || s.category.includes(search)
+      const matchDiff = difficulty === '全部' || s.difficulty === difficulty
+      return matchSearch && matchDiff
+    })
+  }, [scenarios, search, difficulty])
+
   if (loading) {
     return (
       <div className="space-y-3">
         {[1, 2, 3, 4].map((i) => (
-          <Card key={i}><CardContent className="p-4 animate-pulse"><div className="h-16 bg-muted rounded" /></CardContent></Card>
+          <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full" /></CardContent></Card>
         ))}
       </div>
     )
@@ -38,9 +54,15 @@ export default function ScenarioList() {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">演练场景</h2>
-      <p className="text-sm text-muted-foreground">选择场景开始模拟演练</p>
+      <SearchBar placeholder="搜索场景名或分类..." value={search} onChange={setSearch} />
+      <FilterDropdown
+        label="难度"
+        value={difficulty}
+        options={DIFFICULTY_OPTIONS.map((v) => ({ value: v, label: DIFFICULTY_LABELS[v] }))}
+        onChange={setDifficulty}
+      />
       <div className="space-y-3">
-        {scenarios.map((scenario) => {
+        {filtered.map((scenario) => {
           const diff = DIFFICULTY_MAP[scenario.difficulty]
           return (
             <Card
@@ -76,6 +98,9 @@ export default function ScenarioList() {
           )
         })}
       </div>
+      {!loading && filtered.length === 0 && (
+        <div className="text-center py-12 text-sm text-muted-foreground">没有找到匹配的场景</div>
+      )}
     </div>
   )
 }

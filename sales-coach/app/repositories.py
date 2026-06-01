@@ -1,8 +1,7 @@
 import sqlite3
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from shared.base import validate_columns
 from shared.columns import (
     TABLE_COACH_SCENARIO_COLS,
     TABLE_COACH_SESSION_COLS,
@@ -45,13 +44,19 @@ class ModuleRepository(BaseRepository):
             conds.extend(conditions)
         return self.list_all(conditions=conds, params=params, order_by=order_by)
 
-    def paginate_active(self, page=1, page_size=20, conditions=None, params=None,
-                        order_by="id DESC"):
+    def paginate_active(
+        self, page=1, page_size=20, conditions=None, params=None, order_by="id DESC"
+    ):
         conds = ["is_active = 1"]
         if conditions:
             conds.extend(conditions)
-        return self.paginate(page=page, page_size=page_size, conditions=conds,
-                             params=params, order_by=order_by)
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conds,
+            params=params,
+            order_by=order_by,
+        )
 
 
 class ScenarioRepository(BaseRepository):
@@ -70,9 +75,7 @@ class ScenarioRepository(BaseRepository):
             from fastapi import HTTPException
             from starlette import status
 
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="Scenario not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Scenario not found")
         return row
 
     def soft_delete_scenario(self, scenario_id: int) -> None:
@@ -89,13 +92,19 @@ class ScenarioRepository(BaseRepository):
             conds.extend(conditions)
         return self.list_all(conditions=conds, params=params, order_by=order_by)
 
-    def paginate_active(self, page=1, page_size=20, conditions=None, params=None,
-                        order_by="id DESC"):
+    def paginate_active(
+        self, page=1, page_size=20, conditions=None, params=None, order_by="id DESC"
+    ):
         conds = ["is_active = 1"]
         if conditions:
             conds.extend(conditions)
-        return self.paginate(page=page, page_size=page_size, conditions=conds,
-                             params=params, order_by=order_by)
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conds,
+            params=params,
+            order_by=order_by,
+        )
 
 
 class SessionRepository(BaseRepository):
@@ -108,20 +117,18 @@ class SessionRepository(BaseRepository):
             from fastapi import HTTPException
             from starlette import status
 
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="Session not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Session not found")
         return row
 
     def list_by_module(self, module_id: int, order_by="id DESC"):
         return self.db.execute(
-            "SELECT * FROM coach_session WHERE module_id = ? ORDER BY "
-            + order_by,
+            "SELECT * FROM coach_session WHERE module_id = ? ORDER BY " + order_by,
             (module_id,),
         ).fetchall()
 
-    def paginate_by_module(self, module_id: int, page=1, page_size=20,
-                           order_by="id DESC"):
+    def paginate_by_module(
+        self, module_id: int, page=1, page_size=20, order_by="id DESC"
+    ):
         total = self.db.execute(
             "SELECT COUNT(*) FROM coach_session WHERE module_id = ?",
             (module_id,),
@@ -130,7 +137,8 @@ class SessionRepository(BaseRepository):
         offset = (page - 1) * page_size
         rows = self.db.execute(
             "SELECT * FROM coach_session WHERE module_id = ? ORDER BY "
-            + order_by + " LIMIT ? OFFSET ?",
+            + order_by
+            + " LIMIT ? OFFSET ?",
             (module_id, page_size, offset),
         ).fetchall()
         return total, total_pages, rows
@@ -176,13 +184,19 @@ class AssessmentRepository(BaseRepository):
             conds.extend(conditions)
         return self.list_all(conditions=conds, params=params, order_by=order_by)
 
-    def paginate_active(self, page=1, page_size=20, conditions=None, params=None,
-                        order_by="id DESC"):
+    def paginate_active(
+        self, page=1, page_size=20, conditions=None, params=None, order_by="id DESC"
+    ):
         conds = ["is_active = 1"]
         if conditions:
             conds.extend(conditions)
-        return self.paginate(page=page, page_size=page_size, conditions=conds,
-                             params=params, order_by=order_by)
+        return self.paginate(
+            page=page,
+            page_size=page_size,
+            conditions=conds,
+            params=params,
+            order_by=order_by,
+        )
 
     def get_stats(self) -> Dict[str, Any]:
         from collections import Counter

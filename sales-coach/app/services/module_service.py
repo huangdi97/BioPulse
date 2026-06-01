@@ -33,8 +33,11 @@ class ModuleService(BaseService):
             params.append(difficulty)
 
         return repo.paginate_active(
-            page=page, page_size=page_size,
-            conditions=conditions, params=params, order_by="id DESC",
+            page=page,
+            page_size=page_size,
+            conditions=conditions,
+            params=params,
+            order_by="id DESC",
         )
 
     def get(self, module_id: int) -> dict:

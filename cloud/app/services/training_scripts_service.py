@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from cloud.app.repositories import (
-    CollaborationSessionsRepository,
     TrainingRoiAnalysisRepository,
     TrainingScriptsRepository,
 )
@@ -12,9 +11,9 @@ from cloud.app.services.base import BaseService
 
 
 class TrainingScriptsService(BaseService):
-
-    def extract_scripts(self, source_agent_role: str, min_score: float,
-                        user_id: int) -> dict:
+    def extract_scripts(
+        self, source_agent_role: str, min_score: float, user_id: int
+    ) -> dict:
         rows = self.db.execute(
             """SELECT cs.session_id, cs.source_agent_role, cs.result_summary,
                       cs.total_steps, cs.completed_steps, cs.involved_agents
@@ -33,7 +32,9 @@ class TrainingScriptsService(BaseService):
         for row in rows:
             steps = []
             total = row["total_steps"] or 0
-            score_val = round(min((row["completed_steps"] or 0) / max(total, 1), 1.0), 2)
+            score_val = round(
+                min((row["completed_steps"] or 0) / max(total, 1), 1.0), 2
+            )
             if score_val < min_score:
                 continue
             if total > 0:
@@ -78,18 +79,24 @@ class TrainingScriptsService(BaseService):
             ).fetchone()
             if not existing:
                 scripts_repo.create(script_data)
-                created.append({
-                    "script_id": script_id,
-                    "script_name": script_name,
-                    "score": score_val,
-                })
+                created.append(
+                    {
+                        "script_id": script_id,
+                        "script_name": script_name,
+                        "score": score_val,
+                    }
+                )
 
         return {"created_count": len(created), "scripts": created}
 
-    def list_scripts(self, page: int = 1, page_size: int = 20,
-                     source_agent_role: Optional[str] = None,
-                     difficulty: Optional[str] = None,
-                     target_roles: Optional[str] = None) -> dict:
+    def list_scripts(
+        self,
+        page: int = 1,
+        page_size: int = 20,
+        source_agent_role: Optional[str] = None,
+        difficulty: Optional[str] = None,
+        target_roles: Optional[str] = None,
+    ) -> dict:
         scripts_repo = TrainingScriptsRepository(self.db)
 
         conditions = []
@@ -105,8 +112,10 @@ class TrainingScriptsService(BaseService):
             params.append(f"%{target_roles}%")
 
         total, total_pages, rows = scripts_repo.paginate(
-            page=page, page_size=page_size,
-            conditions=conditions or None, params=params or None,
+            page=page,
+            page_size=page_size,
+            conditions=conditions or None,
+            params=params or None,
             order_by="id DESC",
         )
 
@@ -141,19 +150,23 @@ class TrainingScriptsService(BaseService):
 
         analysis_id = f"roi:analyze:{uuid.uuid4().hex[:8]}"
 
-        roi_repo.create({
-            "analysis_id": analysis_id,
-            "period_start": period_start,
-            "period_end": period_end,
-            "training_hours": training_hours,
-            "participants": participants,
-            "behavior_change_score": behavior_change_score,
-            "sales_impact": sales_impact,
-            "cost_savings": cost_savings,
-            "roi": roi_val,
-            "metadata": json.dumps({"method": "simulation", "source": "auto"}, ensure_ascii=False),
-            "created_at": now,
-        })
+        roi_repo.create(
+            {
+                "analysis_id": analysis_id,
+                "period_start": period_start,
+                "period_end": period_end,
+                "training_hours": training_hours,
+                "participants": participants,
+                "behavior_change_score": behavior_change_score,
+                "sales_impact": sales_impact,
+                "cost_savings": cost_savings,
+                "roi": roi_val,
+                "metadata": json.dumps(
+                    {"method": "simulation", "source": "auto"}, ensure_ascii=False
+                ),
+                "created_at": now,
+            }
+        )
 
         return {
             "analysis_id": analysis_id,
@@ -171,7 +184,8 @@ class TrainingScriptsService(BaseService):
         roi_repo = TrainingRoiAnalysisRepository(self.db)
 
         total, total_pages, rows = roi_repo.paginate(
-            page=page, page_size=page_size,
+            page=page,
+            page_size=page_size,
             order_by="id DESC",
         )
 

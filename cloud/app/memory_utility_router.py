@@ -1,11 +1,6 @@
-import json
-from typing import List, Optional
-
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
-from starlette import status
 
-from shared.auth_scope import require_scope
 from shared.base import success
 from cloud.app.services.memory_utility_service import MemoryUtilityService
 
@@ -22,7 +17,9 @@ def subtree_stats(node_id: int, service: MemoryUtilityService = Depends()):
 
 
 @router.post("/tree/move/{node_id}")
-def move_node(node_id: int, body: MoveRequest, service: MemoryUtilityService = Depends()):
+def move_node(
+    node_id: int, body: MoveRequest, service: MemoryUtilityService = Depends()
+):
     result = service.move_node(node_id, body.new_parent_id)
     return success(message=result.get("message"))
 
@@ -40,8 +37,9 @@ def tree_duplicates(node_id: int, service: MemoryUtilityService = Depends()):
 @router.delete("/tree/prune/{node_id}")
 def prune_node(node_id: int, service: MemoryUtilityService = Depends()):
     result = service.prune_node(node_id)
-    return success(data={"deleted_count": result["deleted_count"]},
-                   message=result.get("message"))
+    return success(
+        data={"deleted_count": result["deleted_count"]}, message=result.get("message")
+    )
 
 
 @router.post("/utility/score/{memory_id}")
@@ -55,8 +53,11 @@ def score_all(service: MemoryUtilityService = Depends()):
 
 
 @router.get("/utility/rankings")
-def utility_rankings(min_utility: float = Query(0.0), limit: int = Query(20, ge=1, le=200),
-                     service: MemoryUtilityService = Depends()):
+def utility_rankings(
+    min_utility: float = Query(0.0),
+    limit: int = Query(20, ge=1, le=200),
+    service: MemoryUtilityService = Depends(),
+):
     return success(data=service.utility_rankings(min_utility=min_utility, limit=limit))
 
 

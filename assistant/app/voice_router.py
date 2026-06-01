@@ -1,10 +1,19 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+)
 from fastapi.responses import FileResponse
 
 from shared.auth import get_current_user
-from shared.base import ApiResponse, success
+from shared.base import success
 from assistant.app.services.voice_service import VoiceService
 
 router = APIRouter(tags=["voice"])

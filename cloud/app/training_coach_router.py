@@ -1,8 +1,7 @@
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
-from starlette import status
 
 from cloud.app.services.training_coach_service import TrainingCoachService
 from shared.auth_scope import require_scope
@@ -99,7 +98,10 @@ def list_sessions(
     service: TrainingCoachService = Depends(),
 ) -> Any:
     result = service.list_sessions(
-        user_id=user_id, module_id=module_id, page=page, page_size=page_size,
+        user_id=user_id,
+        module_id=module_id,
+        page=page,
+        page_size=page_size,
     )
     return success(data=PaginatedResponse(**result))
 

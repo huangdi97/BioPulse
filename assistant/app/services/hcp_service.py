@@ -43,7 +43,10 @@ class HcpService(BaseService):
             params.append(level)
 
         return repo.paginate(
-            page=page, page_size=page_size, conditions=conditions, params=params,
+            page=page,
+            page_size=page_size,
+            conditions=conditions,
+            params=params,
         )
 
     def get_hcp(self, hcp_id: int) -> dict:

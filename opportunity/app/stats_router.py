@@ -2,7 +2,6 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
-from starlette import status
 
 from shared.auth import get_current_user
 from shared.base import ApiResponse, success
