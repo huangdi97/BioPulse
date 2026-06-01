@@ -32,6 +32,36 @@ import EmployeeTasks from './pages/admin/employee/MyTasks'
 import EmployeeCompliance from './pages/admin/employee/MyCompliance'
 import EmployeePerformance from './pages/admin/employee/MyPerformance'
 import EmployeeTrend from './pages/admin/employee/MyTrend'
+import CoachLayout from './pages/coach/CoachLayout'
+import ScenarioList from './pages/coach/ScenarioList'
+import SessionList from './pages/coach/SessionList'
+import SessionDetail from './pages/coach/SessionDetail'
+import AssessmentList from './pages/coach/AssessmentList'
+import ReflectionList from './pages/coach/ReflectionList'
+import StatsDashboard from './pages/coach/StatsDashboard'
+import OpportunityLayout from './pages/opportunity/OpportunityLayout'
+import OpportunityList from './pages/opportunity/OpportunityList'
+import OpportunityDetail from './pages/opportunity/OpportunityDetail'
+import BiddingList from './pages/opportunity/BiddingList'
+import ResearchPanel from './pages/opportunity/ResearchPanel'
+import ContactList from './pages/opportunity/ContactList'
+import TrendsChart from './pages/opportunity/TrendsChart'
+import OppStats from './pages/opportunity/OppStats'
+import AssistantLayout from './pages/assistant/AssistantLayout'
+import AsstHcpList from './pages/assistant/HcpList'
+import AsstHcpDetail from './pages/assistant/HcpDetail'
+import VisitList from './pages/assistant/VisitList'
+import AsstTaskList from './pages/assistant/TaskList'
+import KnowledgeView from './pages/assistant/KnowledgeView'
+import QAPanel from './pages/assistant/QAPanel'
+import SalesAssistantLayout from './pages/sales-assistant/SalesAssistantLayout'
+import PreCallView from './pages/sales-assistant/PreCallView'
+import ContentLibrary from './pages/sales-assistant/ContentLibrary'
+import StrategyView from './pages/sales-assistant/StrategyView'
+import ObjectionList from './pages/sales-assistant/ObjectionList'
+import NoteList from './pages/sales-assistant/NoteList'
+import FunnelView from './pages/sales-assistant/FunnelView'
+import ScheduleView from './pages/sales-assistant/ScheduleView'
 
 export default function App() {
   return (
@@ -85,6 +115,45 @@ export default function App() {
                 <Route path="employee/performance" element={<EmployeePerformance />} />
                 <Route path="employee/trend" element={<EmployeeTrend />} />
               </Route>
+            </Route>
+            {/* Four-End Routes */}
+            <Route path="/coach" element={<CoachLayout />}>
+              <Route index element={<Navigate to="scenarios" replace />} />
+              <Route path="scenarios" element={<ScenarioList />} />
+              <Route path="sessions" element={<SessionList />} />
+              <Route path="sessions/:id" element={<SessionDetail />} />
+              <Route path="assessments" element={<AssessmentList />} />
+              <Route path="reflections" element={<ReflectionList />} />
+              <Route path="stats" element={<StatsDashboard />} />
+            </Route>
+            <Route path="/opportunity" element={<OpportunityLayout />}>
+              <Route index element={<Navigate to="opportunities" replace />} />
+              <Route path="opportunities" element={<OpportunityList />} />
+              <Route path="opportunities/:id" element={<OpportunityDetail />} />
+              <Route path="bidding" element={<BiddingList />} />
+              <Route path="research" element={<ResearchPanel />} />
+              <Route path="contacts" element={<ContactList />} />
+              <Route path="trends" element={<TrendsChart />} />
+              <Route path="stats" element={<OppStats />} />
+            </Route>
+            <Route path="/assistant" element={<AssistantLayout />}>
+              <Route index element={<Navigate to="hcps" replace />} />
+              <Route path="hcps" element={<AsstHcpList />} />
+              <Route path="hcps/:id" element={<AsstHcpDetail />} />
+              <Route path="visits" element={<VisitList />} />
+              <Route path="tasks" element={<AsstTaskList />} />
+              <Route path="knowledge" element={<KnowledgeView />} />
+              <Route path="qa" element={<QAPanel />} />
+            </Route>
+            <Route path="/sales-assistant" element={<SalesAssistantLayout />}>
+              <Route index element={<Navigate to="precall" replace />} />
+              <Route path="precall" element={<PreCallView />} />
+              <Route path="content" element={<ContentLibrary />} />
+              <Route path="strategy" element={<StrategyView />} />
+              <Route path="objections" element={<ObjectionList />} />
+              <Route path="notes" element={<NoteList />} />
+              <Route path="funnel" element={<FunnelView />} />
+              <Route path="schedule" element={<ScheduleView />} />
             </Route>
             <Route path="/dashboard" element={<Navigate to="/rep/dashboard" replace />} />
             <Route path="/" element={<Navigate to="/rep/dashboard" replace />} />

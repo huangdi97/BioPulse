@@ -9,7 +9,18 @@ import {
   LogOut,
   Pill,
   TrendingUp,
+  GraduationCap,
+  Phone,
+  UserPlus,
 } from 'lucide-react'
+
+const END_PORTS = [
+  { to: '/manager/dashboard', label: '云四端', icon: Pill },
+  { to: '/coach', label: '销售教练', icon: GraduationCap },
+  { to: '/opportunity', label: '商机', icon: Target },
+  { to: '/assistant', label: '拜访助手', icon: UserPlus },
+  { to: '/sales-assistant', label: '销售助理', icon: Phone },
+]
 
 const sidebarItems = [
   { to: '/manager/dashboard', label: '团队概览', icon: LayoutDashboard },
@@ -103,26 +114,70 @@ export default function ManagerLayout() {
       {/* Mobile: top header + bottom tabs */}
       <div className="flex flex-col flex-1 min-w-0">
         {/* Mobile Top Bar */}
-        <header className="flex md:hidden items-center justify-between px-4 py-2 bg-slate-900 text-slate-100 shrink-0">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            <span className="font-semibold text-sm">管理后台</span>
+        <header className="flex md:hidden flex-col bg-slate-900 text-slate-100 shrink-0">
+          <div className="flex items-center justify-between px-4 py-2">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              <span className="font-semibold text-sm">管理后台</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm">{user?.username}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                className="text-slate-100 hover:bg-slate-700"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm">{user?.username}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleLogout}
-              className="text-slate-100 hover:bg-slate-700"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
+          <nav className="flex items-center gap-0.5 px-2 pb-1.5 overflow-x-auto">
+            {END_PORTS.map((end) => {
+              const Icon = end.icon
+              return (
+                <NavLink
+                  key={end.to}
+                  to={end.to}
+                  className={({ isActive }) =>
+                    `flex items-center gap-1 px-2 py-1 rounded text-xs whitespace-nowrap transition-colors ${
+                      isActive
+                        ? 'bg-white/20 font-medium'
+                        : 'hover:bg-white/10'
+                    }`
+                  }
+                >
+                  <Icon className="h-3 w-3" />
+                  <span>{end.label}</span>
+                </NavLink>
+              )
+            })}
+          </nav>
         </header>
 
         {/* Desktop top bar (minimal) */}
-        <header className="hidden md:flex items-center justify-end px-4 py-2 bg-white border-b shrink-0">
+        <header className="hidden md:flex items-center justify-between px-4 py-2 bg-white border-b shrink-0">
+          <nav className="flex items-center gap-1">
+            {END_PORTS.map((end) => {
+              const Icon = end.icon
+              return (
+                <NavLink
+                  key={end.to}
+                  to={end.to}
+                  className={({ isActive }) =>
+                    `flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs whitespace-nowrap transition-colors ${
+                      isActive
+                        ? 'bg-primary/10 text-primary font-medium'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    }`
+                  }
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span>{end.label}</span>
+                </NavLink>
+              )
+            })}
+          </nav>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">{user?.username ?? '管理员'}</span>
             <Button variant="ghost" size="sm" onClick={handleLogout}>

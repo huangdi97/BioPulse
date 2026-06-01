@@ -1,0 +1,52 @@
+import { useState, useEffect } from 'react'
+import { fetchContent, type ContentItem } from '@/api/sales-assistant-api'
+import { Card, CardContent } from '@/components/ui/card'
+import { FileText, Clock } from 'lucide-react'
+
+const TYPE_ICONS: Record<string, string> = {
+  presentation: 'bg-blue-50 text-blue-600',
+  document: 'bg-green-50 text-green-600',
+  brochure: 'bg-purple-50 text-purple-600',
+}
+
+export default function ContentLibrary() {
+  const [items, setItems] = useState<ContentItem[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchContent().then((data) => {
+      if (cancelled) return
+      setItems(data)
+      setLoading(false)
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  if (loading) return <div className="space-y-3">{[1, 2, 3].map((i) => <Card key={i}><CardContent className="p-4 animate-pulse"><div className="h-16 bg-muted rounded" /></CardContent></Card>)}</div>
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-semibold">内容库</h2>
+      {items.map((item) => (
+        <Card key={item.id}>
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded ${TYPE_ICONS[item.type] ?? 'bg-gray-50 text-gray-500'}`}>
+                <FileText className="h-5 w-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">{item.title}</p>
+                <p className="text-xs text-muted-foreground mt-1">{item.summary}</p>
+                <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                  <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">{item.category}</span>
+                  <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{item.updatedAt}</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}

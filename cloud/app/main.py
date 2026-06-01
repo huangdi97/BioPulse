@@ -75,6 +75,7 @@ from cloud.app.routers.research_export_router import router as research_export_r
 from cloud.app.routers.research_matching_router import router as research_matching_router
 from cloud.app.routers.research_route_router import router as research_route_router
 from cloud.app.routers.research_quotation_workflow_router import router as research_quotation_workflow_router
+from cloud.app.routers.switch_router import router as switch_router
 from cloud.app.token_budget_router import router as token_budget_router
 # Serve frontend SPA
 START_TIME = time.time()
@@ -213,6 +214,7 @@ app.include_router(research_export_router)
 app.include_router(research_matching_router)
 app.include_router(research_route_router)
 app.include_router(research_quotation_workflow_router)
+app.include_router(switch_router)
 app.include_router(token_budget_router)
 
 @app.on_event("startup")

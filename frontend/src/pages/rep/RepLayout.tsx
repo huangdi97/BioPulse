@@ -8,7 +8,19 @@ import {
   ClipboardCheck,
   LogOut,
   Pill,
+  GraduationCap,
+  Target,
+  Phone,
+  UserPlus,
 } from 'lucide-react'
+
+const END_PORTS = [
+  { to: '/rep/dashboard', label: '云四端', icon: Pill },
+  { to: '/coach', label: '销售教练', icon: GraduationCap },
+  { to: '/opportunity', label: '商机', icon: Target },
+  { to: '/assistant', label: '拜访助手', icon: UserPlus },
+  { to: '/sales-assistant', label: '销售助理', icon: Phone },
+]
 
 export default function RepLayout() {
   const { user, logout } = useAuth()
@@ -65,6 +77,28 @@ export default function RepLayout() {
           </Button>
         </div>
       </header>
+
+      <nav className="flex items-center gap-0.5 px-2 py-1.5 bg-primary/90 text-primary-foreground shrink-0 overflow-x-auto">
+        {END_PORTS.map((end) => {
+          const Icon = end.icon
+          return (
+            <NavLink
+              key={end.to}
+              to={end.to}
+              className={({ isActive }) =>
+                `flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs whitespace-nowrap transition-colors ${
+                  isActive
+                    ? 'bg-white/20 font-medium'
+                    : 'hover:bg-white/10'
+                }`
+              }
+            >
+              <Icon className="h-3.5 w-3.5" />
+              <span>{end.label}</span>
+            </NavLink>
+          )
+        })}
+      </nav>
 
       <main className="flex-1 overflow-y-auto p-4">
         <Outlet />

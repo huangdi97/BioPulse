@@ -6,6 +6,7 @@ process restarts. Defaults to a local SQLite database file.
 
 import os
 import sqlite3
+from typing import Optional
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 
@@ -28,6 +29,14 @@ def get_sqlite_checkpointer(db_path: str | None = None) -> SqliteSaver:
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
     conn = sqlite3.connect(db_path, check_same_thread=False)
     return SqliteSaver(conn)
+
+
+def get_psql_checkpointer(conn_string: Optional[str] = None):
+    """返回 PostgresSaver checkpointer。配置连接字符串后可使用。"""
+    if conn_string:
+        from langgraph.checkpoint.postgres import PostgresSaver
+        return PostgresSaver.from_conn_string(conn_string)
+    return get_checkpointer()
 
 
 def get_checkpointer() -> SqliteSaver:

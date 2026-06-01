@@ -1,5 +1,4 @@
 import json
-import urllib.error
 import urllib.request
 from datetime import datetime
 from typing import Any, Optional
@@ -13,6 +12,7 @@ from cloud.app.repositories import (
 )
 from shared.auth_scope import require_scope
 from shared.base import success, PaginatedResponse
+from cloud.langgraph.pipeline_graph import get_pipeline_graph
 
 router = APIRouter(prefix="/agent/pipelines", tags=["Agent系统"])
 
@@ -155,75 +155,53 @@ def run_pipeline(pipeline_id: int, body: PipelineRunRequest, request: Request,
     })
 
     auth_header = request.headers.get("Authorization", "")
-    previous_output = ""
-    final_status = "completed"
-    step_results = []
-
+    graph_steps = []
     for step in steps:
+        graph_steps.append({
+            "step_order": step["step_order"],
+            "agent_role_id": step["agent_role_id"],
+            "agent_name": step["ar_name"],
+            "system_prompt": step["system_prompt"],
+            "custom_prompt_override": step["custom_prompt_override"],
+            "temperature": step["temperature"] or 0.7,
+            "max_tokens": step["max_tokens"] or 2048,
+            "input_mapping": json.loads(step["input_mapping"]) if step["input_mapping"] else {},
+        })
+
+    initial_state = {
+        "steps": graph_steps,
+        "current_index": 0,
+        "accumulated_outputs": [],
+        "current_step_input": None,
+        "done": False,
+        "auth_header": auth_header,
+        "previous_output": "",
+        "user_input": body.user_input,
+    }
+
+    graph = get_pipeline_graph()
+    result = graph.invoke(initial_state)
+
+    step_results = result["accumulated_outputs"]
+    final_status = "completed"
+    for sr in step_results:
         s_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        input_mapping = json.loads(step["input_mapping"]) if step["input_mapping"] else {}
-        user_content = body.user_input
-        if input_mapping.get("user_input") == "$request":
-            user_content = body.user_input
-        ctx = input_mapping.get("context", "")
-        strategy = input_mapping.get("strategy", "")
-        if previous_output:
-            if ctx == "previous_output":
-                user_content = previous_output
-            if strategy == "previous_output":
-                user_content = previous_output
-            if not input_mapping:
-                user_content = previous_output
-
-        messages = [
-            {"role": "system", "content": step["custom_prompt_override"] or step["system_prompt"]},
-            {"role": "user", "content": user_content},
-        ]
-        sr_id = step_runs_repo.create({
-            "run_id": run_id, "step_order": step["step_order"],
-            "agent_role_id": step["agent_role_id"], "agent_role_name": step["ar_name"],
-            "input_data": json.dumps(messages, ensure_ascii=False),
-            "status": "running", "started_at": s_now,
+        matching_step = next((s for s in steps if s["step_order"] == sr["step_order"]), None)
+        step_runs_repo.create({
+            "run_id": run_id,
+            "step_order": sr["step_order"],
+            "agent_role_id": matching_step["agent_role_id"] if matching_step else 0,
+            "agent_role_name": sr["agent_name"],
+            "input_data": json.dumps(sr.get("messages", []), ensure_ascii=False),
+            "output_data": sr["output"],
+            "ai_response_raw": sr["output"] if sr["status"] == "completed" else "",
+            "tokens_used": sr.get("tokens", 0),
+            "status": sr["status"],
+            "started_at": s_now,
+            "completed_at": s_now,
         })
-
-        step_status = "completed"
-        output_data = ""
-        ai_raw = ""
-        tokens = 0
-        try:
-            payload = {
-                "messages": messages,
-                "temperature": step["temperature"] or 0.7,
-                "max_tokens": step["max_tokens"] or 2048,
-            }
-            req = urllib.request.Request(
-                "http://localhost:8000/ai/chat",
-                data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json", "Authorization": auth_header},
-                method="POST")
-            with urllib.request.urlopen(req, timeout=120) as rp:
-                resp = json.loads(rp.read().decode("utf-8"))
-                ai_raw = resp.get("data", {}).get("reply", "")
-                usage = resp.get("data", {}).get("usage", {})
-                tokens = usage.get("total_tokens", 0) if usage else 0
-                output_data = ai_raw
-        except Exception as e:
-            step_status = "failed"
-            output_data = str(e)
+        if sr["status"] == "failed":
             final_status = "failed"
-
-        c_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        step_runs_repo.update(sr_id, {
-            "output_data": output_data, "ai_response_raw": ai_raw,
-            "tokens_used": tokens, "status": step_status, "completed_at": c_now,
-        })
-        step_results.append({
-            "step_order": step["step_order"], "agent_name": step["ar_name"],
-            "output": output_data, "status": step_status,
-        })
-        previous_output = output_data
-        if step_status == "failed":
-            break
 
     c_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     runs_repo.update(run_id, {
