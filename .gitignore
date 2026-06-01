@@ -47,13 +47,19 @@ htmlcov/
 
 # Uploads
 uploads/
+
+# Media
 media/
 
 # Node
 node_modules/
 
 # Benchmark
+benchmarks/
 .benchmarks/
+
+# Test cache
+.pytest_cache/
 
 # Misc
 *.orig
