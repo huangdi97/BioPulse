@@ -1,0 +1,65 @@
+import type { AiSuggestion } from '@/types'
+
+export const mockRecommends: AiSuggestion[] = [
+  {
+    id: 1,
+    title: '优先拜访张明华主任',
+    content: '张明华主任近期处方量增长15%，且对新产品线表现出浓厚兴趣，建议本周内安排实地拜访，重点介绍新药临床数据。',
+    type: 'visit_priority',
+    relatedHcpName: '张明华',
+    createdAt: '2026-05-30',
+  },
+  {
+    id: 2,
+    title: '安排吴佳慧医生回访',
+    content: '吴佳慧医生上次拜访后对新药安全性提出关注，建议准备安全性研究文献，安排回访深入解答疑虑。',
+    type: 'visit_priority',
+    relatedHcpName: '吴佳慧',
+    createdAt: '2026-05-30',
+  },
+  {
+    id: 3,
+    title: '张明华主任拜访后跟进',
+    content: '上次拜访张明华主任讨论了新药处方方案，建议一周内安排科室会，邀请心内科全体医生参与学术交流。',
+    type: 'follow_up',
+    relatedHcpName: '张明华',
+    createdAt: '2026-05-29',
+  },
+  {
+    id: 4,
+    title: '刘伟强医生拜访周期提醒',
+    content: '刘伟强医生拜访间隔已接近30天阈值，请尽快安排回访。上次拜访讨论了消化产品线，可准备新的临床数据作为切入点。',
+    type: 'follow_up',
+    relatedHcpName: '刘伟强',
+    createdAt: '2026-05-29',
+  },
+  {
+    id: 5,
+    title: '张明华医生处方量下降预警',
+    content: '张明华医生近两周处方量较上月下降30%，可能与竞品推广活动有关，建议尽快拜访了解情况并制定应对策略。',
+    type: 'insight',
+    relatedHcpName: '张明华',
+    createdAt: '2026-05-30',
+  },
+  {
+    id: 6,
+    title: '心内科区域处方分析',
+    content: '北京心内科区域整体处方量环比增长8%，其中协和医院贡献最大。建议重点关注该区域，持续保持学术推广力度。',
+    type: 'insight',
+    createdAt: '2026-05-30',
+  },
+  {
+    id: 7,
+    title: '合规表达规范提醒',
+    content: '近期合规审核发现部分拜访记录中存在夸大疗效的表述，请注意使用"有效改善""临床验证有效"等合规表述，避免使用"特效""根治"等违规词汇。',
+    type: 'compliance_tip',
+    createdAt: '2026-05-28',
+  },
+  {
+    id: 8,
+    title: '竞品对比注意事项',
+    content: '进行产品对比时，避免使用"优于竞品""最安全"等不正当竞争表述，建议改用"具有临床优势"或"提供差异化价值"等合规方式。',
+    type: 'compliance_tip',
+    createdAt: '2026-05-27',
+  },
+]

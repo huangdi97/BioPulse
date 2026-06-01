@@ -1,0 +1,25 @@
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
+from shared.auth import get_current_user
+from cloud.app.services.pubmed_service import search_pubmed
+
+router = APIRouter(prefix="/api/pubmed", tags=["pubmed"])
+
+
+class SearchRequest(BaseModel):
+    keyword: str
+    max_results: int = 20
+
+
+@router.post("/search")
+def search(body: SearchRequest, current_user: dict = Depends(get_current_user)):
+    """Search PubMed papers by keyword. Returns title, authors, journal, date."""
+    papers = search_pubmed(body.keyword, body.max_results)
+    return {"code": 0, "data": papers, "message": "success"}
+
+
+@router.post("/author/{author_name}")
+def search_by_author(author_name: str, current_user: dict = Depends(get_current_user)):
+    """Search PubMed papers by author name. Uses [AU] qualifier."""
+    papers = search_pubmed(f"{author_name}[AU]", max_results=20)
+    return {"code": 0, "data": papers, "message": "success"}

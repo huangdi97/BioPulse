@@ -1,0 +1,74 @@
+import 'package:flutter/foundation.dart';
+import 'package:one_cloud_app/services/auth_service.dart';
+
+/// ChangeNotifier managing authentication state across the app.
+///
+/// Exposes login/logout actions and observable states for
+/// [isLoading], [error], and current [user].
+class AuthProvider extends ChangeNotifier {
+  final AuthService _authService;
+
+  bool _isLoading = false;
+  String? _error;
+  Map<String, dynamic>? _user;
+  bool _isLoggedIn = false;
+
+  AuthProvider(this._authService);
+
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+  Map<String, dynamic>? get user => _user;
+  bool get isLoggedIn => _isLoggedIn;
+
+  /// Initialize auth state by checking for an existing token.
+  Future<void> init() async {
+    _isLoggedIn = await _authService.isLoggedIn();
+    if (_isLoggedIn) {
+      _user = await _authService.getUser();
+    }
+    notifyListeners();
+  }
+
+  /// Attempt login with [username] and [password].
+  Future<bool> login(String username, String password) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final data = await _authService.login(username, password);
+      if (data != null) {
+        _user = data;
+        _isLoggedIn = true;
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _error = '用户名或密码错误';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _error = '登录失败: $e';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Log out and clear all user state.
+  Future<void> logout() async {
+    await _authService.logout();
+    _user = null;
+    _isLoggedIn = false;
+    _error = null;
+    notifyListeners();
+  }
+
+  /// Clear the current error message.
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+}

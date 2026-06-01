@@ -1,0 +1,71 @@
+[
+  {
+    "code": "PHR-L1-001",
+    "name": "备案身份核验",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "核验医药代表备案身份，未备案人员不得从事学术推广活动",
+    "detection": {
+      "type": "field_check",
+      "field": "rep_verified",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-002",
+    "name": "统方禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "禁止以任何形式获取、使用医疗机构统方数据",
+    "detection": {
+      "type": "keyword_match",
+      "field": "notes",
+      "keywords": ["处方量", "开方数", "统方", "处方统计", "开药量"]
+    }
+  },
+  {
+    "code": "PHR-L1-003",
+    "name": "利益输送拦截",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "拦截向医务人员提供财物或其他不正当利益的行为",
+    "detection": {
+      "type": "threshold",
+      "field": "expenses",
+      "operator": "gte",
+      "value": 500,
+      "exclude_when": {"field": "call_type", "operator": "eq", "value": "学术会议"}
+    }
+  },
+  {
+    "code": "PHR-L1-004",
+    "name": "场所异常检测",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "检测并阻止在医疗机构内非指定区域进行的推广活动",
+    "detection": {
+      "type": "field_check",
+      "field": "location_type",
+      "operator": "eq",
+      "value": "unauthorized"
+    }
+  },
+  {
+    "code": "PHR-L1-005",
+    "name": "回扣红线",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "严禁以回扣、提成等方式诱导采购或处方行为",
+    "detection": {
+      "type": "keyword_match",
+      "field": "notes",
+      "keywords": ["回扣", "提成", "返点", "返利"]
+    }
+  }
+]

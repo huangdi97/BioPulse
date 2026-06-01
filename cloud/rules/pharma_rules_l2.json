@@ -1,0 +1,51 @@
+[
+  {
+    "id": "PHR-L2-001",
+    "name": "高频拜访预警",
+    "severity": "warning",
+    "check_type": "frequency_count",
+    "condition": {
+      "field": "hcp_id",
+      "window_days": 7
+    },
+    "threshold": 3,
+    "description": "同一HCP 7天内拜访次数达到或超过3次时触发预警"
+  },
+  {
+    "id": "PHR-L2-002",
+    "name": "礼品价值超限",
+    "severity": "review",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "gift_value",
+      "operator": "gt"
+    },
+    "threshold": 200,
+    "description": "单次礼品价值超过200元时标记"
+  },
+  {
+    "id": "PHR-L2-003",
+    "name": "会议参与合规",
+    "severity": "warning",
+    "check_type": "flag_check",
+    "condition": {
+      "field": "meeting_registered",
+      "expected": true
+    },
+    "threshold": null,
+    "description": "未备案会议参与标记"
+  },
+  {
+    "id": "PHR-L2-004",
+    "name": "科室覆盖异常",
+    "severity": "review",
+    "check_type": "concentration_check",
+    "condition": {
+      "field": "department",
+      "ratio_threshold": 0.8,
+      "window_days": 30
+    },
+    "threshold": 0.8,
+    "description": "同一科室拜访集中度异常（占比超过80%）"
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "code": "RSR-L1-001",
+    "name": "学术推广边界",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "不得以科研名义变相推销与学术无关的产品"
+  },
+  {
+    "code": "RSR-L1-002",
+    "name": "产品资质校验",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "推荐产品必须有有效注册证/资质"
+  },
+  {
+    "code": "RSR-L1-003",
+    "name": "反商业贿赂",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "科研支持不得附带采购条件"
+  }
+]

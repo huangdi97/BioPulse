@@ -1,0 +1,36 @@
+from typing import Any
+
+from fastapi import APIRouter, Depends, Request
+from pydantic import BaseModel
+
+from shared.auth import get_current_user
+from shared.base import ApiResponse, success
+from sales_assistant.app.services.objection_service import ObjectionService
+
+router = APIRouter(tags=["Objection Handling"])
+
+
+class ObjectionRequest(BaseModel):
+    objection: str
+    customer_type: str | None = None
+    context: str | None = None
+
+
+class ObjectionResponse(BaseModel):
+    objection: str
+    analysis: str
+    response_suggestion: str
+    key_points: list[str]
+    do_not_say: list[str]
+
+
+@router.post("/objection", response_model=ApiResponse[ObjectionResponse])
+def handle_objection(
+    request: Request,
+    body: ObjectionRequest,
+    service: ObjectionService = Depends(),
+    current_user: dict = Depends(get_current_user),
+) -> Any:
+    auth_header = request.headers.get("Authorization", "")
+    result = service.handle_objection(body, auth_header)
+    return success(ObjectionResponse(**result))

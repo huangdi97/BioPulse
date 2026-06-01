@@ -1,0 +1,70 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+*.egg
+**/__pycache__/
+**/*.pyc
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+*.env.local
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/archive/
+data/exports/
+data/export/
+
+# Build / Dist
+frontend/dist/
+cloud/static/assets/
+static/
+
+# Coverage
+coverage_html/
+.coverage
+htmlcov/
+
+# Uploads
+uploads/
+media/
+
+# Node
+node_modules/
+
+# Benchmark
+.benchmarks/
+
+# Misc
+*.orig
+*.backup
+briefings/
+docs/
+vibecoding/
+.github/
+start_*.sh
+test_*.sh
+cloud-api.service
+pyproject.toml
+.flake8
+frontend-plan-tg.md

@@ -1,0 +1,50 @@
+from fastapi import APIRouter, Depends, HTTPException, Request
+from starlette import status
+from pydantic import BaseModel
+
+from cloud.app.services.config_service import ConfigService
+from cloud.app.database import DB_PATH
+from shared.auth import verify_token
+from shared.base import success
+import sqlite3
+import os
+
+router = APIRouter(prefix="/admin/settings", tags=["配置"])
+
+
+class SettingsBody(BaseModel):
+    settings: dict
+
+
+def get_db_direct():
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def get_current_user(request: Request) -> dict:
+    auth = request.headers.get("Authorization", "")
+    scheme, _, token = auth.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid auth header")
+    payload = verify_token(token)
+    return payload
+
+
+@router.get("")
+def get_all(user: dict = Depends(get_current_user)):
+    db = get_db_direct()
+    service = ConfigService(db)
+    result = service.get_all()
+    db.close()
+    return success(data=result)
+
+
+@router.put("")
+def update(body: SettingsBody, user: dict = Depends(get_current_user)):
+    db = get_db_direct()
+    service = ConfigService(db)
+    result = service.update(body.settings)
+    db.close()
+    return success(data=result)

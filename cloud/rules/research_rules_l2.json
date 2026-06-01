@@ -1,0 +1,39 @@
+[
+  {
+    "id": "RSR-L2-001",
+    "name": "学术推广边界检查",
+    "severity": "warning",
+    "check_type": "citation_check",
+    "condition": {
+      "field": "reference_verified",
+      "expected": true
+    },
+    "threshold": null,
+    "description": "论文引用准确性检查，未验证的引用标记"
+  },
+  {
+    "id": "RSR-L2-002",
+    "name": "产品资质有效期预警",
+    "severity": "warning",
+    "check_type": "expiry_check",
+    "condition": {
+      "field": "certification_expiry",
+      "lead_days": 90
+    },
+    "threshold": 90,
+    "description": "产品资质有效期预警，到期前90天提醒"
+  },
+  {
+    "id": "RSR-L2-003",
+    "name": "报价折扣异常",
+    "severity": "review",
+    "check_type": "discount_check",
+    "condition": {
+      "field": "discount_rate",
+      "operator": "lt",
+      "baseline_field": "standard_discount"
+    },
+    "threshold": 0.7,
+    "description": "报价折扣低于标准价的70%时标记"
+  }
+]

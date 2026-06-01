@@ -1,0 +1,12 @@
+{
+  "quotation_id": 25,
+  "template_id": "tpl-001",
+  "title": "Test Quotation",
+  "customer_name": "Test Customer",
+  "items_json": "[]",
+  "total_amount": 1000.0,
+  "status": "draft",
+  "created_by": "test_user",
+  "created_at": "2026-05-31T00:00:00",
+  "watermark": "科研服务记录-学术合规"
+}

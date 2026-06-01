@@ -1,0 +1,45 @@
+from typing import Optional
+
+from opportunity.app.repositories import StatsRepository
+from opportunity.app.services.base import BaseService
+
+
+class StatsService(BaseService):
+    def get_stats(
+        self,
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+    ) -> dict:
+        repo = StatsRepository(self.db)
+        total_count, total_value = repo.get_totals(start_date, end_date)
+
+        by_stage: dict = {}
+        won_count = 0
+        lost_count = 0
+        for r in repo.get_by_stage(start_date, end_date):
+            stage = r[0] or "unknown"
+            count = r[1]
+            val = r[2]
+            by_stage[stage] = {"count": count, "value": val}
+            if stage == "won":
+                won_count = count
+            elif stage == "lost":
+                lost_count = count
+
+        by_product: list = []
+        for r in repo.get_by_product(start_date, end_date):
+            by_product.append({"product": r[0], "count": r[1], "value": r[2]})
+
+        avg_value = round(total_value / total_count, 2) if total_count > 0 else 0.0
+
+        total_closed = won_count + lost_count
+        win_rate = round(won_count / total_closed * 100, 1) if total_closed > 0 else 0.0
+
+        return {
+            "total_count": total_count,
+            "total_value": total_value,
+            "by_stage": by_stage,
+            "by_product": by_product,
+            "avg_value": avg_value,
+            "win_rate": win_rate,
+        }

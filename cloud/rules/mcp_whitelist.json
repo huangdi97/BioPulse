@@ -1,0 +1,30 @@
+{
+    "pubmed_search": {
+        "version": "1.0.0",
+        "endpoint": "/mcp/tools/pubmed/search",
+        "allowed_roles": ["admin", "researcher", "rep"],
+        "max_calls_per_min": 30,
+        "audit_level": "medium"
+    },
+    "kg_query": {
+        "version": "1.0.0",
+        "endpoint": "/mcp/tools/kg/query",
+        "allowed_roles": ["admin", "researcher", "rep"],
+        "max_calls_per_min": 60,
+        "audit_level": "low"
+    },
+    "ai_chat": {
+        "version": "2.1.0",
+        "endpoint": "/mcp/tools/ai/chat",
+        "allowed_roles": ["admin", "rep"],
+        "max_calls_per_min": 20,
+        "audit_level": "high"
+    },
+    "market_intel": {
+        "version": "1.2.0",
+        "endpoint": "/mcp/tools/market/intel",
+        "allowed_roles": ["admin", "researcher"],
+        "max_calls_per_min": 40,
+        "audit_level": "medium"
+    }
+}
