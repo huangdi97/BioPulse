@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from cloud.app.services.event_bus_service import EventBusService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/events", tags=["Event Bus"])
@@ -41,7 +41,7 @@ class EventSubscribe(BaseModel):
 
 @router.post("/definitions/create")
 def definitions_create(body: EventDefCreate,
-                       current_user: dict = Depends(get_current_user),
+                       current_user: dict = Depends(require_scope("visit")),
                        service: EventBusService = Depends()):
     result = service.create_definition(
         event_type=body.event_type, display_name=body.display_name,
@@ -55,7 +55,7 @@ def definitions_create(body: EventDefCreate,
 @router.get("/definitions/list")
 def definitions_list(source_end: Optional[str] = Query(None),
                      enabled: Optional[int] = Query(None),
-                     current_user: dict = Depends(get_current_user),
+                     current_user: dict = Depends(require_scope("visit")),
                      service: EventBusService = Depends()):
     rows = service.list_definitions(source_end=source_end, enabled=enabled)
     return success(data=rows)
@@ -63,7 +63,7 @@ def definitions_list(source_end: Optional[str] = Query(None),
 
 @router.patch("/definitions/{event_type}/toggle")
 def definitions_toggle(event_type: str,
-                       current_user: dict = Depends(get_current_user),
+                       current_user: dict = Depends(require_scope("visit")),
                        service: EventBusService = Depends()):
     result = service.toggle_definition(event_type)
     return success(data=result)
@@ -71,7 +71,7 @@ def definitions_toggle(event_type: str,
 
 @router.post("/messages/publish")
 def messages_publish(body: EventPublish,
-                     current_user: dict = Depends(get_current_user),
+                     current_user: dict = Depends(require_scope("visit")),
                      service: EventBusService = Depends()):
     result = service.publish_message(
         event_type=body.event_type, source_entity_type=body.source_entity_type,
@@ -87,7 +87,7 @@ def messages_list(event_type: Optional[str] = Query(None),
                   source_end: Optional[str] = Query(None),
                   start_date: Optional[str] = Query(None),
                   end_date: Optional[str] = Query(None),
-                  current_user: dict = Depends(get_current_user),
+                  current_user: dict = Depends(require_scope("visit")),
                   service: EventBusService = Depends()):
     rows = service.list_messages(event_type=event_type, status=status,
                                   source_end=source_end, start_date=start_date,
@@ -97,7 +97,7 @@ def messages_list(event_type: Optional[str] = Query(None),
 
 @router.get("/messages/{message_id}")
 def messages_get(message_id: str,
-                 current_user: dict = Depends(get_current_user),
+                 current_user: dict = Depends(require_scope("visit")),
                  service: EventBusService = Depends()):
     result = service.get_message(message_id)
     return success(data=result)
@@ -105,7 +105,7 @@ def messages_get(message_id: str,
 
 @router.post("/messages/{message_id}/redeliver")
 def messages_redeliver(message_id: str,
-                       current_user: dict = Depends(get_current_user),
+                       current_user: dict = Depends(require_scope("visit")),
                        service: EventBusService = Depends()):
     result = service.redeliver_message(message_id)
     return success(data=result)
@@ -113,7 +113,7 @@ def messages_redeliver(message_id: str,
 
 @router.post("/subscribe")
 def subscribe(body: EventSubscribe,
-              current_user: dict = Depends(get_current_user),
+              current_user: dict = Depends(require_scope("visit")),
               service: EventBusService = Depends()):
     result = service.subscribe(target_end=body.target_end,
                                 event_types=body.event_types,
@@ -125,7 +125,7 @@ def subscribe(body: EventSubscribe,
 def delivery_log_list(message_id: Optional[str] = Query(None),
                       target_end: Optional[str] = Query(None),
                       delivery_status: Optional[str] = Query(None),
-                      current_user: dict = Depends(get_current_user),
+                      current_user: dict = Depends(require_scope("visit")),
                       service: EventBusService = Depends()):
     rows = service.list_delivery_log(message_id=message_id,
                                       target_end=target_end,
@@ -134,7 +134,7 @@ def delivery_log_list(message_id: Optional[str] = Query(None),
 
 
 @router.get("/dashboard")
-def dashboard(current_user: dict = Depends(get_current_user),
+def dashboard(current_user: dict = Depends(require_scope("visit")),
               service: EventBusService = Depends()):
     result = service.get_dashboard()
     return success(data=result)

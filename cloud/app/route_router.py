@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from cloud.app.services.route_service import RouteService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/route", tags=["Route"])
@@ -37,7 +37,7 @@ class RouteExecute(BaseModel):
 
 
 @router.post("/rules", status_code=status.HTTP_201_CREATED)
-def create_rule(body: RuleCreate, current_user=Depends(get_current_user),
+def create_rule(body: RuleCreate, current_user=Depends(require_scope("visit")),
                 service: RouteService = Depends()):
     row = service.create_rule(
         name=body.name, priority=body.priority,
@@ -51,13 +51,13 @@ def create_rule(body: RuleCreate, current_user=Depends(get_current_user),
 
 
 @router.get("/rules")
-def list_rules(current_user=Depends(get_current_user),
+def list_rules(current_user=Depends(require_scope("visit")),
                service: RouteService = Depends()):
     return success(data=service.list_rules())
 
 
 @router.patch("/rules/{rule_id}")
-def update_rule(rule_id: int, body: RuleUpdate, current_user=Depends(get_current_user),
+def update_rule(rule_id: int, body: RuleUpdate, current_user=Depends(require_scope("visit")),
                 service: RouteService = Depends()):
     row = service.update_rule(
         rule_id=rule_id, name=body.name, priority=body.priority,
@@ -68,14 +68,14 @@ def update_rule(rule_id: int, body: RuleUpdate, current_user=Depends(get_current
 
 
 @router.delete("/rules/{rule_id}")
-def delete_rule(rule_id: int, current_user=Depends(get_current_user),
+def delete_rule(rule_id: int, current_user=Depends(require_scope("visit")),
                 service: RouteService = Depends()):
     service.delete_rule(rule_id)
     return success()
 
 
 @router.post("/execute")
-def execute_route(body: RouteExecute, current_user=Depends(get_current_user),
+def execute_route(body: RouteExecute, current_user=Depends(require_scope("visit")),
                   service: RouteService = Depends()):
     result = service.execute_route(
         input_text=body.input,
@@ -89,7 +89,7 @@ def execute_route(body: RouteExecute, current_user=Depends(get_current_user),
 def list_logs(role_id: Optional[int] = Query(None), source: Optional[str] = Query(None),
               date_from: Optional[str] = Query(None), date_to: Optional[str] = Query(None),
               page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100),
-              current_user=Depends(get_current_user),
+              current_user=Depends(require_scope("visit")),
               service: RouteService = Depends()):
     return success(data=service.list_logs(
         role_id=role_id, source=source, date_from=date_from, date_to=date_to,
@@ -97,18 +97,18 @@ def list_logs(role_id: Optional[int] = Query(None), source: Optional[str] = Quer
 
 
 @router.get("/logs/{log_id}")
-def get_log(log_id: int, current_user=Depends(get_current_user),
+def get_log(log_id: int, current_user=Depends(require_scope("visit")),
             service: RouteService = Depends()):
     return success(data=service.get_log(log_id))
 
 
 @router.get("/stats")
-def get_stats(current_user=Depends(get_current_user),
+def get_stats(current_user=Depends(require_scope("visit")),
               service: RouteService = Depends()):
     return success(data=service.get_stats())
 
 
 @router.get("/dashboard")
-def get_dashboard(current_user=Depends(get_current_user),
+def get_dashboard(current_user=Depends(require_scope("visit")),
                   service: RouteService = Depends()):
     return success(data=service.get_dashboard())

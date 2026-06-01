@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from cloud.app.services.decision_intel_service import DecisionIntelService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success, PaginatedResponse
 
 router = APIRouter(prefix="/decision-intel", tags=["Decision Intelligence"])
@@ -48,7 +48,7 @@ class InsightUpdate(BaseModel):
 
 @router.post("/cases", status_code=201)
 def create_case(body: CaseCreate, request: Request,
-                current_user=Depends(get_current_user),
+                current_user=Depends(require_scope("visit")),
                 service: DecisionIntelService = Depends()):
     uid = int(current_user["sub"])
     row = service.create_case(
@@ -67,7 +67,7 @@ def list_cases(outcome_score_min: Optional[float] = Query(None),
                search: Optional[str] = Query(None),
                page: int = Query(1, ge=1),
                page_size: int = Query(20, ge=1, le=100),
-               current_user=Depends(get_current_user),
+               current_user=Depends(require_scope("visit")),
                service: DecisionIntelService = Depends()):
     result = service.list_cases(
         outcome_score_min=outcome_score_min,
@@ -83,7 +83,7 @@ def list_cases(outcome_score_min: Optional[float] = Query(None),
 
 @router.get("/cases/{case_id}")
 def get_case(case_id: int,
-             current_user=Depends(get_current_user),
+             current_user=Depends(require_scope("visit")),
              service: DecisionIntelService = Depends()):
     row = service.get_case(case_id)
     return success(data=row)
@@ -91,7 +91,7 @@ def get_case(case_id: int,
 
 @router.patch("/cases/{case_id}")
 def update_case(case_id: int, body: CaseUpdate,
-                current_user=Depends(get_current_user),
+                current_user=Depends(require_scope("visit")),
                 service: DecisionIntelService = Depends()):
     row = service.update_case(
         case_id=case_id, name=body.name, description=body.description,
@@ -103,7 +103,7 @@ def update_case(case_id: int, body: CaseUpdate,
 
 @router.delete("/cases/{case_id}")
 def delete_case(case_id: int,
-                current_user=Depends(get_current_user),
+                current_user=Depends(require_scope("visit")),
                 service: DecisionIntelService = Depends()):
     service.delete_case(case_id)
     return success(message="deleted")
@@ -112,7 +112,7 @@ def delete_case(case_id: int,
 @router.post("/cases/{case_id}/analyze")
 def analyze_case(case_id: int, body: AnalyzeRequest,
                  request: Request,
-                 current_user=Depends(get_current_user),
+                 current_user=Depends(require_scope("visit")),
                  service: DecisionIntelService = Depends()):
     auth_header = request.headers.get("Authorization", "")
     result = service.analyze_case(
@@ -124,7 +124,7 @@ def analyze_case(case_id: int, body: AnalyzeRequest,
 
 @router.get("/cases/{case_id}/analyses")
 def list_analyses(case_id: int,
-                  current_user=Depends(get_current_user),
+                  current_user=Depends(require_scope("visit")),
                   service: DecisionIntelService = Depends()):
     rows = service.list_analyses(case_id)
     return success(data=rows)
@@ -132,7 +132,7 @@ def list_analyses(case_id: int,
 
 @router.get("/analyses/{analysis_id}")
 def get_analysis(analysis_id: int,
-                 current_user=Depends(get_current_user),
+                 current_user=Depends(require_scope("visit")),
                  service: DecisionIntelService = Depends()):
     row = service.get_analysis(analysis_id)
     return success(data=row)
@@ -140,7 +140,7 @@ def get_analysis(analysis_id: int,
 
 @router.post("/reflect")
 def reflect(body: ReflectRequest, request: Request,
-            current_user=Depends(get_current_user),
+            current_user=Depends(require_scope("visit")),
             service: DecisionIntelService = Depends()):
     auth_header = request.headers.get("Authorization", "")
     result = service.reflect(
@@ -155,7 +155,7 @@ def list_insights(insight_type: Optional[str] = Query(None),
                   confidence_min: Optional[float] = Query(None),
                   page: int = Query(1, ge=1),
                   page_size: int = Query(20, ge=1, le=100),
-                  current_user=Depends(get_current_user),
+                  current_user=Depends(require_scope("visit")),
                   service: DecisionIntelService = Depends()):
     result = service.list_insights(
         insight_type=insight_type, confidence_min=confidence_min,
@@ -170,7 +170,7 @@ def list_insights(insight_type: Optional[str] = Query(None),
 
 @router.get("/insights/{insight_id}")
 def get_insight(insight_id: int,
-                current_user=Depends(get_current_user),
+                current_user=Depends(require_scope("visit")),
                 service: DecisionIntelService = Depends()):
     row = service.get_insight(insight_id)
     return success(data=row)
@@ -178,7 +178,7 @@ def get_insight(insight_id: int,
 
 @router.patch("/insights/{insight_id}")
 def update_insight(insight_id: int, body: InsightUpdate,
-                   current_user=Depends(get_current_user),
+                   current_user=Depends(require_scope("visit")),
                    service: DecisionIntelService = Depends()):
     row = service.update_insight(
         insight_id=insight_id, title=body.title,
@@ -189,7 +189,7 @@ def update_insight(insight_id: int, body: InsightUpdate,
 
 
 @router.get("/dashboard")
-def dashboard(current_user=Depends(get_current_user),
+def dashboard(current_user=Depends(require_scope("visit")),
               service: DecisionIntelService = Depends()):
     result = service.dashboard()
     return success(data=result)

@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from cloud.app.services.brain_memory_service import BrainMemoryService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success, PaginatedResponse
 
 router = APIRouter(prefix="/brain-memory", tags=["Brain Memory"])
@@ -92,7 +92,7 @@ def working_refresh(session_id: str,
 def episodic_store(
     body: EpisodicStore,
     request: Request,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_scope("visit")),
     service: BrainMemoryService = Depends(),
 ):
     uid = str(current_user["sub"])

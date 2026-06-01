@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from cloud.app.services.hcp_sandbox_service import HcpSandboxService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/hcp-sandbox", tags=["HCP Sandbox"])
@@ -57,7 +57,7 @@ class SimulateRequest(BaseModel):
 @router.post("/profiles", status_code=status.HTTP_201_CREATED)
 def create_profile(
     body: HcpCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: HcpSandboxService = Depends(),
 ):
     user_id = int(current_user["sub"])
@@ -80,7 +80,7 @@ def list_profiles(
     city: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: HcpSandboxService = Depends(),
 ):
     result = service.list_profiles(
@@ -93,7 +93,7 @@ def list_profiles(
 @router.get("/profiles/{hcp_id}")
 def get_profile(
     hcp_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: HcpSandboxService = Depends(),
 ):
     row = service.get_profile(hcp_id)
@@ -104,7 +104,7 @@ def get_profile(
 def update_profile(
     hcp_id: int,
     body: HcpUpdate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: HcpSandboxService = Depends(),
 ):
     row = service.update_profile(
@@ -124,7 +124,7 @@ def update_profile(
 def create_interaction(
     hcp_id: int,
     body: InteractionCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: HcpSandboxService = Depends(),
 ):
     user_id = int(current_user["sub"])
@@ -142,7 +142,7 @@ def list_interactions(
     hcp_id: int,
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: HcpSandboxService = Depends(),
 ):
     result = service.list_interactions(
@@ -155,7 +155,7 @@ def list_interactions(
 def simulate(
     hcp_id: int,
     body: SimulateRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: HcpSandboxService = Depends(),
 ):
     user_id = int(current_user["sub"])
@@ -172,7 +172,7 @@ def list_simulations(
     status: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: HcpSandboxService = Depends(),
 ):
     result = service.list_simulations(
@@ -184,7 +184,7 @@ def list_simulations(
 @router.get("/simulations/{sim_id}")
 def get_simulation(
     sim_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: HcpSandboxService = Depends(),
 ):
     row = service.get_simulation(sim_id)
@@ -193,7 +193,7 @@ def get_simulation(
 
 @router.get("/dashboard")
 def dashboard(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: HcpSandboxService = Depends(),
 ):
     result = service.dashboard()

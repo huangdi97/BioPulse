@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from starlette import status
 
 from cloud.app.services.customer_service import CustomerService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/customers", tags=["customers"])
@@ -38,7 +38,7 @@ class CustomerUpdate(BaseModel):
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_customer(
     body: CustomerCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: CustomerService = Depends(),
 ) -> Any:
     user_id = int(current_user["sub"])
@@ -59,7 +59,7 @@ def list_customers(
     status: str = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: CustomerService = Depends(),
 ) -> Any:
     result = service.list_customers(
@@ -72,7 +72,7 @@ def list_customers(
 @router.get("/{customer_id}")
 def get_customer(
     customer_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: CustomerService = Depends(),
 ) -> Any:
     row = service.get_customer(customer_id)
@@ -83,7 +83,7 @@ def get_customer(
 def update_customer(
     customer_id: int,
     body: CustomerUpdate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: CustomerService = Depends(),
 ) -> Any:
     row = service.update_customer(
@@ -98,7 +98,7 @@ def update_customer(
 @router.delete("/{customer_id}")
 def delete_customer(
     customer_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: CustomerService = Depends(),
 ) -> Any:
     service.delete_customer(customer_id)

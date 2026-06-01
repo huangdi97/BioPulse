@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from cloud.app.services.orchestrate_service import OrchestrateService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/orchestrate", tags=["Orchestration"])
@@ -24,7 +24,7 @@ class OrchestrateRun(BaseModel):
 
 @router.post("/templates/create", status_code=status.HTTP_201_CREATED)
 def create_template(body: TemplateCreate,
-                    current_user=Depends(get_current_user),
+                    current_user=Depends(require_scope("visit")),
                     service: OrchestrateService = Depends()):
     uid = int(current_user["sub"])
     row = service.create_template(
@@ -39,7 +39,7 @@ def create_template(body: TemplateCreate,
 @router.get("/templates/list")
 def list_templates(
     enabled: Optional[int] = Query(None),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_scope("visit")),
     service: OrchestrateService = Depends(),
 ):
     rows = service.list_templates(enabled=enabled)
@@ -48,7 +48,7 @@ def list_templates(
 
 @router.post("/run", status_code=status.HTTP_201_CREATED)
 def run_orchestration(body: OrchestrateRun,
-                      current_user=Depends(get_current_user),
+                      current_user=Depends(require_scope("visit")),
                       service: OrchestrateService = Depends()):
     result = service.run_orchestration(
         template_name=body.template_name,

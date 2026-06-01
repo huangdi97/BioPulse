@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from starlette import status
 
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 from cloud.app.services.team_service import TeamService
 
@@ -30,7 +30,7 @@ class TeamMemberAdd(BaseModel):
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_team(
     body: TeamCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: TeamService = Depends(),
 ) -> Any:
     """Create a new team."""
@@ -43,7 +43,7 @@ def list_teams(
     name: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: TeamService = Depends(),
 ) -> Any:
     """List teams with optional name filter and pagination."""
@@ -54,7 +54,7 @@ def list_teams(
 @router.get("/{team_id:int}")
 def get_team(
     team_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: TeamService = Depends(),
 ) -> Any:
     """Get a single team with its members."""
@@ -65,7 +65,7 @@ def get_team(
 def update_team(
     team_id: int,
     body: TeamUpdate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: TeamService = Depends(),
 ) -> Any:
     """Update team fields dynamically."""
@@ -78,7 +78,7 @@ def update_team(
 @router.delete("/{team_id:int}")
 def delete_team(
     team_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: TeamService = Depends(),
 ) -> Any:
     """Soft-delete a team by setting is_active=0."""
@@ -90,7 +90,7 @@ def delete_team(
 def add_team_member(
     team_id: int,
     body: TeamMemberAdd,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: TeamService = Depends(),
 ) -> Any:
     """Add a member to a team."""
@@ -102,7 +102,7 @@ def add_team_member(
 def remove_team_member(
     team_id: int,
     user_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: TeamService = Depends(),
 ) -> Any:
     """Remove a member from a team."""

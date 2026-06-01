@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from cloud.app.services.task_service import TaskService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/boards", tags=["boards"])
@@ -37,7 +37,7 @@ class TaskUpdate(BaseModel):
 def create_task(
     board_id: int,
     body: TaskCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: TaskService = Depends(),
 ) -> Any:
     row = service.create_task(
@@ -53,7 +53,7 @@ def create_task(
 def list_tasks(
     board_id: int,
     status_filter: Optional[str] = Query(None, alias="status"),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: TaskService = Depends(),
 ) -> Any:
     rows = service.list_tasks(board_id, status_filter=status_filter)
@@ -65,7 +65,7 @@ def update_task(
     board_id: int,
     task_id: int,
     body: TaskUpdate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: TaskService = Depends(),
 ) -> Any:
     row = service.update_task(
@@ -82,7 +82,7 @@ def update_task(
 def delete_task(
     board_id: int,
     task_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: TaskService = Depends(),
 ) -> Any:
     service.delete_task(board_id, task_id)
@@ -91,7 +91,7 @@ def delete_task(
 
 @router.get("/tasks/my")
 def my_tasks(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: TaskService = Depends(),
 ) -> Any:
     rows = service.my_tasks(user_id=int(current_user["sub"]))

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from starlette import status
 
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 from cloud.app.services.marketplace_service import MarketplaceService
 
@@ -37,7 +37,7 @@ class MarketplacePublish(BaseModel):
 @router.post("/metrics/log", status_code=status.HTTP_201_CREATED)
 def log_metric(
     body: MetricLog,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: MarketplaceService = Depends(),
 ) -> Any:
     return success(data=service.log_metric(
@@ -47,7 +47,7 @@ def log_metric(
 
 @router.get("/metrics/dashboard")
 def metrics_dashboard(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: MarketplaceService = Depends(),
     agent_role: Optional[str] = Query(None),
 ) -> Any:
@@ -57,7 +57,7 @@ def metrics_dashboard(
 @router.post("/benchmark/generate", status_code=status.HTTP_201_CREATED)
 def generate_benchmark(
     body: BenchmarkGenerate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: MarketplaceService = Depends(),
 ) -> Any:
     return success(data=service.generate_benchmark(body.report_name, body.report_type, body.period))
@@ -65,7 +65,7 @@ def generate_benchmark(
 
 @router.get("/benchmark/list")
 def list_benchmarks(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: MarketplaceService = Depends(),
     report_type: Optional[str] = Query(None),
 ) -> Any:
@@ -75,7 +75,7 @@ def list_benchmarks(
 @router.post("/items/publish", status_code=status.HTTP_201_CREATED)
 def publish_item(
     body: MarketplacePublish,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: MarketplaceService = Depends(),
 ) -> Any:
     return success(data=service.publish_item(
@@ -85,7 +85,7 @@ def publish_item(
 
 @router.get("/items/discover")
 def discover_items(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: MarketplaceService = Depends(),
     category: Optional[str] = Query(None),
     price_model: Optional[str] = Query(None),

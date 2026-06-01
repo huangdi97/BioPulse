@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from cloud.app.services.causal_service import CausalService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/causal", tags=["因果推理"])
@@ -35,7 +35,7 @@ class HcpPrescription(BaseModel):
 
 @router.post("/graph/build", status_code=status.HTTP_201_CREATED)
 def build_graph(body: GraphBuild,
-                current_user: dict = Depends(get_current_user),
+                current_user: dict = Depends(require_scope("visit")),
                 service: CausalService = Depends()):
     user_id = int(current_user["sub"])
     result = service.build_graph(
@@ -48,7 +48,7 @@ def build_graph(body: GraphBuild,
 
 @router.get("/graph/{graph_id}")
 def get_graph(graph_id: str,
-              current_user: dict = Depends(get_current_user),
+              current_user: dict = Depends(require_scope("visit")),
               service: CausalService = Depends()):
     result = service.get_graph(graph_id)
     return success(data=result)
@@ -56,7 +56,7 @@ def get_graph(graph_id: str,
 
 @router.post("/counterfactual/simulate", status_code=status.HTTP_201_CREATED)
 def simulate_counterfactual(body: CounterfactualSimulate,
-                            current_user: dict = Depends(get_current_user),
+                            current_user: dict = Depends(require_scope("visit")),
                             service: CausalService = Depends()):
     user_id = int(current_user["sub"])
     result = service.simulate_counterfactual(
@@ -71,7 +71,7 @@ def simulate_counterfactual(body: CounterfactualSimulate,
 def list_counterfactuals(strategy_id: Optional[str] = Query(None),
                          page: int = Query(1, ge=1),
                          page_size: int = Query(20, ge=1, le=100),
-                         current_user: dict = Depends(get_current_user),
+                         current_user: dict = Depends(require_scope("visit")),
                          service: CausalService = Depends()):
     result = service.list_counterfactuals(
         strategy_id=strategy_id,
@@ -82,7 +82,7 @@ def list_counterfactuals(strategy_id: Optional[str] = Query(None),
 
 @router.post("/infer")
 def causal_infer(body: CausalInfer,
-                 current_user: dict = Depends(get_current_user),
+                 current_user: dict = Depends(require_scope("visit")),
                  service: CausalService = Depends()):
     result = service.causal_infer(
         features=body.features,
@@ -94,7 +94,7 @@ def causal_infer(body: CausalInfer,
 
 @router.post("/hcp/prescription")
 def hcp_prescription_attribution(body: HcpPrescription,
-                                 current_user: dict = Depends(get_current_user),
+                                 current_user: dict = Depends(require_scope("visit")),
                                  service: CausalService = Depends()):
     result = service.hcp_prescription_attribution(
         hcp_entity_id=body.hcp_entity_id,

@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from cloud.app.services.compute_service import ComputeService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/compute", tags=["Privacy Computing"])
@@ -38,7 +38,7 @@ class TrustFedProve(BaseModel):
 @router.post("/job/create")
 def job_create(
     body: ComputeJobCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ComputeService = Depends(),
 ):
     user_id = int(current_user["sub"])
@@ -55,7 +55,7 @@ def job_create(
 def job_list(
     status: Optional[str] = Query(None),
     compute_type: Optional[str] = Query(None),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ComputeService = Depends(),
 ):
     rows = service.list_jobs(status_filter=status, compute_type=compute_type)
@@ -65,7 +65,7 @@ def job_list(
 @router.get("/job/{job_id}")
 def job_detail(
     job_id: str,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ComputeService = Depends(),
 ):
     row = service.get_job(job_id)
@@ -75,7 +75,7 @@ def job_detail(
 @router.post("/federated/init")
 def federated_init(
     body: FederatedInit,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ComputeService = Depends(),
 ):
     rows = service.init_federated(
@@ -89,7 +89,7 @@ def federated_init(
 @router.post("/federated/submit")
 def federated_submit(
     body: FederatedSubmit,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ComputeService = Depends(),
 ):
     row = service.submit_federated(
@@ -105,7 +105,7 @@ def federated_submit(
 def rounds_list(
     model_name: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ComputeService = Depends(),
 ):
     rows = service.list_federated_rounds(model_name=model_name, status_filter=status)
@@ -115,7 +115,7 @@ def rounds_list(
 @router.post("/trustfed/prove")
 def trustfed_prove(
     body: TrustFedProve,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ComputeService = Depends(),
 ):
     proof = service.prove_contribution(
@@ -128,7 +128,7 @@ def trustfed_prove(
 @router.get("/trustfed/verify/{contribution_id}")
 def trustfed_verify(
     contribution_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ComputeService = Depends(),
 ):
     result = service.verify_contribution(contribution_id)

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from cloud.app.services.memory_consolidation_service import MemoryConsolidationService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/memory/consolidation", tags=["记忆系统"])
@@ -14,7 +14,7 @@ class MemoryEvaluateRequest(BaseModel):
 
 @router.post("/trigger")
 def trigger_consolidation(
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_scope("visit")),
     service: MemoryConsolidationService = Depends(),
 ):
     result = service.trigger_consolidation(
@@ -25,7 +25,7 @@ def trigger_consolidation(
 
 @router.get("/status")
 def consolidation_status(
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_scope("visit")),
     service: MemoryConsolidationService = Depends(),
 ):
     return success(data=service.consolidation_status())
@@ -34,7 +34,7 @@ def consolidation_status(
 @router.post("/evaluate")
 def evaluate_memory(
     body: MemoryEvaluateRequest,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_scope("visit")),
     service: MemoryConsolidationService = Depends(),
 ):
     return success(data=service.evaluate_memory(agent_id=body.agent_id))
@@ -42,7 +42,7 @@ def evaluate_memory(
 
 @router.get("/evaluate/trend")
 def evaluate_trend(
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_scope("visit")),
     service: MemoryConsolidationService = Depends(),
 ):
     return success(data=service.evaluate_trend())

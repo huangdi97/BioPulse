@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 from pydantic import BaseModel
 from typing import Optional
 from cloud.app.database import DB_PATH
-from shared.auth import verify_token
+from shared.auth_scope import require_scope
 from shared.base import success
 import json
 import sqlite3
@@ -42,14 +42,6 @@ init_visits_table(conn)
 conn.close()
 
 
-def get_current_user(request: Request) -> dict:
-    auth = request.headers.get("Authorization", "")
-    scheme, _, token = auth.partition(" ")
-    if scheme.lower() != "bearer" or not token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid auth header")
-    return verify_token(token)
-
-
 class VisitCreate(BaseModel):
     hcp_id: int
     hcp_name: str
@@ -61,7 +53,7 @@ class VisitCreate(BaseModel):
 
 
 @router.post("/visit")
-def create_visit(body: VisitCreate, user: dict = Depends(get_current_user)):
+def create_visit(body: VisitCreate, user: dict = Depends(require_scope("visit"))):
     db = get_direct_db()
     cursor = db.execute(
         """
@@ -87,7 +79,7 @@ def create_visit(body: VisitCreate, user: dict = Depends(get_current_user)):
 
 
 @router.get("/visit/{visit_id}")
-def get_visit(visit_id: int, user: dict = Depends(get_current_user)):
+def get_visit(visit_id: int, user: dict = Depends(require_scope("visit"))):
     db = get_direct_db()
     row = db.execute("SELECT * FROM visits WHERE id = ?", (visit_id,)).fetchone()
     db.close()

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from starlette import status
 
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 from cloud.app.services.board_service import BoardService
 
@@ -24,7 +24,7 @@ class BoardUpdate(BaseModel):
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_board(
     body: BoardCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: BoardService = Depends(),
 ) -> Any:
     user_id = int(current_user["sub"])
@@ -34,7 +34,7 @@ def create_board(
 
 @router.get("/")
 def list_boards(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: BoardService = Depends(),
 ) -> Any:
     return success(data=service.list_boards())
@@ -43,7 +43,7 @@ def list_boards(
 @router.get("/{board_id}")
 def get_board(
     board_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: BoardService = Depends(),
 ) -> Any:
     return success(data=service.get_board(board_id))
@@ -53,7 +53,7 @@ def get_board(
 def update_board(
     board_id: int,
     body: BoardUpdate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: BoardService = Depends(),
 ) -> Any:
     result = service.update_board(board_id, name=body.name, description=body.description)
@@ -63,7 +63,7 @@ def update_board(
 @router.delete("/{board_id}")
 def delete_board(
     board_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: BoardService = Depends(),
 ) -> Any:
     service.delete_board(board_id)
@@ -73,7 +73,7 @@ def delete_board(
 @router.get("/{board_id}/kanban")
 def kanban_view(
     board_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: BoardService = Depends(),
 ) -> Any:
     return success(data=service.kanban_view(board_id))

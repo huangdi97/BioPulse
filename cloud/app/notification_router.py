@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from starlette import status
 
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 from cloud.app.services.notification_service import NotificationService
 
@@ -39,7 +39,7 @@ class NotificationSend(BaseModel):
 @router.post("/templates", status_code=status.HTTP_201_CREATED)
 def create_template(
     body: TemplateCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
     result = service.create_template(
@@ -53,7 +53,7 @@ def create_template(
 
 @router.get("/templates")
 def list_templates(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
     return success(data=service.list_templates())
@@ -62,7 +62,7 @@ def list_templates(
 @router.get("/templates/{template_id}")
 def get_template(
     template_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
     return success(data=service.get_template(template_id))
@@ -72,7 +72,7 @@ def get_template(
 def update_template(
     template_id: int,
     body: TemplateUpdate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
     updates = {}
@@ -87,7 +87,7 @@ def update_template(
 @router.delete("/templates/{template_id}")
 def delete_template(
     template_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
     service.delete_template(template_id)
@@ -97,7 +97,7 @@ def delete_template(
 @router.post("/send", status_code=status.HTTP_201_CREATED)
 def send_notification(
     body: NotificationSend,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
     result = service.send(
@@ -118,7 +118,7 @@ def list_notifications(
     is_read: Optional[int] = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
     user_id = int(current_user["sub"])
@@ -129,7 +129,7 @@ def list_notifications(
 @router.patch("/{notification_id}/read")
 def mark_read(
     notification_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
     user_id = int(current_user["sub"])
@@ -139,7 +139,7 @@ def mark_read(
 
 @router.get("/unread-count")
 def unread_count(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
     user_id = int(current_user["sub"])

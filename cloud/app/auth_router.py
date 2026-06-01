@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends
 from starlette import status
@@ -19,6 +19,7 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=6, max_length=128)
+    scope: Optional[str] = "visit"
 
 
 class RefreshRequest(BaseModel):
@@ -39,7 +40,7 @@ def register(body: RegisterRequest, service: AuthService = Depends()) -> Any:
     description="Validates credentials and returns access_token and refresh_token.",
 )
 def login(body: LoginRequest, service: AuthService = Depends()) -> Any:
-    result = service.login(body.username, body.password)
+    result = service.login(body.username, body.password, body.scope)
     return success(data=result)
 
 

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from starlette import status
 
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success, PaginatedResponse
 from cloud.app.services.audit_service import AuditService
 
@@ -24,7 +24,7 @@ class AuditLogCreate(BaseModel):
 @router.post("/logs")
 def create_audit_log(
     body: AuditLogCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: AuditService = Depends(),
 ) -> Any:
     service.create_log(
@@ -44,7 +44,7 @@ def list_audit_logs(
     user_id: int = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: AuditService = Depends(),
 ) -> Any:
     result = service.list_logs(
@@ -57,7 +57,7 @@ def list_audit_logs(
 
 @router.get("/logs/stats")
 def audit_stats(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: AuditService = Depends(),
 ) -> Any:
     return success(data=service.get_stats())

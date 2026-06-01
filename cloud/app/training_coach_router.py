@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from cloud.app.services.training_coach_service import TrainingCoachService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success, PaginatedResponse
 
 router = APIRouter(prefix="/training-coach", tags=["Training Coach"])
@@ -43,7 +43,7 @@ class AttributionCreate(BaseModel):
 @router.post("/modules", status_code=201)
 def create_module(
     body: ModuleCreate,
-    cu=Depends(get_current_user),
+    cu=Depends(require_scope("visit")),
     service: TrainingCoachService = Depends(),
 ) -> Any:
     row = service.create_module(
@@ -63,7 +63,7 @@ def create_module(
 def list_modules(
     category: Optional[str] = None,
     difficulty: Optional[str] = None,
-    cu=Depends(get_current_user),
+    cu=Depends(require_scope("visit")),
     service: TrainingCoachService = Depends(),
 ) -> Any:
     rows = service.list_modules(category=category, difficulty=difficulty)
@@ -73,7 +73,7 @@ def list_modules(
 @router.post("/sessions")
 def create_session(
     body: SessionCreate,
-    cu=Depends(get_current_user),
+    cu=Depends(require_scope("visit")),
     service: TrainingCoachService = Depends(),
 ) -> Any:
     row = service.create_session(
@@ -95,7 +95,7 @@ def list_sessions(
     module_id: Optional[int] = None,
     page: int = 1,
     page_size: int = 20,
-    cu=Depends(get_current_user),
+    cu=Depends(require_scope("visit")),
     service: TrainingCoachService = Depends(),
 ) -> Any:
     result = service.list_sessions(
@@ -107,7 +107,7 @@ def list_sessions(
 @router.get("/sessions/{session_id}")
 def get_session(
     session_id: int,
-    cu=Depends(get_current_user),
+    cu=Depends(require_scope("visit")),
     service: TrainingCoachService = Depends(),
 ) -> Any:
     row = service.get_session(session_id)
@@ -117,7 +117,7 @@ def get_session(
 @router.post("/recommend")
 def recommend(
     body: Request,
-    cu=Depends(get_current_user),
+    cu=Depends(require_scope("visit")),
     service: TrainingCoachService = Depends(),
 ) -> Any:
     result = service.recommend(cu["user_id"])
@@ -127,7 +127,7 @@ def recommend(
 @router.post("/attributions")
 def create_attribution(
     body: AttributionCreate,
-    cu=Depends(get_current_user),
+    cu=Depends(require_scope("visit")),
     service: TrainingCoachService = Depends(),
 ) -> Any:
     row = service.create_attribution(
@@ -144,7 +144,7 @@ def create_attribution(
 def list_attributions(
     user_id: Optional[int] = None,
     metric_name: Optional[str] = None,
-    cu=Depends(get_current_user),
+    cu=Depends(require_scope("visit")),
     service: TrainingCoachService = Depends(),
 ) -> Any:
     rows = service.list_attributions(user_id=user_id, metric_name=metric_name)
@@ -154,7 +154,7 @@ def list_attributions(
 @router.post("/attributions/{att_id}/analyze")
 def analyze_attribution(
     att_id: int,
-    cu=Depends(get_current_user),
+    cu=Depends(require_scope("visit")),
     service: TrainingCoachService = Depends(),
 ) -> Any:
     row = service.analyze_attribution(att_id)
@@ -163,7 +163,7 @@ def analyze_attribution(
 
 @router.get("/dashboard")
 def dashboard(
-    cu=Depends(get_current_user),
+    cu=Depends(require_scope("visit")),
     service: TrainingCoachService = Depends(),
 ) -> Any:
     result = service.dashboard()

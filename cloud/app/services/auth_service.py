@@ -31,7 +31,7 @@ class AuthService(BaseService):
 
         return {"user_id": user_id, "username": username}
 
-    def login(self, username: str, password: str) -> dict:
+    def login(self, username: str, password: str, scope: str = "visit") -> dict:
         users_repo = UsersRepository(self.db)
         row = users_repo.db.execute(
             "SELECT id, username, hashed_password, role, is_active FROM users WHERE username=?",
@@ -45,7 +45,7 @@ class AuthService(BaseService):
             raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Account is inactive")
 
         role = row["role"] or "rep"
-        access_token = create_access_token(row["id"], role)
+        access_token = create_access_token(row["id"], role, scope)
         refresh_token = create_refresh_token(row["id"])
 
         return {

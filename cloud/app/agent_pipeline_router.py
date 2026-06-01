@@ -11,7 +11,7 @@ from cloud.app.repositories import (
     AgentPipelinesRepository, PipelineStepsRepository,
     PipelineRunsRepository, PipelineStepRunsRepository,
 )
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success, PaginatedResponse
 
 router = APIRouter(prefix="/agent/pipelines", tags=["Agent系统"])
@@ -57,7 +57,7 @@ def _p404(pipelines_repo, pid):
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_pipeline(body: PipelineCreate,
-                    current_user=Depends(get_current_user), db=Depends(get_db)):
+                    current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     uid = int(current_user["sub"])
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     pipelines_repo = AgentPipelinesRepository(db)
@@ -77,7 +77,7 @@ def create_pipeline(body: PipelineCreate,
 
 
 @router.get("")
-def list_pipelines(current_user=Depends(get_current_user), db=Depends(get_db)):
+def list_pipelines(current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     pipelines_repo = AgentPipelinesRepository(db)
     steps_repo = PipelineStepsRepository(db)
     rows = pipelines_repo.list_all(order_by="created_at DESC")
@@ -90,7 +90,7 @@ def list_pipelines(current_user=Depends(get_current_user), db=Depends(get_db)):
 
 # IMPORTANT: /runs/{run_id} MUST come before /{pipeline_id} to avoid route conflicts
 @router.get("/runs/{run_id}")
-def get_run(run_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
+def get_run(run_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     runs_repo = PipelineRunsRepository(db)
     step_runs_repo = PipelineStepRunsRepository(db)
     row = runs_repo.get_by_id(run_id)
@@ -107,7 +107,7 @@ def get_run(run_id: int, current_user=Depends(get_current_user), db=Depends(get_
 
 @router.get("/{pipeline_id}")
 def get_pipeline(pipeline_id: int,
-                 current_user=Depends(get_current_user), db=Depends(get_db)):
+                 current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     pipelines_repo = AgentPipelinesRepository(db)
     steps_repo = PipelineStepsRepository(db)
     row = _p404(pipelines_repo, pipeline_id)
@@ -119,7 +119,7 @@ def get_pipeline(pipeline_id: int,
 
 @router.delete("/{pipeline_id}")
 def delete_pipeline(pipeline_id: int,
-                    current_user=Depends(get_current_user), db=Depends(get_db)):
+                    current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     pipelines_repo = AgentPipelinesRepository(db)
     steps_repo = PipelineStepsRepository(db)
     runs_repo = PipelineRunsRepository(db)
@@ -134,7 +134,7 @@ def delete_pipeline(pipeline_id: int,
 
 @router.post("/{pipeline_id}/run")
 def run_pipeline(pipeline_id: int, body: PipelineRunRequest, request: Request,
-                 current_user=Depends(get_current_user), db=Depends(get_db)):
+                 current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     pipelines_repo = AgentPipelinesRepository(db)
     steps_repo = PipelineStepsRepository(db)
     runs_repo = PipelineRunsRepository(db)
@@ -237,7 +237,7 @@ def run_pipeline(pipeline_id: int, body: PipelineRunRequest, request: Request,
 @router.get("/{pipeline_id}/runs")
 def list_runs(pipeline_id: int,
               page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100),
-              current_user=Depends(get_current_user), db=Depends(get_db)):
+              current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     pipelines_repo = AgentPipelinesRepository(db)
     runs_repo = PipelineRunsRepository(db)
     _p404(pipelines_repo, pipeline_id)

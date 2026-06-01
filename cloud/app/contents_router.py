@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from starlette import status
 
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 from cloud.app.services.content_service import ContentService
 
@@ -50,7 +50,7 @@ class PaginatedContents(BaseModel):
 @router.post("/")
 def create_content(
     body: ContentCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ContentService = Depends(),
 ) -> Any:
     user_id = int(current_user["sub"])
@@ -64,7 +64,7 @@ def list_contents(
     category: str = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ContentService = Depends(),
 ) -> Any:
     result = service.list_contents(status_filter=status_param, category_filter=category, page=page, page_size=page_size)
@@ -74,7 +74,7 @@ def list_contents(
 @router.get("/{content_id:int}")
 def get_content(
     content_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ContentService = Depends(),
 ) -> Any:
     row = service.get_content(content_id)
@@ -85,7 +85,7 @@ def get_content(
 def update_content(
     content_id: int,
     body: ContentUpdate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ContentService = Depends(),
 ) -> Any:
     row = service.update_content(
@@ -102,7 +102,7 @@ def update_content(
 @router.delete("/{content_id:int}")
 def delete_content(
     content_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ContentService = Depends(),
 ) -> Any:
     service.delete_content(content_id)

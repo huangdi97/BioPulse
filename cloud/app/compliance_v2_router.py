@@ -12,7 +12,7 @@ from starlette import status
 from cloud.app.database import get_db
 from cloud.app.services.compliance_strategy_service import ComplianceStrategyService
 from cloud.app.repositories import AuditChainEntriesRepository, ComplianceAuditRecordsRepository, ComplianceRulesRepository, TrainingCorrectionsRepository
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success, PaginatedResponse
 from shared.compliance import check_content
 
@@ -63,7 +63,7 @@ def _parse_json(raw: str, default=None):
 RISK_ORDER = {"low": 0, "medium": 1, "high": 2, "critical": 3}
 
 @router.post("/scan", status_code=201)
-def scan(body: ScanRequest, request: Request, current_user=Depends(get_current_user), db=Depends(get_db)):
+def scan(body: ScanRequest, request: Request, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     uid = int(current_user["sub"]); n = _now()
     rules_repo = ComplianceRulesRepository(db)
     audit_repo = ComplianceAuditRecordsRepository(db)
@@ -100,7 +100,7 @@ def scan(body: ScanRequest, request: Request, current_user=Depends(get_current_u
     return success(data={"record_id": record_id, "passed": passed, "score": score, "risk_level": risk_level, "violations": violations})
 
 @router.get("/records")
-def list_records(message_type: Optional[str] = Query(None), risk_level: Optional[str] = Query(None), passed: Optional[int] = Query(None), date_from: Optional[str] = Query(None), date_to: Optional[str] = Query(None), page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100), current_user=Depends(get_current_user), db=Depends(get_db)):
+def list_records(message_type: Optional[str] = Query(None), risk_level: Optional[str] = Query(None), passed: Optional[int] = Query(None), date_from: Optional[str] = Query(None), date_to: Optional[str] = Query(None), page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100), current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = ComplianceAuditRecordsRepository(db)
     conditions, params = [], []
     if message_type: conditions.append("message_type=?"); params.append(message_type)
@@ -113,7 +113,7 @@ def list_records(message_type: Optional[str] = Query(None), risk_level: Optional
     return success(data=PaginatedResponse(items=rows, total=total, page=page, page_size=page_size, total_pages=total_pages))
 
 @router.get("/records/{record_id}")
-def get_record(record_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
+def get_record(record_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = ComplianceAuditRecordsRepository(db)
     row = repo.get_by_id(record_id)
     if not row: _n404("Record")
@@ -123,7 +123,7 @@ def get_record(record_id: int, current_user=Depends(get_current_user), db=Depend
     return success(data=data)
 
 @router.post("/records/{record_id}/review")
-def review_record(record_id: int, body: ReviewRequest, current_user=Depends(get_current_user), db=Depends(get_db)):
+def review_record(record_id: int, body: ReviewRequest, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     audit_repo = ComplianceAuditRecordsRepository(db)
     chain_repo = AuditChainEntriesRepository(db)
     row = audit_repo.get_by_id(record_id)
@@ -134,7 +134,7 @@ def review_record(record_id: int, body: ReviewRequest, current_user=Depends(get_
     return success(data=audit_repo.get_by_id(record_id))
 
 @router.post("/audit-chain", status_code=201)
-def create_audit_chain(body: AuditChainCreate, current_user=Depends(get_current_user), db=Depends(get_db)):
+def create_audit_chain(body: AuditChainCreate, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = AuditChainEntriesRepository(db)
     uid = int(current_user["sub"]); n = _now()
     prev_hash = ""
@@ -146,13 +146,13 @@ def create_audit_chain(body: AuditChainCreate, current_user=Depends(get_current_
     return success(data={"entity_type": body.entity_type, "entity_id": body.entity_id, "current_hash": current_hash, "previous_hash": prev_hash})
 
 @router.get("/audit-chain/{entity_type}/{entity_id}")
-def get_audit_chain(entity_type: str, entity_id: str, current_user=Depends(get_current_user), db=Depends(get_db)):
+def get_audit_chain(entity_type: str, entity_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = AuditChainEntriesRepository(db)
     rows = repo.list_all(conditions=["entity_type=?", "entity_id=?"], params=[entity_type, entity_id], order_by="performed_at ASC")
     return success(data=rows)
 
 @router.get("/audit-chain/verify/{entity_type}/{entity_id}")
-def verify_audit_chain(entity_type: str, entity_id: str, current_user=Depends(get_current_user), db=Depends(get_db)):
+def verify_audit_chain(entity_type: str, entity_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = AuditChainEntriesRepository(db)
     rows = repo.list_all(conditions=["entity_type=?", "entity_id=?"], params=[entity_type, entity_id], order_by="performed_at ASC")
     valid = True; broken_at = None
@@ -167,7 +167,7 @@ def verify_audit_chain(entity_type: str, entity_id: str, current_user=Depends(ge
     return success(data={"entity_type": entity_type, "entity_id": entity_id, "valid": valid, "total_entries": len(rows), "broken_at": broken_at})
 
 @router.post("/audit-records/{record_id}/train")
-def train_correction(record_id: int, request: Request, current_user=Depends(get_current_user), db=Depends(get_db)):
+def train_correction(record_id: int, request: Request, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     audit_repo = ComplianceAuditRecordsRepository(db)
     corrections_repo = TrainingCorrectionsRepository(db)
     row = audit_repo.get_by_id(record_id)
@@ -191,7 +191,7 @@ def train_correction(record_id: int, request: Request, current_user=Depends(get_
     return success(data={"audit_record_id": record_id, "title": title, "description": desc, "category": cat, "severity": sev})
 
 @router.get("/corrections")
-def list_corrections(category: Optional[str] = Query(None), severity: Optional[str] = Query(None), status: Optional[str] = Query(None), page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100), current_user=Depends(get_current_user), db=Depends(get_db)):
+def list_corrections(category: Optional[str] = Query(None), severity: Optional[str] = Query(None), status: Optional[str] = Query(None), page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100), current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = TrainingCorrectionsRepository(db)
     conditions, params = [], []
     if category: conditions.append("category=?"); params.append(category)
@@ -202,7 +202,7 @@ def list_corrections(category: Optional[str] = Query(None), severity: Optional[s
     return success(data=PaginatedResponse(items=rows, total=total, page=page, page_size=page_size, total_pages=total_pages))
 
 @router.patch("/corrections/{correction_id}")
-def update_correction(correction_id: int, body: CorrectionUpdate, current_user=Depends(get_current_user), db=Depends(get_db)):
+def update_correction(correction_id: int, body: CorrectionUpdate, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = TrainingCorrectionsRepository(db)
     row = repo.get_by_id(correction_id)
     if not row: _n404("Correction")
@@ -214,18 +214,18 @@ def update_correction(correction_id: int, body: CorrectionUpdate, current_user=D
     return success(data=repo.get_by_id(correction_id))
 
 @router.get("/rules/l2")
-def list_l2_rules(current_user=Depends(get_current_user)):
+def list_l2_rules(current_user=Depends(require_scope("visit"))):
     strategy = ComplianceStrategyService(None)
     return success(data={"rules": strategy.get_l2_rules()})
 
 @router.post("/evaluate")
-def evaluate_visit(body: EvaluateRequest, current_user=Depends(get_current_user), db=Depends(get_db)):
+def evaluate_visit(body: EvaluateRequest, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     strategy = ComplianceStrategyService(db)
     result = strategy.evaluate_visit(body.visit_data)
     return success(data=result)
 
 @router.get("/dashboard")
-def dashboard(current_user=Depends(get_current_user), db=Depends(get_db)):
+def dashboard(current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     audit_repo = ComplianceAuditRecordsRepository(db)
     corrections_repo = TrainingCorrectionsRepository(db)
     total_scans = audit_repo.count()

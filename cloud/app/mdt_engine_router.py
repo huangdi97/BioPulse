@@ -11,7 +11,7 @@ from cloud.app.database import get_db
 from cloud.app.repositories import (
     MdtSessionsRepository, MdtParticipantsRepository, MdtOpinionsRepository, AgentRolesRepository
 )
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/mdt", tags=["MDT会诊"])
@@ -54,7 +54,7 @@ def _n404(name="Resource"):
 
 @router.post("/sessions", status_code=201)
 def create_session(body: SessionCreate, request: Request,
-                   current_user=Depends(get_current_user), db=Depends(get_db)):
+                   current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     uid = int(current_user["sub"]); n = _now()
     sessions_repo = MdtSessionsRepository(db)
     participants_repo = MdtParticipantsRepository(db)
@@ -79,7 +79,7 @@ def create_session(body: SessionCreate, request: Request,
 @router.get("/sessions")
 def list_sessions(status_filter: Optional[str] = Query(None, alias="status"),
                   page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=100),
-                  current_user=Depends(get_current_user), db=Depends(get_db)):
+                  current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     sessions_repo = MdtSessionsRepository(db)
     conditions, params = [], []
     if status_filter:
@@ -95,7 +95,7 @@ def list_sessions(status_filter: Optional[str] = Query(None, alias="status"),
     })
 
 @router.get("/sessions/{session_id}")
-def get_session(session_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
+def get_session(session_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     sessions_repo = MdtSessionsRepository(db)
     participants_repo = MdtParticipantsRepository(db)
     opinions_repo = MdtOpinionsRepository(db)
@@ -107,7 +107,7 @@ def get_session(session_id: int, current_user=Depends(get_current_user), db=Depe
 
 @router.post("/sessions/{session_id}/debate")
 def debate(session_id: int, body: DebateRequest, request: Request,
-           current_user=Depends(get_current_user), db=Depends(get_db)):
+           current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     sessions_repo = MdtSessionsRepository(db)
     participants_repo = MdtParticipantsRepository(db)
     opinions_repo = MdtOpinionsRepository(db)
@@ -167,7 +167,7 @@ def debate(session_id: int, body: DebateRequest, request: Request,
 
 @router.post("/sessions/{session_id}/consensus")
 def consensus(session_id: int, request: Request,
-              current_user=Depends(get_current_user), db=Depends(get_db)):
+              current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     sessions_repo = MdtSessionsRepository(db)
     opinions_repo = MdtOpinionsRepository(db)
     s = sessions_repo.get_by_id(session_id)
@@ -211,7 +211,7 @@ def consensus(session_id: int, request: Request,
 
 @router.get("/sessions/{session_id}/opinions")
 def get_opinions(session_id: int, round_number: Optional[int] = Query(None),
-                 current_user=Depends(get_current_user), db=Depends(get_db)):
+                 current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     sessions_repo = MdtSessionsRepository(db)
     opinions_repo = MdtOpinionsRepository(db)
     s = sessions_repo.get_by_id(session_id)
@@ -222,7 +222,7 @@ def get_opinions(session_id: int, round_number: Optional[int] = Query(None),
     return success(rows)
 
 @router.get("/sessions/{session_id}/timeline")
-def timeline(session_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
+def timeline(session_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     sessions_repo = MdtSessionsRepository(db)
     opinions_repo = MdtOpinionsRepository(db)
     s = sessions_repo.get_by_id(session_id)
@@ -246,7 +246,7 @@ def timeline(session_id: int, current_user=Depends(get_current_user), db=Depends
     return success(timeline_data)
 
 @router.get("/dashboard")
-def dashboard(current_user=Depends(get_current_user), db=Depends(get_db)):
+def dashboard(current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     sessions_repo = MdtSessionsRepository(db)
     participants_repo = MdtParticipantsRepository(db)
     opinions_repo = MdtOpinionsRepository(db)

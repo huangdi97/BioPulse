@@ -9,7 +9,7 @@ from starlette import status
 
 from cloud.app.database import get_db
 from cloud.app.repositories import AgentExecutionTasksRepository, AgentSkillsRepository
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/agent/exec", tags=["Agent系统"])
@@ -47,7 +47,7 @@ def _rows(rows):
 
 
 @router.post("/submit", status_code=status.HTTP_201_CREATED)
-def submit_task(body: TaskSubmit, current_user=Depends(get_current_user), db=Depends(get_db)):
+def submit_task(body: TaskSubmit, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = AgentExecutionTasksRepository(db)
     task_id = f"aet:{uuid.uuid4()}"
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -66,7 +66,7 @@ def submit_task(body: TaskSubmit, current_user=Depends(get_current_user), db=Dep
 def list_tasks(
     status_filter: Optional[str] = Query(None, alias="status"),
     agent_role: Optional[str] = Query(None),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
     repo = AgentExecutionTasksRepository(db)
@@ -82,7 +82,7 @@ def list_tasks(
 
 
 @router.get("/tasks/{task_id}")
-def get_task(task_id: str, current_user=Depends(get_current_user), db=Depends(get_db)):
+def get_task(task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = AgentExecutionTasksRepository(db)
     row = repo.get_by_task_id(task_id)
     if not row:
@@ -91,7 +91,7 @@ def get_task(task_id: str, current_user=Depends(get_current_user), db=Depends(ge
 
 
 @router.post("/tasks/{task_id}/retry")
-def retry_task(task_id: str, current_user=Depends(get_current_user), db=Depends(get_db)):
+def retry_task(task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = AgentExecutionTasksRepository(db)
     row = repo.get_by_task_id(task_id)
     if not row:
@@ -103,7 +103,7 @@ def retry_task(task_id: str, current_user=Depends(get_current_user), db=Depends(
 
 
 @router.post("/tasks/{task_id}/approve")
-def approve_task(task_id: str, current_user=Depends(get_current_user), db=Depends(get_db)):
+def approve_task(task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = AgentExecutionTasksRepository(db)
     row = repo.get_by_task_id(task_id)
     if not row:
@@ -115,7 +115,7 @@ def approve_task(task_id: str, current_user=Depends(get_current_user), db=Depend
 
 
 @router.get("/a2a/card")
-def a2a_card(current_user=Depends(get_current_user), db=Depends(get_db)):
+def a2a_card(current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     skills_repo = AgentSkillsRepository(db)
     rows = skills_repo.list_all(conditions=["enabled=1"], order_by="priority ASC")
     skill_names = [s["skill_name"] for s in rows]
@@ -123,7 +123,7 @@ def a2a_card(current_user=Depends(get_current_user), db=Depends(get_db)):
 
 
 @router.post("/a2a/task", status_code=status.HTTP_201_CREATED)
-def a2a_task(body: A2ATask, current_user=Depends(get_current_user), db=Depends(get_db)):
+def a2a_task(body: A2ATask, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = AgentExecutionTasksRepository(db)
     task_id = body.task_id or f"aet:{uuid.uuid4()}"
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from starlette import status
 
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 from cloud.app.services.user_service import UserService
 
@@ -33,7 +33,7 @@ def _require_admin(current_user: dict) -> None:
 
 @router.get("/")
 def list_users(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: UserService = Depends(),
 ) -> Any:
     _require_admin(current_user)
@@ -44,7 +44,7 @@ def list_users(
 @router.get("/{user_id:int}")
 def get_user(
     user_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: UserService = Depends(),
 ) -> Any:
     _require_admin(current_user)
@@ -56,7 +56,7 @@ def get_user(
 def update_user(
     user_id: int,
     body: UserUpdate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: UserService = Depends(),
 ) -> Any:
     _require_admin(current_user)
@@ -74,7 +74,7 @@ def update_user(
 @router.delete("/{user_id:int}")
 def delete_user(
     user_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: UserService = Depends(),
 ) -> Any:
     _require_admin(current_user)

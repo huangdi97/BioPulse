@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from cloud.app.services.training_scripts_service import TrainingScriptsService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/training/scripts", tags=["Training Scripts"])
@@ -56,7 +56,7 @@ class RoiOut(BaseModel):
 @router.post("/extract", status_code=status.HTTP_201_CREATED)
 def extract_scripts(
     body: ScriptExtract,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_scope("visit")),
     service: TrainingScriptsService = Depends(),
 ) -> JSONResponse:
     result = service.extract_scripts(
@@ -77,7 +77,7 @@ def list_scripts(
     source_agent_role: Optional[str] = Query(None),
     difficulty: Optional[str] = Query(None),
     target_roles: Optional[str] = Query(None),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_scope("visit")),
     service: TrainingScriptsService = Depends(),
 ) -> ApiResponse[PaginatedResponse[ScriptOut]]:
     result = service.list_scripts(
@@ -100,7 +100,7 @@ def list_scripts(
 @router.post("/roi/analyze", status_code=status.HTTP_201_CREATED)
 def analyze_roi(
     body: RoiAnalyze,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_scope("visit")),
     service: TrainingScriptsService = Depends(),
 ) -> JSONResponse:
     result = service.analyze_roi(
@@ -117,7 +117,7 @@ def analyze_roi(
 def list_roi(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_scope("visit")),
     service: TrainingScriptsService = Depends(),
 ) -> ApiResponse[PaginatedResponse[RoiOut]]:
     result = service.list_roi(page=page, page_size=page_size)

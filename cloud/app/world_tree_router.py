@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from cloud.app.services.world_tree_service import WorldTreeService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/world-tree", tags=["记忆系统"])
@@ -29,9 +29,9 @@ class NodeUpdate(BaseModel):
 
 # 1
 @router.post("/nodes")
-def create_node(body: NodeCreate, request=None,
+def create_node(body: NodeCreate, current_user: dict = Depends(require_scope("visit")),
                 service: WorldTreeService = Depends()):
-    uid = int(get_current_user(request)["sub"]) if request else 1
+    uid = int(current_user["sub"])
     row = service.create_node(
         name=body.name, description=body.description,
         parent_id=body.parent_id, node_type=body.node_type,
@@ -60,7 +60,7 @@ def get_node(node_id: int, service: WorldTreeService = Depends()):
 
 # 4
 @router.patch("/nodes/{node_id}")
-def update_node(node_id: int, body: NodeUpdate, request=None,
+def update_node(node_id: int, body: NodeUpdate, current_user: dict = Depends(require_scope("visit")),
                 service: WorldTreeService = Depends()):
     row = service.update_node(
         node_id=node_id, name=body.name, description=body.description,

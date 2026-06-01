@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 from starlette import status
 
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success, PaginatedResponse
 from cloud.app.services.memory_gate_service import MemoryGateService
 
@@ -40,7 +40,7 @@ class RecallRequest(BaseModel):
 
 @router.post("/gates", status_code=201)
 def create_gate(body: GateCreate, request: Request,
-                current_user=Depends(get_current_user),
+                current_user=Depends(require_scope("visit")),
                 service: MemoryGateService = Depends()):
     result = service.create_gate(
         name=body.name, source_type=body.source_type,
@@ -57,7 +57,7 @@ def list_gates(service: MemoryGateService = Depends()):
 
 @router.post("/entries", status_code=201)
 def create_entry(body: EntryCreate, request: Request,
-                 current_user=Depends(get_current_user),
+                 current_user=Depends(require_scope("visit")),
                  service: MemoryGateService = Depends()):
     uid = int(current_user["sub"])
     result = service.create_entry(
@@ -90,7 +90,7 @@ def get_entry(entry_id: int, service: MemoryGateService = Depends()):
 
 @router.post("/recall")
 def recall(body: RecallRequest, request: Request,
-           current_user=Depends(get_current_user),
+           current_user=Depends(require_scope("visit")),
            service: MemoryGateService = Depends()):
     result = service.recall(
         query=body.query, memory_types=body.memory_types,
@@ -101,7 +101,7 @@ def recall(body: RecallRequest, request: Request,
 
 @router.post("/auto-store/{source_type}/{source_id}")
 def auto_store(source_type: str, source_id: str, request: Request,
-               current_user=Depends(get_current_user),
+               current_user=Depends(require_scope("visit")),
                service: MemoryGateService = Depends()):
     uid = int(current_user["sub"])
     auth = request.headers.get("Authorization", "")

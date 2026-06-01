@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from starlette import status
 from cloud.app.database import get_db
 from cloud.app.repositories import AgentRolesRepository
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/agent/roles", tags=["Agent系统"])
@@ -54,7 +54,7 @@ def _404(repo, rid):
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-def create_role(body: RoleCreate, current_user=Depends(get_current_user), db=Depends(get_db)):
+def create_role(body: RoleCreate, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     uid = int(current_user["sub"])
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     repo = AgentRolesRepository(db)
@@ -74,7 +74,7 @@ def create_role(body: RoleCreate, current_user=Depends(get_current_user), db=Dep
 def list_roles(
     role_type: Optional[str] = Query(None),
     is_active: Optional[int] = Query(None),
-    current_user=Depends(get_current_user), db=Depends(get_db),
+    current_user=Depends(require_scope("visit")), db=Depends(get_db),
 ):
     repo = AgentRolesRepository(db)
     conds, pars = [], []
@@ -91,7 +91,7 @@ def list_roles(
 
 
 @router.get("/{role_id}")
-def get_role(role_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
+def get_role(role_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = AgentRolesRepository(db)
     row = _404(repo, role_id)
     return success(data=rd(row))
@@ -99,7 +99,7 @@ def get_role(role_id: int, current_user=Depends(get_current_user), db=Depends(ge
 
 @router.patch("/{role_id}")
 def update_role(role_id: int, body: RoleUpdate,
-                current_user=Depends(get_current_user), db=Depends(get_db)):
+                current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = AgentRolesRepository(db)
     _404(repo, role_id)
     updates = {}
@@ -119,7 +119,7 @@ def update_role(role_id: int, body: RoleUpdate,
 
 
 @router.delete("/{role_id}")
-def delete_role(role_id: int, current_user=Depends(get_current_user), db=Depends(get_db)):
+def delete_role(role_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = AgentRolesRepository(db)
     _404(repo, role_id)
     repo.soft_delete(role_id)

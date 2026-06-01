@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from cloud.app.services.collaboration_service import CollaborationService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/collaboration", tags=["Agent Collaboration"])
@@ -51,7 +51,7 @@ class RouteRequest(BaseModel):
 
 @router.post("/skills/register")
 def register_skill(body: SkillRegister,
-                   current_user: dict = Depends(get_current_user),
+                   current_user: dict = Depends(require_scope("visit")),
                    service: CollaborationService = Depends()):
     row = service.register_skill(
         skill_name=body.skill_name, agent_role=body.agent_role,
@@ -66,7 +66,7 @@ def register_skill(body: SkillRegister,
 def list_skills(
     agent_role: Optional[str] = Query(None),
     enabled: Optional[int] = Query(None),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: CollaborationService = Depends(),
 ):
     rows = service.list_skills(agent_role=agent_role, enabled=enabled)
@@ -75,7 +75,7 @@ def list_skills(
 
 @router.delete("/skills/{skill_id}")
 def delete_skill(skill_id: int,
-                 current_user: dict = Depends(get_current_user),
+                 current_user: dict = Depends(require_scope("visit")),
                  service: CollaborationService = Depends()):
     service.delete_skill(skill_id)
     return success(data={"deleted": skill_id})
@@ -83,7 +83,7 @@ def delete_skill(skill_id: int,
 
 @router.post("/sessions/create")
 def create_session(body: SessionCreate,
-                   current_user: dict = Depends(get_current_user),
+                   current_user: dict = Depends(require_scope("visit")),
                    service: CollaborationService = Depends()):
     row = service.create_session(
         task_description=body.task_description,
@@ -98,7 +98,7 @@ def create_session(body: SessionCreate,
 @router.post("/sessions/{session_id}/step")
 def add_session_step(
     session_id: str, body: StepAdd,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: CollaborationService = Depends(),
 ):
     row = service.add_session_step(
@@ -112,7 +112,7 @@ def add_session_step(
 @router.post("/sessions/{session_id}/step/{step_id}/complete")
 def complete_step(
     session_id: str, step_id: int, body: StepComplete,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: CollaborationService = Depends(),
 ):
     result = service.complete_step(
@@ -129,7 +129,7 @@ def list_sessions(
     status: Optional[str] = Query(None),
     source_agent_role: Optional[str] = Query(None),
     routing_strategy: Optional[str] = Query(None),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: CollaborationService = Depends(),
 ):
     rows = service.list_sessions(
@@ -141,7 +141,7 @@ def list_sessions(
 
 @router.get("/sessions/{session_id}")
 def get_session(session_id: str,
-                current_user: dict = Depends(get_current_user),
+                current_user: dict = Depends(require_scope("visit")),
                 service: CollaborationService = Depends()):
     result = service.get_session(session_id)
     return success(data=result)
@@ -149,7 +149,7 @@ def get_session(session_id: str,
 
 @router.post("/route")
 def semantic_route(body: RouteRequest,
-                   current_user: dict = Depends(get_current_user),
+                   current_user: dict = Depends(require_scope("visit")),
                    service: CollaborationService = Depends()):
     result = service.semantic_route(
         task_description=body.task_description,
@@ -161,7 +161,7 @@ def semantic_route(body: RouteRequest,
 
 
 @router.get("/dashboard")
-def dashboard(current_user: dict = Depends(get_current_user),
+def dashboard(current_user: dict = Depends(require_scope("visit")),
               service: CollaborationService = Depends()):
     result = service.dashboard()
     return success(data=result)

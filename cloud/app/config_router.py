@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from starlette import status
 
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 from cloud.app.services.config_service import ConfigService
 
@@ -19,7 +19,7 @@ class ConfigItem(BaseModel):
 
 @router.get("/")
 def list_configs(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ConfigService = Depends(),
 ) -> Any:
     rows = service.list_configs()
@@ -29,7 +29,7 @@ def list_configs(
 @router.put("/")
 def batch_upsert_configs(
     body: List[ConfigItem],
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ConfigService = Depends(),
 ) -> Any:
     user_id = int(current_user["sub"])
@@ -40,7 +40,7 @@ def batch_upsert_configs(
 @router.get("/{key}")
 def get_config(
     key: str,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ConfigService = Depends(),
 ) -> Any:
     return success(data=service.get_config(key))

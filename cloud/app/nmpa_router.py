@@ -3,7 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 from cloud.app.services.nmpa_service import NmpaService
 
@@ -18,7 +18,7 @@ class NmpaCheck(BaseModel):
 @router.post("/check")
 def nmpa_check(
     body: NmpaCheck,
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(require_scope("visit")),
     service: NmpaService = Depends(),
 ):
     user_id = int(user["sub"])
@@ -31,7 +31,7 @@ def logs_list(
     document_type: Optional[str] = Query(None),
     check_result: Optional[str] = Query(None),
     human_review_required: Optional[int] = Query(None),
-    user: dict = Depends(get_current_user),
+    user: dict = Depends(require_scope("visit")),
     service: NmpaService = Depends(),
 ):
     result = service.list_logs(

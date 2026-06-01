@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from starlette import status
 
 from cloud.app.services.opportunity_service import OpportunityService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/opportunities", tags=["商机"])
@@ -42,7 +42,7 @@ class StageTransition(BaseModel):
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_opportunity(
     body: OpportunityCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: OpportunityService = Depends(),
 ) -> Any:
     user_id = int(current_user["sub"])
@@ -64,7 +64,7 @@ def list_opportunities(
     search: str = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: OpportunityService = Depends(),
 ) -> Any:
     result = service.list_opportunities(
@@ -76,7 +76,7 @@ def list_opportunities(
 
 @router.get("/pipeline")
 def get_pipeline(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: OpportunityService = Depends(),
 ) -> Any:
     result = service.get_pipeline()
@@ -86,7 +86,7 @@ def get_pipeline(
 @router.get("/{opp_id}")
 def get_opportunity(
     opp_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: OpportunityService = Depends(),
 ) -> Any:
     row = service.get_opportunity(opp_id)
@@ -97,7 +97,7 @@ def get_opportunity(
 def update_opportunity(
     opp_id: int,
     body: OpportunityUpdate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: OpportunityService = Depends(),
 ) -> Any:
     row = service.update_opportunity(
@@ -112,7 +112,7 @@ def update_opportunity(
 @router.delete("/{opp_id}")
 def delete_opportunity(
     opp_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: OpportunityService = Depends(),
 ) -> Any:
     service.delete_opportunity(opp_id)
@@ -123,7 +123,7 @@ def delete_opportunity(
 def transition_stage(
     opp_id: int,
     body: StageTransition,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: OpportunityService = Depends(),
 ) -> Any:
     row = service.transition_stage(

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from starlette import status
 
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 from shared.compliance import check_content
 from cloud.app.services.compliance_service import ComplianceService
@@ -48,7 +48,7 @@ def check(request: CheckRequest) -> Any:
 @router.post("/rules")
 def create_rule(
     body: RuleCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ComplianceService = Depends(),
 ) -> Any:
     """Create a new compliance rule."""
@@ -63,7 +63,7 @@ def create_rule(
 
 @router.get("/rules")
 def list_rules(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ComplianceService = Depends(),
 ) -> Any:
     """List all compliance rules."""
@@ -73,7 +73,7 @@ def list_rules(
 @router.delete("/rules/{rule_id:int}")
 def delete_rule(
     rule_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
     service: ComplianceService = Depends(),
 ) -> Any:
     """Delete a compliance rule by ID."""
