@@ -7,13 +7,13 @@ or free-text method descriptions using keyword overlap scoring.
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from shared.auth import get_current_user
-from shared.auth_scope import require_scope
 from cloud.app.research_database import get_research_db
 from cloud.app.services.product_matching_service import (
-    match_products_for_pi,
     match_products_by_method,
+    match_products_for_pi,
 )
+from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 
 router = APIRouter(
     prefix="/api/research/matching",
@@ -64,9 +64,7 @@ def match_by_method(
     """
     db = get_research_db()
     try:
-        results = match_products_by_method(
-            body.method_description, top_k=3, research_db=db
-        )
+        results = match_products_by_method(body.method_description, top_k=3, research_db=db)
         return {"code": 0, "data": results, "message": "success"}
     finally:
         db.close()

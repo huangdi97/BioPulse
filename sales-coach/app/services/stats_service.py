@@ -50,9 +50,7 @@ class StatsService(BaseService):
         Returns:
             包含平均分、最高分、最低分和标准差的字典。
         """
-        rows = self.db.execute(
-            "SELECT score FROM coach_session WHERE score IS NOT NULL"
-        ).fetchall()
+        rows = self.db.execute("SELECT score FROM coach_session WHERE score IS NOT NULL").fetchall()
         scores = [r["score"] for r in rows]
         if not scores:
             return {"avg": 0, "max": 0, "min": 0, "std": 0, "count": 0}
@@ -76,8 +74,7 @@ class StatsService(BaseService):
             包含各维度平均分的字典。
         """
         rows = self.db.execute(
-            "SELECT auto_assessment FROM coach_session "
-            "WHERE created_by = ? AND auto_assessment IS NOT NULL",
+            "SELECT auto_assessment FROM coach_session WHERE created_by = ? AND auto_assessment IS NOT NULL",
             (user_id,),
         ).fetchall()
         dims = {

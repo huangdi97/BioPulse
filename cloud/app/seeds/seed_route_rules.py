@@ -7,12 +7,7 @@ def seed_route_rules(conn: sqlite3.Connection) -> None:
     if count > 0:
         return
     now = "2026-05-25 10:00:00"
-    roles = {
-        r["name"]: r["id"]
-        for r in conn.execute(
-            "SELECT id, name FROM agent_roles WHERE is_active=1"
-        ).fetchall()
-    }
+    roles = {r["name"]: r["id"] for r in conn.execute("SELECT id, name FROM agent_roles WHERE is_active=1").fetchall()}
     rules = [
         (
             "竞品相关",

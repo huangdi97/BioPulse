@@ -50,9 +50,7 @@ class PrecallService(BaseService):
             "suggested_approach": "以学术交流为主，建立专业信任关系，先了解客户实际需求再推荐产品。",
         }
 
-    def _gather_db_context(
-        self, customer_name: str, hospital: str | None = None
-    ) -> str:
+    def _gather_db_context(self, customer_name: str, hospital: str | None = None) -> str:
         parts: list[str] = []
         hcp_repo = HcpRepository(self.db)
         visit_repo = VisitRepository(self.db)
@@ -72,25 +70,19 @@ class PrecallService(BaseService):
             if visits:
                 visit_lines = []
                 for v in visits:
-                    visit_lines.append(
-                        f"- 产品:{v['products_discussed']} 反馈:{v['hcp_feedback']}"
-                    )
+                    visit_lines.append(f"- 产品:{v['products_discussed']} 反馈:{v['hcp_feedback']}")
                 parts.append("近期拜访记录：\n" + "\n".join(visit_lines))
 
             schedules = schedule_repo.search(customer_name, limit=5)
             if schedules:
                 sched_lines = []
                 for s in schedules:
-                    sched_lines.append(
-                        f"- {s['title']} @ {s['location']} ({s['start_time']})"
-                    )
+                    sched_lines.append(f"- {s['title']} @ {s['location']} ({s['start_time']})")
                 parts.append("相关日程：\n" + "\n".join(sched_lines))
 
         return "\n".join(parts)
 
-    def _call_ai_gateway(
-        self, auth_header: str, body, db_context: str = ""
-    ) -> dict[str, Any]:
+    def _call_ai_gateway(self, auth_header: str, body, db_context: str = "") -> dict[str, Any]:
         req_body = {
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
@@ -141,11 +133,7 @@ class PrecallService(BaseService):
             logger.exception("Unexpected error calling AI gateway")
             reply = ""
 
-        brief = (
-            self._parse_brief(reply, body)
-            if reply
-            else self._build_fallback_brief(body)
-        )
+        brief = self._parse_brief(reply, body) if reply else self._build_fallback_brief(body)
         return {
             "customer_name": body.customer_name,
             "hospital": body.hospital,

@@ -33,9 +33,7 @@ def _rows(rows):
 
 
 class OrchestrateService(BaseService):
-    def create_template(
-        self, template_name: str, description: str, steps: list[dict], user_id: int
-    ) -> dict:
+    def create_template(self, template_name: str, description: str, steps: list[dict], user_id: int) -> dict:
         tmpl_repo = OrchestrationTemplatesRepository(self.db)
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         row_id = tmpl_repo.create(
@@ -73,19 +71,11 @@ class OrchestrateService(BaseService):
             (template_name,),
         ).fetchone()
         if not tmpl:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="Template not found or disabled"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Template not found or disabled")
 
-        steps = (
-            json.loads(tmpl["steps"])
-            if isinstance(tmpl["steps"], str)
-            else tmpl["steps"]
-        )
+        steps = json.loads(tmpl["steps"]) if isinstance(tmpl["steps"], str) else tmpl["steps"]
         if not steps:
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST, detail="Template has no steps"
-            )
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Template has no steps")
 
         session_id = f"orch:{uuid.uuid4()}"
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -98,9 +88,7 @@ class OrchestrateService(BaseService):
                 "source_agent_role": steps[0].get("agent_role", ""),
                 "orchestrator_agent": "orchestrator",
                 "routing_strategy": "pipeline",
-                "involved_agents": json.dumps(
-                    [s.get("agent_role", "") for s in steps], ensure_ascii=False
-                ),
+                "involved_agents": json.dumps([s.get("agent_role", "") for s in steps], ensure_ascii=False),
                 "total_steps": len(steps),
                 "started_at": now,
             }

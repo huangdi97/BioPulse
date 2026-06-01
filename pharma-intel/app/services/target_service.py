@@ -1,8 +1,9 @@
 """靶点研究监控服务。"""
 
-import httpx
 from collections import Counter
 from datetime import datetime, timezone
+
+import httpx
 from pharma_intel.app.database import get_cache, set_cache
 
 CLOUD_API = "http://localhost:8000"
@@ -78,10 +79,7 @@ def _aggregate_target(name: str, papers: list) -> dict:
         [{"month": k, "count": v} for k, v in monthly_counter.items()],
         key=lambda x: x["month"],
     )
-    top_institutions = [
-        {"name": name, "count": cnt}
-        for name, cnt in institution_counter.most_common(10)
-    ]
+    top_institutions = [{"name": name, "count": cnt} for name, cnt in institution_counter.most_common(10)]
 
     return {
         "target_name": name,

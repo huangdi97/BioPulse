@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
-from shared.auth import get_current_user
 from cloud.app.services.product_service import ProductService
+from shared.auth import get_current_user
 
 router = APIRouter(prefix="/api/products", tags=["products"])
 

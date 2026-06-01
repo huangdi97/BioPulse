@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from cloud.app.services.decision_intel_service import DecisionIntelService
 from shared.auth_scope import require_scope
-from shared.base import success, PaginatedResponse
+from shared.base import PaginatedResponse, success
 
 router = APIRouter(prefix="/decision-intel", tags=["Decision Intelligence"])
 

@@ -70,9 +70,7 @@ class AssessmentService(BaseService):
         repo.soft_delete_assessment(assessment_id)
 
     @staticmethod
-    def calculate_auto_score(
-        dialogue_log: list, weights: Optional[dict] = None
-    ) -> dict:
+    def calculate_auto_score(dialogue_log: list, weights: Optional[dict] = None) -> dict:
         """根据对话日志自动计算各维度评分。
 
         Args:
@@ -86,9 +84,7 @@ class AssessmentService(BaseService):
             weights = DEFAULT_WEIGHTS
         rounds = len(dialogue_log) if dialogue_log else 0
         violations = 0
-        user_entries = [
-            e for e in dialogue_log if isinstance(e, dict) and e.get("role") == "user"
-        ]
+        user_entries = [e for e in dialogue_log if isinstance(e, dict) and e.get("role") == "user"]
         violations = sum(1 for e in user_entries if len(e.get("content", "")) < 3)
         product_knowledge = max(0, min(100, 65 + rounds * 2.5 - violations * 5))
         communication = max(0, min(100, 60 + rounds * 2 - violations * 3))
@@ -126,9 +122,7 @@ class AssessmentService(BaseService):
         ).fetchall()
         return [dict(r) for r in rows]
 
-    def update_assessment_with_reflection(
-        self, assessment_id: int, reflection: dict
-    ) -> dict:
+    def update_assessment_with_reflection(self, assessment_id: int, reflection: dict) -> dict:
         """将反思报告关联到评分记录。
 
         Args:

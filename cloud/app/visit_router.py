@@ -1,12 +1,14 @@
+import json
+import os
+import sqlite3
+
 from fastapi import APIRouter, Depends, HTTPException
-from starlette import status
 from pydantic import BaseModel
+from starlette import status
+
 from cloud.app.database import DB_PATH
 from shared.auth_scope import require_scope
 from shared.base import success
-import json
-import sqlite3
-import os
 
 router = APIRouter(prefix="", tags=["拜访"])
 
@@ -70,9 +72,7 @@ def create_visit(body: VisitCreate, user: dict = Depends(require_scope("visit"))
         ),
     )
     db.commit()
-    row = db.execute(
-        "SELECT * FROM visits WHERE id = ?", (cursor.lastrowid,)
-    ).fetchone()
+    row = db.execute("SELECT * FROM visits WHERE id = ?", (cursor.lastrowid,)).fetchone()
     record = dict(row)
     record["evidence_photos"] = json.loads(record["evidence_photos"])
     db.close()
@@ -85,9 +85,7 @@ def get_visit(visit_id: int, user: dict = Depends(require_scope("visit"))):
     row = db.execute("SELECT * FROM visits WHERE id = ?", (visit_id,)).fetchone()
     db.close()
     if row is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
     record = dict(row)
     record["evidence_photos"] = json.loads(record["evidence_photos"])
     return success(data=record)

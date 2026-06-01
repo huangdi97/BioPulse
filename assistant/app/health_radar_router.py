@@ -1,11 +1,13 @@
 from typing import Optional
+
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, field_validator
 from starlette import status
+
+from assistant.app.services.health_radar_service import HealthRadarService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from assistant.app.services.health_radar_service import HealthRadarService
 
 router = APIRouter(prefix="/health-radar", tags=["health-radar"])
 
@@ -92,9 +94,7 @@ def list_health_radar(
     service: HealthRadarService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[HealthRadarOut]]:
-    total, total_pages, rows = service.list(
-        page, page_size, patient_name, score_min, score_max, date_from, date_to
-    )
+    total, total_pages, rows = service.list(page, page_size, patient_name, score_min, score_max, date_from, date_to)
     items = [HealthRadarOut(**dict(r)) for r in rows]
     return success(
         data=PaginatedResponse(

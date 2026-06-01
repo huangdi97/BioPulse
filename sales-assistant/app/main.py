@@ -1,22 +1,23 @@
-import time
 import sqlite3
+import time
+
 from fastapi import FastAPI
 from starlette import status
+
+from sales_assistant.app.anomaly_router import router as anomaly_router
+from sales_assistant.app.coach_router import router as coach_router
+from sales_assistant.app.content_router import router as content_router
+from sales_assistant.app.database import DB_PATH, init_db
+from sales_assistant.app.funnel_router import router as funnel_router
+from sales_assistant.app.hcp_router import router as hcp_router
+from sales_assistant.app.note_router import router as note_router
+from sales_assistant.app.objection_router import router as objection_router
+from sales_assistant.app.precall_router import router as precall_router
+from sales_assistant.app.schedule_router import router as schedule_router
+from sales_assistant.app.strategy_router import router as strategy_router
+from shared.exception_handlers import register_exception_handlers
 from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
-from shared.exception_handlers import register_exception_handlers
-
-from sales_assistant.app.database import init_db, DB_PATH
-from sales_assistant.app.schedule_router import router as schedule_router
-from sales_assistant.app.note_router import router as note_router
-from sales_assistant.app.hcp_router import router as hcp_router
-from sales_assistant.app.precall_router import router as precall_router
-from sales_assistant.app.objection_router import router as objection_router
-from sales_assistant.app.funnel_router import router as funnel_router
-from sales_assistant.app.content_router import router as content_router
-from sales_assistant.app.coach_router import router as coach_router
-from sales_assistant.app.anomaly_router import router as anomaly_router
-from sales_assistant.app.strategy_router import router as strategy_router
 
 START_TIME = time.time()
 

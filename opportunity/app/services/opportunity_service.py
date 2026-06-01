@@ -48,18 +48,14 @@ class OpportunityService(BaseService):
         repo = OpportunityRepository(self.db)
         row = repo.get_by_id(opportunity_id)
         if not row:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found")
         return dict(row)
 
     def update_opportunity(self, opportunity_id: int, body) -> dict:
         repo = OpportunityRepository(self.db)
         row = repo.get_by_id(opportunity_id)
         if not row:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found")
 
         updates = body.model_dump(exclude_unset=True)
         if not updates:
@@ -73,9 +69,7 @@ class OpportunityService(BaseService):
         repo = OpportunityRepository(self.db)
         row = repo.get_by_id(opportunity_id)
         if not row:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found")
         repo.soft_delete(opportunity_id)
 
     def list_all_active(self) -> list:

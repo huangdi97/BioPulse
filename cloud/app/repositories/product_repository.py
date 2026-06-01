@@ -57,9 +57,7 @@ class ProductRepository:
         return cursor.lastrowid
 
     def get_by_id(self, product_id: int) -> Optional[dict]:
-        row = self.db.execute(
-            "SELECT * FROM products WHERE product_id = ?", (product_id,)
-        ).fetchone()
+        row = self.db.execute("SELECT * FROM products WHERE product_id = ?", (product_id,)).fetchone()
         if row:
             return dict(row)
         return None
@@ -85,16 +83,12 @@ class ProductRepository:
             updates["tech_params"] = json.dumps(updates["tech_params"])
         set_clause = ", ".join(f"{k} = ?" for k in updates)
         values = list(updates.values()) + [product_id]
-        cursor = self.db.execute(
-            f"UPDATE products SET {set_clause} WHERE product_id = ?", values
-        )
+        cursor = self.db.execute(f"UPDATE products SET {set_clause} WHERE product_id = ?", values)
         self.db.commit()
         return cursor.rowcount > 0
 
     def delete(self, product_id: int) -> bool:
-        cursor = self.db.execute(
-            "DELETE FROM products WHERE product_id = ?", (product_id,)
-        )
+        cursor = self.db.execute("DELETE FROM products WHERE product_id = ?", (product_id,))
         self.db.commit()
         return cursor.rowcount > 0
 
@@ -103,9 +97,7 @@ class ProductRepository:
         params = []
         if q:
             pattern = f"%{q}%"
-            conditions.append(
-                "(name LIKE ? OR keywords LIKE ? OR brand LIKE ? OR model LIKE ?)"
-            )
+            conditions.append("(name LIKE ? OR keywords LIKE ? OR brand LIKE ? OR model LIKE ?)")
             params.extend([pattern, pattern, pattern, pattern])
         if category:
             conditions.append("category = ?")
@@ -113,7 +105,5 @@ class ProductRepository:
         where = ""
         if conditions:
             where = " WHERE " + " AND ".join(conditions)
-        rows = self.db.execute(
-            f"SELECT * FROM products{where} ORDER BY product_id DESC", params
-        ).fetchall()
+        rows = self.db.execute(f"SELECT * FROM products{where} ORDER BY product_id DESC", params).fetchall()
         return [dict(r) for r in rows]

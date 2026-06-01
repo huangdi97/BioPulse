@@ -1,9 +1,9 @@
-from cloud.shared.repository import BaseRepository
 from cloud.shared.columns import (
     TABLE_MARKET_INTEL_ITEMS_COLS,
     TABLE_MARKET_INTEL_SOURCES_COLS,
     TABLE_MCP_TOOLS_COLS,
 )
+from cloud.shared.repository import BaseRepository
 
 
 class MarketIntelItemsRepository(BaseRepository):
@@ -13,10 +13,8 @@ class MarketIntelItemsRepository(BaseRepository):
     def count_by_field(self, field: str) -> dict:
         if field not in self.cols:
             return {}
-        placeholders = ", ".join(self.cols)
-        rows = self.db.execute(
-            f"SELECT {field}, COUNT(*) as cnt FROM {self.table_name} GROUP BY {field}"
-        ).fetchall()
+        ", ".join(self.cols)
+        rows = self.db.execute(f"SELECT {field}, COUNT(*) as cnt FROM {self.table_name} GROUP BY {field}").fetchall()
         return {r[field]: r["cnt"] for r in rows}
 
     def count_recent_critical(self, limit: int = 10) -> list:
@@ -31,7 +29,7 @@ class MarketIntelItemsRepository(BaseRepository):
         from datetime import datetime, timedelta
 
         result = []
-        placeholders = ", ".join(self.cols)
+        ", ".join(self.cols)
         for i in range(days, -1, -1):
             day = (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d")
             cnt = self.db.execute(
@@ -53,9 +51,7 @@ class MarketIntelItemsRepository(BaseRepository):
         where = ""
         if conditions:
             where = " WHERE " + " AND ".join(conditions)
-        total = self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} mi{where}", params or []
-        ).fetchone()[0]
+        total = self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} mi{where}", params or []).fetchone()[0]
         offset = (page - 1) * page_size
         rows = self.db.execute(
             f"SELECT {placeholders}, ms.name as source_name FROM {self.table_name} mi "
@@ -79,9 +75,7 @@ class MarketIntelItemsRepository(BaseRepository):
         return cursor.lastrowid
 
     def delete_by_source(self, source_id: int):
-        self.db.execute(
-            f"DELETE FROM {self.table_name} WHERE source_id=?", (source_id,)
-        )
+        self.db.execute(f"DELETE FROM {self.table_name} WHERE source_id=?", (source_id,))
 
     def update_fields(self, record_id: int, data: dict) -> bool:
         filtered = {k: v for k, v in data.items() if k in self.cols and k != "id"}
@@ -89,9 +83,7 @@ class MarketIntelItemsRepository(BaseRepository):
             return False
         set_clause = ", ".join(f"{k}=?" for k in filtered.keys())
         values = list(filtered.values()) + [record_id]
-        cursor = self.db.execute(
-            f"UPDATE {self.table_name} SET {set_clause} WHERE id=?", values
-        )
+        cursor = self.db.execute(f"UPDATE {self.table_name} SET {set_clause} WHERE id=?", values)
         return cursor.rowcount > 0
 
 
@@ -105,23 +97,17 @@ class MarketIntelSourcesRepository(BaseRepository):
             return False
         set_clause = ", ".join(f"{k}=?" for k in filtered.keys())
         values = list(filtered.values()) + [record_id]
-        cursor = self.db.execute(
-            f"UPDATE {self.table_name} SET {set_clause} WHERE id=?", values
-        )
+        cursor = self.db.execute(f"UPDATE {self.table_name} SET {set_clause} WHERE id=?", values)
         self.db.commit()
         return cursor.rowcount > 0
 
     def list_active(self) -> list:
         placeholders = ", ".join(self.cols)
-        rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1").fetchall()
         return [dict(r) for r in rows]
 
     def count_active(self) -> int:
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1").fetchone()[0]
 
 
 class McpToolsRepository(BaseRepository):

@@ -1,7 +1,7 @@
 """Seed product data for demo purposes."""
 
-import sqlite3
 import json
+import sqlite3
 
 
 def seed_products(conn: sqlite3.Connection):

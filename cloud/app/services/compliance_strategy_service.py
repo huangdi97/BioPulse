@@ -1,14 +1,14 @@
-from typing import Optional
 import json
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
+from typing import Optional
 
-from cloud.rules.loader import (
-    load_pharma_rules,
-    load_research_rules,
-    load_pharma_l2_rules,
-    load_research_l2_rules,
-)
 from cloud.app.services.compliance_enforcer import ComplianceEnforcer
+from cloud.rules.loader import (
+    load_pharma_l2_rules,
+    load_pharma_rules,
+    load_research_l2_rules,
+    load_research_rules,
+)
 
 
 class ComplianceStrategyService:
@@ -120,9 +120,7 @@ class ComplianceStrategyService:
                 or (op == "lte" and val <= thr)
                 or (op == "eq" and val == thr)
             ):
-                return self._l2_violation(
-                    rule, f"字段[{field}]值[{val}]超出阈值[{thr}]"
-                )
+                return self._l2_violation(rule, f"字段[{field}]值[{val}]超出阈值[{thr}]")
         except (TypeError, ValueError):
             pass
         return None
@@ -163,9 +161,7 @@ class ComplianceStrategyService:
         if dept_val is None:
             return None
         since = (datetime.now() - timedelta(days=window_days)).isoformat()
-        total = self.db.execute(
-            "SELECT COUNT(*) AS c FROM visits WHERE created_at >= ?", (since,)
-        ).fetchone()["c"]
+        total = self.db.execute("SELECT COUNT(*) AS c FROM visits WHERE created_at >= ?", (since,)).fetchone()["c"]
         if total > 0:
             dept_count = self.db.execute(
                 f"SELECT COUNT(*) AS c FROM visits WHERE {field} = ? AND created_at >= ?",
@@ -173,18 +169,14 @@ class ComplianceStrategyService:
             ).fetchone()["c"]
             ratio = dept_count / total
             if ratio >= ratio_threshold:
-                return self._l2_violation(
-                    rule, f"值[{dept_val}]占比{ratio:.1%}，阈值[{ratio_threshold:.0%}]"
-                )
+                return self._l2_violation(rule, f"值[{dept_val}]占比{ratio:.1%}，阈值[{ratio_threshold:.0%}]")
         return None
 
     def _check_citation(self, rule, condition, visit_data):
         field = condition.get("field")
         expected = condition.get("expected")
         if visit_data.get(field) != expected:
-            return self._l2_violation(
-                rule, f"引用未验证，字段[{field}]值[{visit_data.get(field)}]"
-            )
+            return self._l2_violation(rule, f"引用未验证，字段[{field}]值[{visit_data.get(field)}]")
         return None
 
     def _check_expiry(self, rule, condition, threshold, visit_data):
@@ -193,17 +185,11 @@ class ComplianceStrategyService:
         expiry = visit_data.get(field)
         if expiry:
             try:
-                expiry_date = (
-                    datetime.fromisoformat(expiry)
-                    if isinstance(expiry, str)
-                    else expiry
-                )
+                expiry_date = datetime.fromisoformat(expiry) if isinstance(expiry, str) else expiry
                 if isinstance(expiry_date, datetime):
                     remaining = (expiry_date - datetime.now()).days
                     if remaining <= lead_days:
-                        return self._l2_violation(
-                            rule, f"资质{remaining}天后到期，预警期{lead_days}天"
-                        )
+                        return self._l2_violation(rule, f"资质{remaining}天后到期，预警期{lead_days}天")
             except (ValueError, TypeError):
                 pass
         return None

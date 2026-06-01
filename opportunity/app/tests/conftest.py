@@ -4,11 +4,9 @@ import sqlite3
 import pytest
 from starlette.testclient import TestClient
 
-from shared.conftest_base import is_pg, setup_test_db, clean_test_tables
+from shared.conftest_base import clean_test_tables, is_pg, setup_test_db
 
-BASE_DIR = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 TEST_DB = os.path.join(BASE_DIR, "data", "test_opportunity.db")
 os.makedirs(os.path.dirname(TEST_DB), exist_ok=True)
 
@@ -22,9 +20,7 @@ def app():
     if not is_pg():
         conn = sqlite3.connect(TEST_DB)
         try:
-            conn.execute(
-                "ALTER TABLE opportunity ADD COLUMN heat_score INTEGER DEFAULT 0"
-            )
+            conn.execute("ALTER TABLE opportunity ADD COLUMN heat_score INTEGER DEFAULT 0")
             conn.commit()
         except sqlite3.OperationalError:
             pass

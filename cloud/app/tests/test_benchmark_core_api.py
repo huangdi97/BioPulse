@@ -1,7 +1,8 @@
 import sqlite3
-from cloud.app.services.compliance_enforcer import ComplianceEnforcer
-from cloud.app.repositories import PiRepository, ProductRepository
+
 from cloud.app.database import DB_PATH
+from cloud.app.repositories import PiRepository, ProductRepository
+from cloud.app.services.compliance_enforcer import ComplianceEnforcer
 
 
 def _get_db():

@@ -1,9 +1,9 @@
-from cloud.shared.repository import BaseRepository
 from cloud.shared.columns import (
-    TABLE_RECOMMENDATIONS_COLS,
     TABLE_CONTENTS_COLS,
+    TABLE_RECOMMENDATIONS_COLS,
     TABLE_SUPPLY_CHAIN_ITEMS_COLS,
 )
+from cloud.shared.repository import BaseRepository
 
 
 class RecommendationsRepository(BaseRepository):
@@ -14,14 +14,10 @@ class RecommendationsRepository(BaseRepository):
         return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name}").fetchone()[0]
 
     def count_clicked(self):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE clicked=1"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE clicked=1").fetchone()[0]
 
     def count_dismissed(self):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE dismissed=1"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE dismissed=1").fetchone()[0]
 
     def count_by_rec_type(self):
         rows = self.db.execute(
@@ -60,16 +56,12 @@ class RecommendationsRepository(BaseRepository):
         )
 
     def mark_clicked(self, rec_id: int) -> bool:
-        cursor = self.db.execute(
-            f"UPDATE {self.table_name} SET clicked=1 WHERE id=?", (rec_id,)
-        )
+        cursor = self.db.execute(f"UPDATE {self.table_name} SET clicked=1 WHERE id=?", (rec_id,))
         self.db.commit()
         return cursor.rowcount > 0
 
     def mark_dismissed(self, rec_id: int) -> bool:
-        cursor = self.db.execute(
-            f"UPDATE {self.table_name} SET dismissed=1 WHERE id=?", (rec_id,)
-        )
+        cursor = self.db.execute(f"UPDATE {self.table_name} SET dismissed=1 WHERE id=?", (rec_id,))
         self.db.commit()
         return cursor.rowcount > 0
 

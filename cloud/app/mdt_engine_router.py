@@ -9,10 +9,10 @@ from starlette import status
 
 from cloud.app.database import get_db
 from cloud.app.repositories import (
-    MdtSessionsRepository,
-    MdtParticipantsRepository,
-    MdtOpinionsRepository,
     AgentRolesRepository,
+    MdtOpinionsRepository,
+    MdtParticipantsRepository,
+    MdtSessionsRepository,
 )
 from shared.auth_scope import require_scope
 from shared.base import success
@@ -149,9 +149,7 @@ def list_sessions(
 
 
 @router.get("/sessions/{session_id}")
-def get_session(
-    session_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)
-):
+def get_session(session_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     sessions_repo = MdtSessionsRepository(db)
     participants_repo = MdtParticipantsRepository(db)
     opinions_repo = MdtOpinionsRepository(db)
@@ -179,14 +177,10 @@ def debate(
     if not s:
         _n404("MDT Session")
     if s["status"] == "completed":
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST, detail="Session already completed"
-        )
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Session already completed")
     participants = participants_repo.list_by_session(session_id)
     if not participants:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST, detail="No participants in session"
-        )
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="No participants in session")
     auth = request.headers.get("Authorization", "")
     current_round = s["round_count"] or 0
     results = []
@@ -222,9 +216,7 @@ def debate(
                     summary = parsed.get("summary", "")
                     sentiment = parsed.get("sentiment", "neutral")
                     confidence = float(parsed.get("confidence", 0.5))
-                    key_points = json.dumps(
-                        parsed.get("key_points", []), ensure_ascii=False
-                    )
+                    key_points = json.dumps(parsed.get("key_points", []), ensure_ascii=False)
                 else:
                     opinion = reply
                     summary = ""
@@ -262,9 +254,7 @@ def debate(
                         "error": "AI call failed",
                     }
                 )
-    sessions_repo.update_fields(
-        session_id, {"round_count": current_round, "updated_at": _now()}
-    )
+    sessions_repo.update_fields(session_id, {"round_count": current_round, "updated_at": _now()})
     return success({"round": current_round, "results": results})
 
 
@@ -281,17 +271,12 @@ def consensus(
     if not s:
         _n404("MDT Session")
     if s["status"] == "completed":
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST, detail="Consensus already generated"
-        )
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Consensus already generated")
     all_ops = opinions_repo.list_by_session_with_participant(session_id)
     if not all_ops:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST, detail="No opinions to build consensus from"
-        )
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="No opinions to build consensus from")
     opinions_text = "\n".join(
-        f"[Round {o['round_number']}] {o['role_name']}({o.get('stance', 'neutral')}): {o['opinion']}"
-        for o in all_ops
+        f"[Round {o['round_number']}] {o['role_name']}({o.get('stance', 'neutral')}): {o['opinion']}" for o in all_ops
     )
     sys_msg = (
         "你是一名MDT辩论主持人，负责总结多方观点形成共识。"
@@ -300,10 +285,7 @@ def consensus(
         '"agreements":["各方一致认同的点"],"disagreements":["存在分歧的点"],'
         '"action_items":["建议下一步行动"]}'
     )
-    user_msg = (
-        f"议题：{s['title']}\n问题：{s['question']}\n背景：{s['context']}\n\n"
-        f"各方观点：\n{opinions_text}"
-    )
+    user_msg = f"议题：{s['title']}\n问题：{s['question']}\n背景：{s['context']}\n\n各方观点：\n{opinions_text}"
     try:
         ai = _call_ai(
             [
@@ -330,12 +312,8 @@ def consensus(
             },
         )
     except Exception:
-        raise HTTPException(
-            status.HTTP_502_BAD_GATEWAY, detail="Failed to generate consensus"
-        )
-    return success(
-        {"consensus": consensus_text, "consensus_json": _parse_json(consensus_json, {})}
-    )
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail="Failed to generate consensus")
+    return success({"consensus": consensus_text, "consensus_json": _parse_json(consensus_json, {})})
 
 
 @router.get("/sessions/{session_id}/opinions")
@@ -357,9 +335,7 @@ def get_opinions(
 
 
 @router.get("/sessions/{session_id}/timeline")
-def timeline(
-    session_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)
-):
+def timeline(session_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     sessions_repo = MdtSessionsRepository(db)
     opinions_repo = MdtOpinionsRepository(db)
     s = sessions_repo.get_by_id(session_id)
@@ -372,10 +348,7 @@ def timeline(
         rounds.setdefault(rn, []).append(o)
     timeline_data = {
         "session": s,
-        "rounds": [
-            {"round_number": int(k), "opinions": v}
-            for k, v in sorted(rounds.items(), key=lambda x: int(x[0]))
-        ],
+        "rounds": [{"round_number": int(k), "opinions": v} for k, v in sorted(rounds.items(), key=lambda x: int(x[0]))],
     }
     if s["status"] == "completed" and s.get("consensus"):
         timeline_data["consensus"] = {

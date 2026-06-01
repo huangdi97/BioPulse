@@ -3,10 +3,9 @@ from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
+from cloud.app.services.content_service import ContentService
 from shared.auth_scope import require_scope
 from shared.base import success
-from cloud.app.services.content_service import ContentService
-
 
 router = APIRouter(prefix="/contents", tags=["contents"])
 
@@ -53,9 +52,7 @@ def create_content(
     service: ContentService = Depends(),
 ) -> Any:
     user_id = int(current_user["sub"])
-    row = service.create_content(
-        body.title, body.body, body.category, body.tags, user_id
-    )
+    row = service.create_content(body.title, body.body, body.category, body.tags, user_id)
     return success(data=row)
 
 

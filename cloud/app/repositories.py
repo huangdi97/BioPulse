@@ -1,4 +1,5 @@
-from cloud.shared.repository import BaseRepository
+from datetime import datetime
+
 from cloud.shared.columns import (
     TABLE_AGENT_EXECUTION_TASKS_COLS,
     TABLE_AGENT_MARKETPLACE_COLS,
@@ -82,6 +83,7 @@ from cloud.shared.columns import (
     TABLE_WORLD_TREE_NODES_COLS,
     TABLE_WORLD_TREE_SNAPSHOTS_COLS,
 )
+from cloud.shared.repository import BaseRepository
 
 
 class AgentExecutionTasksRepository(BaseRepository):
@@ -141,9 +143,7 @@ class AgentRolesRepository(BaseRepository):
 
     def get_system_prompt(self, role_id: int):
         placeholders = ", ".join(self.cols)
-        row = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE id=?", (role_id,)
-        ).fetchone()
+        row = self.db.execute(f"SELECT {placeholders} FROM {self.table_name} WHERE id=?", (role_id,)).fetchone()
         return dict(row) if row else None
 
     def get_by_id(self, role_id: int):
@@ -261,9 +261,7 @@ class CausalGraphsRepository(BaseRepository):
 
 class CollaborationSessionsRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(
-            db, "collaboration_sessions", TABLE_COLLABORATION_SESSIONS_COLS
-        )
+        super().__init__(db, "collaboration_sessions", TABLE_COLLABORATION_SESSIONS_COLS)
 
 
 class CollaborationStepsRepository(BaseRepository):
@@ -273,9 +271,7 @@ class CollaborationStepsRepository(BaseRepository):
 
 class ComplianceAuditRecordsRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(
-            db, "compliance_audit_records", TABLE_COMPLIANCE_AUDIT_RECORDS_COLS
-        )
+        super().__init__(db, "compliance_audit_records", TABLE_COMPLIANCE_AUDIT_RECORDS_COLS)
 
 
 class ComplianceRulesRepository(BaseRepository):
@@ -290,18 +286,14 @@ class ContentsRepository(BaseRepository):
 
 class CounterfactualScenariosRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(
-            db, "counterfactual_scenarios", TABLE_COUNTERFACTUAL_SCENARIOS_COLS
-        )
+        super().__init__(db, "counterfactual_scenarios", TABLE_COUNTERFACTUAL_SCENARIOS_COLS)
 
 
 class CrossCaseInsightsRepository(BaseRepository):
     def __init__(self, db):
         super().__init__(db, "cross_case_insights", TABLE_CROSS_CASE_INSIGHTS_COLS)
 
-    def list_filtered(
-        self, insight_type=None, confidence_min=None, page=1, page_size=20
-    ):
+    def list_filtered(self, insight_type=None, confidence_min=None, page=1, page_size=20):
         conditions = ["is_active=1"]
         params = []
         if insight_type:
@@ -328,8 +320,7 @@ class CrossCaseInsightsRepository(BaseRepository):
 
     def count_by_type(self):
         rows = self.db.execute(
-            f"SELECT insight_type, COUNT(*) AS cnt FROM {self.table_name} WHERE is_active=1 "
-            "GROUP BY insight_type"
+            f"SELECT insight_type, COUNT(*) AS cnt FROM {self.table_name} WHERE is_active=1 GROUP BY insight_type"
         ).fetchall()
         return [{"type": r["insight_type"], "count": r["cnt"]} for r in rows]
 
@@ -376,12 +367,7 @@ class CustomersRepository(BaseRepository):
         super().__init__(db, "customers", TABLE_CUSTOMERS_COLS)
 
     def exists(self, customer_id: int):
-        return (
-            self.db.execute(
-                f"SELECT id FROM {self.table_name} WHERE id=?", (customer_id,)
-            ).fetchone()
-            is not None
-        )
+        return self.db.execute(f"SELECT id FROM {self.table_name} WHERE id=?", (customer_id,)).fetchone() is not None
 
 
 class DataMaskingRulesRepository(BaseRepository):
@@ -438,9 +424,7 @@ class DecisionCasesRepository(BaseRepository):
             f"UPDATE {self.table_name} SET is_active=0, updated_at=? WHERE id=?",
             (now, case_id),
         )
-        self.db.execute(
-            "UPDATE causal_analyses SET case_id=-case_id WHERE case_id=?", (case_id,)
-        )
+        self.db.execute("UPDATE causal_analyses SET case_id=-case_id WHERE case_id=?", (case_id,))
         self.db.commit()
 
     def list_success_cases(self, limit=5, filter_tags=None):
@@ -474,9 +458,7 @@ class DecisionCasesRepository(BaseRepository):
         return [dict(r) for r in rows]
 
     def count_active(self):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1").fetchone()[0]
 
     def score_distribution(self):
         rows = self.db.execute(
@@ -519,8 +501,7 @@ class EpisodicMemoryRepository(BaseRepository):
     def find_unconsolidated(self):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} "
-            "WHERE is_consolidated=0 OR is_consolidated IS NULL"
+            f"SELECT {placeholders} FROM {self.table_name} WHERE is_consolidated=0 OR is_consolidated IS NULL"
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -632,15 +613,11 @@ class EventBusMessagesRepository(BaseRepository):
 
     def count_by_status(self):
         return {
-            "pending": self.db.execute(
-                f"SELECT COUNT(*) FROM {self.table_name} WHERE status='pending'"
-            ).fetchone()[0],
-            "delivered": self.db.execute(
-                f"SELECT COUNT(*) FROM {self.table_name} WHERE status='delivered'"
-            ).fetchone()[0],
-            "failed": self.db.execute(
-                f"SELECT COUNT(*) FROM {self.table_name} WHERE status='failed'"
-            ).fetchone()[0],
+            "pending": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='pending'").fetchone()[0],
+            "delivered": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='delivered'").fetchone()[
+                0
+            ],
+            "failed": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='failed'").fetchone()[0],
         }
 
     def count_all(self):
@@ -649,8 +626,7 @@ class EventBusMessagesRepository(BaseRepository):
     def top_event_types(self, limit=5):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT event_type, COUNT(*) as cnt FROM {self.table_name} "
-            "GROUP BY event_type ORDER BY cnt DESC LIMIT ?",
+            f"SELECT event_type, COUNT(*) as cnt FROM {self.table_name} GROUP BY event_type ORDER BY cnt DESC LIMIT ?",
             (limit,),
         ).fetchall()
         return [dict(r) for r in rows]
@@ -720,13 +696,9 @@ class EventDeliveryLogRepository(BaseRepository):
 
 class FedAuditContributionsRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(
-            db, "fed_audit_contributions", TABLE_FED_AUDIT_CONTRIBUTIONS_COLS
-        )
+        super().__init__(db, "fed_audit_contributions", TABLE_FED_AUDIT_CONTRIBUTIONS_COLS)
 
-    def list_filtered(
-        self, contributor_did=None, contribution_type=None, verified=None
-    ):
+    def list_filtered(self, contributor_did=None, contribution_type=None, verified=None):
         conditions, params = [], []
         if contributor_did:
             conditions.append("contributor_did=?")
@@ -773,9 +745,7 @@ class HcpInteractionsRepository(BaseRepository):
         super().__init__(db, "hcp_interactions", TABLE_HCP_INTERACTIONS_COLS)
 
     def count_by_hcp_id(self, hcp_id: int):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE hcp_id=?", (hcp_id,)
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE hcp_id=?", (hcp_id,)).fetchone()[0]
 
     def get_last_by_hcp_id(self, hcp_id: int):
         placeholders = ", ".join(self.cols)
@@ -828,9 +798,7 @@ class HcpProfilesRepository(BaseRepository):
         )
 
     def count_active(self):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1").fetchone()[0]
 
     def tier_distribution(self):
         rows = self.db.execute(
@@ -844,9 +812,7 @@ class HcpSimulationsRepository(BaseRepository):
         super().__init__(db, "hcp_simulations", TABLE_HCP_SIMULATIONS_COLS)
 
     def count_by_hcp_id(self, hcp_id: int):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE hcp_id=?", (hcp_id,)
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE hcp_id=?", (hcp_id,)).fetchone()[0]
 
     def count_all(self):
         return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name}").fetchone()[0]
@@ -889,10 +855,7 @@ class KgEntitiesRepository(BaseRepository):
 
     def exists_entity_id(self, entity_id: str):
         return (
-            self.db.execute(
-                f"SELECT id FROM {self.table_name} WHERE entity_id=?", (entity_id,)
-            ).fetchone()
-            is not None
+            self.db.execute(f"SELECT id FROM {self.table_name} WHERE entity_id=?", (entity_id,)).fetchone() is not None
         )
 
     def list_filtered(self, entity_type=None, name=None, status_="active"):
@@ -928,9 +891,7 @@ class KgEntitiesRepository(BaseRepository):
         return [dict(r) for r in rows]
 
     def count_active(self):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE status='active'"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='active'").fetchone()[0]
 
     def count_by_entity_type(self):
         rows = self.db.execute(
@@ -949,8 +910,7 @@ class KgEntitiesRepository(BaseRepository):
     def top_active(self, limit: int = 5):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} "
-            "WHERE status='active' ORDER BY confidence DESC LIMIT ?",
+            f"SELECT {placeholders} FROM {self.table_name} WHERE status='active' ORDER BY confidence DESC LIMIT ?",
             (limit,),
         ).fetchall()
         return [dict(r) for r in rows]
@@ -1012,10 +972,7 @@ class KgRelationsRepository(BaseRepository):
                 WHERE e.status='active' GROUP BY e.entity_id ORDER BY degree DESC LIMIT ?""",
             (limit,),
         ).fetchall()
-        return [
-            {"name": r["name"], "type": r["entity_type"], "degree": r["degree"]}
-            for r in rows
-        ]
+        return [{"name": r["name"], "type": r["entity_type"], "degree": r["degree"]} for r in rows]
 
 
 class KgSearchCacheRepository(BaseRepository):
@@ -1034,9 +991,7 @@ class MarketIntelItemsRepository(BaseRepository):
         if field not in self.cols:
             return {}
         placeholders = ", ".join(self.cols)
-        rows = self.db.execute(
-            f"SELECT {field}, COUNT(*) as cnt FROM {self.table_name} GROUP BY {field}"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT {field}, COUNT(*) as cnt FROM {self.table_name} GROUP BY {field}").fetchall()
 
     def count_recent_critical(self, limit: int = 10) -> list:
         placeholders = ", ".join(self.cols)
@@ -1072,9 +1027,7 @@ class MarketIntelItemsRepository(BaseRepository):
         where = ""
         if conditions:
             where = " WHERE " + " AND ".join(conditions)
-        total = self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} mi{where}", params or []
-        ).fetchone()[0]
+        total = self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} mi{where}", params or []).fetchone()[0]
         offset = (page - 1) * page_size
         rows = self.db.execute(
             f"SELECT {placeholders}, ms.name as source_name FROM {self.table_name} mi "
@@ -1098,9 +1051,7 @@ class MarketIntelItemsRepository(BaseRepository):
         return cursor.lastrowid
 
     def delete_by_source(self, source_id: int):
-        self.db.execute(
-            f"DELETE FROM {self.table_name} WHERE source_id=?", (source_id,)
-        )
+        self.db.execute(f"DELETE FROM {self.table_name} WHERE source_id=?", (source_id,))
 
     def update_fields(self, record_id: int, data: dict) -> bool:
         filtered = {k: v for k, v in data.items() if k in self.cols and k != "id"}
@@ -1108,9 +1059,7 @@ class MarketIntelItemsRepository(BaseRepository):
             return False
         set_clause = ", ".join(f"{k}=?" for k in filtered.keys())
         values = list(filtered.values()) + [record_id]
-        cursor = self.db.execute(
-            f"UPDATE {self.table_name} SET {set_clause} WHERE id=?", values
-        )
+        cursor = self.db.execute(f"UPDATE {self.table_name} SET {set_clause} WHERE id=?", values)
         return cursor.rowcount > 0
 
 
@@ -1124,23 +1073,17 @@ class MarketIntelSourcesRepository(BaseRepository):
             return False
         set_clause = ", ".join(f"{k}=?" for k in filtered.keys())
         values = list(filtered.values()) + [record_id]
-        cursor = self.db.execute(
-            f"UPDATE {self.table_name} SET {set_clause} WHERE id=?", values
-        )
+        cursor = self.db.execute(f"UPDATE {self.table_name} SET {set_clause} WHERE id=?", values)
         self.db.commit()
         return cursor.rowcount > 0
 
     def list_active(self) -> list:
         placeholders = ", ".join(self.cols)
-        rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1").fetchall()
         return [dict(r) for r in rows]
 
     def count_active(self) -> int:
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1").fetchone()[0]
 
 
 class McpToolsRepository(BaseRepository):
@@ -1209,9 +1152,7 @@ class MdtOpinionsRepository(BaseRepository):
         return [dict(r) for r in rows]
 
     def avg_confidence(self) -> float:
-        return self.db.execute(
-            f"SELECT COALESCE(ROUND(AVG(confidence),2),0) FROM {self.table_name}"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COALESCE(ROUND(AVG(confidence),2),0) FROM {self.table_name}").fetchone()[0]
 
     def build_round_summary(self, session_id: int, round_num: int) -> str:
         if round_num < 1:
@@ -1223,9 +1164,7 @@ class MdtOpinionsRepository(BaseRepository):
             f"WHERE o.session_id=? AND o.round_number=?",
             (session_id, round_num),
         ).fetchall()
-        return "\n".join(
-            f"- {r['role_name']}: {r['summary']}" for r in rows if r.get("summary")
-        )
+        return "\n".join(f"- {r['role_name']}: {r['summary']}" for r in rows if r.get("summary"))
 
     def create_raw(self, data: dict) -> int:
         filtered = {k: v for k, v in data.items() if k in self.cols}
@@ -1255,8 +1194,7 @@ class MdtParticipantsRepository(BaseRepository):
 
     def avg_per_session(self) -> float:
         return self.db.execute(
-            "SELECT COALESCE(ROUND(AVG(c),2),0) FROM "
-            f"(SELECT COUNT(*) c FROM {self.table_name} GROUP BY session_id)"
+            f"SELECT COALESCE(ROUND(AVG(c),2),0) FROM (SELECT COUNT(*) c FROM {self.table_name} GROUP BY session_id)"
         ).fetchone()[0]
 
     def create_raw(self, data: dict) -> int:
@@ -1279,20 +1217,14 @@ class MdtSessionsRepository(BaseRepository):
 
     def count_by_field(self, field: str) -> dict:
         placeholders = ", ".join(self.cols)
-        rows = self.db.execute(
-            f"SELECT {field}, COUNT(*) as cnt FROM {self.table_name} GROUP BY {field}"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT {field}, COUNT(*) as cnt FROM {self.table_name} GROUP BY {field}").fetchall()
         return {r[field]: r["cnt"] for r in rows}
 
     def count_completed(self) -> int:
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE status='completed'"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='completed'").fetchone()[0]
 
     def avg_field(self, field: str) -> float:
-        return self.db.execute(
-            f"SELECT COALESCE(ROUND(AVG({field}),2),0) FROM {self.table_name}"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COALESCE(ROUND(AVG({field}),2),0) FROM {self.table_name}").fetchone()[0]
 
     def list_recent(self, limit: int = 5) -> list:
         placeholders = ", ".join(self.cols)
@@ -1305,9 +1237,7 @@ class MdtSessionsRepository(BaseRepository):
 
 class MemoryConsolidationLogRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(
-            db, "memory_consolidation_log", TABLE_MEMORY_CONSOLIDATION_LOG_COLS
-        )
+        super().__init__(db, "memory_consolidation_log", TABLE_MEMORY_CONSOLIDATION_LOG_COLS)
 
     def list_recent(self, limit=5):
         placeholders = ", ".join(self.cols)
@@ -1319,8 +1249,7 @@ class MemoryConsolidationLogRepository(BaseRepository):
 
     def count_by_type_since(self, consolidation_type, since):
         return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} "
-            "WHERE consolidation_type=? AND created_at >= ?",
+            f"SELECT COUNT(*) FROM {self.table_name} WHERE consolidation_type=? AND created_at >= ?",
             (consolidation_type, since),
         ).fetchone()[0]
 
@@ -1342,8 +1271,7 @@ class MemoryEntriesRepository(BaseRepository):
     def list_active_ordered(self, order_by="importance DESC"):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} "
-            f"WHERE is_active=1 ORDER BY {order_by}"
+            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY {order_by}"
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -1358,15 +1286,12 @@ class MemoryEntriesRepository(BaseRepository):
     def find_by_source_active(self, source_type, source_id):
         placeholders = ", ".join(self.cols)
         row = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} "
-            "WHERE source_type=? AND source_id=? AND is_active=1",
+            f"SELECT {placeholders} FROM {self.table_name} WHERE source_type=? AND source_id=? AND is_active=1",
             (source_type, source_id),
         ).fetchone()
         return dict(row) if row else None
 
-    def list_filtered(
-        self, memory_type=None, importance_min=None, keyword=None, page=1, page_size=20
-    ):
+    def list_filtered(self, memory_type=None, importance_min=None, keyword=None, page=1, page_size=20):
         conditions, params = ["is_active = 1"], []
         if memory_type:
             conditions.append("memory_type = ?")
@@ -1387,9 +1312,7 @@ class MemoryEntriesRepository(BaseRepository):
         )
 
     def count_active(self):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1").fetchone()[0]
 
     def by_type_stats(self):
         placeholders = ", ".join(self.cols)
@@ -1400,15 +1323,12 @@ class MemoryEntriesRepository(BaseRepository):
         return [dict(r) for r in rows]
 
     def all_context_tags_active(self):
-        rows = self.db.execute(
-            f"SELECT context_tags FROM {self.table_name} WHERE is_active=1"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT context_tags FROM {self.table_name} WHERE is_active=1").fetchall()
         return [dict(r) for r in rows]
 
     def increment_access(self, entry_id, now):
         self.db.execute(
-            "UPDATE memory_entries SET access_count = access_count + 1, "
-            "last_accessed = ? WHERE id = ?",
+            "UPDATE memory_entries SET access_count = access_count + 1, last_accessed = ? WHERE id = ?",
             (now, entry_id),
         )
 
@@ -1448,16 +1368,13 @@ class MemoryGatesRepository(BaseRepository):
 
     def list_ordered(self):
         placeholders = ", ".join(self.cols)
-        rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} ORDER BY id"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT {placeholders} FROM {self.table_name} ORDER BY id").fetchall()
         return [dict(r) for r in rows]
 
     def find_active_by_source_type(self, source_type):
         placeholders = ", ".join(self.cols)
         row = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} "
-            "WHERE source_type=? AND is_active=1",
+            f"SELECT {placeholders} FROM {self.table_name} WHERE source_type=? AND is_active=1",
             (source_type,),
         ).fetchone()
         return dict(row) if row else None
@@ -1515,9 +1432,7 @@ class NmpaComplianceLogsRepository(BaseRepository):
     def __init__(self, db):
         super().__init__(db, "nmpa_compliance_logs", TABLE_NMPA_COMPLIANCE_LOGS_COLS)
 
-    def list_filtered(
-        self, document_type=None, check_result=None, human_review_required=None
-    ):
+    def list_filtered(self, document_type=None, check_result=None, human_review_required=None):
         conditions, params = [], []
         if document_type:
             conditions.append("document_type=?")
@@ -1540,9 +1455,7 @@ class NodeMemoryLinksRepository(BaseRepository):
         super().__init__(db, "node_memory_links", TABLE_NODE_MEMORY_LINKS_COLS)
 
     def count_by_node(self, node_id):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE node_id=?", (node_id,)
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE node_id=?", (node_id,)).fetchone()[0]
 
     def delete_by_node(self, node_id):
         self.db.execute(f"DELETE FROM {self.table_name} WHERE node_id=?", (node_id,))
@@ -1551,9 +1464,7 @@ class NodeMemoryLinksRepository(BaseRepository):
         if not node_ids:
             return
         ph = ",".join("?" for _ in node_ids)
-        self.db.execute(
-            f"DELETE FROM {self.table_name} WHERE node_id IN ({ph})", node_ids
-        )
+        self.db.execute(f"DELETE FROM {self.table_name} WHERE node_id IN ({ph})", node_ids)
 
     def memory_ids_for_nodes(self, node_ids):
         if not node_ids:
@@ -1593,9 +1504,7 @@ class NodeMemoryLinksRepository(BaseRepository):
 
 class NotificationTemplatesRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(
-            db, "notification_templates", TABLE_NOTIFICATION_TEMPLATES_COLS
-        )
+        super().__init__(db, "notification_templates", TABLE_NOTIFICATION_TEMPLATES_COLS)
 
 
 class NotificationsRepository(BaseRepository):
@@ -1634,9 +1543,7 @@ class OpportunitiesRepository(BaseRepository):
 
 class OrchestrationTemplatesRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(
-            db, "orchestration_templates", TABLE_ORCHESTRATION_TEMPLATES_COLS
-        )
+        super().__init__(db, "orchestration_templates", TABLE_ORCHESTRATION_TEMPLATES_COLS)
 
 
 class PipelineRunsRepository(BaseRepository):
@@ -1672,14 +1579,10 @@ class RecommendationsRepository(BaseRepository):
         return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name}").fetchone()[0]
 
     def count_clicked(self):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE clicked=1"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE clicked=1").fetchone()[0]
 
     def count_dismissed(self):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE dismissed=1"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE dismissed=1").fetchone()[0]
 
     def count_by_rec_type(self):
         rows = self.db.execute(
@@ -1718,16 +1621,12 @@ class RecommendationsRepository(BaseRepository):
         )
 
     def mark_clicked(self, rec_id: int) -> bool:
-        cursor = self.db.execute(
-            f"UPDATE {self.table_name} SET clicked=1 WHERE id=?", (rec_id,)
-        )
+        cursor = self.db.execute(f"UPDATE {self.table_name} SET clicked=1 WHERE id=?", (rec_id,))
         self.db.commit()
         return cursor.rowcount > 0
 
     def mark_dismissed(self, rec_id: int) -> bool:
-        cursor = self.db.execute(
-            f"UPDATE {self.table_name} SET dismissed=1 WHERE id=?", (rec_id,)
-        )
+        cursor = self.db.execute(f"UPDATE {self.table_name} SET dismissed=1 WHERE id=?", (rec_id,))
         self.db.commit()
         return cursor.rowcount > 0
 
@@ -1775,9 +1674,7 @@ class RouteLogsRepository(BaseRepository):
         return [dict(r) for r in rows]
 
     def avg_latency(self):
-        return self.db.execute(
-            f"SELECT COALESCE(AVG(latency_ms), 0) FROM {self.table_name}"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COALESCE(AVG(latency_ms), 0) FROM {self.table_name}").fetchone()[0]
 
     def list_recent(self, limit: int = 10):
         placeholders = ", ".join(self.cols)
@@ -1801,9 +1698,7 @@ class RouteRulesRepository(BaseRepository):
 
     def list_all_ordered(self):
         placeholders = ", ".join(self.cols)
-        rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} ORDER BY priority ASC"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT {placeholders} FROM {self.table_name} ORDER BY priority ASC").fetchall()
         return [dict(r) for r in rows]
 
 
@@ -1815,15 +1710,11 @@ class RouteStatsRepository(BaseRepository):
         from datetime import datetime
 
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        row = self.db.execute(
-            f"SELECT * FROM {self.table_name} WHERE role_id=?", (role_id,)
-        ).fetchone()
+        row = self.db.execute(f"SELECT * FROM {self.table_name} WHERE role_id=?", (role_id,)).fetchone()
         if row:
             total = row["total_routed"] + 1
             n = float(total)
-            avg_confidence = round(
-                (row["avg_confidence"] * (n - 1) + confidence) / n, 4
-            )
+            avg_confidence = round((row["avg_confidence"] * (n - 1) + confidence) / n, 4)
             avg_tokens = round((row["avg_tokens"] * (n - 1) + tokens) / n, 2)
             avg_latency = round((row["avg_latency_ms"] * (n - 1) + latency_ms) / n, 2)
             self.db.execute(
@@ -1857,9 +1748,7 @@ class RouteStatsRepository(BaseRepository):
 
 class SleepConsolidationLogsRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(
-            db, "sleep_consolidation_logs", TABLE_SLEEP_CONSOLIDATION_LOGS_COLS
-        )
+        super().__init__(db, "sleep_consolidation_logs", TABLE_SLEEP_CONSOLIDATION_LOGS_COLS)
 
     def list_recent(self, limit=10):
         placeholders = ", ".join(self.cols)
@@ -1874,9 +1763,7 @@ class SoapDecisionsRepository(BaseRepository):
     def __init__(self, db):
         super().__init__(db, "soap_decisions", TABLE_SOAP_DECISIONS_COLS)
 
-    def list_active_filtered(
-        self, status=None, priority=None, tag=None, page=1, page_size=20
-    ):
+    def list_active_filtered(self, status=None, priority=None, tag=None, page=1, page_size=20):
         conditions = ["is_active=1"]
         params = []
         if status:
@@ -1897,9 +1784,7 @@ class SoapDecisionsRepository(BaseRepository):
         )
 
     def count_active(self):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1").fetchone()[0]
 
     def count_by_status(self):
         rows = self.db.execute(
@@ -1916,8 +1801,7 @@ class SoapDecisionsRepository(BaseRepository):
     def list_active_recent(self, limit: int = 5):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 "
-            "ORDER BY created_at DESC LIMIT ?",
+            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY created_at DESC LIMIT ?",
             (limit,),
         ).fetchall()
         return [dict(r) for r in rows]
@@ -1933,9 +1817,7 @@ class SoapTemplatesRepository(BaseRepository):
         if category:
             conditions.append("category=?")
             params.append(category)
-        return self.list_all(
-            conditions=conditions, params=params or None, order_by="id ASC"
-        )
+        return self.list_all(conditions=conditions, params=params or None, order_by="id ASC")
 
 
 class TaskBoardsRepository(BaseRepository):
@@ -1991,9 +1873,7 @@ class UserBehaviorsRepository(BaseRepository):
         super().__init__(db, "user_behaviors", TABLE_USER_BEHAVIORS_COLS)
 
     def count_by_user(self, user_id: int):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE user_id=?", (user_id,)
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE user_id=?", (user_id,)).fetchone()[0]
 
     def top_action_by_user(self, user_id: int):
         row = self.db.execute(
@@ -2003,9 +1883,7 @@ class UserBehaviorsRepository(BaseRepository):
         ).fetchone()
         return dict(row) if row else None
 
-    def top_targets_by_user_action(
-        self, user_id: int, action_type: str, limit: int = 5
-    ):
+    def top_targets_by_user_action(self, user_id: int, action_type: str, limit: int = 5):
         rows = self.db.execute(
             f"SELECT target_id, target_type, COUNT(*) AS cnt FROM {self.table_name} "
             "WHERE user_id=? AND action_type=? GROUP BY target_id, target_type "
@@ -2014,9 +1892,7 @@ class UserBehaviorsRepository(BaseRepository):
         ).fetchall()
         return [dict(r) for r in rows]
 
-    def list_filtered(
-        self, user_id=None, action_type=None, target_type=None, limit=50, offset=0
-    ):
+    def list_filtered(self, user_id=None, action_type=None, target_type=None, limit=50, offset=0):
         conditions, params = [], []
         if user_id is not None:
             conditions.append("user_id=?")
@@ -2109,18 +1985,12 @@ class WorldTreeNodesRepository(BaseRepository):
         super().__init__(db, "world_tree_nodes", TABLE_WORLD_TREE_NODES_COLS)
 
     def exists_by_id(self, node_id):
-        return (
-            self.db.execute(
-                f"SELECT id FROM {self.table_name} WHERE id=?", (node_id,)
-            ).fetchone()
-            is not None
-        )
+        return self.db.execute(f"SELECT id FROM {self.table_name} WHERE id=?", (node_id,)).fetchone() is not None
 
     def list_active_sorted(self):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} "
-            "WHERE is_active=1 ORDER BY sort_order, name"
+            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY sort_order, name"
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -2131,9 +2001,7 @@ class WorldTreeNodesRepository(BaseRepository):
             ids.append(cur)
             stack.extend(
                 c["id"]
-                for c in self.db.execute(
-                    f"SELECT id FROM {self.table_name} WHERE parent_id=?", (cur,)
-                ).fetchall()
+                for c in self.db.execute(f"SELECT id FROM {self.table_name} WHERE parent_id=?", (cur,)).fetchall()
             )
         return ids
 
@@ -2172,6 +2040,4 @@ class WorldTreeSnapshotsRepository(BaseRepository):
         if not node_ids:
             return
         ph = ",".join("?" for _ in node_ids)
-        self.db.execute(
-            f"DELETE FROM {self.table_name} WHERE node_id IN ({ph})", node_ids
-        )
+        self.db.execute(f"DELETE FROM {self.table_name} WHERE node_id IN ({ph})", node_ids)

@@ -3,9 +3,9 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
+from cloud.app.services.audit_service import AuditService
 from shared.auth_scope import require_scope
 from shared.base import success
-from cloud.app.services.audit_service import AuditService
 
 router = APIRouter(prefix="/audit", tags=["审计日志"])
 

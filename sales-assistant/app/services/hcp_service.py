@@ -49,18 +49,14 @@ class HcpService(BaseService):
         repo = HcpRepository(self.db)
         row = repo.get_by_id(hcp_id)
         if not row or not row["is_active"]:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
         return dict(row)
 
     def update_hcp(self, hcp_id: int, body) -> dict:
         repo = HcpRepository(self.db)
         row = repo.get_by_id(hcp_id)
         if not row or not row["is_active"]:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
         updates = body.model_dump(exclude_unset=True)
         if not updates:
             return dict(row)
@@ -72,9 +68,7 @@ class HcpService(BaseService):
         repo = HcpRepository(self.db)
         row = repo.get_by_id(hcp_id)
         if not row or not row["is_active"]:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
         repo.soft_delete(hcp_id)
 
     def get_graph(self, hcp_id: Optional[int], product_id: Optional[int]) -> dict:
@@ -96,9 +90,7 @@ class HcpService(BaseService):
                 (product_id,),
             ).fetchall()
         else:
-            prods = self.db.execute(
-                "SELECT id, name, company FROM product WHERE is_active = 1"
-            ).fetchall()
+            prods = self.db.execute("SELECT id, name, company FROM product WHERE is_active = 1").fetchall()
         hcp_ids = [h["id"] for h in hcps]
         if hcp_ids:
             placeholders = ",".join("?" * len(hcp_ids))
@@ -168,18 +160,14 @@ class HcpService(BaseService):
         repo = ProductRepository(self.db)
         row = repo.get_by_id(product_id)
         if not row or not row["is_active"]:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Product not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
         return dict(row)
 
     def update_product(self, product_id: int, body) -> dict:
         repo = ProductRepository(self.db)
         row = repo.get_by_id(product_id)
         if not row or not row["is_active"]:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Product not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
         updates = body.model_dump(exclude_unset=True)
         if not updates:
             return dict(row)
@@ -191,9 +179,7 @@ class HcpService(BaseService):
         repo = ProductRepository(self.db)
         row = repo.get_by_id(product_id)
         if not row or not row["is_active"]:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Product not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
         repo.soft_delete(product_id)
 
     def create_relation(self, hcp_id: int, body, user_id: int) -> int:
@@ -202,14 +188,10 @@ class HcpService(BaseService):
         relation_repo = RelationRepository(self.db)
         hcp_row = hcp_repo.get_by_id(hcp_id)
         if not hcp_row or not hcp_row["is_active"]:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
         prod_row = product_repo.get_by_id(body.product_id)
         if not prod_row or not prod_row["is_active"]:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Product not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
         now = self._now()
         return relation_repo.create(
             {
@@ -226,9 +208,7 @@ class HcpService(BaseService):
         hcp_repo = HcpRepository(self.db)
         hcp_row = hcp_repo.get_by_id(hcp_id)
         if not hcp_row or not hcp_row["is_active"]:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
         rows = self.db.execute(
             "SELECT r.id, r.hcp_id, r.product_id, r.relation_type, r.strength, "
             "r.notes, r.is_active, p.name AS product_name "
@@ -242,7 +222,5 @@ class HcpService(BaseService):
         repo = RelationRepository(self.db)
         row = repo.get_by_id(relation_id)
         if not row or not row["is_active"]:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Relation not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Relation not found")
         repo.soft_delete(relation_id)

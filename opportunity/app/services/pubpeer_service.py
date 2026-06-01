@@ -1,6 +1,6 @@
 import json
 import urllib.request
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from opportunity.app.repositories import (
@@ -53,9 +53,7 @@ class PubpeerService(BaseService):
                 "flags": "[]",
             }
 
-    def _check_or_get_cache(
-        self, pubmed_id: Optional[str], doi: Optional[str]
-    ) -> Optional[dict]:
+    def _check_or_get_cache(self, pubmed_id: Optional[str], doi: Optional[str]) -> Optional[dict]:
         if not pubmed_id and not doi:
             return None
         repo = PaperIntegrityRepository(self.db)
@@ -144,9 +142,7 @@ class PubpeerService(BaseService):
             "checked_at": now,
         }
 
-    def check_trail_integrity(
-        self, trail_id: int, auth_header: str, user_id: int
-    ) -> dict:
+    def check_trail_integrity(self, trail_id: int, auth_header: str, user_id: int) -> dict:
         repo = ResearchTrailRepository(self.db)
         trail = dict(repo.get_or_404(trail_id))
         cached = self._check_or_get_cache(trail.get("pubmed_id"), None)
@@ -159,9 +155,7 @@ class PubpeerService(BaseService):
                 "concerns": json.loads(cached.get("concerns") or "[]"),
                 "checked_at": cached["checked_at"],
             }
-        return self._do_check(
-            auth_header, trail.get("pubmed_id"), trail.get("doi"), user_id
-        )
+        return self._do_check(auth_header, trail.get("pubmed_id"), trail.get("doi"), user_id)
 
     def get_trail_integrity(self, trail_id: int) -> Optional[dict]:
         trail = dict(ResearchTrailRepository(self.db).get_or_404(trail_id))

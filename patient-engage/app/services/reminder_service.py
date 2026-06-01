@@ -1,7 +1,8 @@
 """用药提醒服务。"""
 
-import httpx
 from datetime import datetime, timezone
+
+import httpx
 from patient_engage.app.database import get_cache, set_cache
 
 CLOUD_API = "http://localhost:8000"
@@ -145,17 +146,12 @@ def _build_adherence_report(patient_id: str, days: int) -> dict:
         "overall_adherence_rate": overall_rate,
         "total_expected_doses": days * 3,
         "total_taken_doses": int(days * 3 * overall_rate / 100),
-        "weekly_breakdown": [
-            {"week": i + 1, "adherence_rate": rate}
-            for i, rate in enumerate(weekly_rates)
-        ],
+        "weekly_breakdown": [{"week": i + 1, "adherence_rate": rate} for i, rate in enumerate(weekly_rates)],
         "insights": {
             "best_time": "早晨",
             "worst_time": "晚间",
             "most_missed_drug": "维生素D",
-            "trend": "improving"
-            if weekly_rates and weekly_rates[-1] >= weekly_rates[0]
-            else "stable",
+            "trend": "improving" if weekly_rates and weekly_rates[-1] >= weekly_rates[0] else "stable",
         },
         "recommendations": [
             "设置固定用药闹钟可提高依从性",

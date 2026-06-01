@@ -153,9 +153,7 @@ def delivery_log_list(
     current_user: dict = Depends(require_scope("visit")),
     service: EventBusService = Depends(),
 ):
-    rows = service.list_delivery_log(
-        message_id=message_id, target_end=target_end, delivery_status=delivery_status
-    )
+    rows = service.list_delivery_log(message_id=message_id, target_end=target_end, delivery_status=delivery_status)
     return success(data=rows)
 
 

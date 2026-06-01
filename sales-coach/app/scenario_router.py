@@ -5,14 +5,14 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from starlette import status
 
-from shared.auth import get_current_user
-from shared.base import ApiResponse, PaginatedResponse, success
 from sales_coach.app.scenario_library import (
     FIXED_SCENARIOS,
-    get_scenarios_by_category,
     get_scenario_by_difficulty,
+    get_scenarios_by_category,
 )
 from sales_coach.app.services.scenario_service import ScenarioService
+from shared.auth import get_current_user
+from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/scenarios", tags=["scenarios"])
 
@@ -114,9 +114,7 @@ def list_scenarios_by_category(
 ) -> ApiResponse:
     """Return all fixed scenarios matching the given category."""
     scenarios = get_scenarios_by_category(category)
-    return success(
-        data={"category": category, "scenarios": scenarios, "count": len(scenarios)}
-    )
+    return success(data={"category": category, "scenarios": scenarios, "count": len(scenarios)})
 
 
 @router.get("/by-difficulty/{difficulty}")
@@ -126,9 +124,7 @@ def list_scenarios_by_difficulty(
 ) -> ApiResponse:
     """Return all fixed scenarios matching the given difficulty level."""
     scenarios = get_scenario_by_difficulty(difficulty)
-    return success(
-        data={"difficulty": difficulty, "scenarios": scenarios, "count": len(scenarios)}
-    )
+    return success(data={"difficulty": difficulty, "scenarios": scenarios, "count": len(scenarios)})
 
 
 @router.get("/{scenario_id}")

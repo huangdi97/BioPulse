@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 from cloud.app.services.brain_memory_service import BrainMemoryService
 from shared.auth_scope import require_scope
-from shared.base import success, PaginatedResponse
+from shared.base import PaginatedResponse, success
 
 router = APIRouter(prefix="/brain-memory", tags=["Brain Memory"])
 
@@ -163,9 +163,7 @@ def dashboard(service: BrainMemoryService = Depends()):
 
 
 @router.post("/semantic/abstract")
-def semantic_abstract(
-    body: SemanticAbstract, request: Request, service: BrainMemoryService = Depends()
-):
+def semantic_abstract(body: SemanticAbstract, request: Request, service: BrainMemoryService = Depends()):
     result = service.semantic_abstract(
         source_type=body.source_type,
         source_id=body.source_id,

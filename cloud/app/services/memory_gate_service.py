@@ -161,17 +161,13 @@ class MemoryGateService(BaseService):
                 "query_text": query,
                 "memory_ids": json.dumps(ids),
                 "result_count": len(results),
-                "context": json.dumps(
-                    {"memory_types": memory_types}, ensure_ascii=False
-                ),
+                "context": json.dumps({"memory_types": memory_types}, ensure_ascii=False),
                 "created_at": now,
             }
         )
         return {"results": results, "recall_count": len(results)}
 
-    def auto_store(
-        self, source_type: str, source_id: str, uid: int, auth_header: str
-    ) -> dict:
+    def auto_store(self, source_type: str, source_id: str, uid: int, auth_header: str) -> dict:
         gate_repo = MemoryGatesRepository(self.db)
         entry_repo = MemoryEntriesRepository(self.db)
 

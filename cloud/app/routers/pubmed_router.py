@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from shared.auth import get_current_user
+
 from cloud.app.services.pubmed_service import search_pubmed
+from shared.auth import get_current_user
 
 router = APIRouter(prefix="/api/pubmed", tags=["pubmed"])
 

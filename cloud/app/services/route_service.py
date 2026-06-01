@@ -9,10 +9,10 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.repositories import (
-    RouteRulesRepository,
-    RouteLogsRepository,
-    RouteStatsRepository,
     AgentRolesRepository,
+    RouteLogsRepository,
+    RouteRulesRepository,
+    RouteStatsRepository,
 )
 from cloud.app.services.base import BaseService
 from shared.base import validate_columns
@@ -50,9 +50,7 @@ def _call_deepseek(messages: list, temperature: float, max_tokens: int) -> dict:
         with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as resp:
             raw = resp.read()
     except urllib.error.URLError as exc:
-        raise HTTPException(
-            status.HTTP_502_BAD_GATEWAY, detail=f"DeepSeek API call failed: {exc}"
-        )
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=f"DeepSeek API call failed: {exc}")
     payload = json.loads(raw)
     choices = payload.get("choices", [])
     reply = choices[0].get("message", {}).get("content", "") if choices else ""

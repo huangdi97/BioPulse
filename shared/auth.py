@@ -1,9 +1,10 @@
-from passlib.hash import bcrypt
-from jose import jwt, JWTError
-from datetime import datetime, timedelta, timezone
-from fastapi import Request, HTTPException
-from starlette import status
 import os
+from datetime import datetime, timedelta, timezone
+
+from fastapi import HTTPException, Request
+from jose import JWTError, jwt
+from passlib.hash import bcrypt
+from starlette import status
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-secret-key-change-in-production")
 ALGORITHM = "HS256"
@@ -54,17 +55,13 @@ def verify_token(token: str) -> dict:
     try:
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
 
 def get_current_user(request: Request) -> dict:
     """Extract and verify the Bearer token from the Authorization header."""
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Bearer "):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid auth header"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid auth header")
     token = auth[7:]
     return verify_token(token)

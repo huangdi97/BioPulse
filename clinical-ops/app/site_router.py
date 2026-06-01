@@ -1,7 +1,8 @@
 """中心筛选路由。"""
 
+from clinical_ops.app.services.site_service import get_site_detail, search_sites
 from fastapi import APIRouter, Query
-from clinical_ops.app.services.site_service import search_sites, get_site_detail
+
 from shared.base import success
 
 router = APIRouter(prefix="/api/sites", tags=["中心筛选"])

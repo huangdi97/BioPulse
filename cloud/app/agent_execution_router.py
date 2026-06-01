@@ -47,9 +47,7 @@ def _rows(rows):
 
 
 @router.post("/submit", status_code=status.HTTP_201_CREATED)
-def submit_task(
-    body: TaskSubmit, current_user=Depends(require_scope("visit")), db=Depends(get_db)
-):
+def submit_task(body: TaskSubmit, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = AgentExecutionTasksRepository(db)
     task_id = f"aet:{uuid.uuid4()}"
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -86,16 +84,12 @@ def list_tasks(
     if agent_role:
         conds.append("agent_role=?")
         pars.append(agent_role)
-    rows = repo.list_all(
-        conditions=conds or None, params=pars or None, order_by="created_at DESC"
-    )
+    rows = repo.list_all(conditions=conds or None, params=pars or None, order_by="created_at DESC")
     return success(data=_rows(rows))
 
 
 @router.get("/tasks/{task_id}")
-def get_task(
-    task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)
-):
+def get_task(task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = AgentExecutionTasksRepository(db)
     row = repo.get_by_task_id(task_id)
     if not row:
@@ -104,9 +98,7 @@ def get_task(
 
 
 @router.post("/tasks/{task_id}/retry")
-def retry_task(
-    task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)
-):
+def retry_task(task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = AgentExecutionTasksRepository(db)
     row = repo.get_by_task_id(task_id)
     if not row:
@@ -118,9 +110,7 @@ def retry_task(
 
 
 @router.post("/tasks/{task_id}/approve")
-def approve_task(
-    task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)
-):
+def approve_task(task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = AgentExecutionTasksRepository(db)
     row = repo.get_by_task_id(task_id)
     if not row:
@@ -140,9 +130,7 @@ def a2a_card(current_user=Depends(require_scope("visit")), db=Depends(get_db)):
 
 
 @router.post("/a2a/task", status_code=status.HTTP_201_CREATED)
-def a2a_task(
-    body: A2ATask, current_user=Depends(require_scope("visit")), db=Depends(get_db)
-):
+def a2a_task(body: A2ATask, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = AgentExecutionTasksRepository(db)
     task_id = body.task_id or f"aet:{uuid.uuid4()}"
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

@@ -9,7 +9,6 @@ from cloud.app.services.base import BaseService
 from shared.base import validate_columns
 from shared.columns import TABLE_OPPORTUNITIES_COLS
 
-
 VALID_STAGES = ["lead", "qualify", "proposal", "negotiation", "won", "lost"]
 TERMINAL_STAGES = {"won", "lost"}
 STAGE_ORDER = ["lead", "qualify", "proposal", "negotiation", "won", "lost"]
@@ -41,9 +40,7 @@ class OpportunityService(BaseService):
             params=[opp_id],
         )
         if not rows:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="Opportunity not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Opportunity not found")
         return rows[0]
 
     def _row_to_dict(self, row) -> dict:
@@ -88,9 +85,7 @@ class OpportunityService(BaseService):
             (customer_id,),
         ).fetchone()
         if not customer:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="Customer not found or inactive"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Customer not found or inactive")
 
         if stage not in VALID_STAGES:
             raise HTTPException(
@@ -169,18 +164,13 @@ class OpportunityService(BaseService):
             GROUP BY stage"""
         ).fetchall()
 
-        stage_map = {
-            r["stage"]: {"count": r["count"], "total_value": r["total_value"]}
-            for r in rows
-        }
+        stage_map = {r["stage"]: {"count": r["count"], "total_value": r["total_value"]} for r in rows}
         pipeline = []
         for s in STAGE_ORDER:
             if s == "lost":
                 continue
             data = stage_map.get(s, {"count": 0, "total_value": 0.0})
-            pipeline.append(
-                {"stage": s, "count": data["count"], "total_value": data["total_value"]}
-            )
+            pipeline.append({"stage": s, "count": data["count"], "total_value": data["total_value"]})
 
         return {"pipeline": pipeline}
 
@@ -246,9 +236,7 @@ class OpportunityService(BaseService):
         opp_repo = OpportunitiesRepository(self.db)
         opp_repo.soft_delete(opp_id)
 
-    def transition_stage(
-        self, opp_id: int, stage: str, actual_value: Optional[float] = None
-    ) -> dict:
+    def transition_stage(self, opp_id: int, stage: str, actual_value: Optional[float] = None) -> dict:
         row = self._get_opp_or_404(opp_id)
 
         if stage not in VALID_STAGES:

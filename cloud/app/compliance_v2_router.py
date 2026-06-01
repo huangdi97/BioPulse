@@ -1,24 +1,24 @@
-import json
 import hashlib
+import json
 import math
 import urllib.request
-from typing import Optional
 from datetime import datetime, timedelta
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 from starlette import status
 
 from cloud.app.database import get_db
-from cloud.app.services.compliance_strategy_service import ComplianceStrategyService
 from cloud.app.repositories import (
     AuditChainEntriesRepository,
     ComplianceAuditRecordsRepository,
     ComplianceRulesRepository,
     TrainingCorrectionsRepository,
 )
+from cloud.app.services.compliance_strategy_service import ComplianceStrategyService
 from shared.auth_scope import require_scope
-from shared.base import success, PaginatedResponse
+from shared.base import PaginatedResponse, success
 from shared.compliance import check_content
 
 router = APIRouter(prefix="/compliance-v2", tags=["合规"])
@@ -124,11 +124,7 @@ def scan(
                 violations = list(set(violations + ai_violations))
             if not ai_parsed.get("passed", True):
                 score = max(0.0, score - 0.3)
-        ai_analysis = (
-            json.dumps(ai_parsed, ensure_ascii=False)
-            if isinstance(ai_parsed, dict)
-            else ai_reply
-        )
+        ai_analysis = json.dumps(ai_parsed, ensure_ascii=False) if isinstance(ai_parsed, dict) else ai_reply
     risk_level = "low"
     if len(violations) >= 3 or score <= 0.3:
         risk_level = "critical"
@@ -157,9 +153,7 @@ def scan(
             "entity_id": str(record_id),
             "action": "scan",
             "previous_hash": "",
-            "current_hash": hashlib.sha256(
-                json.dumps({"action": "scan", "record_id": record_id}).encode()
-            ).hexdigest(),
+            "current_hash": hashlib.sha256(json.dumps({"action": "scan", "record_id": record_id}).encode()).hexdigest(),
             "payload": json.dumps(
                 {"record_id": record_id, "passed": passed, "risk_level": risk_level},
                 ensure_ascii=False,
@@ -229,9 +223,7 @@ def list_records(
 
 
 @router.get("/records/{record_id}")
-def get_record(
-    record_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)
-):
+def get_record(record_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     repo = ComplianceAuditRecordsRepository(db)
     row = repo.get_by_id(record_id)
     if not row:
@@ -305,9 +297,7 @@ def create_audit_chain(
     if latest_rows:
         prev_hash = latest_rows[0]["current_hash"]
     current_hash = hashlib.sha256(
-        (
-            prev_hash + json.dumps(body.payload, ensure_ascii=False, sort_keys=True)
-        ).encode("utf-8")
+        (prev_hash + json.dumps(body.payload, ensure_ascii=False, sort_keys=True)).encode("utf-8")
     ).hexdigest()
     repo.create(
         {
@@ -370,16 +360,9 @@ def verify_audit_chain(
             valid = False
             broken_at = row["id"]
             break
-        payload = (
-            _parse_json(row["payload"], {})
-            if isinstance(row["payload"], str)
-            else row["payload"]
-        )
+        payload = _parse_json(row["payload"], {}) if isinstance(row["payload"], str) else row["payload"]
         recomputed = hashlib.sha256(
-            (
-                row["previous_hash"]
-                + json.dumps(payload, ensure_ascii=False, sort_keys=True)
-            ).encode("utf-8")
+            (row["previous_hash"] + json.dumps(payload, ensure_ascii=False, sort_keys=True)).encode("utf-8")
         ).hexdigest()
         if recomputed != row["current_hash"]:
             valid = False
@@ -542,9 +525,7 @@ def dashboard(current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     passed = audit_repo.count(conditions=["passed=1"])
     pass_rate = round(passed / total_scans * 100, 1) if total_scans > 0 else 0.0
     today_str = datetime.now().strftime("%Y-%m-%d")
-    today_violations = audit_repo.count(
-        conditions=["passed=0", "DATE(created_at)=?"], params=[today_str]
-    )
+    today_violations = audit_repo.count(conditions=["passed=0", "DATE(created_at)=?"], params=[today_str])
     week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
     weekly_total = audit_repo.count(conditions=["created_at >= ?"], params=[week_ago])
     high_risk_count = audit_repo.count(conditions=["risk_level='critical'"])
@@ -554,27 +535,19 @@ def dashboard(current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     by_risk = db.execute(
         "SELECT risk_level, COUNT(*) as cnt FROM compliance_audit_records GROUP BY risk_level ORDER BY CASE risk_level WHEN 'critical' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END"
     ).fetchall()
-    all_failed = audit_repo.list_all(
-        conditions=["passed=0"], order_by="created_at DESC"
-    )[:50]
+    all_failed = audit_repo.list_all(conditions=["passed=0"], order_by="created_at DESC")[:50]
     vcounts: dict[str, int] = {}
     for r in all_failed:
         for v in _parse_json(r["violations"], []):
             vcounts[v] = vcounts.get(v, 0) + 1
     top_v = sorted(vcounts.items(), key=lambda x: x[1], reverse=True)[:3]
     total_v = sum(vcounts.values()) or 1
-    top_categories = [
-        {"category": v, "count": c, "percentage": round(c / total_v * 100, 1)}
-        for v, c in top_v
-    ]
+    top_categories = [{"category": v, "count": c, "percentage": round(c / total_v * 100, 1)} for v, c in top_v]
     trend_7d = db.execute(
         "SELECT DATE(created_at) as d, COUNT(*) as cnt, SUM(passed) as passed_cnt FROM compliance_audit_records WHERE created_at >= ? GROUP BY d ORDER BY d",
         (week_ago,),
     ).fetchall()
-    daily_trend = [
-        {"date": (r["d"] or "")[-5:], "count": (r["cnt"] or 0) - (r["passed_cnt"] or 0)}
-        for r in trend_7d
-    ]
+    daily_trend = [{"date": (r["d"] or "")[-5:], "count": (r["cnt"] or 0) - (r["passed_cnt"] or 0)} for r in trend_7d]
     risk_map = {3: "critical", 2: "high", 1: "medium", 0: "low"}
     top_reps = []
     rep_rows = db.execute(
@@ -606,9 +579,7 @@ def dashboard(current_user=Depends(require_scope("visit")), db=Depends(get_db)):
                 }
                 for r in by_type
             ],
-            "by_risk": [
-                {"risk_level": r["risk_level"], "count": r["cnt"]} for r in by_risk
-            ],
+            "by_risk": [{"risk_level": r["risk_level"], "count": r["cnt"]} for r in by_risk],
             "top_violations": [{"violation": v, "count": c} for v, c in top_v],
             "recent_corrections": recent_corrections,
         }

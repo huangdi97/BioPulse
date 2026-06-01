@@ -1,7 +1,8 @@
 """管线竞争分析服务。"""
 
-import httpx
 from datetime import datetime, timezone
+
+import httpx
 from pharma_intel.app.database import get_cache, set_cache
 
 CLOUD_API = "http://localhost:8000"
@@ -39,9 +40,7 @@ async def analyze_pipeline(company: str, therapeutic_area: str = "") -> dict:
         pub_resp = await client.post(
             f"{CLOUD_API}/pubmed/search",
             json={
-                "query": f"{company} {therapeutic_area}"
-                if therapeutic_area
-                else company,
+                "query": f"{company} {therapeutic_area}" if therapeutic_area else company,
                 "limit": 100,
             },
         )
@@ -67,9 +66,7 @@ async def analyze_pipeline(company: str, therapeutic_area: str = "") -> dict:
     return result
 
 
-def _aggregate_pipeline(
-    company: str, therapeutic_area: str, papers: list, pipelines: list
-) -> dict:
+def _aggregate_pipeline(company: str, therapeutic_area: str, papers: list, pipelines: list) -> dict:
     """聚合管线分析结果。"""
     phase_dist = {"I期": 0, "II期": 0, "III期": 0, "上市": 0}
     indication_dist = {}

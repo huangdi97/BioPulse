@@ -1,15 +1,14 @@
 import json
-import uuid
 import sqlite3
-from shared.auth import create_access_token
+import uuid
+
 from cloud.app.research_database import _get_research_db_path
+from shared.auth import create_access_token
 
 
 def _get_research_token(client):
     username = f"research_{uuid.uuid4().hex[:8]}"
-    resp = client.post(
-        "/auth/register", json={"username": username, "password": "testpass123"}
-    )
+    resp = client.post("/auth/register", json={"username": username, "password": "testpass123"})
     assert resp.status_code == 201
     user_id = resp.json()["data"]["user_id"]
     return create_access_token(user_id, "rep", "research")
@@ -65,9 +64,7 @@ class TestResearchE2E:
 
         conn = sqlite3.connect(db_path)
         try:
-            conn.execute(
-                "DELETE FROM research_products WHERE product_id = ?", (product_id,)
-            )
+            conn.execute("DELETE FROM research_products WHERE product_id = ?", (product_id,))
             conn.commit()
         finally:
             conn.close()
@@ -129,9 +126,7 @@ class TestResearchE2E:
 
         conn = sqlite3.connect(db_path)
         try:
-            conn.execute(
-                "DELETE FROM research_quotations WHERE quotation_id = ?", (qid,)
-            )
+            conn.execute("DELETE FROM research_quotations WHERE quotation_id = ?", (qid,))
             conn.commit()
         finally:
             conn.close()

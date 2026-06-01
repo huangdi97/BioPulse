@@ -117,9 +117,7 @@ def _parse_json_list(value: str) -> list[str]:
         return []
 
 
-def match_products_for_pi(
-    pi_id: int, top_k: int = 3, research_db=None
-) -> list[dict[str, Any]]:
+def match_products_for_pi(pi_id: int, top_k: int = 3, research_db=None) -> list[dict[str, Any]]:
     from cloud.app.research_database import get_research_db
 
     close_db = False
@@ -127,14 +125,10 @@ def match_products_for_pi(
         research_db = get_research_db()
         close_db = True
     try:
-        product_count = research_db.execute(
-            "SELECT COUNT(*) FROM research_products"
-        ).fetchone()[0]
+        product_count = research_db.execute("SELECT COUNT(*) FROM research_products").fetchone()[0]
         if product_count == 0:
             return []
-        row = research_db.execute(
-            "SELECT * FROM research_pi_profiles WHERE pi_id = ?", (pi_id,)
-        ).fetchone()
+        row = research_db.execute("SELECT * FROM research_pi_profiles WHERE pi_id = ?", (pi_id,)).fetchone()
         if not row:
             return []
         pi = dict(row)
@@ -169,9 +163,7 @@ def match_products_for_pi(
             research_db.close()
 
 
-def match_products_by_method(
-    method_description: str, top_k: int = 3, research_db=None
-) -> list[dict[str, Any]]:
+def match_products_by_method(method_description: str, top_k: int = 3, research_db=None) -> list[dict[str, Any]]:
     if not method_description.strip():
         return []
     from cloud.app.research_database import get_research_db

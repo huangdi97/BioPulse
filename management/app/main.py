@@ -1,5 +1,7 @@
 import time
+
 from fastapi import FastAPI
+
 from shared.request_id_middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 
@@ -36,9 +38,9 @@ def health():
     }
 
 
-from management.app.president_router import router as president_router
-from management.app.manager_router import router as manager_router
 from management.app.employee_router import router as employee_router
+from management.app.manager_router import router as manager_router
+from management.app.president_router import router as president_router
 
 app.include_router(president_router, prefix="/api/v1")
 app.include_router(manager_router, prefix="/api/v1")

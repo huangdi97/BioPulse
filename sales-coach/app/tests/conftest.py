@@ -3,11 +3,9 @@ import os
 import pytest
 from starlette.testclient import TestClient
 
-from shared.conftest_base import setup_test_db, clean_test_tables
+from shared.conftest_base import clean_test_tables, setup_test_db
 
-BASE_DIR = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 TEST_DB = os.path.join(BASE_DIR, "data", "test_sales_coach.db")
 os.makedirs(os.path.dirname(TEST_DB), exist_ok=True)
 

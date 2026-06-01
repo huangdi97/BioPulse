@@ -2,8 +2,8 @@ import logging
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from shared.auth import verify_token
 from assistant.app.ws_manager import connection_manager
+from shared.auth import verify_token
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["websocket"])

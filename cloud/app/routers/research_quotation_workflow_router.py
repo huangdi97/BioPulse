@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from shared.auth import get_current_user
-from shared.auth_scope import require_scope
 from cloud.app.services.quotation_workflow_service import (
-    submit_for_approval,
     approve,
     reject,
+    submit_for_approval,
 )
+from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 
 router = APIRouter(
     prefix="/api/research/quotations",
@@ -39,9 +39,7 @@ def approve_quotation(id: int, current_user: dict = Depends(get_current_user)):
 
 
 @router.post("/{id}/reject")
-def reject_quotation(
-    id: int, body: RejectRequest, current_user: dict = Depends(get_current_user)
-):
+def reject_quotation(id: int, body: RejectRequest, current_user: dict = Depends(get_current_user)):
     try:
         reject(id, current_user.get("username", "unknown"), body.reason)
         return {"code": 0, "message": "rejected"}

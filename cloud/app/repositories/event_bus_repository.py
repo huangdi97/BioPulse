@@ -1,9 +1,9 @@
-from cloud.shared.repository import BaseRepository
 from cloud.shared.columns import (
     TABLE_EVENT_BUS_DEFINITIONS_COLS,
     TABLE_EVENT_BUS_MESSAGES_COLS,
     TABLE_EVENT_DELIVERY_LOG_COLS,
 )
+from cloud.shared.repository import BaseRepository
 
 
 class EventBusDefinitionsRepository(BaseRepository):
@@ -107,25 +107,20 @@ class EventBusMessagesRepository(BaseRepository):
 
     def count_by_status(self):
         return {
-            "pending": self.db.execute(
-                f"SELECT COUNT(*) FROM {self.table_name} WHERE status='pending'"
-            ).fetchone()[0],
-            "delivered": self.db.execute(
-                f"SELECT COUNT(*) FROM {self.table_name} WHERE status='delivered'"
-            ).fetchone()[0],
-            "failed": self.db.execute(
-                f"SELECT COUNT(*) FROM {self.table_name} WHERE status='failed'"
-            ).fetchone()[0],
+            "pending": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='pending'").fetchone()[0],
+            "delivered": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='delivered'").fetchone()[
+                0
+            ],
+            "failed": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='failed'").fetchone()[0],
         }
 
     def count_all(self):
         return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name}").fetchone()[0]
 
     def top_event_types(self, limit=5):
-        placeholders = ", ".join(self.cols)
+        ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT event_type, COUNT(*) as cnt FROM {self.table_name} "
-            "GROUP BY event_type ORDER BY cnt DESC LIMIT ?",
+            f"SELECT event_type, COUNT(*) as cnt FROM {self.table_name} GROUP BY event_type ORDER BY cnt DESC LIMIT ?",
             (limit,),
         ).fetchall()
         return [dict(r) for r in rows]

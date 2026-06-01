@@ -50,9 +50,7 @@ class ScheduleService(BaseService):
         repo = ScheduleRepository(self.db)
         row = repo.get_by_id(schedule_id)
         if not row:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Schedule not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Schedule not found")
         return dict(row)
 
     def update_schedule(self, schedule_id: int, body) -> dict:

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
-from shared.base import success
 from cloud.app.services.memory_utility_service import MemoryUtilityService
+from shared.base import success
 
 router = APIRouter(prefix="/memory-utils", tags=["Memory Utilities"])
 
@@ -17,9 +17,7 @@ def subtree_stats(node_id: int, service: MemoryUtilityService = Depends()):
 
 
 @router.post("/tree/move/{node_id}")
-def move_node(
-    node_id: int, body: MoveRequest, service: MemoryUtilityService = Depends()
-):
+def move_node(node_id: int, body: MoveRequest, service: MemoryUtilityService = Depends()):
     result = service.move_node(node_id, body.new_parent_id)
     return success(message=result.get("message"))
 
@@ -37,9 +35,7 @@ def tree_duplicates(node_id: int, service: MemoryUtilityService = Depends()):
 @router.delete("/tree/prune/{node_id}")
 def prune_node(node_id: int, service: MemoryUtilityService = Depends()):
     result = service.prune_node(node_id)
-    return success(
-        data={"deleted_count": result["deleted_count"]}, message=result.get("message")
-    )
+    return success(data={"deleted_count": result["deleted_count"]}, message=result.get("message"))
 
 
 @router.post("/utility/score/{memory_id}")

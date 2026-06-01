@@ -25,9 +25,7 @@ class MemoryConsolidationService(BaseService):
         if not rows:
             return {"promoted": 0, "pruned": 0, "total": 0}
 
-        scored = [
-            (r, _calc_utility(r["valence"] or 0.0, r["intensity"] or 0.5)) for r in rows
-        ]
+        scored = [(r, _calc_utility(r["valence"] or 0.0, r["intensity"] or 0.5)) for r in rows]
         scored.sort(key=lambda x: x[1], reverse=True)
 
         total = len(scored)
@@ -69,9 +67,7 @@ class MemoryConsolidationService(BaseService):
                 "items_pruned": pruned,
                 "duration_ms": duration_ms,
                 "status": "completed",
-                "details": json.dumps(
-                    {"triggered_by": triggered_by}, ensure_ascii=False
-                ),
+                "details": json.dumps({"triggered_by": triggered_by}, ensure_ascii=False),
                 "created_at": now,
             }
         )
@@ -90,9 +86,7 @@ class MemoryConsolidationService(BaseService):
 
         ep_count = ep_repo.count_by_creator(agent_id)
 
-        ret_count = log_repo.count_by_type_since(
-            "retrieval_reconsolidation", seven_days_ago
-        )
+        ret_count = log_repo.count_by_type_since("retrieval_reconsolidation", seven_days_ago)
 
         con_logs = log_repo.count_by_type_since("sleep_consolidation", seven_days_ago)
         con_rate = min(1.0, con_logs / 7.0) if con_logs else 0.0
@@ -101,9 +95,7 @@ class MemoryConsolidationService(BaseService):
         cov_norm = min(1.0, ep_count / 200.0)
         decay_norm = max(0.0, 1.0 - ep_count / 500.0) if ep_count else 1.0
 
-        composite = round(
-            0.4 * con_rate + 0.3 * ret_norm + 0.2 * cov_norm - 0.1 * decay_norm, 4
-        )
+        composite = round(0.4 * con_rate + 0.3 * ret_norm + 0.2 * cov_norm - 0.1 * decay_norm, 4)
 
         return {
             "agent_id": agent_id,
@@ -115,9 +107,7 @@ class MemoryConsolidationService(BaseService):
 
     def evaluate_trend(self) -> dict:
         log_repo = MemoryConsolidationLogRepository(self.db)
-        seven_days_ago = (datetime.now() - timedelta(days=7)).strftime(
-            "%Y-%m-%d 00:00:00"
-        )
+        seven_days_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d 00:00:00")
         rows = log_repo.trend_since(seven_days_ago)
 
         trend: dict[str, dict[str, int]] = {}

@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette import status
 
+from assistant.app.services.surgery_service import SurgeryService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from assistant.app.services.surgery_service import SurgeryService
 
 router = APIRouter(prefix="/surgery-reminders", tags=["surgery"])
 

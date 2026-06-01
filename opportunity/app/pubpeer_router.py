@@ -3,9 +3,9 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
-from shared.auth import get_current_user
-from shared.base import ApiResponse, PaginatedResponse, success, ErrorCode
 from opportunity.app.services.pubpeer_service import PubpeerService
+from shared.auth import get_current_user
+from shared.base import ApiResponse, ErrorCode, PaginatedResponse, success
 
 router = APIRouter(tags=["pubpeer", "integrity"])
 
@@ -77,9 +77,7 @@ def pubpeer_check(
     auth_header = request.headers.get("Authorization", "")
     result = service.pubpeer_check(body, auth_header, user_id)
     if result == "validation_error":
-        return ApiResponse(
-            code=ErrorCode.VALIDATION_ERROR, message="Provide pubmed_id or doi"
-        )
+        return ApiResponse(code=ErrorCode.VALIDATION_ERROR, message="Provide pubmed_id or doi")
     return success(data=IntegrityCheckOut(**result))
 
 

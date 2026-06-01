@@ -26,8 +26,7 @@ class ApiTokenService(BaseService):
 
     def list_tokens(self, user_id: int) -> list:
         rows = self.db.execute(
-            "SELECT id, name, created_at, is_active FROM api_tokens "
-            "WHERE user_id=? ORDER BY created_at DESC",
+            "SELECT id, name, created_at, is_active FROM api_tokens WHERE user_id=? ORDER BY created_at DESC",
             (user_id,),
         ).fetchall()
 

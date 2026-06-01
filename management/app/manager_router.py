@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Path
+
 from management.app.services.manager_service import (
-    get_team_stats,
-    get_team_members,
     get_team_compliance,
+    get_team_members,
     get_team_performance,
+    get_team_stats,
 )
 from shared.base import success
 

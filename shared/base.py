@@ -1,6 +1,7 @@
 from enum import IntEnum
-from pydantic import BaseModel
 from typing import Generic, List, Optional, TypeVar
+
+from pydantic import BaseModel
 
 
 class ErrorCode(IntEnum):
@@ -82,6 +83,4 @@ def validate_columns(updates: dict, table_name: str, allowed: frozenset) -> None
         return
     unknown = [k for k in updates if k not in allowed]
     if unknown:
-        raise ValueError(
-            f"Invalid columns for {table_name}: {unknown}. Allowed: {sorted(allowed)}"
-        )
+        raise ValueError(f"Invalid columns for {table_name}: {unknown}. Allowed: {sorted(allowed)}")

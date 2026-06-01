@@ -1,6 +1,6 @@
-import time
 import asyncio
 import logging
+import time
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -59,11 +59,7 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
 
-        if (
-            path in WHITELIST_PATHS
-            or path.startswith("/docs")
-            or path.startswith("/openapi.json")
-        ):
+        if path in WHITELIST_PATHS or path.startswith("/docs") or path.startswith("/openapi.json"):
             return await call_next(request)
 
         client_ip = request.client.host if request.client else "127.0.0.1"

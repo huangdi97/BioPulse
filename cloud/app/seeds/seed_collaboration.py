@@ -159,9 +159,7 @@ def seed_collaboration(conn: sqlite3.Connection) -> None:
             now_plus,
             "2026-05-25 11:30:00",
             90,
-            _json.dumps(
-                {"violations_found": 2, "risk_level": "medium"}, ensure_ascii=False
-            ),
+            _json.dumps({"violations_found": 2, "risk_level": "medium"}, ensure_ascii=False),
         ),
         (
             "collab:test-001",

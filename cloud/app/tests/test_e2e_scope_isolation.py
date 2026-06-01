@@ -1,14 +1,14 @@
 import uuid
 from datetime import datetime, timedelta, timezone
+
 from jose import jwt
-from shared.auth import create_access_token, SECRET_KEY, ALGORITHM
+
+from shared.auth import ALGORITHM, SECRET_KEY, create_access_token
 
 
 def _get_token(client, scope):
     username = f"scope_{scope}_{uuid.uuid4().hex[:8]}"
-    resp = client.post(
-        "/auth/register", json={"username": username, "password": "testpass123"}
-    )
+    resp = client.post("/auth/register", json={"username": username, "password": "testpass123"})
     assert resp.status_code == 201
     user_id = resp.json()["data"]["user_id"]
     return create_access_token(user_id, "rep", scope)
@@ -61,6 +61,4 @@ class TestScopeIsolation:
         assert not data["passed"]
         rule_codes = [v["rule_code"] for v in data["violations"]]
         for code in rule_codes:
-            assert code.startswith("RSR-"), (
-                f"Expected research rules (RSR-), got {code}"
-            )
+            assert code.startswith("RSR-"), f"Expected research rules (RSR-), got {code}"

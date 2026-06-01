@@ -27,9 +27,7 @@ class BookmarkService(BaseService):
                 detail="Bookmark already exists",
             )
 
-    def list_bookmarks(
-        self, page: int, page_size: int, user_id: int, entity_type: Optional[str] = None
-    ) -> tuple:
+    def list_bookmarks(self, page: int, page_size: int, user_id: int, entity_type: Optional[str] = None) -> tuple:
         conditions = ["created_by = ?"]
         params: list = [user_id]
         if entity_type:
@@ -44,9 +42,7 @@ class BookmarkService(BaseService):
             order_by="created_at DESC",
         )
 
-    def check_bookmark(
-        self, entity_type: str, entity_id: int, user_id: int
-    ) -> Optional[dict]:
+    def check_bookmark(self, entity_type: str, entity_id: int, user_id: int) -> Optional[dict]:
         repo = UserBookmarkRepository(self.db)
         row = repo.get_by_entity(entity_type, entity_id, user_id)
         return dict(row) if row else None

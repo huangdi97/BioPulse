@@ -1,8 +1,8 @@
-from cloud.shared.repository import BaseRepository
 from cloud.shared.columns import (
-    TABLE_NOTIFICATIONS_COLS,
     TABLE_NOTIFICATION_TEMPLATES_COLS,
+    TABLE_NOTIFICATIONS_COLS,
 )
+from cloud.shared.repository import BaseRepository
 
 
 class NotificationsRepository(BaseRepository):
@@ -36,6 +36,4 @@ class NotificationsRepository(BaseRepository):
 
 class NotificationTemplatesRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(
-            db, "notification_templates", TABLE_NOTIFICATION_TEMPLATES_COLS
-        )
+        super().__init__(db, "notification_templates", TABLE_NOTIFICATION_TEMPLATES_COLS)

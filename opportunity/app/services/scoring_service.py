@@ -84,9 +84,7 @@ class ScoringService(BaseService):
         repo = OpportunityRepository(self.db)
         row = repo.get_by_id(opportunity_id)
         if not row:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found")
         now = datetime.now(timezone.utc).isoformat()
         repo.update(opportunity_id, {"heat_score": heat_score, "updated_at": now})
         return dict(repo.get_by_id(opportunity_id))

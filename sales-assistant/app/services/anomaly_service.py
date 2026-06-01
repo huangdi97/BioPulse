@@ -1,7 +1,7 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
-from sales_assistant.app.repositories import AnomalyRuleRepository, AlertRepository
+from sales_assistant.app.repositories import AlertRepository, AnomalyRuleRepository
 from sales_assistant.app.services.base import BaseService
 
 
@@ -70,9 +70,7 @@ class AnomalyService(BaseService):
             total = self.db.execute("SELECT COUNT(*) FROM visit_hcp").fetchone()[0]
             if total == 0:
                 return 0.0
-            fu = self.db.execute(
-                "SELECT COUNT(*) FROM visit_hcp WHERE follow_up_required = 1"
-            ).fetchone()[0]
+            fu = self.db.execute("SELECT COUNT(*) FROM visit_hcp WHERE follow_up_required = 1").fetchone()[0]
             return fu / total
         return 0.0
 
@@ -130,9 +128,7 @@ class AnomalyService(BaseService):
         if status_val:
             conditions.append("status = ?")
             params.append(status_val)
-        return repo.paginate(
-            page, page_size, conditions, params, order_by="detected_at DESC"
-        )
+        return repo.paginate(page, page_size, conditions, params, order_by="detected_at DESC")
 
     def update_alert(self, alert_id: int, body, user_id: int) -> dict:
         repo = AlertRepository(self.db)
@@ -149,9 +145,7 @@ class AnomalyService(BaseService):
         by_severity = self.db.execute(
             "SELECT severity, COUNT(*) AS cnt FROM anomaly_alert GROUP BY severity"
         ).fetchall()
-        by_rule = self.db.execute(
-            "SELECT rule_id, COUNT(*) AS cnt FROM anomaly_alert GROUP BY rule_id"
-        ).fetchall()
+        by_rule = self.db.execute("SELECT rule_id, COUNT(*) AS cnt FROM anomaly_alert GROUP BY rule_id").fetchall()
         cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
         trend = self.db.execute(
             "SELECT DATE(detected_at) AS day, COUNT(*) AS cnt "

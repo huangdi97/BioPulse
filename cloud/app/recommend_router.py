@@ -1,9 +1,11 @@
 from typing import Optional
+
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
+
+from cloud.app.services.recommend_service import RecommendService
 from shared.auth_scope import require_scope
 from shared.base import success
-from cloud.app.services.recommend_service import RecommendService
 
 router = APIRouter(prefix="/recommend", tags=["Recommendation Engine"])
 

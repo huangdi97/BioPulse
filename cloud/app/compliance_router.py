@@ -3,10 +3,10 @@ from typing import Any, List, Optional
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+from cloud.app.services.compliance_service import ComplianceService
 from shared.auth_scope import require_scope
 from shared.base import success
 from shared.compliance import check_content
-from cloud.app.services.compliance_service import ComplianceService
 
 router = APIRouter(prefix="/compliance", tags=["compliance"])
 

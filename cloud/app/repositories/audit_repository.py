@@ -1,12 +1,12 @@
-from cloud.shared.repository import BaseRepository
 from cloud.shared.columns import (
-    TABLE_AUDIT_LOGS_COLS,
     TABLE_AUDIT_CHAIN_ENTRIES_COLS,
+    TABLE_AUDIT_LOGS_COLS,
+    TABLE_BENCHMARK_REPORTS_COLS,
     TABLE_DP_AUDIT_LOG_COLS,
     TABLE_FED_AUDIT_CONTRIBUTIONS_COLS,
     TABLE_FEDERATED_ROUNDS_COLS,
-    TABLE_BENCHMARK_REPORTS_COLS,
 )
+from cloud.shared.repository import BaseRepository
 
 
 class AuditLogsRepository(BaseRepository):
@@ -26,13 +26,9 @@ class DpAuditLogRepository(BaseRepository):
 
 class FedAuditContributionsRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(
-            db, "fed_audit_contributions", TABLE_FED_AUDIT_CONTRIBUTIONS_COLS
-        )
+        super().__init__(db, "fed_audit_contributions", TABLE_FED_AUDIT_CONTRIBUTIONS_COLS)
 
-    def list_filtered(
-        self, contributor_did=None, contribution_type=None, verified=None
-    ):
+    def list_filtered(self, contributor_did=None, contribution_type=None, verified=None):
         conditions, params = [], []
         if contributor_did:
             conditions.append("contributor_did=?")

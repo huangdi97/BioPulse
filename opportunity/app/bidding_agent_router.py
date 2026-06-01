@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette import status
 
+from opportunity.app.services.bidding_agent_service import BiddingAgentService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from opportunity.app.services.bidding_agent_service import BiddingAgentService
 
 router = APIRouter(tags=["bidding-agent"])
 
@@ -150,9 +150,7 @@ def agent_logs(
     service: BiddingAgentService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse]:
-    items, total, page, page_size, total_pages = service.list_agent_logs(
-        page, page_size
-    )
+    items, total, page, page_size, total_pages = service.list_agent_logs(page, page_size)
     return success(
         data=PaginatedResponse(
             items=[AgentLogOut(**i) for i in items],
@@ -177,6 +175,7 @@ def auto_analyze_bidding(
 
 
 import sqlite3
+
 from opportunity.app.database import DB_PATH
 from opportunity.app.services.bidding_agent_service import BiddingAgentService
 

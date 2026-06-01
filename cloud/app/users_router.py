@@ -4,10 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from starlette import status
 
+from cloud.app.services.user_service import UserService
 from shared.auth_scope import require_scope
 from shared.base import success
-from cloud.app.services.user_service import UserService
-
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -80,9 +79,7 @@ def delete_user(
     _require_admin(current_user)
 
     if str(current_user["sub"]) == str(user_id):
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST, detail="Cannot disable your own account"
-        )
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Cannot disable your own account")
 
     service.delete_user(user_id)
     return success()

@@ -1,4 +1,4 @@
-from sales_assistant.app.repositories import ScheduleRepository, NoteRepository
+from sales_assistant.app.repositories import NoteRepository, ScheduleRepository
 from sales_assistant.app.services.base import BaseService
 
 

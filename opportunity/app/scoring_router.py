@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, field_validator
 from starlette import status
 
+from opportunity.app.services.scoring_service import ScoringService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from opportunity.app.services.scoring_service import ScoringService
 
 router = APIRouter(prefix="/scoring", tags=["scoring"])
 

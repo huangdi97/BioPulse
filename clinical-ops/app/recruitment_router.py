@@ -1,10 +1,11 @@
 """患者招募路由。"""
 
-from fastapi import APIRouter, Query
 from clinical_ops.app.services.recruitment_service import (
-    get_recruitment_status,
     get_pipeline,
+    get_recruitment_status,
 )
+from fastapi import APIRouter, Query
+
 from shared.base import success
 
 router = APIRouter(prefix="/api/recruitment", tags=["患者招募"])

@@ -52,9 +52,7 @@ def _notification_to_dict(row) -> dict:
 
 
 class NotificationService(BaseService):
-    def create_template(
-        self, name: str, title_template: str, body_template: str, category: str
-    ) -> dict:
+    def create_template(self, name: str, title_template: str, body_template: str, category: str) -> dict:
         tmpl_repo = NotificationTemplatesRepository(self.db)
         row_id = tmpl_repo.create(
             {
@@ -90,9 +88,7 @@ class NotificationService(BaseService):
             if val is not None:
                 filtered[field] = val
         if filtered:
-            validate_columns(
-                filtered, "notification_templates", TABLE_NOTIFICATION_TEMPLATES_COLS
-            )
+            validate_columns(filtered, "notification_templates", TABLE_NOTIFICATION_TEMPLATES_COLS)
             tmpl_repo.update(template_id, filtered)
         row = tmpl_repo.get_by_id(template_id)
         return _template_to_dict(row)
@@ -130,9 +126,7 @@ class NotificationService(BaseService):
                 (template_name,),
             ).fetchone()
             if not template:
-                raise HTTPException(
-                    status.HTTP_404_NOT_FOUND, detail="Template not found"
-                )
+                raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Template not found")
             ctx = context or {}
             title = _render_template(template["title_template"], ctx)
             body_text = _render_template(template["body_template"], ctx)
@@ -201,9 +195,7 @@ class NotificationService(BaseService):
             (notification_id, user_id),
         ).fetchone()
         if not row:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="Notification not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Notification not found")
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         notif_repo.update(notification_id, {"is_read": 1, "read_at": now})
         row = notif_repo.get_by_id(notification_id)
@@ -211,7 +203,5 @@ class NotificationService(BaseService):
 
     def unread_count(self, user_id: int) -> dict:
         notif_repo = NotificationsRepository(self.db)
-        count = notif_repo.count(
-            conditions=["user_id=?", "is_read=0"], params=[user_id]
-        )
+        count = notif_repo.count(conditions=["user_id=?", "is_read=0"], params=[user_id])
         return {"count": count}

@@ -27,9 +27,7 @@ class InteractionUpdate(BaseModel):
     conducted_at: Optional[str] = None
 
 
-@router.post(
-    "/customers/{customer_id}/interactions", status_code=status.HTTP_201_CREATED
-)
+@router.post("/customers/{customer_id}/interactions", status_code=status.HTTP_201_CREATED)
 def create_interaction(
     customer_id: int,
     body: InteractionCreate,

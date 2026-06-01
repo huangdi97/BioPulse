@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette import status
 
+from assistant.app.services.location_service import LocationService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, success
-from assistant.app.services.location_service import LocationService
 
 router = APIRouter(tags=["locations", "routes"])
 

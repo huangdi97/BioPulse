@@ -1,7 +1,9 @@
 """PatientEngage · 患者服务 — FastAPI 入口。"""
 
 import time
+
 from fastapi import FastAPI
+
 from shared.request_id_middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 
@@ -34,8 +36,8 @@ def health():
 
 
 from patient_engage.app.education_router import router as education_router
-from patient_engage.app.reminder_router import router as reminder_router
 from patient_engage.app.followup_router import router as followup_router
+from patient_engage.app.reminder_router import router as reminder_router
 
 app.include_router(education_router)
 app.include_router(reminder_router)

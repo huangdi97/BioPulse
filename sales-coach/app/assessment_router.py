@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -5,15 +6,15 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from starlette import status
 
-from shared.auth import get_current_user
-from shared.base import ApiResponse, PaginatedResponse, success
 from sales_coach.app.database import get_db
 from sales_coach.app.services.assessment_service import (
-    AssessmentService,
     DEFAULT_WEIGHTS,
+    AssessmentService,
 )
 from sales_coach.app.services.reflection_service import generate_reflection_report
 from sales_coach.app.services.session_service import SessionService
+from shared.auth import get_current_user
+from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/assessments", tags=["assessments"])
 
@@ -173,9 +174,7 @@ def reflect_on_assessment(
         (assessment.get("trainee_name", ""),),
     ).fetchone()
     if not sessions:
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND, detail="No session found for trainee"
-        )
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="No session found for trainee")
     dialogue_log = json.loads(sessions["dialogue_log"] or "[]")
     violations = sessions["compliance_violations"] or 0
     reflection = generate_reflection_report(
@@ -213,15 +212,8 @@ def update_weights(
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
     """更新评分权重配置。"""
-    total = (
-        body.product_knowledge
-        + body.communication
-        + body.compliance
-        + body.objection_handling
-    )
+    total = body.product_knowledge + body.communication + body.compliance + body.objection_handling
     if abs(total - 1.0) > 0.01:
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Weights must sum to 1.0"
-        )
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Weights must sum to 1.0")
     DEFAULT_WEIGHTS.update(body.model_dump())
     return success(data=DEFAULT_WEIGHTS, message="Weights updated")

@@ -6,6 +6,7 @@ from patient_engage.app.services.education_service import (
     get_recommended_content,
     push_content,
 )
+
 from shared.base import success
 
 router = APIRouter(prefix="/api/education", tags=["患者教育"])

@@ -6,8 +6,8 @@ from starlette import status
 
 from cloud.app.repositories import (
     BoardTasksRepository,
-    TaskBoardsRepository,
     NotificationsRepository,
+    TaskBoardsRepository,
 )
 from cloud.app.services.base import BaseService
 from shared.base import validate_columns

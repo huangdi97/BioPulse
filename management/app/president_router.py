@@ -1,7 +1,8 @@
 from fastapi import APIRouter
+
 from management.app.services.president_service import (
-    get_summary,
     get_compliance_overview,
+    get_summary,
     get_team_rankings,
     get_trend_report,
 )

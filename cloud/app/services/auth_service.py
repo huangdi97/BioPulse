@@ -4,10 +4,10 @@ from starlette import status
 from cloud.app.repositories import UsersRepository
 from cloud.app.services.base import BaseService
 from shared.auth import (
-    hash_password,
-    verify_password,
     create_access_token,
     create_refresh_token,
+    hash_password,
+    verify_password,
     verify_token,
 )
 
@@ -26,13 +26,9 @@ class AuthService(BaseService):
             )
 
         users_repo = UsersRepository(self.db)
-        existing = users_repo.db.execute(
-            "SELECT id FROM users WHERE username=?", (username,)
-        ).fetchone()
+        existing = users_repo.db.execute("SELECT id FROM users WHERE username=?", (username,)).fetchone()
         if existing:
-            raise HTTPException(
-                status.HTTP_409_CONFLICT, detail="Username already exists"
-            )
+            raise HTTPException(status.HTTP_409_CONFLICT, detail="Username already exists")
 
         hashed = hash_password(password)
         user_id = users_repo.create({"username": username, "hashed_password": hashed})
@@ -47,9 +43,7 @@ class AuthService(BaseService):
         ).fetchone()
 
         if not row or not verify_password(password, row["hashed_password"]):
-            raise HTTPException(
-                status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password"
-            )
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
 
         if not row["is_active"]:
             raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Account is inactive")
@@ -68,9 +62,7 @@ class AuthService(BaseService):
     def refresh(self, refresh_token: str) -> dict:
         payload = verify_token(refresh_token)
         if payload.get("type") != "refresh":
-            raise HTTPException(
-                status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
-            )
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
 
         user_id = int(payload["sub"])
         users_repo = UsersRepository(self.db)

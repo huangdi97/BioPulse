@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette import status
 
+from sales_assistant.app.services.anomaly_service import AnomalyService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from sales_assistant.app.services.anomaly_service import AnomalyService
 
 router = APIRouter(tags=["anomaly"])
 

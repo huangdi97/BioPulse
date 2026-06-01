@@ -1,8 +1,8 @@
-from cloud.shared.repository import BaseRepository
 from cloud.shared.columns import (
     TABLE_WORLD_TREE_NODES_COLS,
     TABLE_WORLD_TREE_SNAPSHOTS_COLS,
 )
+from cloud.shared.repository import BaseRepository
 
 
 class WorldTreeNodesRepository(BaseRepository):
@@ -10,18 +10,12 @@ class WorldTreeNodesRepository(BaseRepository):
         super().__init__(db, "world_tree_nodes", TABLE_WORLD_TREE_NODES_COLS)
 
     def exists_by_id(self, node_id):
-        return (
-            self.db.execute(
-                f"SELECT id FROM {self.table_name} WHERE id=?", (node_id,)
-            ).fetchone()
-            is not None
-        )
+        return self.db.execute(f"SELECT id FROM {self.table_name} WHERE id=?", (node_id,)).fetchone() is not None
 
     def list_active_sorted(self):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} "
-            "WHERE is_active=1 ORDER BY sort_order, name"
+            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY sort_order, name"
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -32,9 +26,7 @@ class WorldTreeNodesRepository(BaseRepository):
             ids.append(cur)
             stack.extend(
                 c["id"]
-                for c in self.db.execute(
-                    f"SELECT id FROM {self.table_name} WHERE parent_id=?", (cur,)
-                ).fetchall()
+                for c in self.db.execute(f"SELECT id FROM {self.table_name} WHERE parent_id=?", (cur,)).fetchall()
             )
         return ids
 
@@ -73,6 +65,4 @@ class WorldTreeSnapshotsRepository(BaseRepository):
         if not node_ids:
             return
         ph = ",".join("?" for _ in node_ids)
-        self.db.execute(
-            f"DELETE FROM {self.table_name} WHERE node_id IN ({ph})", node_ids
-        )
+        self.db.execute(f"DELETE FROM {self.table_name} WHERE node_id IN ({ph})", node_ids)

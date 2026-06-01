@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
 from typing import Optional
 
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+
+from cloud.app.services.research_pi_service import ResearchPiService
 from shared.auth import get_current_user
 from shared.auth_scope import require_scope
-from cloud.app.services.research_pi_service import ResearchPiService
 
 router = APIRouter(
     prefix="/api/research/pi",

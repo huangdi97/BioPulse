@@ -1,11 +1,11 @@
-from typing import Optional, List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
+from opportunity.app.services.trend_service import TrendService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from opportunity.app.services.trend_service import TrendService
 
 router = APIRouter(tags=["trends"])
 
@@ -52,9 +52,7 @@ class TrendAnalysisOut(BaseModel):
 @router.get("/trends/by-topic")
 def trends_by_topic(
     topic: str = Query(..., description="Research topic"),
-    period: str = Query(
-        "monthly", description="Aggregation period: monthly/quarterly/yearly"
-    ),
+    period: str = Query("monthly", description="Aggregation period: monthly/quarterly/yearly"),
     service: TrendService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:

@@ -3,9 +3,9 @@ from typing import Any
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
+from opportunity.app.services.stats_service import StatsService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, success
-from opportunity.app.services.stats_service import StatsService
 
 router = APIRouter(prefix="", tags=["Opportunity Stats"])
 
@@ -39,14 +39,8 @@ def get_opportunity_stats(
 ) -> Any:
     data = service.get_stats(start_date, end_date)
 
-    by_stage = {
-        stage: StageStat(count=s["count"], value=s["value"])
-        for stage, s in data["by_stage"].items()
-    }
-    by_product = [
-        ProductStat(product=p["product"], count=p["count"], value=p["value"])
-        for p in data["by_product"]
-    ]
+    by_stage = {stage: StageStat(count=s["count"], value=s["value"]) for stage, s in data["by_stage"].items()}
+    by_product = [ProductStat(product=p["product"], count=p["count"], value=p["value"]) for p in data["by_product"]]
 
     return success(
         data=StatsData(

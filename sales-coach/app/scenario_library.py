@@ -1,6 +1,6 @@
 import json
-import sqlite3
 import os
+import sqlite3
 from datetime import datetime, timezone
 from typing import List
 
@@ -529,9 +529,7 @@ def generate_training_scenarios() -> List[dict]:
     return scenarios
 
 
-def append_scenarios_to_db(
-    conn: sqlite3.Connection, scenarios: List[dict], created_by: int = 1
-) -> int:
+def append_scenarios_to_db(conn: sqlite3.Connection, scenarios: List[dict], created_by: int = 1) -> int:
     count = 0
     for sc in scenarios:
         conn.execute(

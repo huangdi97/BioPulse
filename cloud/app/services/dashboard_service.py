@@ -15,18 +15,11 @@ class DashboardService(BaseService):
         user_count = users_repo.count(conditions=["is_active=1"])
         content_count = contents_repo.count(conditions=["status!='archived'"])
         total_checks = contents_repo.count(conditions=["compliance_score IS NOT NULL"])
-        passed_checks = contents_repo.count(
-            conditions=["compliance_score IS NOT NULL", "compliance_score >= 1.0"]
-        )
-        compliance_rate = (
-            round(passed_checks / total_checks * 100, 1) if total_checks > 0 else 0.0
-        )
+        passed_checks = contents_repo.count(conditions=["compliance_score IS NOT NULL", "compliance_score >= 1.0"])
+        compliance_rate = round(passed_checks / total_checks * 100, 1) if total_checks > 0 else 0.0
 
         recent_logs = audit_repo.list_all(order_by="created_at DESC")[:10]
-        recent_activity = [
-            {k: r[k] for k in ("action", "entity_type", "entity_id", "created_at")}
-            for r in recent_logs
-        ]
+        recent_activity = [{k: r[k] for k in ("action", "entity_type", "entity_id", "created_at")} for r in recent_logs]
 
         return {
             "user_count": user_count,
@@ -37,10 +30,8 @@ class DashboardService(BaseService):
 
     def get_user_stats(self) -> dict:
         db = self.db
-        users_repo = UsersRepository(db)
-        by_role = db.execute(
-            "SELECT role, COUNT(*) as cnt FROM users WHERE is_active=1 GROUP BY role"
-        ).fetchall()
+        UsersRepository(db)
+        by_role = db.execute("SELECT role, COUNT(*) as cnt FROM users WHERE is_active=1 GROUP BY role").fetchall()
         trend = db.execute(
             "SELECT DATE(created_at) as day, COUNT(*) as cnt FROM users "
             "WHERE created_at IS NOT NULL GROUP BY DATE(created_at) ORDER BY day DESC LIMIT 30"
@@ -55,9 +46,7 @@ class DashboardService(BaseService):
         db = self.db
         contents_repo = ContentsRepository(db)
         total = contents_repo.count(conditions=["compliance_score IS NOT NULL"])
-        passed = contents_repo.count(
-            conditions=["compliance_score IS NOT NULL", "compliance_score >= 1.0"]
-        )
+        passed = contents_repo.count(conditions=["compliance_score IS NOT NULL", "compliance_score >= 1.0"])
         failed = total - passed
         pass_rate = round(passed / total * 100, 1) if total > 0 else 0.0
 
@@ -85,7 +74,7 @@ class DashboardService(BaseService):
 
     def get_content_stats(self) -> dict:
         db = self.db
-        contents_repo = ContentsRepository(db)
+        ContentsRepository(db)
         by_category = db.execute(
             "SELECT category, COUNT(*) as cnt FROM contents WHERE status!='archived' GROUP BY category"
         ).fetchall()

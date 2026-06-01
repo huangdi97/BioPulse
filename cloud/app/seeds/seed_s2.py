@@ -4,9 +4,7 @@ import sqlite3
 
 def seed_s2(conn: sqlite3.Connection) -> None:
     count_mcp = conn.execute("SELECT COUNT(*) FROM mcp_tools").fetchone()[0]
-    count_ot = conn.execute("SELECT COUNT(*) FROM orchestration_templates").fetchone()[
-        0
-    ]
+    count_ot = conn.execute("SELECT COUNT(*) FROM orchestration_templates").fetchone()[0]
     if count_mcp > 0 and count_ot > 0:
         return
     now = "2026-05-25 10:00:00"

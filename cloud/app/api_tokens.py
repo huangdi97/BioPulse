@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
 from typing import Any
 
-from shared.base import success
-from shared.auth import get_current_user
-from cloud.app.services.api_token_service import ApiTokenService
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 
+from cloud.app.services.api_token_service import ApiTokenService
+from shared.auth import get_current_user
+from shared.base import success
 
 router = APIRouter(prefix="/tokens", tags=["tokens"])
 

@@ -65,18 +65,14 @@ class ContentService(BaseService):
         repo = ContentRepository(self.db)
         row = repo.get_by_id(content_id)
         if not row or row["is_active"] != 1:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Content not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content not found")
         return dict(row)
 
     def update_content(self, content_id: int, body) -> dict:
         repo = ContentRepository(self.db)
         row = repo.get_by_id(content_id)
         if not row or row["is_active"] != 1:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Content not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content not found")
         updates = body.model_dump(exclude_unset=True)
         if not updates:
             return dict(row)
@@ -88,7 +84,5 @@ class ContentService(BaseService):
         repo = ContentRepository(self.db)
         row = repo.get_by_id(content_id)
         if not row or not row["is_active"]:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Content not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content not found")
         repo.soft_delete(content_id)

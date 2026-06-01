@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette import status
 
+from sales_assistant.app.services.content_service import ContentService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from sales_assistant.app.services.content_service import ContentService
 
 router = APIRouter(prefix="/contents", tags=["contents"])
 

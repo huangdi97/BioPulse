@@ -27,9 +27,7 @@ def seed_memory_gates(conn: sqlite3.Connection) -> None:
             "insight",
             "",
             0.85,
-            _json.dumps(
-                ["竞品分析", "肺癌", "市场冲击", "学术推广"], ensure_ascii=False
-            ),
+            _json.dumps(["竞品分析", "肺癌", "市场冲击", "学术推广"], ensure_ascii=False),
         ),
         (
             "集采政策下创新药转型的必要性与路径分析",
@@ -38,9 +36,7 @@ def seed_memory_gates(conn: sqlite3.Connection) -> None:
             "insight",
             "",
             0.92,
-            _json.dumps(
-                ["集采政策", "创新转型", "品牌建设", "医联体"], ensure_ascii=False
-            ),
+            _json.dumps(["集采政策", "创新转型", "品牌建设", "医联体"], ensure_ascii=False),
         ),
         (
             "竞品A新药上市应对策略效果复盘",
@@ -49,9 +45,7 @@ def seed_memory_gates(conn: sqlite3.Connection) -> None:
             "case",
             "",
             0.75,
-            _json.dumps(
-                ["竞品应对", "策略复盘", "成功因素", "失败教训"], ensure_ascii=False
-            ),
+            _json.dumps(["竞品应对", "策略复盘", "成功因素", "失败教训"], ensure_ascii=False),
         ),
         (
             "集采政策应对复盘：关键教训与改进方向",
@@ -60,9 +54,7 @@ def seed_memory_gates(conn: sqlite3.Connection) -> None:
             "case",
             "",
             0.88,
-            _json.dumps(
-                ["集采应对", "失败复盘", "政策预警", "产品线深度"], ensure_ascii=False
-            ),
+            _json.dumps(["集采应对", "失败复盘", "政策预警", "产品线深度"], ensure_ascii=False),
         ),
         (
             "合规审查高频违规项：绝对化用语与对比声明",
@@ -71,9 +63,7 @@ def seed_memory_gates(conn: sqlite3.Connection) -> None:
             "compliance",
             "",
             0.82,
-            _json.dumps(
-                ["合规审查", "绝对化用语", "对比声明", "培训"], ensure_ascii=False
-            ),
+            _json.dumps(["合规审查", "绝对化用语", "对比声明", "培训"], ensure_ascii=False),
         ),
     ]
     conn.executemany(

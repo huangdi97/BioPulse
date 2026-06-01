@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette import status
 
+from opportunity.app.services.bookmark_service import BookmarkService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from opportunity.app.services.bookmark_service import BookmarkService
 
 router = APIRouter(prefix="/bookmarks", tags=["bookmarks"])
 

@@ -3,9 +3,9 @@ from typing import Any, List
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+from cloud.app.services.config_service import ConfigService
 from shared.auth_scope import require_scope
 from shared.base import success
-from cloud.app.services.config_service import ConfigService
 
 router = APIRouter(prefix="/admin/configs", tags=["配置"])
 

@@ -85,9 +85,7 @@ class ComplianceService(BaseService):
             "total_violations_today": total_today,
             "l1_violations": l1_count,
             "most_common_rule": most_common_rule,
-            "violations_by_rep": [
-                {"rep_id": rid, "count": cnt} for rid, cnt in rep_counter.items()
-            ],
+            "violations_by_rep": [{"rep_id": rid, "count": cnt} for rid, cnt in rep_counter.items()],
         }
 
     def rep_violations(self, rep_id: int) -> dict:
@@ -125,17 +123,13 @@ class ComplianceService(BaseService):
             "SELECT COUNT(*) AS c FROM visits WHERE DATE(created_at)=? AND compliance_status!='passed'",
             (today,),
         ).fetchone()["c"]
-        wt = db.execute(
-            "SELECT COUNT(*) AS c FROM visits WHERE created_at >= ?", (w7,)
-        ).fetchone()["c"]
+        wt = db.execute("SELECT COUNT(*) AS c FROM visits WHERE created_at >= ?", (w7,)).fetchone()["c"]
         total = db.execute("SELECT COUNT(*) AS c FROM visits").fetchone()["c"]
         processed = db.execute(
             "SELECT COUNT(*) AS c FROM visits WHERE compliance_status IS NOT NULL AND compliance_status!=''"
         ).fetchone()["c"]
         pr = round(processed / total * 100, 1) if total else 0.0
-        hrc = db.execute(
-            "SELECT COUNT(*) AS c FROM visits WHERE compliance_status='critical'"
-        ).fetchone()["c"]
+        hrc = db.execute("SELECT COUNT(*) AS c FROM visits WHERE compliance_status='critical'").fetchone()["c"]
         dt_rows = db.execute(
             "SELECT DATE(created_at) AS d, COUNT(*) AS c FROM visits "
             "WHERE created_at >= ? AND compliance_status!='passed' "

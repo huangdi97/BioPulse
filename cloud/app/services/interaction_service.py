@@ -60,20 +60,14 @@ class InteractionService(BaseService):
         interactions_repo = CustomerInteractionsRepository(self.db)
         row = interactions_repo.get_by_id(interaction_id)
         if not row:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="Interaction not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Interaction not found")
         if updates:
-            validate_columns(
-                updates, "customer_interactions", TABLE_CUSTOMER_INTERACTIONS_COLS
-            )
+            validate_columns(updates, "customer_interactions", TABLE_CUSTOMER_INTERACTIONS_COLS)
             interactions_repo.update(interaction_id, updates)
         return interactions_repo.get_by_id(interaction_id)
 
     def delete_interaction(self, interaction_id: int) -> None:
         interactions_repo = CustomerInteractionsRepository(self.db)
         if not interactions_repo.get_by_id(interaction_id):
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="Interaction not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Interaction not found")
         interactions_repo.delete(interaction_id)

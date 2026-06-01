@@ -1,5 +1,6 @@
 from fastapi import Depends, HTTPException
 from starlette import status
+
 from shared.auth import get_current_user
 
 

@@ -23,13 +23,9 @@ class ResearchPiService:
     def get_by_id(self, pi_id: int) -> dict:
         db = get_research_db()
         try:
-            row = db.execute(
-                "SELECT * FROM research_pi_profiles WHERE pi_id = ?", (pi_id,)
-            ).fetchone()
+            row = db.execute("SELECT * FROM research_pi_profiles WHERE pi_id = ?", (pi_id,)).fetchone()
             if not row:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail="PI not found"
-                )
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PI not found")
             return dict(row)
         finally:
             db.close()
@@ -66,9 +62,7 @@ class ResearchPiService:
             )
             db.commit()
             pi_id = cursor.lastrowid
-            row = db.execute(
-                "SELECT * FROM research_pi_profiles WHERE pi_id = ?", (pi_id,)
-            ).fetchone()
+            row = db.execute("SELECT * FROM research_pi_profiles WHERE pi_id = ?", (pi_id,)).fetchone()
             return dict(row)
         finally:
             db.close()

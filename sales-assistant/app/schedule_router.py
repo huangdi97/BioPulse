@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+from sales_assistant.app.services.schedule_service import ScheduleService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from sales_assistant.app.services.schedule_service import ScheduleService
 
 router = APIRouter(prefix="/schedule", tags=["schedule"])
 
@@ -53,9 +53,7 @@ def create_schedule(
 ) -> JSONResponse:
     user_id = int(current_user["sub"])
     new_id = service.create_schedule(body, user_id)
-    return JSONResponse(
-        content=success(data={"id": new_id}).model_dump(), status_code=201
-    )
+    return JSONResponse(content=success(data={"id": new_id}).model_dump(), status_code=201)
 
 
 @router.get("")

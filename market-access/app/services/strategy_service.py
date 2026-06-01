@@ -1,7 +1,8 @@
 """准入策略推演服务。"""
 
-import httpx
 from datetime import datetime, timezone
+
+import httpx
 from market_access.app.database import get_cache, set_cache
 
 CLOUD_API = "http://localhost:8000"
@@ -48,9 +49,7 @@ async def get_access_strategy(drug_name: str, target_province: str) -> dict:
     return result
 
 
-def _generate_strategy(
-    drug_name: str, province: str, papers: list, items: list
-) -> dict:
+def _generate_strategy(drug_name: str, province: str, papers: list, items: list) -> dict:
     """基于论文和市场情报生成准入策略。"""
     pub_count = len(papers)
     news_count = len(items)
@@ -79,12 +78,8 @@ def _generate_strategy(
         "confidence_score": min(round(0.5 + pub_count * 0.03, 2), 0.95),
         "key_actions": actions,
         "risk_assessment": {
-            "competitive_pressure": "高"
-            if news_count > 10
-            else ("中" if news_count > 5 else "低"),
-            "evidence_strength": "强"
-            if pub_count > 10
-            else ("中" if pub_count > 3 else "弱"),
+            "competitive_pressure": "高" if news_count > 10 else ("中" if news_count > 5 else "低"),
+            "evidence_strength": "强" if pub_count > 10 else ("中" if pub_count > 3 else "弱"),
             "policy_risk": "中",
         },
         "last_updated": datetime.now(timezone.utc).isoformat(),

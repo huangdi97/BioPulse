@@ -1,15 +1,15 @@
-from cloud.shared.repository import BaseRepository
 from cloud.shared.columns import (
     TABLE_AGENT_EXECUTION_TASKS_COLS,
     TABLE_AGENT_MARKETPLACE_COLS,
     TABLE_AGENT_PIPELINES_COLS,
     TABLE_AGENT_ROLES_COLS,
     TABLE_AGENT_SKILLS_COLS,
+    TABLE_ORCHESTRATION_TEMPLATES_COLS,
     TABLE_PIPELINE_RUNS_COLS,
     TABLE_PIPELINE_STEP_RUNS_COLS,
     TABLE_PIPELINE_STEPS_COLS,
-    TABLE_ORCHESTRATION_TEMPLATES_COLS,
 )
+from cloud.shared.repository import BaseRepository
 
 
 class AgentExecutionTasksRepository(BaseRepository):
@@ -69,9 +69,7 @@ class AgentRolesRepository(BaseRepository):
 
     def get_system_prompt(self, role_id: int):
         placeholders = ", ".join(self.cols)
-        row = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE id=?", (role_id,)
-        ).fetchone()
+        row = self.db.execute(f"SELECT {placeholders} FROM {self.table_name} WHERE id=?", (role_id,)).fetchone()
         return dict(row) if row else None
 
     def get_by_id(self, role_id: int):
@@ -100,6 +98,4 @@ class PipelineStepsRepository(BaseRepository):
 
 class OrchestrationTemplatesRepository(BaseRepository):
     def __init__(self, db):
-        super().__init__(
-            db, "orchestration_templates", TABLE_ORCHESTRATION_TEMPLATES_COLS
-        )
+        super().__init__(db, "orchestration_templates", TABLE_ORCHESTRATION_TEMPLATES_COLS)

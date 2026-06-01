@@ -3,6 +3,7 @@ from pharma_intel.app.services.competitor_service import (
     get_competitor_intel,
     get_market_news,
 )
+
 from shared.base import success
 
 router = APIRouter(prefix="/api/competitor", tags=["竞品情报"])

@@ -3,9 +3,9 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
+from assistant.app.services.sync_service import SyncService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, success
-from assistant.app.services.sync_service import SyncService
 
 router = APIRouter(prefix="/sync", tags=["sync"])
 

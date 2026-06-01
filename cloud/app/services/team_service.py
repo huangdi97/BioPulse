@@ -32,9 +32,7 @@ class TeamService(BaseService):
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Team not found")
         return row
 
-    def create_team(
-        self, name: str, description: Optional[str], created_by: int
-    ) -> dict:
+    def create_team(self, name: str, description: Optional[str], created_by: int) -> dict:
         teams_repo, _ = self._get_repos()
         team_id = teams_repo.create(
             {
@@ -48,9 +46,7 @@ class TeamService(BaseService):
         row = teams_repo.get_by_id(team_id)
         return _row_to_team_out(row)
 
-    def list_teams(
-        self, name: Optional[str] = None, page: int = 1, page_size: int = 20
-    ) -> dict:
+    def list_teams(self, name: Optional[str] = None, page: int = 1, page_size: int = 20) -> dict:
         teams_repo, _ = self._get_repos()
         conditions = ["is_active=1"]
         params = []
@@ -164,6 +160,4 @@ class TeamService(BaseService):
         self.db.commit()
 
         if cur.rowcount == 0:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="Member not found in team"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Member not found in team")

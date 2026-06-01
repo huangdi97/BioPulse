@@ -127,9 +127,7 @@ class StrategyService(BaseService):
     def compare_strategies(self, ids: str) -> list:
         id_list = [int(x.strip()) for x in ids.split(",") if x.strip()]
         if not id_list:
-            raise HTTPException(
-                status_code=400, detail="Provide at least one strategy id"
-            )
+            raise HTTPException(status_code=400, detail="Provide at least one strategy id")
         repo = StrategyRepository(self.db)
         conditions = [f"id IN ({','.join('?' * len(id_list))})", "is_active = 1"]
         rows = repo.list_all(conditions, id_list)
@@ -148,7 +146,9 @@ class StrategyService(BaseService):
         user_text = f"客户：{body.hcp_name}，策略：{body.approach}"
         if body.product_name:
             user_text += f"，产品：{body.product_name}"
-        user_text += '。预测此策略有效性（0-1）并给出置信度（高/中/低），回复JSON：{"effectiveness":0.7,"confidence":"中"}'
+        user_text += (
+            '。预测此策略有效性（0-1）并给出置信度（高/中/低），回复JSON：{"effectiveness":0.7,"confidence":"中"}'
+        )
         try:
             req = urllib.request.Request(
                 AI_GATEWAY_URL,

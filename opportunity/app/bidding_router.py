@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette import status
 
+from opportunity.app.services.bidding_service import BiddingService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from opportunity.app.services.bidding_service import BiddingService
 
 router = APIRouter(prefix="/bidding", tags=["bidding"])
 

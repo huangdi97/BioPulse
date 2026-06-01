@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette import status
 
+from sales_assistant.app.services.coach_service import CoachService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from sales_assistant.app.services.coach_service import CoachService
 
 router = APIRouter(tags=["coach"])
 

@@ -1,5 +1,7 @@
 import time
+
 from fastapi import FastAPI
+
 from shared.middleware import RequestIDMiddleware
 
 START_TIME = time.time()
@@ -29,11 +31,11 @@ def health():
     }
 
 
+from pharma_intel.app.competitor_router import router as competitor_router
+from pharma_intel.app.conference_router import router as conference_router
 from pharma_intel.app.kol_router import router as kol_router
 from pharma_intel.app.pipeline_router import router as pipeline_router
 from pharma_intel.app.target_router import router as target_router
-from pharma_intel.app.competitor_router import router as competitor_router
-from pharma_intel.app.conference_router import router as conference_router
 
 app.include_router(kol_router, prefix="/api/v1")
 app.include_router(pipeline_router, prefix="/api/v1")

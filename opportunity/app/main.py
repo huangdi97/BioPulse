@@ -1,26 +1,29 @@
-import time
 import sqlite3
+import time
+
 from fastapi import FastAPI
 from starlette import status
-from shared.request_id_middleware import RequestIDMiddleware
-from shared.structured_logging import setup_logging
-from shared.rate_limiter import RateLimiterMiddleware
-from shared.exception_handlers import register_exception_handlers
 
-from opportunity.app.database import init_db, DB_PATH
-from opportunity.app.stats_router import router as stats_router
-from opportunity.app.opportunity_router import router as opportunity_router
-from opportunity.app.contact_router import router as contact_router
-from opportunity.app.bidding_router import router as bidding_router
-from opportunity.app.research_router import router as research_router
-from opportunity.app.scoring_router import router as scoring_router
-from opportunity.app.bookmark_router import router as bookmark_router
-from opportunity.app.pubpeer_router import router as pubpeer_router
-from opportunity.app.trend_router import router as trend_router
 from opportunity.app.bidding_agent_router import (
     router as bidding_agent_router,
+)
+from opportunity.app.bidding_agent_router import (
     start_bidding_scheduler,
 )
+from opportunity.app.bidding_router import router as bidding_router
+from opportunity.app.bookmark_router import router as bookmark_router
+from opportunity.app.contact_router import router as contact_router
+from opportunity.app.database import DB_PATH, init_db
+from opportunity.app.opportunity_router import router as opportunity_router
+from opportunity.app.pubpeer_router import router as pubpeer_router
+from opportunity.app.research_router import router as research_router
+from opportunity.app.scoring_router import router as scoring_router
+from opportunity.app.stats_router import router as stats_router
+from opportunity.app.trend_router import router as trend_router
+from shared.exception_handlers import register_exception_handlers
+from shared.rate_limiter import RateLimiterMiddleware
+from shared.request_id_middleware import RequestIDMiddleware
+from shared.structured_logging import setup_logging
 
 START_TIME = time.time()
 

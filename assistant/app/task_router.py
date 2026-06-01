@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from starlette import status
 
+from assistant.app.services.task_service import TaskService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from assistant.app.services.task_service import TaskService
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 

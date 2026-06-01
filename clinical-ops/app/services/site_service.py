@@ -1,7 +1,8 @@
 """中心筛选服务。"""
 
-import httpx
 from datetime import datetime, timezone
+
+import httpx
 from clinical_ops.app.database import get_cache, set_cache
 
 CLOUD_API = "http://localhost:8000"
@@ -58,9 +59,7 @@ def _build_site_list(indication: str, papers: list, kg_entities: list) -> dict:
                 "site_id": f"SITE-{i + 1:04d}",
                 "name": f"{site_name}医院",
                 "location": ["北京", "上海", "广州", "成都", "武汉"][i % 5],
-                "principal_investigator": paper.get(
-                    "author", paper.get("authors", [{}])[0].get("name", "")
-                )
+                "principal_investigator": paper.get("author", paper.get("authors", [{}])[0].get("name", ""))
                 if isinstance(paper.get("authors"), list)
                 else "",
                 "patient_capacity": 50 + i * 30,
@@ -78,9 +77,7 @@ def _build_site_list(indication: str, papers: list, kg_entities: list) -> dict:
                 "principal_investigator": entity.get("properties", {}).get("pi", ""),
                 "patient_capacity": entity.get("properties", {}).get("capacity", 0),
                 "status": entity.get("properties", {}).get("status", "active"),
-                "therapeutic_area": entity.get("properties", {}).get(
-                    "area", indication
-                ),
+                "therapeutic_area": entity.get("properties", {}).get("area", indication),
             }
         )
 

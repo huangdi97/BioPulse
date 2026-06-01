@@ -1,10 +1,12 @@
 from typing import Optional
+
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 from starlette import status
+
+from cloud.app.services.market_intel_service import MarketIntelService
 from shared.auth_scope import require_scope
 from shared.base import success
-from cloud.app.services.market_intel_service import MarketIntelService
 
 router = APIRouter(prefix="/market-intel", tags=["Market Intel"])
 
@@ -33,11 +35,7 @@ def create_source(
     service: MarketIntelService = Depends(),
 ):
     uid = int(current_user["sub"])
-    return success(
-        data=service.create_source(
-            body.name, body.source_type, body.target_keywords, uid
-        )
-    )
+    return success(data=service.create_source(body.name, body.source_type, body.target_keywords, uid))
 
 
 @router.get("/sources")
@@ -47,9 +45,7 @@ def list_sources(
     current_user=Depends(require_scope("visit")),
     service: MarketIntelService = Depends(),
 ):
-    return success(
-        data=service.list_sources(source_type=source_type, is_active=is_active)
-    )
+    return success(data=service.list_sources(source_type=source_type, is_active=is_active))
 
 
 @router.patch("/sources/{source_id}")
@@ -60,9 +56,7 @@ def update_source(
     service: MarketIntelService = Depends(),
 ):
     return success(
-        data=service.update_source(
-            source_id, body.name, body.source_type, body.target_keywords, body.is_active
-        )
+        data=service.update_source(source_id, body.name, body.source_type, body.target_keywords, body.is_active)
     )
 
 

@@ -4,9 +4,7 @@ import sqlite3
 
 def seed_s3(conn: sqlite3.Connection) -> None:
     count_cg = conn.execute("SELECT COUNT(*) FROM causal_graphs").fetchone()[0]
-    count_cs = conn.execute("SELECT COUNT(*) FROM counterfactual_scenarios").fetchone()[
-        0
-    ]
+    count_cs = conn.execute("SELECT COUNT(*) FROM counterfactual_scenarios").fetchone()[0]
     if count_cg > 0 and count_cs > 0:
         return
     now = "2026-05-25 10:00:00"
@@ -46,9 +44,7 @@ def seed_s3(conn: sqlite3.Connection) -> None:
                 "cf:test-001",
                 "strategy-01",
                 "",
-                json.dumps(
-                    [{"variable": "拜访频率", "from": 3, "to": 6}], ensure_ascii=False
-                ),
+                json.dumps([{"variable": "拜访频率", "from": 3, "to": 6}], ensure_ascii=False),
                 json.dumps({"处方量变化": "+15%"}, ensure_ascii=False),
                 0.75,
                 now,
@@ -61,9 +57,7 @@ def seed_s3(conn: sqlite3.Connection) -> None:
                 "cf:test-002",
                 "strategy-01",
                 "",
-                json.dumps(
-                    [{"variable": "学术活动", "from": 1, "to": 3}], ensure_ascii=False
-                ),
+                json.dumps([{"variable": "学术活动", "from": 1, "to": 3}], ensure_ascii=False),
                 json.dumps({"处方量变化": "+10%"}, ensure_ascii=False),
                 0.65,
                 now,

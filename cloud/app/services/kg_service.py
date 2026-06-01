@@ -60,9 +60,7 @@ class KgService(BaseService):
         entities_repo = KgEntitiesRepository(self.db)
         entity_id = data.entity_id or f"kg:{data.entity_type}:{uuid.uuid4()}"
         if entities_repo.exists_entity_id(entity_id):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Entity ID already exists"
-            )
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Entity ID already exists")
         entities_repo.create(
             {
                 "entity_id": entity_id,
@@ -80,27 +78,21 @@ class KgService(BaseService):
 
     def list_entities(self, entity_type=None, name=None, status_="active") -> list:
         entities_repo = KgEntitiesRepository(self.db)
-        return entities_repo.list_filtered(
-            entity_type=entity_type, name=name, status_=status_
-        )
+        return entities_repo.list_filtered(entity_type=entity_type, name=name, status_=status_)
 
     def get_entity(self, entity_id: str) -> dict:
         entities_repo = KgEntitiesRepository(self.db)
         relations_repo = KgRelationsRepository(self.db)
         row = entities_repo.get_by_entity_id(entity_id)
         if not row:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Entity not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entity not found")
         rels = relations_repo.list_by_entity_id(entity_id)
         return {"entity": row, "relations": rels}
 
     def delete_entity(self, entity_id: str) -> dict:
         entities_repo = KgEntitiesRepository(self.db)
         if not entities_repo.exists_entity_id(entity_id):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Entity not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entity not found")
         entities_repo.soft_delete_by_entity_id(entity_id)
         return {"entity_id": entity_id, "status": "inactive"}
 
@@ -132,16 +124,12 @@ class KgService(BaseService):
 
     def list_relations(self, source=None, target=None, relation_type=None) -> list:
         relations_repo = KgRelationsRepository(self.db)
-        return relations_repo.list_filtered(
-            source=source, target=target, relation_type=relation_type
-        )
+        return relations_repo.list_filtered(source=source, target=target, relation_type=relation_type)
 
     def delete_relation(self, relation_id: int) -> dict:
         relations_repo = KgRelationsRepository(self.db)
         if not relations_repo.get_by_id(relation_id):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Relation not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Relation not found")
         relations_repo.delete(relation_id)
         return {"relation_id": relation_id, "deleted": True}
 
@@ -155,12 +143,8 @@ class KgService(BaseService):
                 data.query, entity_types=data.entity_types, limit=data.limit
             )
         ]
-        ent_dict, rel_dict = _bfs_expand(
-            entities_repo, relations_repo, seeds, data.max_depth
-        )
-        qhash = hashlib.md5(
-            json.dumps(data.model_dump(), sort_keys=True).encode()
-        ).hexdigest()
+        ent_dict, rel_dict = _bfs_expand(entities_repo, relations_repo, seeds, data.max_depth)
+        qhash = hashlib.md5(json.dumps(data.model_dump(), sort_keys=True).encode()).hexdigest()
         cache_repo.create(
             {
                 "query_hash": qhash,
@@ -182,12 +166,8 @@ class KgService(BaseService):
         relations_repo = KgRelationsRepository(self.db)
         entity = entities_repo.get_by_entity_id(entity_id)
         if not entity or entity.get("status") != "active":
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Entity not found"
-            )
-        ent_dict, rel_dict = _bfs_expand(
-            entities_repo, relations_repo, [entity_id], max_depth
-        )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entity not found")
+        ent_dict, rel_dict = _bfs_expand(entities_repo, relations_repo, [entity_id], max_depth)
         return {
             "entities": list(ent_dict.values()),
             "relations": list(rel_dict.values()),

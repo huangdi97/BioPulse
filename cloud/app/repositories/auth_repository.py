@@ -1,12 +1,12 @@
-from cloud.shared.repository import BaseRepository
 from cloud.shared.columns import (
-    TABLE_USERS_COLS,
-    TABLE_USER_TEAM_COLS,
-    TABLE_USER_PROFILES_COLS,
-    TABLE_USER_BEHAVIORS_COLS,
-    TABLE_VC_CREDENTIALS_COLS,
     TABLE_SYSTEM_CONFIGS_COLS,
+    TABLE_USER_BEHAVIORS_COLS,
+    TABLE_USER_PROFILES_COLS,
+    TABLE_USER_TEAM_COLS,
+    TABLE_USERS_COLS,
+    TABLE_VC_CREDENTIALS_COLS,
 )
+from cloud.shared.repository import BaseRepository
 
 
 class UsersRepository(BaseRepository):
@@ -68,9 +68,7 @@ class UserBehaviorsRepository(BaseRepository):
         super().__init__(db, "user_behaviors", TABLE_USER_BEHAVIORS_COLS)
 
     def count_by_user(self, user_id: int):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE user_id=?", (user_id,)
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE user_id=?", (user_id,)).fetchone()[0]
 
     def top_action_by_user(self, user_id: int):
         row = self.db.execute(
@@ -80,9 +78,7 @@ class UserBehaviorsRepository(BaseRepository):
         ).fetchone()
         return dict(row) if row else None
 
-    def top_targets_by_user_action(
-        self, user_id: int, action_type: str, limit: int = 5
-    ):
+    def top_targets_by_user_action(self, user_id: int, action_type: str, limit: int = 5):
         rows = self.db.execute(
             f"SELECT target_id, target_type, COUNT(*) AS cnt FROM {self.table_name} "
             "WHERE user_id=? AND action_type=? GROUP BY target_id, target_type "
@@ -91,9 +87,7 @@ class UserBehaviorsRepository(BaseRepository):
         ).fetchall()
         return [dict(r) for r in rows]
 
-    def list_filtered(
-        self, user_id=None, action_type=None, target_type=None, limit=50, offset=0
-    ):
+    def list_filtered(self, user_id=None, action_type=None, target_type=None, limit=50, offset=0):
         conditions, params = [], []
         if user_id is not None:
             conditions.append("user_id=?")
@@ -113,7 +107,7 @@ class UserBehaviorsRepository(BaseRepository):
         )
 
     def top_actions_global(self, limit: int = 10):
-        placeholders = ", ".join(self.cols)
+        ", ".join(self.cols)
         rows = self.db.execute(
             f"SELECT action_type, COUNT(*) AS cnt FROM {self.table_name} "
             "GROUP BY action_type ORDER BY cnt DESC LIMIT ?",
@@ -133,9 +127,7 @@ class VcCredentialsRepository(BaseRepository):
         ).fetchone()
         return dict(row) if row else None
 
-    def list_filtered(
-        self, issuer_did=None, subject_did=None, credential_type=None, vc_status=None
-    ):
+    def list_filtered(self, issuer_did=None, subject_did=None, credential_type=None, vc_status=None):
         conditions, params = [], []
         if issuer_did:
             conditions.append("issuer_did=?")

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from shared.auth import get_current_user
 from cloud.app.services.enforcer_service import EnforcerService
+from shared.auth import get_current_user
 
 router = APIRouter(prefix="/api/compliance/enforce", tags=["合规"])
 

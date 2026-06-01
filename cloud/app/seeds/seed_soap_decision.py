@@ -60,8 +60,7 @@ def seed_soap_decision(conn: sqlite3.Connection) -> None:
         ),
     ]
     conn.executemany(
-        "INSERT INTO soap_templates (name, category, structure, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO soap_templates (name, category, structure, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
         [(t[0], t[1], t[2], now, now) for t in templates],
     )
     decisions = [
@@ -76,9 +75,7 @@ def seed_soap_decision(conn: sqlite3.Connection) -> None:
             "3. 加速新适应症临床数据发布节奏；4. 组建竞品应对专项团队，周度复盘市场变化",
             "draft",
             "high",
-            _json.dumps(
-                ["竞品分析", "肺癌", "市场策略", "学术推广"], ensure_ascii=False
-            ),
+            _json.dumps(["竞品分析", "肺癌", "市场策略", "学术推广"], ensure_ascii=False),
         ),
         (
             2,
@@ -110,9 +107,7 @@ def seed_soap_decision(conn: sqlite3.Connection) -> None:
             "根据最新情报，竞品A新药获批后已在5家头部三甲医院完成准入。"
             "其销售团队规模扩张计划显示将新增200名代表，覆盖全国主要城市。建议我方立即启动竞品数据对比分析，"
             "重点挖掘竞品在安全性、药物相互作用方面的弱点。支持数据已上传附件。",
-            _json.dumps(
-                {"竞争情报": {"竞品准入": 5, "销售扩张": "200人"}}, ensure_ascii=False
-            ),
+            _json.dumps({"竞争情报": {"竞品准入": 5, "销售扩张": "200人"}}, ensure_ascii=False),
             "supportive",
             0.85,
             _json.dumps(["竞品情报摘要.pdf", "市场分布图.png"], ensure_ascii=False),
@@ -157,9 +152,7 @@ def seed_soap_decision(conn: sqlite3.Connection) -> None:
             ),
             "supportive",
             0.92,
-            _json.dumps(
-                ["合规审计报告Q2.pdf", "违规材料清单.xlsx"], ensure_ascii=False
-            ),
+            _json.dumps(["合规审计报告Q2.pdf", "违规材料清单.xlsx"], ensure_ascii=False),
         ),
     ]
     for did, cid, crole, opinion, sdata, stance, conf, att in opinions:

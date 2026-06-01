@@ -7,16 +7,12 @@ from cloud.app.research_database import get_research_db
 def submit_for_approval(quotation_id: int, submitter: str):
     db = get_research_db()
     try:
-        row = db.execute(
-            "SELECT * FROM research_quotations WHERE quotation_id = ?", (quotation_id,)
-        ).fetchone()
+        row = db.execute("SELECT * FROM research_quotations WHERE quotation_id = ?", (quotation_id,)).fetchone()
         if not row:
             raise ValueError("Quotation not found")
         quotation = dict(row)
         if quotation["status"] != "draft":
-            raise ValueError(
-                f"Cannot submit quotation in status: {quotation['status']}"
-            )
+            raise ValueError(f"Cannot submit quotation in status: {quotation['status']}")
         db.execute(
             "UPDATE research_quotations SET status = ? WHERE quotation_id = ?",
             ("pending_approval", quotation_id),
@@ -41,16 +37,12 @@ def submit_for_approval(quotation_id: int, submitter: str):
 def approve(quotation_id: int, reviewer: str):
     db = get_research_db()
     try:
-        row = db.execute(
-            "SELECT * FROM research_quotations WHERE quotation_id = ?", (quotation_id,)
-        ).fetchone()
+        row = db.execute("SELECT * FROM research_quotations WHERE quotation_id = ?", (quotation_id,)).fetchone()
         if not row:
             raise ValueError("Quotation not found")
         quotation = dict(row)
         if quotation["status"] != "pending_approval":
-            raise ValueError(
-                f"Cannot approve quotation in status: {quotation['status']}"
-            )
+            raise ValueError(f"Cannot approve quotation in status: {quotation['status']}")
         db.execute(
             "UPDATE research_quotations SET status = ? WHERE quotation_id = ?",
             ("approved", quotation_id),
@@ -75,16 +67,12 @@ def approve(quotation_id: int, reviewer: str):
 def reject(quotation_id: int, reviewer: str, reason: str):
     db = get_research_db()
     try:
-        row = db.execute(
-            "SELECT * FROM research_quotations WHERE quotation_id = ?", (quotation_id,)
-        ).fetchone()
+        row = db.execute("SELECT * FROM research_quotations WHERE quotation_id = ?", (quotation_id,)).fetchone()
         if not row:
             raise ValueError("Quotation not found")
         quotation = dict(row)
         if quotation["status"] != "pending_approval":
-            raise ValueError(
-                f"Cannot reject quotation in status: {quotation['status']}"
-            )
+            raise ValueError(f"Cannot reject quotation in status: {quotation['status']}")
         old_status = quotation["status"]
         db.execute(
             "UPDATE research_quotations SET status = ? WHERE quotation_id = ?",

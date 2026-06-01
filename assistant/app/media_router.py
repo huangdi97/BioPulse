@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, File, Request, UploadFile
 
+from assistant.app.services.media_service import MediaService
 from shared.auth import get_current_user
 from shared.base import success
-from assistant.app.services.media_service import MediaService
 
 router = APIRouter(tags=["media"])
 

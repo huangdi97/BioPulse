@@ -2,8 +2,8 @@
 """Batch 19 comprehensive test script."""
 
 import json
-import urllib.request
 import urllib.error
+import urllib.request
 
 BASE = "http://localhost:8000"
 
@@ -128,9 +128,7 @@ r = api(
     },
     token,
 )
-print(
-    f"Create non-compliant content: status={r['data']['status']}, score={r['data']['compliance_score']}"
-)
+print(f"Create non-compliant content: status={r['data']['status']}, score={r['data']['compliance_score']}")
 assert r["code"] == 0
 assert r["data"]["compliance_score"] < 1.0
 
@@ -197,9 +195,7 @@ print("✅ 19-4 看板管理 全部通过")
 print("\n=== 19-5: 数据看板 ===")
 
 r = api("GET", "/dashboard/overview", token=token)
-print(
-    f"1. Overview: users={r['data']['users_count']}, contents={r['data']['contents_count']}"
-)
+print(f"1. Overview: users={r['data']['users_count']}, contents={r['data']['contents_count']}")
 assert r["code"] == 0
 
 r = api("GET", "/dashboard/users", token=token)

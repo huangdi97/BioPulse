@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+from cloud.app.services.route_optimizer import (
+    estimate_travel_time,
+    haversine,
+    optimize_route,
+)
 from shared.auth import get_current_user
 from shared.auth_scope import require_scope
-from cloud.app.services.route_optimizer import (
-    optimize_route,
-    haversine,
-    estimate_travel_time,
-)
 
 router = APIRouter(
     prefix="/api/research/route",

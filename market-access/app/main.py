@@ -1,7 +1,9 @@
 """MarketAccess · 准入策略服务 — FastAPI 入口。"""
 
 import time
+
 from fastapi import FastAPI
+
 from shared.request_id_middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 
@@ -33,8 +35,8 @@ def health():
     }
 
 
-from market_access.app.formulary_router import router as formulary_router
 from market_access.app.bidding_router import router as bidding_router
+from market_access.app.formulary_router import router as formulary_router
 from market_access.app.strategy_router import router as strategy_router
 
 app.include_router(formulary_router)

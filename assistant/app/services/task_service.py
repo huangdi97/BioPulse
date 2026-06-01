@@ -12,9 +12,7 @@ class TaskService(BaseService):
         repo = HcpRepository(self.db)
         row = repo.get_by_id(hcp_id)
         if not row or row["is_active"] != 1:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
 
     def create_task(self, body, user_id: int) -> dict:
         if body.hcp_id is not None:
@@ -59,18 +57,14 @@ class TaskService(BaseService):
         repo = TaskRepository(self.db)
         row = repo.get_by_id(task_id)
         if not row:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
         return dict(row)
 
     def update_task(self, task_id: int, body) -> dict:
         repo = TaskRepository(self.db)
         row = repo.get_by_id(task_id)
         if not row:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
 
         if body.hcp_id is not None:
             self._check_hcp_exists(body.hcp_id)
@@ -86,7 +80,5 @@ class TaskService(BaseService):
         repo = TaskRepository(self.db)
         row = repo.get_by_id(task_id)
         if not row:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
         repo.soft_delete(task_id)

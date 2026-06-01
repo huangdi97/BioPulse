@@ -3,6 +3,7 @@ from pharma_intel.app.services.pipeline_service import (
     analyze_pipeline,
     search_pipeline_by_indication,
 )
+
 from shared.base import success
 
 router = APIRouter(prefix="/api/pipeline", tags=["管线竞争分析"])

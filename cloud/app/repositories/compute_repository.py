@@ -1,10 +1,10 @@
-from cloud.shared.repository import BaseRepository
 from cloud.shared.columns import (
+    TABLE_EFFECT_METRICS_COLS,
     TABLE_PRIVACY_BUDGETS_COLS,
     TABLE_PRIVACY_COMPUTE_JOBS_COLS,
     TABLE_SENSOR_SESSIONS_COLS,
-    TABLE_EFFECT_METRICS_COLS,
 )
+from cloud.shared.repository import BaseRepository
 
 
 class PrivacyBudgetsRepository(BaseRepository):
@@ -40,7 +40,7 @@ class EffectMetricsRepository(BaseRepository):
         if agent_role:
             where = "WHERE agent_role = ?"
             params.append(agent_role)
-        placeholders = ", ".join(self.cols)
+        ", ".join(self.cols)
         rows = self.db.execute(
             f"SELECT agent_role, metric_type, SUM(metric_value) AS total, AVG(metric_value) AS avg_value "
             f"FROM {self.table_name} {where} GROUP BY agent_role, metric_type ORDER BY agent_role, metric_type",

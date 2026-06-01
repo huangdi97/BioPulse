@@ -59,18 +59,14 @@ class BiddingService(BaseService):
         repo = BiddingInfoRepository(self.db)
         row = repo.get_by_id(bidding_id)
         if not row or row["is_active"] != 1:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Bidding record not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bidding record not found")
         return dict(row)
 
     def update_bidding(self, bidding_id: int, body) -> dict:
         repo = BiddingInfoRepository(self.db)
         row = repo.get_by_id(bidding_id)
         if not row or row["is_active"] != 1:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Bidding record not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bidding record not found")
 
         updates = body.model_dump(exclude_unset=True)
         if not updates:
@@ -84,9 +80,7 @@ class BiddingService(BaseService):
         repo = BiddingInfoRepository(self.db)
         row = repo.get_by_id(bidding_id)
         if not row or row["is_active"] != 1:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Bidding record not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bidding record not found")
         repo.soft_delete(bidding_id)
 
     def get_bidding_raw(self, bidding_id: int):

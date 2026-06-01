@@ -1,7 +1,9 @@
 """ClinicalOps · 临床试验运营 — FastAPI 入口。"""
 
 import time
+
 from fastapi import FastAPI
+
 from shared.middleware import RequestIDMiddleware
 
 START_TIME = time.time()
@@ -30,9 +32,9 @@ def health():
     }
 
 
-from clinical_ops.app.site_router import router as site_router
-from clinical_ops.app.recruitment_router import router as recruitment_router
 from clinical_ops.app.monitoring_router import router as monitoring_router
+from clinical_ops.app.recruitment_router import router as recruitment_router
+from clinical_ops.app.site_router import router as site_router
 
 app.include_router(site_router)
 app.include_router(recruitment_router)

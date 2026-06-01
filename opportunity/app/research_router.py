@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from starlette import status
 
+from opportunity.app.services.research_service import ResearchService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from opportunity.app.services.research_service import ResearchService
 
 router = APIRouter(prefix="/research-trails", tags=["research"])
 

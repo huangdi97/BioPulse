@@ -10,8 +10,8 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
-from shared.base import success
 from cloud.app.services.token_budget_service import TokenBudgetService
+from shared.base import success
 
 router = APIRouter(prefix="/admin/tokens", tags=["Token 管理"])
 
@@ -70,8 +70,7 @@ def list_alerts(
     alerts = []
     for cfg in configs:
         row = service.db.execute(
-            "SELECT COALESCE(SUM(tokens), 0) AS total "
-            "FROM token_usage WHERE user_id=? AND model=? AND usage_date=?",
+            "SELECT COALESCE(SUM(tokens), 0) AS total FROM token_usage WHERE user_id=? AND model=? AND usage_date=?",
             (cfg["user_id"], cfg["model"], today),
         ).fetchone()
         daily_used = row["total"] if row else 0

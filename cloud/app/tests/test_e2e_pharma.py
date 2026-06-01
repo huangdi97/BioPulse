@@ -1,12 +1,11 @@
 import uuid
+
 from shared.auth import create_access_token
 
 
 def _register_and_get_visit_token(client):
     username = f"pharma_{uuid.uuid4().hex[:8]}"
-    resp = client.post(
-        "/auth/register", json={"username": username, "password": "testpass123"}
-    )
+    resp = client.post("/auth/register", json={"username": username, "password": "testpass123"})
     assert resp.status_code == 201
     user_id = resp.json()["data"]["user_id"]
     token = create_access_token(user_id, "rep", "visit")

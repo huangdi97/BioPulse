@@ -56,9 +56,7 @@ def _round_to_dict(row) -> dict:
 
 
 class ComputeService(BaseService):
-    def create_job(
-        self, compute_type: str, sensitivity_level: str, data_summary: str, user_id: int
-    ) -> dict:
+    def create_job(self, compute_type: str, sensitivity_level: str, data_summary: str, user_id: int) -> dict:
         repo = PrivacyComputeJobsRepository(self.db)
         job_id = f"pc:{uuid4()}"
         scheme = SCHEME_MAP.get(sensitivity_level, "DP+FL")
@@ -78,9 +76,7 @@ class ComputeService(BaseService):
         row = repo.get_by_id(row_id)
         return _job_to_dict(row)
 
-    def list_jobs(
-        self, status_filter: Optional[str] = None, compute_type: Optional[str] = None
-    ) -> list:
+    def list_jobs(self, status_filter: Optional[str] = None, compute_type: Optional[str] = None) -> list:
         repo = PrivacyComputeJobsRepository(self.db)
         conditions, params = [], []
         if status_filter:
@@ -106,9 +102,7 @@ class ComputeService(BaseService):
             )
         return _job_to_dict(rows[0])
 
-    def init_federated(
-        self, model_name: str, num_rounds: int, aggregation_method: str
-    ) -> list:
+    def init_federated(self, model_name: str, num_rounds: int, aggregation_method: str) -> list:
         repo = FederatedRoundsRepository(self.db)
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         for rn in range(1, num_rounds + 1):
@@ -130,9 +124,7 @@ class ComputeService(BaseService):
         )
         return [_round_to_dict(r) for r in rows]
 
-    def submit_federated(
-        self, round_id: str, participant_id: str, metrics: dict, update_summary: str
-    ) -> dict:
+    def submit_federated(self, round_id: str, participant_id: str, metrics: dict, update_summary: str) -> dict:
         repo = FederatedRoundsRepository(self.db)
         rows = repo.list_all(conditions=["round_id=?"], params=[round_id])
         if not rows:
@@ -156,9 +148,7 @@ class ComputeService(BaseService):
         updated = repo.list_all(conditions=["round_id=?"], params=[round_id])
         return _round_to_dict(updated[0])
 
-    def list_federated_rounds(
-        self, model_name: Optional[str] = None, status_filter: Optional[str] = None
-    ) -> list:
+    def list_federated_rounds(self, model_name: Optional[str] = None, status_filter: Optional[str] = None) -> list:
         repo = FederatedRoundsRepository(self.db)
         conditions, params = [], []
         if model_name:

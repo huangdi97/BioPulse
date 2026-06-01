@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from shared.auth import get_current_user
-from shared.auth_scope import require_scope
 from cloud.app.research_database import get_research_db
 from cloud.app.services.compliance_enforcer import ResearchComplianceEnforcer
+from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 
 router = APIRouter(
     prefix="/api/research/compliance",

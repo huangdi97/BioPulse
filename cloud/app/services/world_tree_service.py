@@ -55,9 +55,7 @@ class WorldTreeService(BaseService):
 
     def _refresh_children(self, parent_id: int) -> None:
         nodes_repo = WorldTreeNodesRepository(self.db)
-        children = nodes_repo.list_all(
-            conditions=["parent_id=?"], params=[parent_id], order_by="id ASC"
-        )
+        children = nodes_repo.list_all(conditions=["parent_id=?"], params=[parent_id], order_by="id ASC")
         for child in children:
             self._refresh_path(child["id"])
             self._refresh_children(child["id"])
@@ -100,9 +98,7 @@ class WorldTreeService(BaseService):
         )
         return self._build(nodes_repo.get_by_id(node_id))
 
-    def list_nodes(
-        self, node_type: Optional[str] = None, parent_id: Optional[int] = None
-    ) -> List[dict]:
+    def list_nodes(self, node_type: Optional[str] = None, parent_id: Optional[int] = None) -> List[dict]:
         nodes_repo, _, _, _ = self._get_repos()
         conditions, params = [], []
         if node_type:
@@ -124,9 +120,7 @@ class WorldTreeService(BaseService):
         nodes_repo, _, nml_repo, _ = self._get_repos()
         n = self._node_or_404(nodes_repo, node_id)
         d = self._build(n)
-        d["child_count"] = nodes_repo.count(
-            conditions=["parent_id=?"], params=[node_id]
-        )
+        d["child_count"] = nodes_repo.count(conditions=["parent_id=?"], params=[node_id])
         d["memory_count"] = nml_repo.count_by_node(node_id)
         return d
 
@@ -180,9 +174,7 @@ class WorldTreeService(BaseService):
     def get_children(self, node_id: int) -> List[dict]:
         nodes_repo, _, _, _ = self._get_repos()
         self._node_or_404(nodes_repo, node_id)
-        rows = nodes_repo.list_all(
-            conditions=["parent_id=?"], params=[node_id], order_by="sort_order, name"
-        )
+        rows = nodes_repo.list_all(conditions=["parent_id=?"], params=[node_id], order_by="sort_order, name")
         return [self._build(r) for r in rows]
 
     def get_ancestors(self, node_id: int) -> List[dict]:

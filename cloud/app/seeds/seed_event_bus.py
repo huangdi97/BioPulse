@@ -17,9 +17,7 @@ def seed_event_bus(conn: sqlite3.Connection) -> None:
             "合规审查触发告警，推送至销售辅助与助理端",
             "cloud",
             _json.dumps(["sales-coach", "assistant"], ensure_ascii=False),
-            _json.dumps(
-                {"alert_level": "string", "violations": "array"}, ensure_ascii=False
-            ),
+            _json.dumps({"alert_level": "string", "violations": "array"}, ensure_ascii=False),
             50,
         ),
         (
@@ -28,9 +26,7 @@ def seed_event_bus(conn: sqlite3.Connection) -> None:
             "推荐引擎生成新推荐，推送至销售助理与机会管理端",
             "cloud",
             _json.dumps(["sales-assistant", "opportunity"], ensure_ascii=False),
-            _json.dumps(
-                {"content_type": "string", "score": "number"}, ensure_ascii=False
-            ),
+            _json.dumps({"content_type": "string", "score": "number"}, ensure_ascii=False),
             100,
         ),
         (
@@ -39,9 +35,7 @@ def seed_event_bus(conn: sqlite3.Connection) -> None:
             "身份信息变更，同步至云端与助理端",
             "cloud",
             _json.dumps(["cloud", "assistant"], ensure_ascii=False),
-            _json.dumps(
-                {"did": "string", "updated_fields": "array"}, ensure_ascii=False
-            ),
+            _json.dumps({"did": "string", "updated_fields": "array"}, ensure_ascii=False),
             80,
         ),
         (
@@ -50,9 +44,7 @@ def seed_event_bus(conn: sqlite3.Connection) -> None:
             "手术排程创建，通知助理与云服务端",
             "sales-coach",
             _json.dumps(["assistant", "cloud"], ensure_ascii=False),
-            _json.dumps(
-                {"surgery_id": "string", "hcp_id": "string"}, ensure_ascii=False
-            ),
+            _json.dumps({"surgery_id": "string", "hcp_id": "string"}, ensure_ascii=False),
             100,
         ),
         (
@@ -61,9 +53,7 @@ def seed_event_bus(conn: sqlite3.Connection) -> None:
             "商机成交通知，同步至云端与销售助理端",
             "opportunity",
             _json.dumps(["cloud", "sales-assistant"], ensure_ascii=False),
-            _json.dumps(
-                {"opportunity_id": "string", "value": "number"}, ensure_ascii=False
-            ),
+            _json.dumps({"opportunity_id": "string", "value": "number"}, ensure_ascii=False),
             120,
         ),
         (
@@ -105,9 +95,7 @@ def seed_event_bus(conn: sqlite3.Connection) -> None:
             "cloud",
             "content",
             "content-99",
-            _json.dumps(
-                {"content_type": "strategy", "score": 0.92}, ensure_ascii=False
-            ),
+            _json.dumps({"content_type": "strategy", "score": 0.92}, ensure_ascii=False),
             "",
             100,
             "delivered",
@@ -119,9 +107,7 @@ def seed_event_bus(conn: sqlite3.Connection) -> None:
             "opportunity",
             "opportunity",
             "opp-005",
-            _json.dumps(
-                {"opportunity_id": "opp-005", "value": 150000}, ensure_ascii=False
-            ),
+            _json.dumps({"opportunity_id": "opp-005", "value": 150000}, ensure_ascii=False),
             "",
             120,
             "pending",

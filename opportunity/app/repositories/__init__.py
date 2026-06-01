@@ -4,9 +4,7 @@ import sys
 
 # Load the original repositories.py module (shadowed by this package directory)
 _old_path = os.path.join(os.path.dirname(__file__), "..", "repositories.py")
-_spec = importlib.util.spec_from_file_location(
-    "_old_repositories_module", os.path.abspath(_old_path)
-)
+_spec = importlib.util.spec_from_file_location("_old_repositories_module", os.path.abspath(_old_path))
 _old_mod = importlib.util.module_from_spec(_spec)
 sys.modules["_old_repositories_module"] = _old_mod
 _spec.loader.exec_module(_old_mod)
@@ -16,8 +14,8 @@ from _old_repositories_module import *  # noqa: F403
 
 # Import new-style repository classes from sub-modules
 from .bidding_repository import (
-    BiddingRepository,
     BiddingAgentRepository,
+    BiddingRepository,
     BookmarkRepository,
 )
 from .contact_repository import (
@@ -26,8 +24,8 @@ from .contact_repository import (
     ResearchRepository,
 )
 from .scoring_repository import (
+    PubPeerRepository,
     ScoringRepository,
     StatsRepository,
     TrendRepository,
-    PubPeerRepository,
 )

@@ -80,9 +80,7 @@ class BaseRepository:
         where = ""
         if conditions:
             where = " WHERE " + " AND ".join(conditions)
-        query = (
-            f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY {order_by}"
-        )
+        query = f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY {order_by}"
         cursor = self.execute(query, params or [])
         return [dict(row) for row in cursor.fetchall()]
 
@@ -98,9 +96,7 @@ class BaseRepository:
         where = ""
         if conditions:
             where = " WHERE " + " AND ".join(conditions)
-        total = self.execute(
-            f"SELECT COUNT(*) FROM {self.table_name}{where}", params or []
-        ).fetchone()[0]
+        total = self.execute(f"SELECT COUNT(*) FROM {self.table_name}{where}", params or []).fetchone()[0]
         total_pages = max(1, (total + page_size - 1) // page_size)
         offset = (page - 1) * page_size
         query = f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY {order_by} LIMIT %s OFFSET %s"
@@ -115,6 +111,4 @@ class BaseRepository:
         where = ""
         if conditions:
             where = " WHERE " + " AND ".join(conditions)
-        return self.execute(
-            f"SELECT COUNT(*) FROM {self.table_name}{where}", params or []
-        ).fetchone()[0]
+        return self.execute(f"SELECT COUNT(*) FROM {self.table_name}{where}", params or []).fetchone()[0]

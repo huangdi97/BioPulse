@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import HTTPException
 from starlette import status
 
-from cloud.app.repositories import TaskBoardsRepository, BoardTasksRepository
+from cloud.app.repositories import BoardTasksRepository, TaskBoardsRepository
 from cloud.app.services.base import BaseService
 from shared.base import validate_columns
 from shared.columns import TABLE_TASK_BOARDS_COLS
@@ -42,9 +42,7 @@ def _task_to_dict(row) -> dict:
 
 class BoardService(BaseService):
     def _get_board_or_404(self, board_id: int):
-        row = self.db.execute(
-            "SELECT * FROM task_boards WHERE id=? AND is_active=1", (board_id,)
-        ).fetchone()
+        row = self.db.execute("SELECT * FROM task_boards WHERE id=? AND is_active=1", (board_id,)).fetchone()
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Board not found")
         return row
@@ -61,9 +59,7 @@ class BoardService(BaseService):
                 "updated_at": now,
             }
         )
-        row = self.db.execute(
-            "SELECT * FROM task_boards WHERE id=?", (board_id,)
-        ).fetchone()
+        row = self.db.execute("SELECT * FROM task_boards WHERE id=?", (board_id,)).fetchone()
         return _board_to_dict(row)
 
     def list_boards(self) -> list:

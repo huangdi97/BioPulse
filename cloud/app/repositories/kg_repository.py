@@ -1,9 +1,9 @@
-from cloud.shared.repository import BaseRepository
 from cloud.shared.columns import (
     TABLE_KG_ENTITIES_COLS,
     TABLE_KG_RELATIONS_COLS,
     TABLE_KG_SEARCH_CACHE_COLS,
 )
+from cloud.shared.repository import BaseRepository
 
 
 class KgEntitiesRepository(BaseRepository):
@@ -19,10 +19,7 @@ class KgEntitiesRepository(BaseRepository):
 
     def exists_entity_id(self, entity_id: str):
         return (
-            self.db.execute(
-                f"SELECT id FROM {self.table_name} WHERE entity_id=?", (entity_id,)
-            ).fetchone()
-            is not None
+            self.db.execute(f"SELECT id FROM {self.table_name} WHERE entity_id=?", (entity_id,)).fetchone() is not None
         )
 
     def list_filtered(self, entity_type=None, name=None, status_="active"):
@@ -58,9 +55,7 @@ class KgEntitiesRepository(BaseRepository):
         return [dict(r) for r in rows]
 
     def count_active(self):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE status='active'"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='active'").fetchone()[0]
 
     def count_by_entity_type(self):
         rows = self.db.execute(
@@ -79,8 +74,7 @@ class KgEntitiesRepository(BaseRepository):
     def top_active(self, limit: int = 5):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} "
-            "WHERE status='active' ORDER BY confidence DESC LIMIT ?",
+            f"SELECT {placeholders} FROM {self.table_name} WHERE status='active' ORDER BY confidence DESC LIMIT ?",
             (limit,),
         ).fetchall()
         return [dict(r) for r in rows]
@@ -142,10 +136,7 @@ class KgRelationsRepository(BaseRepository):
                 WHERE e.status='active' GROUP BY e.entity_id ORDER BY degree DESC LIMIT ?""",
             (limit,),
         ).fetchall()
-        return [
-            {"name": r["name"], "type": r["entity_type"], "degree": r["degree"]}
-            for r in rows
-        ]
+        return [{"name": r["name"], "type": r["entity_type"], "degree": r["degree"]} for r in rows]
 
 
 class KgSearchCacheRepository(BaseRepository):

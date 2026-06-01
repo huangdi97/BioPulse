@@ -36,9 +36,7 @@ class EventBusService(BaseService):
     ) -> dict:
         def_repo = EventBusDefinitionsRepository(self.db)
         if def_repo.get_by_event_type(event_type):
-            raise HTTPException(
-                status.HTTP_409_CONFLICT, detail="Event type already exists"
-            )
+            raise HTTPException(status.HTTP_409_CONFLICT, detail="Event type already exists")
         def_repo.create(
             {
                 "event_type": event_type,
@@ -52,19 +50,13 @@ class EventBusService(BaseService):
         )
         return def_repo.get_by_event_type(event_type)
 
-    def list_definitions(
-        self, source_end: Optional[str] = None, enabled: Optional[int] = None
-    ) -> list:
-        return EventBusDefinitionsRepository(self.db).list_filtered(
-            source_end=source_end, enabled=enabled
-        )
+    def list_definitions(self, source_end: Optional[str] = None, enabled: Optional[int] = None) -> list:
+        return EventBusDefinitionsRepository(self.db).list_filtered(source_end=source_end, enabled=enabled)
 
     def toggle_definition(self, event_type: str) -> dict:
         def_repo = EventBusDefinitionsRepository(self.db)
         if not def_repo.get_by_event_type(event_type):
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="Event definition not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Event definition not found")
         def_repo.toggle_enabled(event_type)
         return def_repo.get_by_event_type(event_type)
 
@@ -79,9 +71,7 @@ class EventBusService(BaseService):
         def_repo = EventBusDefinitionsRepository(self.db)
         definition = def_repo.get_by_event_type(event_type)
         if not definition or not definition.get("enabled"):
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="Event type not found or disabled"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Event type not found or disabled")
         msg_repo = EventBusMessagesRepository(self.db)
         delivery_repo = EventDeliveryLogRepository(self.db)
         message_id = f"evt:{uuid.uuid4()}"
@@ -161,9 +151,7 @@ class EventBusService(BaseService):
         EventDeliveryLogRepository(self.db).reset_pending_by_message(message_id)
         return msg_repo.get_by_message_id(message_id)
 
-    def subscribe(
-        self, target_end: str, event_types: list, callback_url: str = ""
-    ) -> dict:
+    def subscribe(self, target_end: str, event_types: list, callback_url: str = "") -> dict:
         return {
             "acknowledged": True,
             "target_end": target_end,

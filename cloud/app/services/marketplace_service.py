@@ -4,9 +4,9 @@ from typing import Optional
 from uuid import uuid4
 
 from cloud.app.repositories import (
-    EffectMetricsRepository,
-    BenchmarkReportsRepository,
     AgentMarketplaceRepository,
+    BenchmarkReportsRepository,
+    EffectMetricsRepository,
 )
 from cloud.app.services.base import BaseService
 
@@ -48,16 +48,12 @@ class MarketplaceService(BaseService):
                     "agent_role": r["agent_role"],
                     "metric_type": r["metric_type"],
                     "total": r["total"],
-                    "avg_value": round(r["avg_value"], 4)
-                    if r["avg_value"] is not None
-                    else None,
+                    "avg_value": round(r["avg_value"], 4) if r["avg_value"] is not None else None,
                 }
             )
         return result
 
-    def generate_benchmark(
-        self, report_name: str, report_type: str = "", period: str = ""
-    ) -> dict:
+    def generate_benchmark(self, report_name: str, report_type: str = "", period: str = "") -> dict:
         bench_repo = BenchmarkReportsRepository(self.db)
         report_id = f"bm:{uuid4().hex[:12]}"
         now = datetime.utcnow().isoformat()
@@ -130,9 +126,7 @@ class MarketplaceService(BaseService):
         enabled: Optional[int] = None,
     ) -> list:
         marketplace_repo = AgentMarketplaceRepository(self.db)
-        rows = marketplace_repo.list_filtered(
-            category=category, price_model=price_model, enabled=enabled
-        )
+        rows = marketplace_repo.list_filtered(category=category, price_model=price_model, enabled=enabled)
         result = []
         for r in rows:
             result.append(
@@ -141,9 +135,7 @@ class MarketplaceService(BaseService):
                     "item_name": r.get("item_name"),
                     "item_type": r.get("item_type"),
                     "description": r.get("description"),
-                    "agent_config": json.loads(r["agent_config"])
-                    if r.get("agent_config")
-                    else {},
+                    "agent_config": json.loads(r["agent_config"]) if r.get("agent_config") else {},
                     "category": r.get("category"),
                     "price_model": r.get("price_model"),
                     "rating": r.get("rating"),

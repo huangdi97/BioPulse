@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Query
 from pharma_intel.app.services.kol_service import search_kol
+
 from shared.base import success
 
 router = APIRouter(prefix="/api/kol", tags=["KOL学术影响力"])

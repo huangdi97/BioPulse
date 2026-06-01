@@ -1,9 +1,9 @@
-from cloud.shared.repository import BaseRepository
 from cloud.shared.columns import (
-    TABLE_ROUTE_RULES_COLS,
     TABLE_ROUTE_LOGS_COLS,
+    TABLE_ROUTE_RULES_COLS,
     TABLE_ROUTE_STATS_COLS,
 )
+from cloud.shared.repository import BaseRepository
 
 
 class RouteRulesRepository(BaseRepository):
@@ -19,9 +19,7 @@ class RouteRulesRepository(BaseRepository):
 
     def list_all_ordered(self):
         placeholders = ", ".join(self.cols)
-        rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} ORDER BY priority ASC"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT {placeholders} FROM {self.table_name} ORDER BY priority ASC").fetchall()
         return [dict(r) for r in rows]
 
 
@@ -60,7 +58,7 @@ class RouteLogsRepository(BaseRepository):
         )
 
     def role_distribution(self):
-        placeholders = ", ".join(self.cols)
+        ", ".join(self.cols)
         rows = self.db.execute(
             f"SELECT assigned_role_id, assigned_role_name, COUNT(*) as cnt "
             f"FROM {self.table_name} GROUP BY assigned_role_id, assigned_role_name ORDER BY cnt DESC"
@@ -68,9 +66,7 @@ class RouteLogsRepository(BaseRepository):
         return [dict(r) for r in rows]
 
     def avg_latency(self):
-        return self.db.execute(
-            f"SELECT COALESCE(AVG(latency_ms), 0) FROM {self.table_name}"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COALESCE(AVG(latency_ms), 0) FROM {self.table_name}").fetchone()[0]
 
     def list_recent(self, limit: int = 10):
         placeholders = ", ".join(self.cols)
@@ -89,15 +85,11 @@ class RouteStatsRepository(BaseRepository):
         from datetime import datetime
 
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        row = self.db.execute(
-            f"SELECT * FROM {self.table_name} WHERE role_id=?", (role_id,)
-        ).fetchone()
+        row = self.db.execute(f"SELECT * FROM {self.table_name} WHERE role_id=?", (role_id,)).fetchone()
         if row:
             total = row["total_routed"] + 1
             n = float(total)
-            avg_confidence = round(
-                (row["avg_confidence"] * (n - 1) + confidence) / n, 4
-            )
+            avg_confidence = round((row["avg_confidence"] * (n - 1) + confidence) / n, 4)
             avg_tokens = round((row["avg_tokens"] * (n - 1) + tokens) / n, 2)
             avg_latency = round((row["avg_latency_ms"] * (n - 1) + latency_ms) / n, 2)
             self.db.execute(

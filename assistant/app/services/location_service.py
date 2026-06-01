@@ -12,24 +12,15 @@ def haversine(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     R = 6371.0
     dlat = math.radians(lat2 - lat1)
     dlng = math.radians(lng2 - lng1)
-    a = (
-        math.sin(dlat / 2) ** 2
-        + math.cos(math.radians(lat1))
-        * math.cos(math.radians(lat2))
-        * math.sin(dlng / 2) ** 2
-    )
+    a = math.sin(dlat / 2) ** 2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlng / 2) ** 2
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
 class LocationService(BaseService):
     def create(self, hcp_id: int, body, user_id: int) -> dict:
-        hcp = self.db.execute(
-            "SELECT id FROM hcp WHERE id = ? AND is_active = 1", (hcp_id,)
-        ).fetchone()
+        hcp = self.db.execute("SELECT id FROM hcp WHERE id = ? AND is_active = 1", (hcp_id,)).fetchone()
         if not hcp:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
         repo = HcpLocationRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()
         location_id = repo.create(
@@ -58,9 +49,7 @@ class LocationService(BaseService):
         repo = HcpLocationRepository(self.db)
         row = repo.get_by_id(location_id)
         if not row or not row["is_active"]:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Location not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Location not found")
         updates = body.model_dump(exclude_unset=True)
         if not updates:
             return dict(row)
@@ -72,9 +61,7 @@ class LocationService(BaseService):
         repo = HcpLocationRepository(self.db)
         row = repo.get_by_id(location_id)
         if not row or not row["is_active"]:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Location not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Location not found")
         repo.soft_delete(location_id)
 
     def optimize_route(self, body) -> dict:
@@ -110,13 +97,9 @@ class LocationService(BaseService):
         while unvisited and len(ordered) < max_results:
             nearest = min(
                 unvisited,
-                key=lambda s: haversine(
-                    current_lat, current_lng, s["latitude"], s["longitude"]
-                ),
+                key=lambda s: haversine(current_lat, current_lng, s["latitude"], s["longitude"]),
             )
-            dist = haversine(
-                current_lat, current_lng, nearest["latitude"], nearest["longitude"]
-            )
+            dist = haversine(current_lat, current_lng, nearest["latitude"], nearest["longitude"])
             total_distance += dist
             ordered.append(
                 {

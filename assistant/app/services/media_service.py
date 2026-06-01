@@ -7,9 +7,9 @@ import urllib.request
 from datetime import datetime, timezone
 from io import BytesIO
 
+from docx import Document
 from PIL import Image
 from pypdf import PdfReader
-from docx import Document
 
 from assistant.app.repositories import MediaFileRepository
 from assistant.app.services.base import BaseService
@@ -93,11 +93,7 @@ class MediaService(BaseService):
             raise HTTPException(status_code=404, detail="Media not found")
 
         context = row["transcript"] or ""
-        prompt = (
-            f"请分析以下内容并提供专业临床药学的见解。\n\n{context}"
-            if context
-            else "没有可分析的内容"
-        )
+        prompt = f"请分析以下内容并提供专业临床药学的见解。\n\n{context}" if context else "没有可分析的内容"
         analysis = ""
         try:
             analysis = self._call_llm(auth_header, prompt, context)

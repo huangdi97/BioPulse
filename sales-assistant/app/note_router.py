@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from starlette import status
 
+from sales_assistant.app.services.note_service import NoteService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from sales_assistant.app.services.note_service import NoteService
 
 router = APIRouter(tags=["notes"])
 

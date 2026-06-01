@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette import status
 
+from sales_coach.app.services.session_service import SessionService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from sales_coach.app.services.session_service import SessionService
 
 router = APIRouter(tags=["sessions"])
 

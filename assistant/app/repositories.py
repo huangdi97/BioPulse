@@ -1,15 +1,17 @@
-from shared.repository import BaseRepository
+from datetime import datetime, timezone
+
 from shared.columns import (
     TABLE_ASSISTANT_HCP_COLS,
-    TABLE_VISIT_RECORD_COLS,
-    TABLE_TASK_COLS,
-    TABLE_HEALTH_RADAR_COLS,
-    TABLE_SURGERY_REMINDER_COLS,
-    TABLE_KNOWLEDGE_BASE_COLS,
     TABLE_HCP_LOCATION_COLS,
-    TABLE_SYNC_QUEUE_COLS,
+    TABLE_HEALTH_RADAR_COLS,
+    TABLE_KNOWLEDGE_BASE_COLS,
     TABLE_MEDIA_FILE_COLS,
+    TABLE_SURGERY_REMINDER_COLS,
+    TABLE_SYNC_QUEUE_COLS,
+    TABLE_TASK_COLS,
+    TABLE_VISIT_RECORD_COLS,
 )
+from shared.repository import BaseRepository
 
 
 class HcpRepository(BaseRepository):
@@ -24,15 +26,11 @@ class HcpRepository(BaseRepository):
 
     def soft_delete(self, row_id):
         now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-        self.db.execute(
-            "UPDATE hcp SET is_active=0, updated_at=? WHERE id=?", (now, row_id)
-        )
+        self.db.execute("UPDATE hcp SET is_active=0, updated_at=? WHERE id=?", (now, row_id))
         self.db.commit()
 
     def list_by_user(self, user_id):
-        return self.list_all(
-            conditions=["created_by=?"], params=[user_id], order_by="updated_at DESC"
-        )
+        return self.list_all(conditions=["created_by=?"], params=[user_id], order_by="updated_at DESC")
 
     def get_by_name(self, name):
         return self.db.execute("SELECT * FROM hcp WHERE name = ?", (name,)).fetchone()
@@ -57,14 +55,10 @@ class VisitRecordRepository(BaseRepository):
         self.db.commit()
 
     def list_by_hcp(self, hcp_id):
-        return self.list_all(
-            conditions=["hcp_id=?"], params=[hcp_id], order_by="visit_date DESC"
-        )
+        return self.list_all(conditions=["hcp_id=?"], params=[hcp_id], order_by="visit_date DESC")
 
     def list_by_user(self, user_id):
-        return self.list_all(
-            conditions=["created_by=?"], params=[user_id], order_by="created_at DESC"
-        )
+        return self.list_all(conditions=["created_by=?"], params=[user_id], order_by="created_at DESC")
 
 
 class TaskRepository(BaseRepository):
@@ -79,20 +73,14 @@ class TaskRepository(BaseRepository):
 
     def soft_delete(self, row_id):
         now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-        self.db.execute(
-            "UPDATE task SET is_active=0, updated_at=? WHERE id=?", (now, row_id)
-        )
+        self.db.execute("UPDATE task SET is_active=0, updated_at=? WHERE id=?", (now, row_id))
         self.db.commit()
 
     def list_by_user(self, user_id):
-        return self.list_all(
-            conditions=["created_by=?"], params=[user_id], order_by="updated_at DESC"
-        )
+        return self.list_all(conditions=["created_by=?"], params=[user_id], order_by="updated_at DESC")
 
     def list_by_status(self, status):
-        return self.list_all(
-            conditions=["status=?"], params=[status], order_by="updated_at DESC"
-        )
+        return self.list_all(conditions=["status=?"], params=[status], order_by="updated_at DESC")
 
 
 class HealthRadarRepository(BaseRepository):
@@ -114,9 +102,7 @@ class HealthRadarRepository(BaseRepository):
         self.db.commit()
 
     def list_by_user(self, user_id):
-        return self.list_all(
-            conditions=["created_by=?"], params=[user_id], order_by="updated_at DESC"
-        )
+        return self.list_all(conditions=["created_by=?"], params=[user_id], order_by="updated_at DESC")
 
 
 class SurgeryReminderRepository(BaseRepository):
@@ -138,9 +124,7 @@ class SurgeryReminderRepository(BaseRepository):
         self.db.commit()
 
     def list_by_user(self, user_id):
-        return self.list_all(
-            conditions=["created_by=?"], params=[user_id], order_by="updated_at DESC"
-        )
+        return self.list_all(conditions=["created_by=?"], params=[user_id], order_by="updated_at DESC")
 
 
 class KnowledgeBaseRepository(BaseRepository):
@@ -162,9 +146,7 @@ class KnowledgeBaseRepository(BaseRepository):
         self.db.commit()
 
     def list_by_user(self, user_id):
-        return self.list_all(
-            conditions=["created_by=?"], params=[user_id], order_by="updated_at DESC"
-        )
+        return self.list_all(conditions=["created_by=?"], params=[user_id], order_by="updated_at DESC")
 
 
 class HcpLocationRepository(BaseRepository):
@@ -188,6 +170,4 @@ class MediaFileRepository(BaseRepository):
         super().__init__(db, "media_file", TABLE_MEDIA_FILE_COLS)
 
     def list_by_user(self, user_id):
-        return self.list_all(
-            conditions=["created_by=?"], params=[user_id], order_by="created_at DESC"
-        )
+        return self.list_all(conditions=["created_by=?"], params=[user_id], order_by="created_at DESC")

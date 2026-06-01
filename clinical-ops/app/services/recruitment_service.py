@@ -1,7 +1,8 @@
 """患者招募服务。"""
 
-import httpx
 from datetime import datetime, timezone
+
+import httpx
 from clinical_ops.app.database import get_cache, set_cache
 
 CLOUD_API = "http://localhost:8000"
@@ -120,9 +121,7 @@ def _build_pipeline(entities: list) -> dict:
                 "status": props.get("recruitment_status", "recruiting"),
                 "enrolled": enrolled,
                 "target": target,
-                "completion_pct": round((enrolled / target) * 100, 1)
-                if target > 0
-                else 0,
+                "completion_pct": round((enrolled / target) * 100, 1) if target > 0 else 0,
             }
         )
 
@@ -130,9 +129,7 @@ def _build_pipeline(entities: list) -> dict:
         "total_trials": len(trials),
         "total_enrolled": total_enrolled,
         "total_target": total_target,
-        "overall_completion_pct": round((total_enrolled / total_target) * 100, 1)
-        if total_target > 0
-        else 0,
+        "overall_completion_pct": round((total_enrolled / total_target) * 100, 1) if total_target > 0 else 0,
         "phase_distribution": phase_distribution,
         "trials": trials,
         "last_updated": datetime.now(timezone.utc).isoformat(),

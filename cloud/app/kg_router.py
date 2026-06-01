@@ -3,9 +3,9 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
+from cloud.app.services.kg_service import KgService
 from shared.auth_scope import require_scope
 from shared.base import success
-from cloud.app.services.kg_service import KgService
 
 router = APIRouter(prefix="/kg", tags=["知识图谱"])
 
@@ -55,9 +55,7 @@ def list_entities(
     user: dict = Depends(require_scope("visit")),
     service: KgService = Depends(),
 ):
-    return success(
-        service.list_entities(entity_type=entity_type, name=name, status_=status_)
-    )
+    return success(service.list_entities(entity_type=entity_type, name=name, status_=status_))
 
 
 @router.get("/entities/{entity_id}")
@@ -95,11 +93,7 @@ def list_relations(
     user: dict = Depends(require_scope("visit")),
     service: KgService = Depends(),
 ):
-    return success(
-        service.list_relations(
-            source=source, target=target, relation_type=relation_type
-        )
-    )
+    return success(service.list_relations(source=source, target=target, relation_type=relation_type))
 
 
 @router.delete("/relations/{relation_id}")
@@ -131,7 +125,5 @@ def get_subgraph(
 
 
 @router.get("/dashboard")
-def dashboard(
-    user: dict = Depends(require_scope("visit")), service: KgService = Depends()
-):
+def dashboard(user: dict = Depends(require_scope("visit")), service: KgService = Depends()):
     return success(service.dashboard())

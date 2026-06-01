@@ -20,9 +20,7 @@ def _now() -> str:
 
 
 def _n404(name: str = "Resource") -> HTTPException:
-    return HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND, detail=f"{name} not found"
-    )
+    return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{name} not found")
 
 
 def _call_ai(messages: list[dict], auth_header: str) -> dict:
@@ -47,9 +45,7 @@ class BrainMemoryService(BaseService):
         ttl_seconds: int,
     ) -> dict:
         n = _now()
-        expires_at = (datetime.now() + timedelta(seconds=ttl_seconds)).strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
+        expires_at = (datetime.now() + timedelta(seconds=ttl_seconds)).strftime("%Y-%m-%d %H:%M:%S")
         wm = WorkingMemoryRepository(self.db)
         wm.db.execute(
             "INSERT OR REPLACE INTO working_memory "
@@ -82,9 +78,7 @@ class BrainMemoryService(BaseService):
         return {"data": [dict(r) for r in rows]}
 
     def working_clear(self, session_id: str) -> str:
-        WorkingMemoryRepository(self.db).db.execute(
-            "DELETE FROM working_memory WHERE session_id=?", (session_id,)
-        )
+        WorkingMemoryRepository(self.db).db.execute("DELETE FROM working_memory WHERE session_id=?", (session_id,))
         return f"Cleared all slots for session {session_id}"
 
     def working_refresh(self, session_id: str) -> dict:
@@ -94,12 +88,8 @@ class BrainMemoryService(BaseService):
             (session_id,),
         ).fetchall()
         for r in rows:
-            ex = (datetime.now() + timedelta(seconds=r["ttl_seconds"])).strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
-            wm.db.execute(
-                "UPDATE working_memory SET expires_at=? WHERE id=?", (ex, r["id"])
-            )
+            ex = (datetime.now() + timedelta(seconds=r["ttl_seconds"])).strftime("%Y-%m-%d %H:%M:%S")
+            wm.db.execute("UPDATE working_memory SET expires_at=? WHERE id=?", (ex, r["id"]))
         wm.db.commit()
         return {"session_id": session_id, "refreshed_count": len(rows)}
 
@@ -158,9 +148,7 @@ class BrainMemoryService(BaseService):
                     "item_count": interference,
                     "items_superseded": interference,
                     "status": "completed",
-                    "details": json.dumps(
-                        {"new_id": new_id, "triggered_by": uid}, ensure_ascii=False
-                    ),
+                    "details": json.dumps({"new_id": new_id, "triggered_by": uid}, ensure_ascii=False),
                     "created_at": n,
                 }
             )
@@ -238,9 +226,7 @@ class BrainMemoryService(BaseService):
         if not row:
             raise _n404("Episodic memory")
         if row["is_consolidated"]:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="Already consolidated"
-            )
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Already consolidated")
         messages = [
             {
                 "role": "system",
@@ -310,15 +296,11 @@ class BrainMemoryService(BaseService):
         slot_total = wm_repo.db.execute(
             "SELECT COUNT(*) FROM working_memory WHERE expires_at > ?", (now_val,)
         ).fetchone()[0]
-        slot_per_session = (
-            round(slot_total / active_sessions, 1) if active_sessions else 0.0
-        )
+        slot_per_session = round(slot_total / active_sessions, 1) if active_sessions else 0.0
         episodic_dist = em_repo.db.execute(
             "SELECT event_type, COUNT(*) as cnt FROM episodic_memory GROUP BY event_type ORDER BY cnt DESC"
         ).fetchall()
-        recent = em_repo.db.execute(
-            "SELECT * FROM episodic_memory ORDER BY created_at DESC LIMIT 10"
-        ).fetchall()
+        recent = em_repo.db.execute("SELECT * FROM episodic_memory ORDER BY created_at DESC LIMIT 10").fetchall()
         return {
             "active_sessions": active_sessions,
             "slot_stats": {"total": slot_total, "avg_per_session": slot_per_session},
@@ -369,9 +351,7 @@ class BrainMemoryService(BaseService):
                 "source_type": source_type,
                 "source_id": str(source_id),
                 "importance": 0.7,
-                "context_tags": json.dumps(
-                    d.get("context_tags", []), ensure_ascii=False
-                ),
+                "context_tags": json.dumps(d.get("context_tags", []), ensure_ascii=False),
                 "access_count": 0,
                 "created_by": 0,
                 "created_at": n,
@@ -453,18 +433,14 @@ class BrainMemoryService(BaseService):
 
     def memory_decay(self, hours_threshold: int = 72) -> dict:
         me_repo = MemoryEntriesRepository(self.db)
-        cutoff = (datetime.now() - timedelta(hours=hours_threshold)).strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
+        cutoff = (datetime.now() - timedelta(hours=hours_threshold)).strftime("%Y-%m-%d %H:%M:%S")
         rows = me_repo.db.execute(
             "SELECT id FROM memory_entries WHERE is_active=1 AND "
             "(last_accessed IS NULL OR last_accessed < ?) AND created_at < ?",
             (cutoff, cutoff),
         ).fetchall()
         for r in rows:
-            me_repo.db.execute(
-                "UPDATE memory_entries SET is_active=0 WHERE id=?", (r["id"],)
-            )
+            me_repo.db.execute("UPDATE memory_entries SET is_active=0 WHERE id=?", (r["id"],))
         if rows:
             me_repo.db.commit()
         return {"decayed": len(rows), "hours_threshold": hours_threshold}

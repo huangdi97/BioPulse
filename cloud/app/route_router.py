@@ -58,9 +58,7 @@ def create_rule(
 
 
 @router.get("/rules")
-def list_rules(
-    current_user=Depends(require_scope("visit")), service: RouteService = Depends()
-):
+def list_rules(current_user=Depends(require_scope("visit")), service: RouteService = Depends()):
     return success(data=service.list_rules())
 
 
@@ -139,14 +137,10 @@ def get_log(
 
 
 @router.get("/stats")
-def get_stats(
-    current_user=Depends(require_scope("visit")), service: RouteService = Depends()
-):
+def get_stats(current_user=Depends(require_scope("visit")), service: RouteService = Depends()):
     return success(data=service.get_stats())
 
 
 @router.get("/dashboard")
-def get_dashboard(
-    current_user=Depends(require_scope("visit")), service: RouteService = Depends()
-):
+def get_dashboard(current_user=Depends(require_scope("visit")), service: RouteService = Depends()):
     return success(data=service.get_dashboard())

@@ -2,35 +2,34 @@ import os
 import sqlite3
 from typing import Generator
 
-from shared.db import PGCompatConnection
-
 from cloud.app.schema import SCHEMA_SQL
 from cloud.app.seeds import (
-    seed_market_intel,
     seed_agent_data,
-    seed_decision_intel,
+    seed_brain_memory,  # seed_identity, seed_privacy,  # ❄️ 冻结
+    seed_collaboration,
     seed_compliance_v2,
+    seed_decision_intel,
+    seed_event_bus,
+    seed_hcp_sandbox,
+    seed_kg,
+    seed_market_intel,
     seed_mdt_engine,
     seed_memory_gates,
-    seed_world_tree,
-    seed_route_rules,
-    seed_hcp_sandbox,
-    seed_training_coach,
-    seed_soap_decision,
-    seed_memory_utility,
-    seed_brain_memory,  # seed_identity, seed_privacy,  # ❄️ 冻结
-    seed_kg,
-    seed_recommend,
-    seed_collaboration,
-    seed_event_bus,
     seed_memory_s1,
+    seed_memory_utility,
+    seed_recommend,
+    seed_route_rules,
     seed_s2,
     seed_s3,
     seed_s4,
     seed_s5,
     seed_s6,
+    seed_soap_decision,
+    seed_training_coach,
+    seed_world_tree,
 )
 from cloud.seed_data import seed_products
+from shared.db import PGCompatConnection
 
 DB_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
@@ -42,9 +41,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", "")
 
 
 def get_db() -> Generator:
-    if DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith(
-        "postgres://"
-    ):
+    if DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://"):
         import psycopg2
 
         conn = PGCompatConnection(psycopg2.connect(DATABASE_URL))
@@ -74,9 +71,7 @@ def _ensure_token_budget_tables(conn) -> None:
         "updated_at TEXT DEFAULT CURRENT_TIMESTAMP"
         ")"
     )
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_token_budget_user ON token_budget(user_id, model)"
-    )
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_token_budget_user ON token_budget(user_id, model)")
     conn.execute(
         "CREATE TABLE IF NOT EXISTS token_usage ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -88,9 +83,7 @@ def _ensure_token_budget_tables(conn) -> None:
         "created_at TEXT DEFAULT CURRENT_TIMESTAMP"
         ")"
     )
-    conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_token_usage_user ON token_usage(user_id, model, usage_date)"
-    )
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_token_usage_user ON token_usage(user_id, model, usage_date)")
     conn.commit()
 
 

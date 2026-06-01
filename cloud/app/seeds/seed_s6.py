@@ -30,9 +30,7 @@ def seed_s6(conn):
             "2026Q1行业对标",
             "sales",
             "2026Q1行业对标报告",
-            _json.dumps(
-                {"avg_visit_freq": 3.5, "conversion_rate": 0.28}, ensure_ascii=False
-            ),
+            _json.dumps({"avg_visit_freq": 3.5, "conversion_rate": 0.28}, ensure_ascii=False),
             "2026Q1",
             now,
         ),

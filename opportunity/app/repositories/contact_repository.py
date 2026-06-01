@@ -1,13 +1,13 @@
-from typing import List
 import sqlite3
 from datetime import datetime, timezone
+from typing import List
 
-from shared.repository import BaseRepository
 from shared.columns import (
     TABLE_CONTACT_RECORD_COLS,
     TABLE_OPPORTUNITY_COLS,
     TABLE_RESEARCH_TRAIL_COLS,
 )
+from shared.repository import BaseRepository
 
 
 class ContactRepository(BaseRepository):

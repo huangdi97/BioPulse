@@ -7,9 +7,7 @@ class ConfigService:
         return {row["key"]: row["value"] for row in rows}
 
     def get(self, key: str) -> str | None:
-        row = self.db.execute(
-            "SELECT value FROM settings WHERE key=?", (key,)
-        ).fetchone()
+        row = self.db.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
         return row["value"] if row else None
 
     def update(self, settings: dict) -> dict:

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
+
 from shared.auth import create_access_token
 from shared.auth_scope import require_scope
 

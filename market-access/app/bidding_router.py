@@ -6,6 +6,7 @@ from market_access.app.services.bidding_service import (
     get_price_trend,
     get_province_prices,
 )
+
 from shared.base import success
 
 router = APIRouter(prefix="/api/bidding", tags=["招标监控"])

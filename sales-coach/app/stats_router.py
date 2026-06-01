@@ -3,9 +3,9 @@ from typing import List
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
+from sales_coach.app.services.stats_service import StatsService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, success
-from sales_coach.app.services.stats_service import StatsService
 
 router = APIRouter(prefix="/coach", tags=["stats"])
 

@@ -1,6 +1,6 @@
+import functools
 import json
 import os
-import functools
 
 _RULES_DIR = os.path.dirname(os.path.abspath(__file__))
 

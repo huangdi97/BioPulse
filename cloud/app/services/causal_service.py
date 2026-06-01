@@ -60,9 +60,7 @@ def _causal_graph_to_dict(row) -> dict:
         "id": row["id"],
         "graph_id": row["graph_id"],
         "decision_id": row["decision_id"],
-        "graph_data": json.loads(row["graph_data"])
-        if isinstance(row["graph_data"], str)
-        else row["graph_data"],
+        "graph_data": json.loads(row["graph_data"]) if isinstance(row["graph_data"], str) else row["graph_data"],
         "summary": row["summary"],
         "node_count": row["node_count"],
         "edge_count": row["edge_count"],
@@ -90,9 +88,7 @@ def _scenario_to_dict(row) -> dict:
 
 
 class CausalService(BaseService):
-    def build_graph(
-        self, decision_id: str, include_metrics: bool, user_id: int
-    ) -> dict:
+    def build_graph(self, decision_id: str, include_metrics: bool, user_id: int) -> dict:
         cg_repo = CausalGraphsRepository(self.db)
         graph_id = _gen_graph_id()
         graph_data = _generate_template_graph(decision_id)
@@ -113,18 +109,12 @@ class CausalService(BaseService):
 
     def get_graph(self, graph_id: str) -> dict:
         cg_repo = CausalGraphsRepository(self.db)
-        row = cg_repo.db.execute(
-            "SELECT * FROM causal_graphs WHERE graph_id=?", (graph_id,)
-        ).fetchone()
+        row = cg_repo.db.execute("SELECT * FROM causal_graphs WHERE graph_id=?", (graph_id,)).fetchone()
         if not row:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="Causal graph not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Causal graph not found")
         return _causal_graph_to_dict(row)
 
-    def simulate_counterfactual(
-        self, strategy_id: str, scenarios: list[dict], user_id: int
-    ) -> dict:
+    def simulate_counterfactual(self, strategy_id: str, scenarios: list[dict], user_id: int) -> dict:
         cs_repo = CounterfactualScenariosRepository(self.db)
         results: list[dict] = []
         for sc in scenarios:
@@ -144,9 +134,7 @@ class CausalService(BaseService):
                         ],
                         ensure_ascii=False,
                     ),
-                    "predicted_outcome": json.dumps(
-                        sim["predicted_outcome"], ensure_ascii=False
-                    ),
+                    "predicted_outcome": json.dumps(sim["predicted_outcome"], ensure_ascii=False),
                     "confidence": sim["confidence"],
                     "created_by": user_id,
                 }
@@ -163,9 +151,7 @@ class CausalService(BaseService):
             )
         return {"simulations": results, "total": len(results)}
 
-    def list_counterfactuals(
-        self, strategy_id: Optional[str] = None, page: int = 1, page_size: int = 20
-    ) -> dict:
+    def list_counterfactuals(self, strategy_id: Optional[str] = None, page: int = 1, page_size: int = 20) -> dict:
         cs_repo = CounterfactualScenariosRepository(self.db)
         conditions = []
         params: list = []
@@ -188,19 +174,14 @@ class CausalService(BaseService):
 
     def causal_infer(self, features: dict, target: str, method: str = "linear") -> dict:
         total_weight = sum(abs(v) for v in features.values()) if features else 1.0
-        weights = {
-            k: round(v / total_weight if total_weight else 0, 4)
-            for k, v in features.items()
-        }
+        weights = {k: round(v / total_weight if total_weight else 0, 4) for k, v in features.items()}
         return {
             "method": method,
             "target": target,
             "feature_weights": weights,
         }
 
-    def hcp_prescription_attribution(
-        self, hcp_entity_id: str, factors: list[str], date_range: dict
-    ) -> dict:
+    def hcp_prescription_attribution(self, hcp_entity_id: str, factors: list[str], date_range: dict) -> dict:
         kg_repo = KgEntitiesRepository(self.db)
         em_repo = EpisodicMemoryRepository(self.db)
         hcp_row = kg_repo.db.execute(
@@ -208,9 +189,7 @@ class CausalService(BaseService):
             (hcp_entity_id,),
         ).fetchone()
         if not hcp_row:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="HCP entity not found in KG"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="HCP entity not found in KG")
 
         kg_id = hcp_row["id"]
         where_parts = ["(related_entity_type='kg_entity' AND related_entity_id=?)"]
@@ -230,11 +209,7 @@ class CausalService(BaseService):
 
         activities = []
         for em in em_rows:
-            ctx = (
-                json.loads(em["context"])
-                if isinstance(em["context"], str) and em["context"]
-                else {}
-            )
+            ctx = json.loads(em["context"]) if isinstance(em["context"], str) and em["context"] else {}
             activities.append(
                 {
                     "event_type": em["event_type"],

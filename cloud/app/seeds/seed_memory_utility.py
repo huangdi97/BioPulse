@@ -19,9 +19,9 @@ def seed_memory_utility(conn: sqlite3.Connection) -> None:
         imp = entry["importance"]
         ac = entry["access_count"] or 0
         la = entry["last_accessed"]
-        conn_count = conn.execute(
-            "SELECT COUNT(*) FROM node_memory_links WHERE memory_entry_id=?", (mid,)
-        ).fetchone()[0]
+        conn_count = conn.execute("SELECT COUNT(*) FROM node_memory_links WHERE memory_entry_id=?", (mid,)).fetchone()[
+            0
+        ]
         access_freq = min(ac / 100.0, 1.0)
         if la is None:
             recency = 0.2

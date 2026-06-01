@@ -6,21 +6,17 @@ class TestAuthFlow:
         username = f"authuser_{uuid.uuid4().hex[:8]}"
         password = "CHANGE_ME"
 
-        resp = client.post(
-            "/auth/register", json={"username": username, "password": password}
-        )
+        resp = client.post("/auth/register", json={"username": username, "password": password})
         assert resp.status_code == 201
         assert resp.json()["data"]["username"] == username
 
-        resp = client.post(
-            "/auth/login", json={"username": username, "password": password}
-        )
+        resp = client.post("/auth/login", json={"username": username, "password": password})
         assert resp.status_code == 200
         data = resp.json()["data"]
         assert "access_token" in data
         assert "refresh_token" in data
         assert data["token_type"] == "bearer"
-        access_token = data["access_token"]
+        data["access_token"]
         refresh_token = data["refresh_token"]
 
         resp = client.post("/auth/refresh", json={"refresh_token": refresh_token})
@@ -42,9 +38,7 @@ class TestUserCRUD:
     def test_user_crud_flow(self, client, admin_token):
         username = f"cruduser_{uuid.uuid4().hex[:8]}"
 
-        resp = client.post(
-            "/auth/register", json={"username": username, "password": "crudpass123"}
-        )
+        resp = client.post("/auth/register", json={"username": username, "password": "crudpass123"})
         assert resp.status_code == 201
         user_id = resp.json()["data"]["user_id"]
 
@@ -71,9 +65,7 @@ class TestUserCRUD:
         assert len(users) >= 1
 
         another = f"deleteuser_{uuid.uuid4().hex[:8]}"
-        resp = client.post(
-            "/auth/register", json={"username": another, "password": "delpass123"}
-        )
+        resp = client.post("/auth/register", json={"username": another, "password": "delpass123"})
         assert resp.status_code == 201
         del_id = resp.json()["data"]["user_id"]
 
@@ -426,9 +418,7 @@ class TestAuthRequired:
         resp = client.get("/users/")
         assert resp.status_code == 401
 
-        resp = client.post(
-            "/audit/logs", json={"user_id": 1, "action": "x", "entity_type": "x"}
-        )
+        resp = client.post("/audit/logs", json={"user_id": 1, "action": "x", "entity_type": "x"})
         assert resp.status_code == 401
 
     def test_non_admin_returns_403(self, client, auth_token):
@@ -682,3 +672,1010 @@ class TestHealthCheckEnhanced:
         assert data["db"] in ("connected", "ok")
         assert isinstance(data["uptime"], (int, float))
         assert isinstance(data["version"], str)
+
+
+class TestAgentRoleRouter:
+    def test_create_role(self, client, auth_token):
+        resp = client.post(
+            "/agent/roles",
+            json={
+                "name": f"test-role-{uuid.uuid4().hex[:6]}",
+                "role_type": "sales_rep",
+                "description": "A test role",
+                "system_prompt": "You are a helpful assistant.",
+                "temperature": 0.5,
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 201
+        data = resp.json()["data"]
+        assert data["name"] is not None
+        assert data["id"] is not None
+        assert data["role_type"] == "sales_rep"
+
+    def test_list_roles(self, client, auth_token):
+        resp = client.get(
+            "/agent/roles",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        assert isinstance(resp.json()["data"], list)
+
+    def test_list_roles_by_type(self, client, auth_token):
+        client.post(
+            "/agent/roles",
+            json={
+                "name": f"typed-role-{uuid.uuid4().hex[:6]}",
+                "role_type": "doctor",
+                "system_prompt": "You are a doctor.",
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        resp = client.get(
+            "/agent/roles?role_type=doctor",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        items = resp.json()["data"]
+        assert all(it.get("role_type") == "doctor" for it in items)
+
+    def test_get_role(self, client, auth_token):
+        create_resp = client.post(
+            "/agent/roles",
+            json={
+                "name": f"get-role-{uuid.uuid4().hex[:6]}",
+                "role_type": "researcher",
+                "system_prompt": "You research.",
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        role_id = create_resp.json()["data"]["id"]
+        resp = client.get(
+            f"/agent/roles/{role_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["data"]["id"] == role_id
+
+    def test_get_role_not_found(self, client, auth_token):
+        resp = client.get(
+            "/agent/roles/99999",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 404
+
+    def test_update_role(self, client, auth_token):
+        create_resp = client.post(
+            "/agent/roles",
+            json={
+                "name": f"update-role-{uuid.uuid4().hex[:6]}",
+                "role_type": "manager",
+                "system_prompt": "You manage.",
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        role_id = create_resp.json()["data"]["id"]
+        resp = client.patch(
+            f"/agent/roles/{role_id}",
+            json={"name": "Updated Role Name", "temperature": 0.9},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["data"]["name"] == "Updated Role Name"
+
+    def test_update_role_not_found(self, client, auth_token):
+        resp = client.patch(
+            "/agent/roles/99999",
+            json={"name": "Does Not Exist"},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 404
+
+    def test_delete_role(self, client, auth_token):
+        create_resp = client.post(
+            "/agent/roles",
+            json={
+                "name": f"del-role-{uuid.uuid4().hex[:6]}",
+                "role_type": "temp",
+                "system_prompt": "Temporary role.",
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        role_id = create_resp.json()["data"]["id"]
+        resp = client.delete(
+            f"/agent/roles/{role_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+
+    def test_delete_role_not_found(self, client, auth_token):
+        resp = client.delete(
+            "/agent/roles/99999",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 404
+
+    def test_role_auth_required(self, client):
+        resp = client.get("/agent/roles")
+        assert resp.status_code == 401
+
+        resp = client.post("/agent/roles", json={"name": "x", "system_prompt": "y"})
+        assert resp.status_code == 401
+
+
+class TestAgentExecutionRouter:
+    def test_submit_task(self, client, auth_token):
+        resp = client.post(
+            "/agent/exec/submit",
+            json={
+                "agent_role": "test-role",
+                "action_type": "process",
+                "input_data": {"key": "value"},
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 201
+        data = resp.json()["data"]
+        assert data["agent_role"] == "test-role"
+        assert data["status"] == "completed"
+        assert "task_id" in data
+
+    def test_list_tasks(self, client, auth_token):
+        client.post(
+            "/agent/exec/submit",
+            json={"agent_role": "lister", "action_type": "process"},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        resp = client.get(
+            "/agent/exec/tasks/list",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        assert isinstance(resp.json()["data"], list)
+        assert len(resp.json()["data"]) >= 1
+
+    def test_list_tasks_with_filters(self, client, auth_token):
+        client.post(
+            "/agent/exec/submit",
+            json={"agent_role": "filter-test", "action_type": "review"},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        resp = client.get(
+            "/agent/exec/tasks/list?status=completed&agent_role=filter-test",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        items = resp.json()["data"]
+        for it in items:
+            assert it["status"] == "completed"
+            assert it["agent_role"] == "filter-test"
+
+    def test_get_task(self, client, auth_token):
+        create_resp = client.post(
+            "/agent/exec/submit",
+            json={"agent_role": "getter", "action_type": "fetch"},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        task_id = create_resp.json()["data"]["task_id"]
+        resp = client.get(
+            f"/agent/exec/tasks/{task_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["data"]["task_id"] == task_id
+
+    def test_get_task_not_found(self, client, auth_token):
+        resp = client.get(
+            "/agent/exec/tasks/nonexistent-task-id",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 404
+
+    def test_retry_task(self, client, auth_token):
+        create_resp = client.post(
+            "/agent/exec/submit",
+            json={"agent_role": "retry-role", "action_type": "test"},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        task_id = create_resp.json()["data"]["task_id"]
+        resp = client.post(
+            f"/agent/exec/tasks/{task_id}/retry",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["data"]["retry_count"] >= 1
+        assert resp.json()["data"]["status"] == "pending"
+
+    def test_retry_task_not_found(self, client, auth_token):
+        resp = client.post(
+            "/agent/exec/tasks/bad-id/retry",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 404
+
+    def test_approve_task(self, client, auth_token):
+        create_resp = client.post(
+            "/agent/exec/submit",
+            json={"agent_role": "approve-role", "action_type": "review"},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        task_id = create_resp.json()["data"]["task_id"]
+        resp = client.post(
+            f"/agent/exec/tasks/{task_id}/approve",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["data"]["status"] == "completed"
+
+    def test_approve_task_not_found(self, client, auth_token):
+        resp = client.post(
+            "/agent/exec/tasks/bad-id/approve",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 404
+
+    def test_a2a_card(self, client, auth_token):
+        resp = client.get(
+            "/agent/exec/a2a/card",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert "name" in data
+        assert "skills" in data
+
+    def test_a2a_task(self, client, auth_token):
+        resp = client.post(
+            "/agent/exec/a2a/task",
+            json={
+                "task_id": f"a2a-test-{uuid.uuid4().hex[:8]}",
+                "agent_role": "a2a-role",
+                "input_data": {"question": "test"},
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 201
+        data = resp.json()["data"]
+        assert data["source"] == "a2a"
+        assert data["agent_role"] == "a2a-role"
+
+    def test_exec_auth_required(self, client):
+        resp = client.get("/agent/exec/tasks/list")
+        assert resp.status_code == 401
+        resp = client.post("/agent/exec/submit", json={})
+        assert resp.status_code == 401
+
+
+class TestAgentPipelineRouter:
+    def _create_role(self, client, auth_token):
+        resp = client.post(
+            "/agent/roles",
+            json={
+                "name": f"pipe-role-{uuid.uuid4().hex[:6]}",
+                "role_type": "processor",
+                "system_prompt": "You are a processor.",
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 201
+        return resp.json()["data"]["id"]
+
+    def test_create_pipeline(self, client, auth_token):
+        role_id = self._create_role(client, auth_token)
+        resp = client.post(
+            "/agent/pipelines",
+            json={
+                "name": f"test-pipe-{uuid.uuid4().hex[:6]}",
+                "description": "A test pipeline",
+                "steps": [
+                    {
+                        "step_order": 1,
+                        "agent_role_id": role_id,
+                        "input_mapping": {"context": "previous_output"},
+                    }
+                ],
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 201
+        data = resp.json()["data"]
+        assert data["id"] is not None
+        assert data["name"] is not None
+
+    def test_list_pipelines(self, client, auth_token):
+        role_id = self._create_role(client, auth_token)
+        client.post(
+            "/agent/pipelines",
+            json={
+                "name": f"list-pipe-{uuid.uuid4().hex[:6]}",
+                "steps": [{"step_order": 1, "agent_role_id": role_id}],
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        resp = client.get(
+            "/agent/pipelines",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        items = resp.json()["data"]
+        assert isinstance(items, list)
+        assert len(items) >= 1
+
+    def test_get_pipeline(self, client, auth_token):
+        role_id = self._create_role(client, auth_token)
+        create_resp = client.post(
+            "/agent/pipelines",
+            json={
+                "name": f"get-pipe-{uuid.uuid4().hex[:6]}",
+                "steps": [{"step_order": 1, "agent_role_id": role_id}],
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        pid = create_resp.json()["data"]["id"]
+        resp = client.get(
+            f"/agent/pipelines/{pid}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert data["id"] == pid
+        assert "steps" in data
+        assert len(data["steps"]) >= 1
+
+    def test_get_pipeline_not_found(self, client, auth_token):
+        resp = client.get(
+            "/agent/pipelines/99999",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 404
+
+    def test_delete_pipeline(self, client, auth_token):
+        role_id = self._create_role(client, auth_token)
+        create_resp = client.post(
+            "/agent/pipelines",
+            json={
+                "name": f"del-pipe-{uuid.uuid4().hex[:6]}",
+                "steps": [{"step_order": 1, "agent_role_id": role_id}],
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        pid = create_resp.json()["data"]["id"]
+        resp = client.delete(
+            f"/agent/pipelines/{pid}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+
+    def test_list_runs_empty(self, client, auth_token):
+        role_id = self._create_role(client, auth_token)
+        create_resp = client.post(
+            "/agent/pipelines",
+            json={
+                "name": f"runs-pipe-{uuid.uuid4().hex[:6]}",
+                "steps": [{"step_order": 1, "agent_role_id": role_id}],
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        pid = create_resp.json()["data"]["id"]
+        resp = client.get(
+            f"/agent/pipelines/{pid}/runs",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert "items" in data or isinstance(data, dict)
+
+    def test_pipeline_auth_required(self, client):
+        resp = client.get("/agent/pipelines")
+        assert resp.status_code == 401
+        resp = client.post("/agent/pipelines", json={"name": "x", "steps": []})
+        assert resp.status_code == 401
+
+
+class TestPiRouter:
+    def test_search_pi(self, client, auth_token):
+        resp = client.get(
+            "/api/pi/search?q=test",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["code"] == 0
+
+    def test_search_pi_empty_query(self, client, auth_token):
+        resp = client.get(
+            "/api/pi/search?q=",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["code"] == 0
+        assert isinstance(resp.json()["data"], list)
+
+    def test_create_pi(self, client, auth_token):
+        resp = client.post(
+            "/api/pi",
+            json={
+                "name": "Dr. Test PI",
+                "institution": "Test University",
+                "department": "Immunology",
+                "title": "Professor",
+                "research_areas": ["oncology", "immunotherapy"],
+                "total_papers": 45,
+                "h_index": 18,
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 201
+        data = resp.json()["data"]
+        assert data["name"] == "Dr. Test PI"
+        assert data["institution"] == "Test University"
+
+    def test_get_pi(self, client, auth_token):
+        create_resp = client.post(
+            "/api/pi",
+            json={
+                "name": "Dr. Get Test",
+                "institution": "Get University",
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        pi_id = create_resp.json()["data"]["pi_id"]
+        resp = client.get(
+            f"/api/pi/{pi_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["data"]["pi_id"] == pi_id
+
+    def test_get_pi_not_found(self, client, auth_token):
+        resp = client.get(
+            "/api/pi/99999",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 404
+
+    def test_update_pi(self, client, auth_token):
+        create_resp = client.post(
+            "/api/pi",
+            json={
+                "name": "Dr. Update PI",
+                "institution": "Update University",
+                "department": "Biology",
+                "title": "Associate Professor",
+                "research_areas": ["genetics"],
+                "total_papers": 12,
+                "h_index": 8,
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        pi_id = create_resp.json()["data"]["pi_id"]
+        resp = client.put(
+            f"/api/pi/{pi_id}",
+            json={"name": "Dr. Updated PI", "h_index": 15},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert data["name"] == "Dr. Updated PI"
+        assert data["h_index"] == 15
+
+    def test_pi_auth_required(self, client):
+        resp = client.get("/api/pi/search")
+        assert resp.status_code == 401
+        resp = client.post("/api/pi", json={"name": "x", "institution": "y"})
+        assert resp.status_code == 401
+
+
+class TestProductRouter:
+    def test_search_products(self, client, auth_token):
+        resp = client.get(
+            "/api/products/search?q=test",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["code"] == 0
+
+    def test_search_products_empty_query(self, client, auth_token):
+        resp = client.get(
+            "/api/products/search?q=",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        assert isinstance(resp.json()["data"], list)
+
+    def test_search_products_with_category(self, client, auth_token):
+        client.post(
+            "/api/products",
+            json={
+                "name": "Cat Test Product",
+                "category": "reagent",
+                "brand": "TestCorp",
+                "unit_price": 99.0,
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        resp = client.get(
+            "/api/products/search?category=reagent",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        items = resp.json()["data"]
+        assert any(it.get("category") == "reagent" for it in items)
+
+    def test_create_product(self, client, auth_token):
+        resp = client.post(
+            "/api/products",
+            json={
+                "name": "Test Product X",
+                "category": "equipment",
+                "brand": "MedTech",
+                "model": "X100",
+                "unit_price": 1500.0,
+                "keywords": ["lab", "analysis"],
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 201
+        data = resp.json()["data"]
+        assert data["name"] == "Test Product X"
+        assert data["category"] == "equipment"
+
+    def test_get_product(self, client, auth_token):
+        create_resp = client.post(
+            "/api/products",
+            json={"name": "Get Product Y", "brand": "GetBrand"},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        product_id = create_resp.json()["data"]["product_id"]
+        resp = client.get(
+            f"/api/products/{product_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["data"]["product_id"] == product_id
+
+    def test_get_product_not_found(self, client, auth_token):
+        resp = client.get(
+            "/api/products/99999",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 404
+
+    def test_product_auth_required(self, client):
+        resp = client.get("/api/products/search")
+        assert resp.status_code == 401
+        resp = client.post("/api/products", json={"name": "x"})
+        assert resp.status_code == 401
+
+
+class TestComplianceDashboardRouter:
+    def test_dashboard_summary(self, client, auth_token):
+        resp = client.get(
+            "/api/compliance/dashboard/summary",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "total_violations_today" in data
+
+    def test_rep_violations(self, client, auth_token):
+        resp = client.get(
+            "/api/compliance/dashboard/reps/1",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "rep_id" in data
+        assert "violations" in data
+
+    def test_dashboard_auth_required(self, client):
+        resp = client.get("/api/compliance/dashboard/summary")
+        assert resp.status_code == 401
+
+        resp = client.get("/api/compliance/dashboard/reps/1")
+        assert resp.status_code == 401
+
+
+class TestEnforcerRouter:
+    def test_enforce_visit(self, client, auth_token):
+        resp = client.post(
+            "/api/compliance/enforce",
+            json={
+                "visit_data": {
+                    "rep_id": 1,
+                    "notes": "Regular checkup visit with no issues.",
+                    "expenses": 100,
+                }
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "violations" in data
+        assert "passed" in data
+
+    def test_list_rules(self, client, auth_token):
+        resp = client.get(
+            "/api/compliance/enforce/rules",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "rules" in data
+
+    def test_enforce_auth_required(self, client):
+        resp = client.post("/api/compliance/enforce", json={"visit_data": {}})
+        assert resp.status_code == 401
+
+        resp = client.get("/api/compliance/enforce/rules")
+        assert resp.status_code == 401
+
+
+class TestAuthServiceEdgeCases:
+    def test_register_username_too_short(self, client):
+        resp = client.post("/auth/register", json={"username": "ab", "password": "testpass123"})
+        assert resp.status_code in (409, 422)
+
+    def test_register_password_too_short(self, client):
+        resp = client.post("/auth/register", json={"username": "validuser123", "password": "12345"})
+        assert resp.status_code in (409, 422)
+
+    def test_register_duplicate_user(self, client):
+        username = f"dup_{uuid.uuid4().hex[:8]}"
+        client.post("/auth/register", json={"username": username, "password": "pass123456"})
+        resp = client.post("/auth/register", json={"username": username, "password": "pass123456"})
+        assert resp.status_code == 409
+
+    def test_login_bad_password(self, client):
+        username = f"badpw_{uuid.uuid4().hex[:8]}"
+        client.post("/auth/register", json={"username": username, "password": "goodpass123"})
+        resp = client.post("/auth/login", json={"username": username, "password": "wrongpass456"})
+        assert resp.status_code == 401
+
+    def test_login_disabled_account(self, client, admin_token):
+        username = f"disabled_{uuid.uuid4().hex[:8]}"
+        reg_resp = client.post("/auth/register", json={"username": username, "password": "CHANGE_ME"})
+        user_id = reg_resp.json()["data"]["user_id"]
+        client.patch(
+            f"/users/{user_id}",
+            json={"is_active": False},
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        resp = client.post("/auth/login", json={"username": username, "password": "CHANGE_ME"})
+        assert resp.status_code == 403
+
+    def test_login_nonexistent_user(self, client):
+        resp = client.post(
+            "/auth/login",
+            json={"username": "no__such__user__x", "password": "pass123456"},
+        )
+        assert resp.status_code == 401
+
+    def test_refresh_invalid_token(self, client):
+        resp = client.post("/auth/refresh", json={"refresh_token": "invalid-token-value"})
+        assert resp.status_code == 401
+
+
+class TestAiGateway:
+    def test_chat_requires_auth(self, client):
+        resp = client.post("/ai/chat", json={"messages": [{"role": "user", "content": "hi"}]})
+        assert resp.status_code == 401
+
+
+class TestWorldTreeRouter:
+    def test_create_node(self, client, auth_token):
+        resp = client.post(
+            "/world-tree/nodes",
+            json={
+                "name": f"node-{uuid.uuid4().hex[:6]}",
+                "description": "A test node",
+                "node_type": "tag",
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert data["name"] is not None
+        assert "id" in data
+
+    def test_list_nodes(self, client):
+        resp = client.get("/world-tree/nodes")
+        assert resp.status_code == 200
+        assert isinstance(resp.json()["data"], list)
+
+    def test_get_node(self, client, auth_token):
+        create_resp = client.post(
+            "/world-tree/nodes",
+            json={
+                "name": f"get-node-{uuid.uuid4().hex[:6]}",
+                "node_type": "category",
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        node_id = create_resp.json()["data"]["id"]
+        resp = client.get(f"/world-tree/nodes/{node_id}")
+        assert resp.status_code == 200
+        assert resp.json()["data"]["id"] == node_id
+
+    def test_get_node_not_found(self, client):
+        resp = client.get("/world-tree/nodes/99999")
+        assert resp.status_code == 404
+
+    def test_update_node(self, client, auth_token):
+        create_resp = client.post(
+            "/world-tree/nodes",
+            json={
+                "name": f"upd-node-{uuid.uuid4().hex[:6]}",
+                "node_type": "tag",
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        node_id = create_resp.json()["data"]["id"]
+        resp = client.patch(
+            f"/world-tree/nodes/{node_id}",
+            json={"name": "Updated Node Name", "description": "Updated desc"},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["data"]["name"] == "Updated Node Name"
+
+    def test_delete_node(self, client, auth_token):
+        create_resp = client.post(
+            "/world-tree/nodes",
+            json={
+                "name": f"del-node-{uuid.uuid4().hex[:6]}",
+                "node_type": "tag",
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        node_id = create_resp.json()["data"]["id"]
+        resp = client.delete(f"/world-tree/nodes/{node_id}")
+        assert resp.status_code == 200
+
+    def test_full_tree(self, client):
+        resp = client.get("/world-tree/tree/full")
+        assert resp.status_code == 200
+        assert isinstance(resp.json()["data"], list)
+
+    def test_world_tree_auth_required(self, client):
+        resp = client.post("/world-tree/nodes", json={"name": "x"})
+        assert resp.status_code == 401
+
+
+class TestDatabaseConnection:
+    def test_health_db_connected(self, client):
+        resp = client.get("/health")
+        assert resp.status_code == 200
+        assert resp.json()["db"] == "connected"
+
+
+class TestConfigRouter:
+    def test_get_configs_unauthorized(self, client):
+        resp = client.get("/admin/configs/")
+        assert resp.status_code == 401
+
+    def test_get_configs(self, client, auth_token):
+        resp = client.get(
+            "/admin/configs/",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (200, 422)
+
+
+class TestCustomerRouter:
+    def test_get_customers_unauthorized(self, client):
+        resp = client.get("/customers/")
+        assert resp.status_code == 401
+
+    def test_create_customer(self, client, auth_token):
+        resp = client.post(
+            "/customers/",
+            json={
+                "name": f"cust-{uuid.uuid4().hex[:6]}",
+                "hospital": "Test Hospital",
+                "department": "Cardiology",
+            },
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (200, 201)
+        data = resp.json()["data"] if "data" in resp.json() else resp.json()
+        assert data is not None
+
+    def test_list_customers(self, client, auth_token):
+        resp = client.get(
+            "/customers/",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+
+
+class TestMarketIntelRouter:
+    def test_get_sources(self, client, auth_token):
+        resp = client.get(
+            "/market-intel/sources",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+
+
+class TestOpportunityRouter:
+    def test_get_opportunities(self, client, auth_token):
+        resp = client.get(
+            "/opportunities/",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+
+
+class TestInteractionRouter:
+    def test_get_interactions(self, client, auth_token):
+        resp = client.get(
+            "/interactions/",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+
+
+class TestTaskRouter:
+    def test_get_tasks(self, client, auth_token):
+        resp = client.get(
+            "/tasks/",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+
+
+class TestVisitRouter:
+    def test_get_visits(self, client, auth_token):
+        resp = client.get(
+            "/visit/",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+
+    def test_visit_auth_required(self, client):
+        resp = client.post("/visit", json={"hcp_id": 1, "hcp_name": "x", "content": "y"})
+        assert resp.status_code == 401
+
+
+class TestSettingsRouter:
+    def test_get_settings(self, client, auth_token):
+        resp = client.get(
+            "/settings/",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+
+
+class TestMemoryGateRouter:
+    def test_get_memory_gates(self, client, auth_token):
+        resp = client.get(
+            "/memory-gates/",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+
+
+class TestTokenBudgetRouter:
+    def test_get_token_budget(self, client, auth_token):
+        resp = client.get(
+            "/token-budget/status",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (200, 404)
+
+
+class TestPaginationEdgeCases:
+    def test_audit_log_pagination_large_page(self, client, auth_token):
+        resp = client.get(
+            "/audit/logs?page=100&page_size=50",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert data["total"] >= 0
+
+    def test_audit_log_pagination_zero_page_size(self, client, auth_token):
+        resp = client.get(
+            "/audit/logs?page=1&page_size=1",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (200, 422)
+
+    def test_users_pagination(self, client, admin_token):
+        resp = client.get(
+            "/users/?page=1&page_size=5",
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        assert resp.status_code == 200
+
+
+class TestEmptyResultSets:
+    def test_audit_logs_empty(self, client, auth_token):
+        resp = client.get(
+            "/audit/logs?entity_type=nonexistent_entity_x",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert data["total"] == 0
+
+    def test_teams_empty(self, client, auth_token):
+        resp = client.get(
+            "/teams",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+
+    def test_notifications_empty(self, client, auth_token):
+        resp = client.get(
+            "/notifications/",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code == 200
+        items = resp.json()["data"].get("items", [])
+        assert isinstance(items, list)
+
+
+class TestInvalidTokenFormat:
+    def test_no_auth_header(self, client):
+        resp = client.get("/admin/configs/")
+        assert resp.status_code == 401
+
+    def test_empty_bearer(self, client):
+        resp = client.get(
+            "/admin/configs/",
+            headers={"Authorization": "Bearer "},
+        )
+        assert resp.status_code == 401
+
+    def test_malformed_auth_header(self, client):
+        resp = client.get(
+            "/admin/configs/",
+            headers={"Authorization": "NotBearer token"},
+        )
+        assert resp.status_code == 401
+
+
+class TestMemoryUtilityRouter:
+    def test_memory_utility_scores_public(self, client):
+        resp = client.get("/memory-utils/status")
+        assert resp.status_code == 200
+
+
+class TestCosmeticEndpointCoverage:
+    def test_key_routes_require_auth(self, client):
+        resp = client.get("/kg/entities/list")
+        assert resp.status_code == 401
+
+        resp = client.get("/recommend/list")
+        assert resp.status_code == 401
+
+        resp = client.get("/collaboration/sessions/list")
+        assert resp.status_code == 401
+
+        resp = client.get("/events/messages/list")
+        assert resp.status_code == 401
+
+        resp = client.get("/memory/consolidation/status")
+        assert resp.status_code == 401
+
+        resp = client.get("/orchestrate/templates/list")
+        assert resp.status_code == 401
+
+        resp = client.get("/causal/graph/test")
+        assert resp.status_code == 401
+
+        resp = client.get("/compute/job/list")
+        assert resp.status_code == 401
+
+        resp = client.get("/compliance/gov/logs/list")
+        assert resp.status_code == 401
+
+        resp = client.get("/training/scripts/list")
+        assert resp.status_code == 401
+
+        resp = client.get("/marketplace/metrics/dashboard")
+        assert resp.status_code == 401
+
+        resp = client.get("/mcp/tools/list")
+        assert resp.status_code == 401

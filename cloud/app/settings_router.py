@@ -1,13 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
-from starlette import status
-from pydantic import BaseModel
+import os
+import sqlite3
 
-from cloud.app.services.config_service import ConfigService
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
+from starlette import status
+
 from cloud.app.database import DB_PATH
+from cloud.app.services.config_service import ConfigService
 from shared.auth import verify_token
 from shared.base import success
-import sqlite3
-import os
 
 router = APIRouter(prefix="/admin/settings", tags=["配置"])
 
@@ -27,9 +28,7 @@ def get_current_user(request: Request) -> dict:
     auth = request.headers.get("Authorization", "")
     scheme, _, token = auth.partition(" ")
     if scheme.lower() != "bearer" or not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid auth header"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid auth header")
     payload = verify_token(token)
     return payload
 

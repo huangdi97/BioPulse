@@ -60,9 +60,7 @@ class PiRepository:
         return cursor.lastrowid
 
     def get_by_id(self, pi_id: int) -> Optional[dict]:
-        row = self.db.execute(
-            "SELECT * FROM pi_profiles WHERE pi_id = ?", (pi_id,)
-        ).fetchone()
+        row = self.db.execute("SELECT * FROM pi_profiles WHERE pi_id = ?", (pi_id,)).fetchone()
         if row:
             return dict(row)
         return None
@@ -87,9 +85,7 @@ class PiRepository:
             updates["research_areas"] = json.dumps(updates["research_areas"])
         set_clause = ", ".join(f"{k} = ?" for k in updates)
         values = list(updates.values()) + [pi_id]
-        cursor = self.db.execute(
-            f"UPDATE pi_profiles SET {set_clause} WHERE pi_id = ?", values
-        )
+        cursor = self.db.execute(f"UPDATE pi_profiles SET {set_clause} WHERE pi_id = ?", values)
         self.db.commit()
         return cursor.rowcount > 0
 
@@ -99,9 +95,7 @@ class PiRepository:
         return cursor.rowcount > 0
 
     def list_all(self) -> list[dict]:
-        return [
-            dict(r) for r in self.db.execute("SELECT * FROM pi_profiles").fetchall()
-        ]
+        return [dict(r) for r in self.db.execute("SELECT * FROM pi_profiles").fetchall()]
 
     def search(self, keyword: str) -> list[dict]:
         pattern = f"%{keyword}%"

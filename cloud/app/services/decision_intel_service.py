@@ -1,6 +1,6 @@
 import json
-import urllib.request
 import urllib.error
+import urllib.request
 from datetime import datetime
 from typing import Any, Optional
 
@@ -16,7 +16,7 @@ from cloud.app.repositories import (
 )
 from cloud.app.services.base import BaseService
 from shared.base import validate_columns
-from shared.columns import TABLE_DECISION_CASES_COLS, TABLE_CROSS_CASE_INSIGHTS_COLS
+from shared.columns import TABLE_CROSS_CASE_INSIGHTS_COLS, TABLE_DECISION_CASES_COLS
 
 
 def _now() -> str:
@@ -155,16 +155,13 @@ class DecisionIntelService(BaseService):
             _e404("Case")
         case_repo.soft_delete_with_causal(case_id)
 
-    def analyze_case(
-        self, case_id: int, custom_question: str, auth_header: str
-    ) -> dict:
+    def analyze_case(self, case_id: int, custom_question: str, auth_header: str) -> dict:
         row = DecisionCasesRepository(self.db).get_active_by_id(case_id)
         if not row:
             _e404("Case")
         ctx = _parse_json(row["context"], {})
         desc = (
-            f"案例名称: {row['name']}\n描述: {row['description']}\n"
-            f"结果: {row['outcome']}\n评分: {row['outcome_score']}"
+            f"案例名称: {row['name']}\n描述: {row['description']}\n结果: {row['outcome']}\n评分: {row['outcome_score']}"
         )
         if ctx:
             desc += f"\n上下文: {json.dumps(ctx, ensure_ascii=False)}"
@@ -227,19 +224,12 @@ class DecisionIntelService(BaseService):
     def reflect(self, filter_tags: list, max_cases: int, auth_header: str) -> dict:
         case_repo = DecisionCasesRepository(self.db)
         limit = min(max_cases, 5)
-        succ_rows = case_repo.list_success_cases(
-            limit=limit, filter_tags=filter_tags or None
-        )
-        fail_rows = case_repo.list_fail_cases(
-            limit=limit, filter_tags=filter_tags or None
-        )
+        succ_rows = case_repo.list_success_cases(limit=limit, filter_tags=filter_tags or None)
+        fail_rows = case_repo.list_fail_cases(limit=limit, filter_tags=filter_tags or None)
 
         def _fmt(rows, label):
             return (
-                "\n".join(
-                    f"{label}: {r['name']} (评分:{r['outcome_score']}) - {r['description']}"
-                    for r in rows
-                )
+                "\n".join(f"{label}: {r['name']} (评分:{r['outcome_score']}) - {r['description']}" for r in rows)
                 or "无"
             )
 
@@ -268,9 +258,7 @@ class DecisionIntelService(BaseService):
                 ("pitfall", "pitfalls"),
                 ("best_practice", "best_practices"),
             ]:
-                for item in (
-                    parsed.get(key) if isinstance(parsed.get(key), list) else []
-                ):
+                for item in parsed.get(key) if isinstance(parsed.get(key), list) else []:
                     if not isinstance(item, dict):
                         continue
                     insight_repo.create(
@@ -279,9 +267,7 @@ class DecisionIntelService(BaseService):
                             "insight_type": itype,
                             "summary": item.get("summary", ""),
                             "detail": json.dumps(item, ensure_ascii=False),
-                            "evidence": json.dumps(
-                                item.get("evidence_case_ids", []), ensure_ascii=False
-                            ),
+                            "evidence": json.dumps(item.get("evidence_case_ids", []), ensure_ascii=False),
                             "confidence": item.get("confidence", 0.5),
                             "applicability": item.get("applicability", "general"),
                             "source_run_ids": "[]",
@@ -338,9 +324,7 @@ class DecisionIntelService(BaseService):
                 updates[f] = v
         if updates:
             updates["updated_at"] = _now()
-            validate_columns(
-                updates, "cross_case_insights", TABLE_CROSS_CASE_INSIGHTS_COLS
-            )
+            validate_columns(updates, "cross_case_insights", TABLE_CROSS_CASE_INSIGHTS_COLS)
             repo.update(insight_id, updates)
         return repo.get_by_id(insight_id)
 

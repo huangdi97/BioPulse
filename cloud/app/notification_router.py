@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from starlette import status
 
+from cloud.app.services.notification_service import NotificationService
 from shared.auth_scope import require_scope
 from shared.base import success
-from cloud.app.services.notification_service import NotificationService
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
@@ -122,9 +122,7 @@ def list_notifications(
     service: NotificationService = Depends(),
 ) -> Any:
     user_id = int(current_user["sub"])
-    result = service.list_notifications(
-        user_id=user_id, is_read=is_read, page=page, page_size=page_size
-    )
+    result = service.list_notifications(user_id=user_id, is_read=is_read, page=page, page_size=page_size)
     return success(data=result)
 
 

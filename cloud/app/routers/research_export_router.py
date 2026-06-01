@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from starlette import status
 from starlette.responses import Response
 
+from cloud.app.services.research_export_service import export_pi_csv, export_quotation
 from shared.auth import get_current_user
 from shared.auth_scope import require_scope
-from cloud.app.services.research_export_service import export_pi_csv, export_quotation
 
 router = APIRouter(
     prefix="/api/research/export",
@@ -19,9 +19,7 @@ def export_pi(
     current_user: dict = Depends(get_current_user),
 ):
     if format != "csv":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Only CSV format supported"
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only CSV format supported")
     content = export_pi_csv()
     return Response(
         content=content,

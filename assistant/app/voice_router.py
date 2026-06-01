@@ -12,9 +12,9 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse
 
+from assistant.app.services.voice_service import VoiceService
 from shared.auth import get_current_user
 from shared.base import success
-from assistant.app.services.voice_service import VoiceService
 
 router = APIRouter(tags=["voice"])
 

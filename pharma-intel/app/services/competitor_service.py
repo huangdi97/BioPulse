@@ -1,7 +1,8 @@
 """竞品情报服务。"""
 
-import httpx
 from datetime import datetime, timezone
+
+import httpx
 from pharma_intel.app.database import get_cache, set_cache
 
 CLOUD_API = "http://localhost:8000"

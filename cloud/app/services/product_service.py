@@ -14,9 +14,7 @@ class ProductService(BaseService):
         repo = ProductRepository(self.db)
         product = repo.get_by_id(product_id)
         if not product:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Product not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
         return product
 
     def create(

@@ -1,12 +1,11 @@
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends
-from starlette import status
 from pydantic import BaseModel, Field
+from starlette import status
 
-from shared.base import success
 from cloud.app.services.auth_service import AuthService
-
+from shared.base import success
 
 router = APIRouter(prefix="/auth", tags=["认证"])
 

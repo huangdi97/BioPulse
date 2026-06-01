@@ -44,9 +44,7 @@ class ModuleRepository(BaseRepository):
             conds.extend(conditions)
         return self.list_all(conditions=conds, params=params, order_by=order_by)
 
-    def paginate_active(
-        self, page=1, page_size=20, conditions=None, params=None, order_by="id DESC"
-    ):
+    def paginate_active(self, page=1, page_size=20, conditions=None, params=None, order_by="id DESC"):
         conds = ["is_active = 1"]
         if conditions:
             conds.extend(conditions)
@@ -92,9 +90,7 @@ class ScenarioRepository(BaseRepository):
             conds.extend(conditions)
         return self.list_all(conditions=conds, params=params, order_by=order_by)
 
-    def paginate_active(
-        self, page=1, page_size=20, conditions=None, params=None, order_by="id DESC"
-    ):
+    def paginate_active(self, page=1, page_size=20, conditions=None, params=None, order_by="id DESC"):
         conds = ["is_active = 1"]
         if conditions:
             conds.extend(conditions)
@@ -126,9 +122,7 @@ class SessionRepository(BaseRepository):
             (module_id,),
         ).fetchall()
 
-    def paginate_by_module(
-        self, module_id: int, page=1, page_size=20, order_by="id DESC"
-    ):
+    def paginate_by_module(self, module_id: int, page=1, page_size=20, order_by="id DESC"):
         total = self.db.execute(
             "SELECT COUNT(*) FROM coach_session WHERE module_id = ?",
             (module_id,),
@@ -136,9 +130,7 @@ class SessionRepository(BaseRepository):
         total_pages = max(1, (total + page_size - 1) // page_size)
         offset = (page - 1) * page_size
         rows = self.db.execute(
-            "SELECT * FROM coach_session WHERE module_id = ? ORDER BY "
-            + order_by
-            + " LIMIT ? OFFSET ?",
+            "SELECT * FROM coach_session WHERE module_id = ? ORDER BY " + order_by + " LIMIT ? OFFSET ?",
             (module_id, page_size, offset),
         ).fetchall()
         return total, total_pages, rows
@@ -164,16 +156,13 @@ class AssessmentRepository(BaseRepository):
             from fastapi import HTTPException
             from starlette import status
 
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="Assessment not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Assessment not found")
         return row
 
     def soft_delete_assessment(self, assessment_id: int) -> None:
         now = datetime.now(timezone.utc).isoformat()
         self.db.execute(
-            "UPDATE education_assessment SET is_active = 0, updated_at = ? "
-            "WHERE id = ?",
+            "UPDATE education_assessment SET is_active = 0, updated_at = ? WHERE id = ?",
             (now, assessment_id),
         )
         self.db.commit()
@@ -184,9 +173,7 @@ class AssessmentRepository(BaseRepository):
             conds.extend(conditions)
         return self.list_all(conditions=conds, params=params, order_by=order_by)
 
-    def paginate_active(
-        self, page=1, page_size=20, conditions=None, params=None, order_by="id DESC"
-    ):
+    def paginate_active(self, page=1, page_size=20, conditions=None, params=None, order_by="id DESC"):
         conds = ["is_active = 1"]
         if conditions:
             conds.extend(conditions)
@@ -201,14 +188,10 @@ class AssessmentRepository(BaseRepository):
     def get_stats(self) -> Dict[str, Any]:
         from collections import Counter
 
-        total = self.db.execute(
-            "SELECT COUNT(*) FROM education_assessment WHERE is_active = 1"
-        ).fetchone()[0]
+        total = self.db.execute("SELECT COUNT(*) FROM education_assessment WHERE is_active = 1").fetchone()[0]
 
         dist_rows = self.db.execute(
-            "SELECT current_level, COUNT(*) as cnt "
-            "FROM education_assessment WHERE is_active = 1 "
-            "GROUP BY current_level"
+            "SELECT current_level, COUNT(*) as cnt FROM education_assessment WHERE is_active = 1 GROUP BY current_level"
         ).fetchall()
         level_dist = {r["current_level"]: r["cnt"] for r in dist_rows}
 
@@ -222,9 +205,7 @@ class AssessmentRepository(BaseRepository):
                 stripped = w.strip()
                 if stripped:
                     counter[stripped] += 1
-        top_weaknesses = [
-            {"weakness": w, "count": c} for w, c in counter.most_common(10)
-        ]
+        top_weaknesses = [{"weakness": w, "count": c} for w, c in counter.most_common(10)]
 
         recent = self.db.execute(
             "SELECT COUNT(*) FROM education_assessment "
@@ -244,9 +225,7 @@ class StatsRepository:
         self.db = db
 
     def get_coach_stats(self) -> Dict[str, Any]:
-        row = self.db.execute(
-            "SELECT COUNT(*) as cnt, AVG(score) as avg FROM coach_session"
-        ).fetchone()
+        row = self.db.execute("SELECT COUNT(*) as cnt, AVG(score) as avg FROM coach_session").fetchone()
         total = row["cnt"]
         avg_score = round(row["avg"] or 0, 1)
 

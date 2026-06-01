@@ -5,17 +5,17 @@ and loaded at runtime. Adding a new rule only requires editing the JSON file,
 not modifying Python code.
 """
 
-from dataclasses import dataclass, field
-from typing import List
 import json
 import sqlite3
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import List
 
 from cloud.rules.loader import (
-    load_pharma_rules,
-    load_research_rules,
     load_pharma_l2_rules,
+    load_pharma_rules,
     load_research_l2_rules,
+    load_research_rules,
 )
 
 
@@ -293,9 +293,7 @@ class ComplianceEnforcer:
                     (entity_id, since),
                 ).fetchone()["c"]
                 if count >= int(threshold):
-                    return self._build_l2_violation(
-                        rule, f"实体[{entity_id}]在{window_days}天内拜访{count}次"
-                    )
+                    return self._build_l2_violation(rule, f"实体[{entity_id}]在{window_days}天内拜访{count}次")
         elif check_type == "concentration_check":
             field = condition.get("field")
             ratio_threshold = condition.get("ratio_threshold", 0.8)
@@ -305,9 +303,9 @@ class ComplianceEnforcer:
                 from datetime import datetime, timedelta
 
                 since = (datetime.now() - timedelta(days=window_days)).isoformat()
-                total = self.db.execute(
-                    "SELECT COUNT(*) AS c FROM visits WHERE created_at >= ?", (since,)
-                ).fetchone()["c"]
+                total = self.db.execute("SELECT COUNT(*) AS c FROM visits WHERE created_at >= ?", (since,)).fetchone()[
+                    "c"
+                ]
                 if total > 0:
                     dept_count = self.db.execute(
                         f"SELECT COUNT(*) AS c FROM visits WHERE {field} = ? AND created_at >= ?",
@@ -315,9 +313,7 @@ class ComplianceEnforcer:
                     ).fetchone()["c"]
                     ratio = dept_count / total
                     if ratio >= ratio_threshold:
-                        return self._build_l2_violation(
-                            rule, f"值[{dept_val}]占比{ratio:.1%}"
-                        )
+                        return self._build_l2_violation(rule, f"值[{dept_val}]占比{ratio:.1%}")
         return None
 
     def _build_l2_violation(self, rule: dict, detail: str = "") -> dict:

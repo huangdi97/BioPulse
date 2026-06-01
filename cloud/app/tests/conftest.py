@@ -4,11 +4,9 @@ import uuid
 import pytest
 from starlette.testclient import TestClient
 
-from shared.conftest_base import is_pg, get_pg_url, setup_test_db, clean_test_tables
+from shared.conftest_base import clean_test_tables, get_pg_url, is_pg, setup_test_db
 
-BASE_DIR = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 TEST_DB = os.path.join(BASE_DIR, "data", "test_cloud.db")
 TEST_RESEARCH_DB = os.path.join(BASE_DIR, "data", "test_research.db")
 os.makedirs(os.path.dirname(TEST_DB), exist_ok=True)
@@ -57,9 +55,7 @@ def db_path():
 
 
 def _register_and_login(client, username, password):
-    resp = client.post(
-        "/auth/register", json={"username": username, "password": password}
-    )
+    resp = client.post("/auth/register", json={"username": username, "password": password})
     assert resp.status_code == 201, resp.text
     resp = client.post("/auth/login", json={"username": username, "password": password})
     assert resp.status_code == 200, resp.text

@@ -1,12 +1,12 @@
-from typing import Optional, List, Any
 import sqlite3
 from datetime import datetime, timezone
+from typing import Any, List, Optional
 
-from shared.repository import BaseRepository
 from shared.columns import (
     TABLE_BIDDING_INFO_COLS,
     TABLE_USER_BOOKMARK_COLS,
 )
+from shared.repository import BaseRepository
 
 
 class BiddingRepository(BaseRepository):
@@ -55,9 +55,7 @@ class BiddingAgentRepository:
         return cur.lastrowid
 
     def get_config(self, config_id: int) -> Optional[sqlite3.Row]:
-        return self.db.execute(
-            "SELECT * FROM bidding_agent_config WHERE id = ?", (config_id,)
-        ).fetchone()
+        return self.db.execute("SELECT * FROM bidding_agent_config WHERE id = ?", (config_id,)).fetchone()
 
     def list_configs(
         self, conditions: Optional[List[str]] = None, params: Optional[List[Any]] = None
@@ -138,9 +136,7 @@ class BiddingAgentRepository:
         ).fetchall()
 
     def get_status(self) -> dict:
-        last = self.db.execute(
-            "SELECT started_at FROM bidding_agent_log ORDER BY id DESC LIMIT 1"
-        ).fetchone()
+        last = self.db.execute("SELECT started_at FROM bidding_agent_log ORDER BY id DESC LIMIT 1").fetchone()
         stats = self.db.execute(
             """SELECT COUNT(*) as total,
                       SUM(CASE WHEN run_status='success' THEN 1 ELSE 0 END) as success
@@ -148,9 +144,7 @@ class BiddingAgentRepository:
         ).fetchone()
         total_runs = stats["total"] or 0
         success_count = stats["success"] or 0
-        success_rate = (
-            round(success_count / total_runs * 100, 1) if total_runs > 0 else 0.0
-        )
+        success_rate = round(success_count / total_runs * 100, 1) if total_runs > 0 else 0.0
         return {
             "last_run": last["started_at"] if last else None,
             "total_runs": total_runs,
@@ -181,9 +175,7 @@ class BookmarkRepository(BaseRepository):
             order_by="created_at DESC",
         )
 
-    def get_by_entity(
-        self, entity_type: str, entity_id: int, user_id: int
-    ) -> Optional[sqlite3.Row]:
+    def get_by_entity(self, entity_type: str, entity_id: int, user_id: int) -> Optional[sqlite3.Row]:
         return self.db.execute(
             """SELECT * FROM user_bookmark
                WHERE entity_type = ? AND entity_id = ? AND created_by = ?""",

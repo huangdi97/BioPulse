@@ -1,9 +1,9 @@
-from cloud.shared.repository import BaseRepository
 from cloud.shared.columns import (
-    TABLE_TASK_BOARDS_COLS,
     TABLE_BOARD_TASKS_COLS,
+    TABLE_TASK_BOARDS_COLS,
     TABLE_TEAMS_COLS,
 )
+from cloud.shared.repository import BaseRepository
 
 
 class TaskBoardsRepository(BaseRepository):

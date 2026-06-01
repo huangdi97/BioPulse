@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from starlette import status
 
+from cloud.app.services.team_service import TeamService
 from shared.auth_scope import require_scope
 from shared.base import success
-from cloud.app.services.team_service import TeamService
 
 router = APIRouter(prefix="/teams", tags=["团队管理"])
 

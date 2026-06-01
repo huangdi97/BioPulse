@@ -1,18 +1,20 @@
 import json
 from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 from starlette import status
+
 from cloud.app.database import get_db
 from cloud.app.repositories import (
     AgentPipelinesRepository,
-    PipelineStepsRepository,
     PipelineRunsRepository,
     PipelineStepRunsRepository,
+    PipelineStepsRepository,
 )
-from shared.auth_scope import require_scope
-from shared.base import success, PaginatedResponse
 from cloud.langgraph.pipeline_graph import get_pipeline_graph
+from shared.auth_scope import require_scope
+from shared.base import PaginatedResponse, success
 
 router = APIRouter(prefix="/agent/pipelines", tags=["Agent系统"])
 
@@ -111,17 +113,13 @@ def list_pipelines(current_user=Depends(require_scope("visit")), db=Depends(get_
 
 # IMPORTANT: /runs/{run_id} MUST come before /{pipeline_id} to avoid route conflicts
 @router.get("/runs/{run_id}")
-def get_run(
-    run_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)
-):
+def get_run(run_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     runs_repo = PipelineRunsRepository(db)
     step_runs_repo = PipelineStepRunsRepository(db)
     row = runs_repo.get_by_id(run_id)
     if not row:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Run not found")
-    steps = step_runs_repo.list_all(
-        conditions=["run_id=?"], params=[run_id], order_by="step_order ASC"
-    )
+    steps = step_runs_repo.list_all(conditions=["run_id=?"], params=[run_id], order_by="step_order ASC")
     return success(
         data={
             "run": dict(row),
@@ -131,22 +129,16 @@ def get_run(
 
 
 @router.get("/{pipeline_id}")
-def get_pipeline(
-    pipeline_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)
-):
+def get_pipeline(pipeline_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     pipelines_repo = AgentPipelinesRepository(db)
     steps_repo = PipelineStepsRepository(db)
     row = _p404(pipelines_repo, pipeline_id)
-    steps = steps_repo.list_all(
-        conditions=["pipeline_id=?"], params=[pipeline_id], order_by="step_order ASC"
-    )
+    steps = steps_repo.list_all(conditions=["pipeline_id=?"], params=[pipeline_id], order_by="step_order ASC")
     return success(data={**pd(row), "steps": [sd(s) for s in steps]})
 
 
 @router.delete("/{pipeline_id}")
-def delete_pipeline(
-    pipeline_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)
-):
+def delete_pipeline(pipeline_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     pipelines_repo = AgentPipelinesRepository(db)
     steps_repo = PipelineStepsRepository(db)
     runs_repo = PipelineRunsRepository(db)
@@ -168,11 +160,11 @@ def run_pipeline(
     db=Depends(get_db),
 ):
     pipelines_repo = AgentPipelinesRepository(db)
-    steps_repo = PipelineStepsRepository(db)
+    PipelineStepsRepository(db)
     runs_repo = PipelineRunsRepository(db)
     step_runs_repo = PipelineStepRunsRepository(db)
 
-    pipeline = _p404(pipelines_repo, pipeline_id)
+    _p404(pipelines_repo, pipeline_id)
     steps = db.execute(
         "SELECT ps.*, ar.system_prompt, ar.name AS ar_name, ar.temperature, ar.max_tokens "
         "FROM pipeline_steps ps JOIN agent_roles ar ON ps.agent_role_id=ar.id "
@@ -205,9 +197,7 @@ def run_pipeline(
                 "custom_prompt_override": step["custom_prompt_override"],
                 "temperature": step["temperature"] or 0.7,
                 "max_tokens": step["max_tokens"] or 2048,
-                "input_mapping": json.loads(step["input_mapping"])
-                if step["input_mapping"]
-                else {},
+                "input_mapping": json.loads(step["input_mapping"]) if step["input_mapping"] else {},
             }
         )
 
@@ -229,9 +219,7 @@ def run_pipeline(
     final_status = "completed"
     for sr in step_results:
         s_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        matching_step = next(
-            (s for s in steps if s["step_order"] == sr["step_order"]), None
-        )
+        matching_step = next((s for s in steps if s["step_order"] == sr["step_order"]), None)
         step_runs_repo.create(
             {
                 "run_id": run_id,
@@ -259,9 +247,7 @@ def run_pipeline(
             "completed_at": c_now,
         },
     )
-    return success(
-        data={"run_id": run_id, "status": final_status, "steps": step_results}
-    )
+    return success(data={"run_id": run_id, "status": final_status, "steps": step_results})
 
 
 @router.get("/{pipeline_id}/runs")

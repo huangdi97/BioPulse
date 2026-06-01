@@ -14,9 +14,7 @@ class ContactService(BaseService):
             (opportunity_id,),
         ).fetchone()
         if not row:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found")
 
     def create_contact(self, body, opportunity_id: int, user_id: int) -> int:
         self._check_opportunity_exists(opportunity_id)
@@ -46,18 +44,14 @@ class ContactService(BaseService):
         repo = ContactRecordRepository(self.db)
         row = repo.get_by_id(contact_id)
         if not row:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")
         return dict(row)
 
     def update_contact(self, contact_id: int, body) -> dict:
         repo = ContactRecordRepository(self.db)
         row = repo.get_by_id(contact_id)
         if not row:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")
 
         updates = body.model_dump(exclude_unset=True)
         if not updates:
@@ -70,7 +64,5 @@ class ContactService(BaseService):
         repo = ContactRecordRepository(self.db)
         row = repo.get_by_id(contact_id)
         if not row:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")
         repo.soft_delete(contact_id)

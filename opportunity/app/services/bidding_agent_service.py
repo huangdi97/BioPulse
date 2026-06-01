@@ -134,9 +134,7 @@ class BiddingAgentService(BaseService):
         repo = BiddingAgentConfigRepository(self.db)
         row = repo.get_by_id(config_id)
         if not row or row["is_active"] != 1:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Config not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Config not found")
         updates = body.model_dump(exclude_unset=True)
         if not updates:
             return dict(row)
@@ -148,9 +146,7 @@ class BiddingAgentService(BaseService):
         repo = BiddingAgentConfigRepository(self.db)
         row = repo.get_by_id(config_id)
         if not row or row["is_active"] != 1:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Config not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Config not found")
         repo.soft_delete(config_id)
 
     def trigger_scan(self, auth_header: str) -> dict:
@@ -186,17 +182,13 @@ class BiddingAgentService(BaseService):
         }
 
     def get_agent_status(self) -> dict:
-        last = self.db.execute(
-            "SELECT started_at FROM bidding_agent_log ORDER BY id DESC LIMIT 1"
-        ).fetchone()
+        last = self.db.execute("SELECT started_at FROM bidding_agent_log ORDER BY id DESC LIMIT 1").fetchone()
         stats = self.db.execute(
             "SELECT COUNT(*) as total, SUM(CASE WHEN run_status='success' THEN 1 ELSE 0 END) as success FROM bidding_agent_log"
         ).fetchone()
         total_runs = stats["total"] or 0
         success_count = stats["success"] or 0
-        success_rate = (
-            round(success_count / total_runs * 100, 1) if total_runs > 0 else 0.0
-        )
+        success_rate = round(success_count / total_runs * 100, 1) if total_runs > 0 else 0.0
         return {
             "last_run": last["started_at"] if last else None,
             "total_runs": total_runs,
@@ -216,13 +208,9 @@ class BiddingAgentService(BaseService):
         return items, total, page, page_size, total_pages
 
     def auto_analyze_bidding(self, bidding_id: int, auth_header: str) -> dict:
-        row = self.db.execute(
-            "SELECT * FROM bidding_info WHERE id = ? AND is_active = 1", (bidding_id,)
-        ).fetchone()
+        row = self.db.execute("SELECT * FROM bidding_info WHERE id = ? AND is_active = 1", (bidding_id,)).fetchone()
         if not row:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Bidding not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bidding not found")
         bid = dict(row)
         prompt = f"""分析以下招标信息的机会评估和产品匹配建议:
 标题: {bid.get("title", "")}
@@ -251,9 +239,7 @@ class BiddingAgentService(BaseService):
         return analysis
 
     def get_all_active_configs(self) -> list:
-        configs = self.db.execute(
-            "SELECT * FROM bidding_agent_config WHERE is_active = 1"
-        ).fetchall()
+        configs = self.db.execute("SELECT * FROM bidding_agent_config WHERE is_active = 1").fetchall()
         return [dict(c) for c in configs]
 
     def run_scheduled_scan(self) -> None:

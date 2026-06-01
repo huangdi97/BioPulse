@@ -3,9 +3,9 @@ from typing import Any
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
+from sales_assistant.app.services.funnel_service import FunnelService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, success
-from sales_assistant.app.services.funnel_service import FunnelService
 
 router = APIRouter(tags=["Funnel Analysis"])
 
@@ -38,8 +38,7 @@ def funnel_analysis(
             with_notes=data["with_notes"],
             note_rate=data["note_rate"],
             by_event_type={
-                k: EventTypeStats(total=v["total"], completed=v["completed"])
-                for k, v in data["by_event_type"].items()
+                k: EventTypeStats(total=v["total"], completed=v["completed"]) for k, v in data["by_event_type"].items()
             },
         )
     )

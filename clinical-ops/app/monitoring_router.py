@@ -1,11 +1,12 @@
 """监察报告路由。"""
 
-from fastapi import APIRouter, Query
 from clinical_ops.app.services.monitoring_service import (
+    generate_report,
     get_monitoring_plan,
     get_monitoring_report,
-    generate_report,
 )
+from fastapi import APIRouter, Query
+
 from shared.base import success
 
 router = APIRouter(prefix="/api/monitoring", tags=["监察报告"])

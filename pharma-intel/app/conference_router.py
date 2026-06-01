@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Query, HTTPException
-from starlette import status
+from fastapi import APIRouter, HTTPException, Query
 from pharma_intel.app.services.conference_service import (
-    get_upcoming_conferences,
-    get_conference_detail,
     analyze_conference_trends,
+    get_conference_detail,
+    get_upcoming_conferences,
 )
+from starlette import status
+
 from shared.base import success
 
 router = APIRouter(prefix="/api/conference", tags=["学术会议追踪"])

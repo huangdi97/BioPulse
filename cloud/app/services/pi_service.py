@@ -16,9 +16,7 @@ class PiService(BaseService):
         repo = PiRepository(self.db)
         pi = repo.get_by_id(pi_id)
         if not pi:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="PI not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PI not found")
         return pi
 
     def create(

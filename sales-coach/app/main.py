@@ -1,18 +1,19 @@
-import time
 import sqlite3
+import time
+
 from fastapi import FastAPI
 from starlette import status
-from shared.middleware import RequestIDMiddleware
-from shared.rate_limiter import RateLimiterMiddleware
-from shared.exception_handlers import register_exception_handlers
 
-from sales_coach.app.database import init_db, DB_PATH
+from sales_coach.app.assessment_router import router as assessment_router
+from sales_coach.app.database import DB_PATH, init_db
 from sales_coach.app.module_router import router as module_router
+from sales_coach.app.reflection_router import router as reflection_router
 from sales_coach.app.scenario_router import router as scenario_router
 from sales_coach.app.session_router import router as session_router
 from sales_coach.app.stats_router import router as stats_router
-from sales_coach.app.assessment_router import router as assessment_router
-from sales_coach.app.reflection_router import router as reflection_router
+from shared.exception_handlers import register_exception_handlers
+from shared.middleware import RequestIDMiddleware
+from shared.rate_limiter import RateLimiterMiddleware
 
 START_TIME = time.time()
 

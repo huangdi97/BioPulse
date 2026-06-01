@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from starlette import status
 
+from cloud.app.services.marketplace_service import MarketplaceService
 from shared.auth_scope import require_scope
 from shared.base import success
-from cloud.app.services.marketplace_service import MarketplaceService
 
 router = APIRouter(prefix="/marketplace", tags=["Marketplace & Analytics"])
 
@@ -67,9 +67,7 @@ def generate_benchmark(
     current_user: dict = Depends(require_scope("visit")),
     service: MarketplaceService = Depends(),
 ) -> Any:
-    return success(
-        data=service.generate_benchmark(body.report_name, body.report_type, body.period)
-    )
+    return success(data=service.generate_benchmark(body.report_name, body.report_type, body.period))
 
 
 @router.get("/benchmark/list")
@@ -107,8 +105,4 @@ def discover_items(
     price_model: Optional[str] = Query(None),
     enabled: Optional[int] = Query(None),
 ) -> Any:
-    return success(
-        data=service.discover_items(
-            category=category, price_model=price_model, enabled=enabled
-        )
-    )
+    return success(data=service.discover_items(category=category, price_model=price_model, enabled=enabled))

@@ -4,9 +4,9 @@ import logging
 import os
 import sqlite3
 import time
-import urllib.request
-import urllib.parse
 import urllib.error
+import urllib.parse
+import urllib.request
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +26,7 @@ ESUMMARY_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
 def _get_cache_conn() -> sqlite3.Connection:
     os.makedirs(_CACHE_DB_DIR, exist_ok=True)
     conn = sqlite3.connect(_CACHE_DB_PATH)
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS pubmed_cache "
-        "(cache_key TEXT PRIMARY KEY, response TEXT, cached_at REAL)"
-    )
+    conn.execute("CREATE TABLE IF NOT EXISTS pubmed_cache (cache_key TEXT PRIMARY KEY, response TEXT, cached_at REAL)")
     return conn
 
 
@@ -63,9 +60,7 @@ def _fetch_json(url: str) -> dict | None:
 def search_pubmed(keyword: str, max_results: int = 20) -> list[dict]:
     ckey = _cache_key(keyword, max_results)
     conn = _get_cache_conn()
-    row = conn.execute(
-        "SELECT response, cached_at FROM pubmed_cache WHERE cache_key = ?", (ckey,)
-    ).fetchone()
+    row = conn.execute("SELECT response, cached_at FROM pubmed_cache WHERE cache_key = ?", (ckey,)).fetchone()
     if row:
         cached_at = row[1]
         if time.time() - cached_at < _CACHE_TTL:
@@ -128,11 +123,7 @@ def _fetch_details(pmids: list[str]) -> list[dict]:
     for uid in uid_list:
         item = result.get(uid, {})
         authors_list = item.get("authors", [])
-        authors = (
-            [a.get("name", "") for a in authors_list]
-            if isinstance(authors_list, list)
-            else []
-        )
+        authors = [a.get("name", "") for a in authors_list] if isinstance(authors_list, list) else []
         papers.append(
             {
                 "pmid": uid,

@@ -1,5 +1,6 @@
-from langchain_core.callbacks import BaseCallbackHandler
 from typing import Optional
+
+from langchain_core.callbacks import BaseCallbackHandler
 
 
 class TokenCallbackHandler(BaseCallbackHandler):

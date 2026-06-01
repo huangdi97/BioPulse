@@ -1,16 +1,15 @@
 """反思报告生成服务：对练结束后自动生成多维度评估和改进建议。"""
 
 import json
-import httpx
 from datetime import datetime, timezone
 from typing import Optional
+
+import httpx
 
 AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
 
 
-def _calculate_dimension_scores(
-    dialogue_log: list, compliance_violations: int, weights: Optional[dict] = None
-) -> dict:
+def _calculate_dimension_scores(dialogue_log: list, compliance_violations: int, weights: Optional[dict] = None) -> dict:
     """从对话数据计算各维度分数。
 
     Args:
@@ -37,9 +36,7 @@ def _calculate_dimension_scores(
     }
 
 
-def _generate_improvements(
-    scores: dict, strengths_weaknesses: Optional[dict] = None
-) -> list:
+def _generate_improvements(scores: dict, strengths_weaknesses: Optional[dict] = None) -> list:
     """根据弱项生成改进建议。
 
     Args:
@@ -202,13 +199,9 @@ def generate_reflection_report(
         )
         if resp.status_code == 200:
             data = resp.json()
-            ai_content = (
-                data.get("choices", [{}])[0].get("message", {}).get("content", "")
-            )
+            ai_content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
             if data.get("data") and data["data"].get("choices"):
-                ai_content = (
-                    data["data"]["choices"][0].get("message", {}).get("content", "")
-                )
+                ai_content = data["data"]["choices"][0].get("message", {}).get("content", "")
             ai_suggestions = _parse_ai_response(ai_content)
     except Exception:
         ai_suggestions = {}
@@ -217,9 +210,7 @@ def generate_reflection_report(
         "strengths",
         [
             "能够主动与客户建立沟通" if rounds > 2 else "态度积极",
-            "基本掌握产品核心卖点"
-            if dim_scores.get("product_knowledge", 0) > 60
-            else "有待提升",
+            "基本掌握产品核心卖点" if dim_scores.get("product_knowledge", 0) > 60 else "有待提升",
             "对话流程基本完整",
         ],
     )
@@ -228,18 +219,12 @@ def generate_reflection_report(
         "weaknesses",
         [
             "合规话术不够熟练" if violations > 0 else "无明显违规行为",
-            "异议处理经验不足"
-            if dim_scores.get("objection_handling", 0) < 70
-            else "异议处理表现良好",
-            "产品知识深度有待加强"
-            if dim_scores.get("product_knowledge", 0) < 75
-            else "产品知识扎实",
+            "异议处理经验不足" if dim_scores.get("objection_handling", 0) < 70 else "异议处理表现良好",
+            "产品知识深度有待加强" if dim_scores.get("product_knowledge", 0) < 75 else "产品知识扎实",
         ],
     )
 
-    improvements = ai_suggestions.get(
-        "improvements", _generate_improvements(dim_scores)
-    )
+    improvements = ai_suggestions.get("improvements", _generate_improvements(dim_scores))
 
     comparison = _compare_with_history(session_id, dim_scores, None)
 

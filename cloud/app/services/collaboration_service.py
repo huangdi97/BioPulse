@@ -37,9 +37,7 @@ class CollaborationService(BaseService):
         )
         return repo.get_by_id(row_id)
 
-    def list_skills(
-        self, agent_role: Optional[str] = None, enabled: Optional[int] = None
-    ) -> list:
+    def list_skills(self, agent_role: Optional[str] = None, enabled: Optional[int] = None) -> list:
         repo = AgentSkillsRepository(self.db)
         conditions, params = [], []
         if agent_role:
@@ -100,9 +98,7 @@ class CollaborationService(BaseService):
             raise HTTPException(status_code=404, detail="Session not found")
         sess = sess_rows[0]
 
-        all_steps = steps_repo.list_all(
-            conditions=["session_id=?"], params=[session_id], order_by="step_order ASC"
-        )
+        all_steps = steps_repo.list_all(conditions=["session_id=?"], params=[session_id], order_by="step_order ASC")
         current_order = max((s["step_order"] for s in all_steps), default=0)
         step_order = current_order + 1
         is_first = step_order == 1
@@ -144,9 +140,7 @@ class CollaborationService(BaseService):
         steps_repo = CollaborationStepsRepository(self.db)
         sess_repo = CollaborationSessionsRepository(self.db)
 
-        step = steps_repo.list_all(
-            conditions=["id=?", "session_id=?"], params=[step_id, session_id]
-        )
+        step = steps_repo.list_all(conditions=["id=?", "session_id=?"], params=[step_id, session_id])
         if not step:
             raise HTTPException(status_code=404, detail="Step not found")
 
@@ -159,9 +153,7 @@ class CollaborationService(BaseService):
             },
         )
 
-        completed = steps_repo.count(
-            conditions=["session_id=?", "status='completed'"], params=[session_id]
-        )
+        completed = steps_repo.count(conditions=["session_id=?", "status='completed'"], params=[session_id])
         total = steps_repo.count(conditions=["session_id=?"], params=[session_id])
 
         all_done = completed >= total
@@ -208,9 +200,7 @@ class CollaborationService(BaseService):
         sess_rows = sess_repo.list_all(conditions=["session_id=?"], params=[session_id])
         if not sess_rows:
             raise HTTPException(status_code=404, detail="Session not found")
-        steps = steps_repo.list_all(
-            conditions=["session_id=?"], params=[session_id], order_by="step_order ASC"
-        )
+        steps = steps_repo.list_all(conditions=["session_id=?"], params=[session_id], order_by="step_order ASC")
         return {"session": sess_rows[0], "steps": steps}
 
     def semantic_route(
@@ -229,14 +219,10 @@ class CollaborationService(BaseService):
                 order_by="priority ASC, confidence DESC",
             )
         else:
-            skills = repo.list_all(
-                conditions=["enabled=1"], order_by="priority ASC, confidence DESC"
-            )
+            skills = repo.list_all(conditions=["enabled=1"], order_by="priority ASC, confidence DESC")
 
         if not skills:
-            raise HTTPException(
-                status_code=404, detail="No matching agent skills found"
-            )
+            raise HTTPException(status_code=404, detail="No matching agent skills found")
 
         return {
             "task_description": task_description,

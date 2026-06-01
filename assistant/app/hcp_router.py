@@ -5,10 +5,10 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from starlette import status
 
-from shared.auth import get_current_user
-from shared.base import ApiResponse, PaginatedResponse, success
 from assistant.app.database import get_db
 from assistant.app.repositories import HcpRepository
+from shared.auth import get_current_user
+from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/hcp", tags=["hcp"])
 
@@ -137,9 +137,7 @@ def get_hcp(
     repo = HcpRepository(db)
     row = repo.get_by_id(hcp_id)
     if not row or row["is_active"] != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
     return success(data=HcpOut(**dict(row)))
 
 
@@ -154,9 +152,7 @@ def update_hcp(
     repo = HcpRepository(db)
     row = repo.get_by_id(hcp_id)
     if not row or row["is_active"] != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
 
     updates = body.model_dump(exclude_unset=True)
     if not updates:
@@ -177,8 +173,6 @@ def delete_hcp(
     repo = HcpRepository(db)
     row = repo.get_by_id(hcp_id)
     if not row or row["is_active"] != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
     repo.soft_delete(hcp_id)
     return success(message="deleted")

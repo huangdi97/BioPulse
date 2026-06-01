@@ -5,12 +5,12 @@ from fastapi import HTTPException
 from starlette import status as http_status
 
 from cloud.app.repositories import (
-    SoapTemplatesRepository,
-    SoapDecisionsRepository,
     AsyncMdtOpinionsRepository,
+    SoapDecisionsRepository,
+    SoapTemplatesRepository,
 )
 from cloud.app.services.base import BaseService
-from shared.base import validate_columns, PaginatedResponse
+from shared.base import PaginatedResponse, validate_columns
 from shared.columns import TABLE_SOAP_DECISIONS_COLS
 
 
@@ -25,9 +25,7 @@ def _row(row, json_keys=None):
 
 
 class SoapDecisionService(BaseService):
-    def create_template(
-        self, name: str, category: str, description: str, structure: dict, created_by
-    ) -> dict:
+    def create_template(self, name: str, category: str, description: str, structure: dict, created_by) -> dict:
         templates_repo = SoapTemplatesRepository(self.db)
         tmpl_id = templates_repo.create(
             {
@@ -39,9 +37,7 @@ class SoapDecisionService(BaseService):
                 "updated_at": "NOW()",
             }
         )
-        self.db.execute(
-            "UPDATE soap_templates SET updated_at=NOW() WHERE id=?", (tmpl_id,)
-        )
+        self.db.execute("UPDATE soap_templates SET updated_at=NOW() WHERE id=?", (tmpl_id,))
         self.db.commit()
         row = templates_repo.get_by_id(tmpl_id)
         return _row(row, ["structure"])
@@ -68,9 +64,7 @@ class SoapDecisionService(BaseService):
         if template_id:
             tmpl = templates_repo.get_by_id(template_id)
             if not tmpl or not tmpl.get("is_active"):
-                raise HTTPException(
-                    http_status.HTTP_404_NOT_FOUND, detail="Template not found"
-                )
+                raise HTTPException(http_status.HTTP_404_NOT_FOUND, detail="Template not found")
         dec_id = decisions_repo.create(
             {
                 "title": title,
@@ -85,9 +79,7 @@ class SoapDecisionService(BaseService):
                 "updated_at": "NOW()",
             }
         )
-        self.db.execute(
-            "UPDATE soap_decisions SET updated_at=NOW() WHERE id=?", (dec_id,)
-        )
+        self.db.execute("UPDATE soap_decisions SET updated_at=NOW() WHERE id=?", (dec_id,))
         self.db.commit()
         row = decisions_repo.get_by_id(dec_id)
         return _row(row, ["tags"])
@@ -116,9 +108,7 @@ class SoapDecisionService(BaseService):
         decisions_repo = SoapDecisionsRepository(self.db)
         row = decisions_repo.get_by_id(decision_id)
         if not row or not row.get("is_active"):
-            raise HTTPException(
-                http_status.HTTP_404_NOT_FOUND, detail="Decision not found"
-            )
+            raise HTTPException(http_status.HTTP_404_NOT_FOUND, detail="Decision not found")
         return _row(row, ["tags"])
 
     def update_decision(
@@ -134,9 +124,7 @@ class SoapDecisionService(BaseService):
         decisions_repo = SoapDecisionsRepository(self.db)
         row = decisions_repo.get_by_id(decision_id)
         if not row or not row.get("is_active"):
-            raise HTTPException(
-                http_status.HTTP_404_NOT_FOUND, detail="Decision not found"
-            )
+            raise HTTPException(http_status.HTTP_404_NOT_FOUND, detail="Decision not found")
         updates = {}
         for f in ("subjective", "objective", "assessment", "plan", "priority"):
             v = locals().get(f)
@@ -149,9 +137,7 @@ class SoapDecisionService(BaseService):
             validate_columns(updates, "soap_decisions", TABLE_SOAP_DECISIONS_COLS)
             updates_to_save = {k: v for k, v in updates.items() if v != "NOW()"}
             decisions_repo.update(decision_id, updates_to_save)
-            self.db.execute(
-                "UPDATE soap_decisions SET updated_at=NOW() WHERE id=?", (decision_id,)
-            )
+            self.db.execute("UPDATE soap_decisions SET updated_at=NOW() WHERE id=?", (decision_id,))
             self.db.commit()
         row = decisions_repo.get_by_id(decision_id)
         return _row(row, ["tags"])
@@ -160,18 +146,14 @@ class SoapDecisionService(BaseService):
         decisions_repo = SoapDecisionsRepository(self.db)
         row = decisions_repo.get_by_id(decision_id)
         if not row or not row.get("is_active"):
-            raise HTTPException(
-                http_status.HTTP_404_NOT_FOUND, detail="Decision not found"
-            )
+            raise HTTPException(http_status.HTTP_404_NOT_FOUND, detail="Decision not found")
         if row["status"] != "draft":
             raise HTTPException(
                 http_status.HTTP_400_BAD_REQUEST,
                 detail="Only draft decisions can be submitted",
             )
         decisions_repo.update(decision_id, {"status": "collecting"})
-        self.db.execute(
-            "UPDATE soap_decisions SET updated_at=NOW() WHERE id=?", (decision_id,)
-        )
+        self.db.execute("UPDATE soap_decisions SET updated_at=NOW() WHERE id=?", (decision_id,))
         self.db.commit()
         row = decisions_repo.get_by_id(decision_id)
         return _row(row, ["tags"])
@@ -191,9 +173,7 @@ class SoapDecisionService(BaseService):
         opinions_repo = AsyncMdtOpinionsRepository(self.db)
         dec = decisions_repo.get_by_id(decision_id)
         if not dec or not dec.get("is_active"):
-            raise HTTPException(
-                http_status.HTTP_404_NOT_FOUND, detail="Decision not found"
-            )
+            raise HTTPException(http_status.HTTP_404_NOT_FOUND, detail="Decision not found")
         opinion_id = opinions_repo.create(
             {
                 "decision_id": decision_id,
@@ -207,9 +187,7 @@ class SoapDecisionService(BaseService):
                 "updated_at": "NOW()",
             }
         )
-        self.db.execute(
-            "UPDATE async_mdt_opinions SET updated_at=NOW() WHERE id=?", (opinion_id,)
-        )
+        self.db.execute("UPDATE async_mdt_opinions SET updated_at=NOW() WHERE id=?", (opinion_id,))
         self.db.commit()
         row = opinions_repo.get_by_id(opinion_id)
         return _row(row, ["attachments"])
@@ -219,21 +197,15 @@ class SoapDecisionService(BaseService):
         opinions_repo = AsyncMdtOpinionsRepository(self.db)
         dec = decisions_repo.get_by_id(decision_id)
         if not dec or not dec.get("is_active"):
-            raise HTTPException(
-                http_status.HTTP_404_NOT_FOUND, detail="Decision not found"
-            )
+            raise HTTPException(http_status.HTTP_404_NOT_FOUND, detail="Decision not found")
         rows = opinions_repo.list_by_decision(decision_id)
         return [_row(r, ["attachments"]) for r in rows]
 
-    def finalize_decision(
-        self, decision_id: int, decision_summary: str, user_id
-    ) -> dict:
+    def finalize_decision(self, decision_id: int, decision_summary: str, user_id) -> dict:
         decisions_repo = SoapDecisionsRepository(self.db)
         row = decisions_repo.get_by_id(decision_id)
         if not row or not row.get("is_active"):
-            raise HTTPException(
-                http_status.HTTP_404_NOT_FOUND, detail="Decision not found"
-            )
+            raise HTTPException(http_status.HTTP_404_NOT_FOUND, detail="Decision not found")
         if row["status"] != "collecting":
             raise HTTPException(
                 http_status.HTTP_400_BAD_REQUEST,

@@ -1,12 +1,12 @@
-from cloud.shared.repository import BaseRepository
 from cloud.shared.columns import (
-    TABLE_OPPORTUNITIES_COLS,
-    TABLE_CUSTOMERS_COLS,
     TABLE_CUSTOMER_INTERACTIONS_COLS,
+    TABLE_CUSTOMERS_COLS,
     TABLE_HCP_INTERACTIONS_COLS,
     TABLE_HCP_PROFILES_COLS,
     TABLE_HCP_SIMULATIONS_COLS,
+    TABLE_OPPORTUNITIES_COLS,
 )
+from cloud.shared.repository import BaseRepository
 
 
 class OpportunitiesRepository(BaseRepository):
@@ -19,12 +19,7 @@ class CustomersRepository(BaseRepository):
         super().__init__(db, "customers", TABLE_CUSTOMERS_COLS)
 
     def exists(self, customer_id: int):
-        return (
-            self.db.execute(
-                f"SELECT id FROM {self.table_name} WHERE id=?", (customer_id,)
-            ).fetchone()
-            is not None
-        )
+        return self.db.execute(f"SELECT id FROM {self.table_name} WHERE id=?", (customer_id,)).fetchone() is not None
 
 
 class CustomerInteractionsRepository(BaseRepository):
@@ -61,9 +56,7 @@ class HcpInteractionsRepository(BaseRepository):
         super().__init__(db, "hcp_interactions", TABLE_HCP_INTERACTIONS_COLS)
 
     def count_by_hcp_id(self, hcp_id: int):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE hcp_id=?", (hcp_id,)
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE hcp_id=?", (hcp_id,)).fetchone()[0]
 
     def get_last_by_hcp_id(self, hcp_id: int):
         placeholders = ", ".join(self.cols)
@@ -116,9 +109,7 @@ class HcpProfilesRepository(BaseRepository):
         )
 
     def count_active(self):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1").fetchone()[0]
 
     def tier_distribution(self):
         rows = self.db.execute(
@@ -132,9 +123,7 @@ class HcpSimulationsRepository(BaseRepository):
         super().__init__(db, "hcp_simulations", TABLE_HCP_SIMULATIONS_COLS)
 
     def count_by_hcp_id(self, hcp_id: int):
-        return self.db.execute(
-            f"SELECT COUNT(*) FROM {self.table_name} WHERE hcp_id=?", (hcp_id,)
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE hcp_id=?", (hcp_id,)).fetchone()[0]
 
     def count_all(self):
         return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name}").fetchone()[0]

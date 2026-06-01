@@ -3,8 +3,8 @@ import urllib.request
 from datetime import datetime, timezone
 
 from opportunity.app.repositories import (
-    TrendAnalysisRepository,
     ResearchTrailRepository,
+    TrendAnalysisRepository,
 )
 from opportunity.app.services.base import BaseService
 
@@ -43,9 +43,7 @@ class TrendService(BaseService):
             fmt = "%Y"
         else:
             fmt = "%Y-%m"
-        format_str = (
-            f"'%{fmt.replace('%Y', 'Y').replace('%m', 'm').replace('%q', 'Q')}'"
-        )
+        (f"'%{fmt.replace('%Y', 'Y').replace('%m', 'm').replace('%q', 'Q')}'")
         rows = (
             ResearchTrailRepository(self.db)
             .db.execute(
@@ -115,6 +113,4 @@ class TrendService(BaseService):
 
     def list_history(self, page: int, page_size: int) -> tuple:
         repo = TrendAnalysisRepository(self.db)
-        return repo.paginate(
-            page=page, page_size=page_size, order_by="analyzed_at DESC"
-        )
+        return repo.paginate(page=page, page_size=page_size, order_by="analyzed_at DESC")

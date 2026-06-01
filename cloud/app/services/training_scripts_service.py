@@ -11,9 +11,7 @@ from cloud.app.services.base import BaseService
 
 
 class TrainingScriptsService(BaseService):
-    def extract_scripts(
-        self, source_agent_role: str, min_score: float, user_id: int
-    ) -> dict:
+    def extract_scripts(self, source_agent_role: str, min_score: float, user_id: int) -> dict:
         rows = self.db.execute(
             """SELECT cs.session_id, cs.source_agent_role, cs.result_summary,
                       cs.total_steps, cs.completed_steps, cs.involved_agents
@@ -32,9 +30,7 @@ class TrainingScriptsService(BaseService):
         for row in rows:
             steps = []
             total = row["total_steps"] or 0
-            score_val = round(
-                min((row["completed_steps"] or 0) / max(total, 1), 1.0), 2
-            )
+            score_val = round(min((row["completed_steps"] or 0) / max(total, 1), 1.0), 2)
             if score_val < min_score:
                 continue
             if total > 0:
@@ -54,9 +50,7 @@ class TrainingScriptsService(BaseService):
             description = (row["result_summary"] or "")[:200]
             involved_agents = row["involved_agents"] or "[]"
             try:
-                target_roles = json.dumps(
-                    list(set(json.loads(involved_agents))), ensure_ascii=False
-                )
+                target_roles = json.dumps(list(set(json.loads(involved_agents))), ensure_ascii=False)
             except (json.JSONDecodeError, TypeError):
                 target_roles = "[]"
 
@@ -74,9 +68,7 @@ class TrainingScriptsService(BaseService):
                 "created_at": now,
                 "updated_at": now,
             }
-            existing = self.db.execute(
-                "SELECT id FROM training_scripts WHERE script_id=?", (script_id,)
-            ).fetchone()
+            existing = self.db.execute("SELECT id FROM training_scripts WHERE script_id=?", (script_id,)).fetchone()
             if not existing:
                 scripts_repo.create(script_data)
                 created.append(
@@ -161,9 +153,7 @@ class TrainingScriptsService(BaseService):
                 "sales_impact": sales_impact,
                 "cost_savings": cost_savings,
                 "roi": roi_val,
-                "metadata": json.dumps(
-                    {"method": "simulation", "source": "auto"}, ensure_ascii=False
-                ),
+                "metadata": json.dumps({"method": "simulation", "source": "auto"}, ensure_ascii=False),
                 "created_at": now,
             }
         )

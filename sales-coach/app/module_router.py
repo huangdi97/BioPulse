@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from starlette import status
 
+from sales_coach.app.services.module_service import ModuleService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from sales_coach.app.services.module_service import ModuleService
 
 router = APIRouter(prefix="/modules", tags=["modules"])
 

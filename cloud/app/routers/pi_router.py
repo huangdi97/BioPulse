@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel
 from typing import Optional
 
-from shared.auth import get_current_user
+from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
+
 from cloud.app.services.pi_service import PiService
+from shared.auth import get_current_user
 
 router = APIRouter(prefix="/api/pi", tags=["pi"])
 

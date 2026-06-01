@@ -1,7 +1,8 @@
 """学术会议追踪服务。"""
 
-import httpx
 from datetime import datetime, timezone
+
+import httpx
 from pharma_intel.app.database import get_cache, set_cache
 
 CLOUD_API = "http://localhost:8000"
@@ -232,9 +233,7 @@ async def get_upcoming_conferences(limit: int = 10) -> list[dict]:
     conferences = MOCK_CONFERENCES[:limit]
     if papers:
         for conf in conferences:
-            conf["related_papers"] = (
-                [p.get("title", "") for p in papers[:5]] if papers else []
-            )
+            conf["related_papers"] = [p.get("title", "") for p in papers[:5]] if papers else []
 
     set_cache(cache_key, conferences, ttl=1800)
     return conferences

@@ -4,11 +4,12 @@ Provides separated export pipelines for the research mode, with distinct
 watermarks and output directories to satisfy identity isolation requirement ⑤.
 """
 
-import os
-import json
 import csv
 import io
+import json
+import os
 from typing import Any
+
 from cloud.app.research_database import get_research_db
 
 EXPORT_DIR = os.path.join(

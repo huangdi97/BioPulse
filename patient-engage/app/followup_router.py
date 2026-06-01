@@ -6,6 +6,7 @@ from patient_engage.app.services.followup_service import (
     get_followup_status,
     get_pending_followups,
 )
+
 from shared.base import success
 
 router = APIRouter(prefix="/api/followup", tags=["随访管理"])

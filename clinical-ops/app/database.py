@@ -1,9 +1,9 @@
 """本地缓存数据库。缓存 Cloud API 响应，TTL 600 秒。"""
 
-import sqlite3
-import os
-import time
 import json
+import os
+import sqlite3
+import time
 
 DB_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),

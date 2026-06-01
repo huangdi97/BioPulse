@@ -107,9 +107,7 @@ def list_decisions(
     service: SoapDecisionService = Depends(),
 ):
     return success(
-        data=service.list_decisions(
-            status=status, priority=priority, tag=tag, page=page, page_size=page_size
-        )
+        data=service.list_decisions(status=status, priority=priority, tag=tag, page=page, page_size=page_size)
     )
 
 
@@ -198,7 +196,5 @@ def finalize_decision(
 
 
 @router.get("/dashboard")
-def dashboard(
-    cu=Depends(require_scope("visit")), service: SoapDecisionService = Depends()
-):
+def dashboard(cu=Depends(require_scope("visit")), service: SoapDecisionService = Depends()):
     return success(service.dashboard())

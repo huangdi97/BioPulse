@@ -2,16 +2,16 @@ import json
 from datetime import datetime, timezone
 from typing import Dict, List
 
-from shared.columns import (
-    TABLE_ASSISTANT_HCP_COLS,
-    TABLE_VISIT_RECORD_COLS,
-    TABLE_TASK_COLS,
-    TABLE_HEALTH_RADAR_COLS,
-    TABLE_SURGERY_REMINDER_COLS,
-    TABLE_KNOWLEDGE_BASE_COLS,
-)
 from assistant.app.repositories import SyncQueueRepository
 from assistant.app.services.base import BaseService
+from shared.columns import (
+    TABLE_ASSISTANT_HCP_COLS,
+    TABLE_HEALTH_RADAR_COLS,
+    TABLE_KNOWLEDGE_BASE_COLS,
+    TABLE_SURGERY_REMINDER_COLS,
+    TABLE_TASK_COLS,
+    TABLE_VISIT_RECORD_COLS,
+)
 
 ENTITY_TABLE_MAP: Dict[str, str] = {
     "hcp": "hcp",
@@ -142,9 +142,7 @@ class SyncService(BaseService):
                             "status": "failed",
                             "server_entity_id": None,
                         }
-                payload_for_insert = {
-                    k: v for k, v in op.payload.items() if k not in ("id", "created_at")
-                }
+                payload_for_insert = {k: v for k, v in op.payload.items() if k not in ("id", "created_at")}
                 cols = ", ".join(payload_for_insert.keys())
                 vals = ", ".join("?" for _ in payload_for_insert)
                 cursor = self.db.execute(
@@ -205,9 +203,7 @@ class SyncService(BaseService):
         )
         time_col = "updated_at" if has_updated else "created_at"
         condition = "AND is_active = 1" if table in TABLES_WITH_IS_ACTIVE else ""
-        changes = self.db.execute(
-            f"SELECT * FROM {table} WHERE {time_col} > ? {condition}", (since,)
-        ).fetchall()
+        changes = self.db.execute(f"SELECT * FROM {table} WHERE {time_col} > ? {condition}", (since,)).fetchall()
         if table in TABLES_WITH_IS_ACTIVE:
             deleted = self.db.execute(
                 f"SELECT id FROM {table} WHERE {time_col} > ? AND is_active = 0",

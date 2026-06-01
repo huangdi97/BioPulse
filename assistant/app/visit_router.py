@@ -5,10 +5,10 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from starlette import status
 
-from shared.auth import get_current_user
-from shared.base import ApiResponse, PaginatedResponse, success
 from assistant.app.database import get_db
 from assistant.app.repositories import HcpRepository, VisitRecordRepository
+from shared.auth import get_current_user
+from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/visits", tags=["visits"])
 
@@ -64,9 +64,7 @@ def _check_hcp_exists(db, hcp_id: int) -> None:
     repo = HcpRepository(db)
     row = repo.get_by_id(hcp_id)
     if not row or row["is_active"] != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
 
 
 @router.post("")
@@ -138,9 +136,7 @@ def get_visit(
     repo = VisitRecordRepository(db)
     row = repo.get_by_id(visit_id)
     if not row:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
     return success(data=VisitOut(**dict(row)))
 
 
@@ -155,9 +151,7 @@ def update_visit(
     repo = VisitRecordRepository(db)
     row = repo.get_by_id(visit_id)
     if not row:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
 
     if body.hcp_id is not None:
         _check_hcp_exists(db, body.hcp_id)
@@ -181,8 +175,6 @@ def delete_visit(
     repo = VisitRecordRepository(db)
     row = repo.get_by_id(visit_id)
     if not row:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
     repo.soft_delete(visit_id)
     return success(message="deleted")

@@ -2,10 +2,10 @@ import asyncio
 from datetime import date, datetime, timezone
 from typing import Optional
 
+from assistant.app.reminder_scheduler import check_reminders
 from assistant.app.repositories import SurgeryReminderRepository
 from assistant.app.services.base import BaseService
 from assistant.app.ws_manager import connection_manager
-from assistant.app.reminder_scheduler import check_reminders
 
 VALID_STATUSES = {"scheduled", "in_progress", "completed", "cancelled"}
 
@@ -34,9 +34,7 @@ class SurgeryService(BaseService):
                 "pre_op_notes": body.pre_op_notes,
                 "post_op_notes": body.post_op_notes,
                 "status": initial_status,
-                "reminder_before": body.reminder_before
-                if body.reminder_before is not None
-                else 1,
+                "reminder_before": body.reminder_before if body.reminder_before is not None else 1,
                 "notification_status": "pending",
                 "created_by": user_id,
                 "created_at": now,

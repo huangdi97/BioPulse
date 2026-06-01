@@ -1,13 +1,13 @@
-from typing import Optional, List
 import sqlite3
 from datetime import datetime, timezone
+from typing import List, Optional
 
-from shared.repository import BaseRepository
 from shared.columns import (
     TABLE_OPPORTUNITY_COLS,
     TABLE_PAPER_INTEGRITY_COLS,
     TABLE_TREND_ANALYSIS_COLS,
 )
+from shared.repository import BaseRepository
 
 
 class ScoringRepository(BaseRepository):
@@ -68,9 +68,7 @@ class StatsRepository:
             conditions.append("created_at <= ?")
             params.append(end_date)
 
-    def _where_clause(
-        self, start_date: str | None, end_date: str | None
-    ) -> tuple[str, list]:
+    def _where_clause(self, start_date: str | None, end_date: str | None) -> tuple[str, list]:
         conditions = ["is_active = 1"]
         params: list = []
         self._build_where(conditions, params, start_date, end_date)
@@ -84,18 +82,14 @@ class StatsRepository:
         ).fetchone()
         return row[0], row[1]
 
-    def get_by_stage(
-        self, start_date: str | None = None, end_date: str | None = None
-    ) -> List[sqlite3.Row]:
+    def get_by_stage(self, start_date: str | None = None, end_date: str | None = None) -> List[sqlite3.Row]:
         where, params = self._where_clause(start_date, end_date)
         return self.db.execute(
             f"SELECT stage, COUNT(*), COALESCE(SUM(estimated_value), 0) FROM {self.table} {where} GROUP BY stage",
             params,
         ).fetchall()
 
-    def get_by_product(
-        self, start_date: str | None = None, end_date: str | None = None
-    ) -> List[sqlite3.Row]:
+    def get_by_product(self, start_date: str | None = None, end_date: str | None = None) -> List[sqlite3.Row]:
         where, params = self._where_clause(start_date, end_date)
         return self.db.execute(
             f"SELECT product, COUNT(*), COALESCE(SUM(estimated_value), 0) FROM {self.table} {where} AND product IS NOT NULL GROUP BY product",

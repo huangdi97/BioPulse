@@ -3,6 +3,7 @@ from pharma_intel.app.services.target_service import (
     analyze_target,
     trending_targets,
 )
+
 from shared.base import success
 
 router = APIRouter(prefix="/api/target", tags=["靶点研究监控"])

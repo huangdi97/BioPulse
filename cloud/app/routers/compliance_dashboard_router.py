@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
-from shared.auth import get_current_user
 from cloud.app.services.compliance_service import ComplianceService
+from shared.auth import get_current_user
 
 router = APIRouter(prefix="/api/compliance/dashboard", tags=["合规"])
 

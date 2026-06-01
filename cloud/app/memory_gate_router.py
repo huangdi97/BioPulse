@@ -3,9 +3,9 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
-from shared.auth_scope import require_scope
-from shared.base import success, PaginatedResponse
 from cloud.app.services.memory_gate_service import MemoryGateService
+from shared.auth_scope import require_scope
+from shared.base import PaginatedResponse, success
 
 router = APIRouter(prefix="/memory", tags=["记忆系统"])
 

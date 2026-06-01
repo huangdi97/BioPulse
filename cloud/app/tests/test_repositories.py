@@ -9,9 +9,7 @@ class TestUsersRepository:
         from cloud.app.repositories import UsersRepository
 
         repo = UsersRepository(mock_db)
-        result = repo.create(
-            {"username": "testuser", "role": "user", "hashed_password": "hash"}
-        )
+        result = repo.create({"username": "testuser", "role": "user", "hashed_password": "hash"})
 
         mock_db.execute.assert_called_once()
         call_args = mock_db.execute.call_args[0]

@@ -114,9 +114,7 @@ class TrainingCoachService(BaseService):
             with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as resp:
                 payload = json.loads(resp.read())
         except urllib.error.URLError as exc:
-            raise HTTPException(
-                status.HTTP_502_BAD_GATEWAY, detail=f"AI call failed: {exc}"
-            )
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=f"AI call failed: {exc}")
         choices = payload.get("choices", [])
         return choices[0].get("message", {}).get("content", "") if choices else ""
 
@@ -157,9 +155,7 @@ class TrainingCoachService(BaseService):
         row = modules_repo.get_by_id(module_id)
         return self._rd(row, MODULE_COLS)
 
-    def list_modules(
-        self, category: Optional[str] = None, difficulty: Optional[str] = None
-    ) -> list:
+    def list_modules(self, category: Optional[str] = None, difficulty: Optional[str] = None) -> list:
         modules_repo = TrainingModulesRepository(self.db)
         conditions = ["is_active=1"]
         params = []
@@ -169,9 +165,7 @@ class TrainingCoachService(BaseService):
         if difficulty:
             conditions.append("difficulty=?")
             params.append(difficulty)
-        rows = modules_repo.list_all(
-            conditions=conditions, params=params, order_by="id ASC"
-        )
+        rows = modules_repo.list_all(conditions=conditions, params=params, order_by="id ASC")
         return [self._rd(r, MODULE_COLS) for r in rows]
 
     def create_session(
@@ -250,9 +244,7 @@ class TrainingCoachService(BaseService):
         sessions_repo = TrainingSessionsRepository(self.db)
         modules_repo = TrainingModulesRepository(self.db)
 
-        rows = sessions_repo.list_all(
-            conditions=["user_id=?"], params=[user_id], order_by="created_at DESC"
-        )
+        rows = sessions_repo.list_all(conditions=["user_id=?"], params=[user_id], order_by="created_at DESC")
         rows = rows[:3]
         if not rows:
             mods = modules_repo.list_all(conditions=["is_active=1"], order_by="id ASC")
@@ -288,11 +280,7 @@ class TrainingCoachService(BaseService):
         period_days: int,
     ) -> dict:
         attrs_repo = TrainingAttributionsRepository(self.db)
-        cp = (
-            round((metric_after - metric_before) / metric_before, 4)
-            if metric_before
-            else 0.0
-        )
+        cp = round((metric_after - metric_before) / metric_before, 4) if metric_before else 0.0
         att_id = attrs_repo.create(
             {
                 "user_id": user_id,
@@ -306,9 +294,7 @@ class TrainingCoachService(BaseService):
         row = attrs_repo.get_by_id(att_id)
         return self._rd(row, ATTR_COLS)
 
-    def list_attributions(
-        self, user_id: Optional[int] = None, metric_name: Optional[str] = None
-    ) -> list:
+    def list_attributions(self, user_id: Optional[int] = None, metric_name: Optional[str] = None) -> list:
         attrs_repo = TrainingAttributionsRepository(self.db)
         conditions = []
         params = []
@@ -331,9 +317,7 @@ class TrainingCoachService(BaseService):
 
         attr_row = attrs_repo.get_by_id(att_id)
         if not attr_row:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="Attribution not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Attribution not found")
         user_row = users_repo.get_by_id(attr_row["user_id"])
         username = user_row["username"] if user_row else "unknown"
         sys_prompt = (
@@ -353,9 +337,7 @@ class TrainingCoachService(BaseService):
             analysis = str(result.get("analysis", ""))
         except Exception:
             ch = abs(attr_row["change_pct"])
-            a_score = (
-                0.8 if ch > 0.3 else (0.5 if ch > 0.1 else (0.3 if ch > 0.05 else 0.1))
-            )
+            a_score = 0.8 if ch > 0.3 else (0.5 if ch > 0.1 else (0.3 if ch > 0.05 else 0.1))
             analysis = f"指标{attr_row['metric_name']}变化率{attr_row['change_pct']}，基于变化率自动评估培训贡献度。"
         conf = round(min(abs(attr_row["change_pct"]) * 100, 100) / 100, 2)
         attrs_repo.update(
@@ -375,14 +357,10 @@ class TrainingCoachService(BaseService):
 
         tm = modules_repo.count(conditions=["is_active=1"])
         ts = sessions_repo.count()
-        tu = self.db.execute(
-            "SELECT COUNT(DISTINCT user_id) FROM training_sessions"
-        ).fetchone()[0]
+        tu = self.db.execute("SELECT COUNT(DISTINCT user_id) FROM training_sessions").fetchone()[0]
         asr = self.db.execute("SELECT AVG(score) FROM training_sessions").fetchone()
         avg = round(asr[0], 2) if asr[0] else 0.0
-        prr = self.db.execute(
-            "SELECT CAST(SUM(passed) AS REAL)/NULLIF(COUNT(*),0) FROM training_sessions"
-        ).fetchone()
+        prr = self.db.execute("SELECT CAST(SUM(passed) AS REAL)/NULLIF(COUNT(*),0) FROM training_sessions").fetchone()
         pr = round(prr[0], 2) if prr and prr[0] else 0.0
         cd = {
             r["category"]: r["cnt"]

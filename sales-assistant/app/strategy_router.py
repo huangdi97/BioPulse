@@ -5,9 +5,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette import status
 
+from sales_assistant.app.services.strategy_service import StrategyService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
-from sales_assistant.app.services.strategy_service import StrategyService
 
 router = APIRouter(prefix="/strategies", tags=["strategies"])
 

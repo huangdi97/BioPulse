@@ -3,9 +3,9 @@ from typing import Any
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
+from sales_assistant.app.services.objection_service import ObjectionService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, success
-from sales_assistant.app.services.objection_service import ObjectionService
 
 router = APIRouter(tags=["Objection Handling"])
 

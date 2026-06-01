@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Query
+
 from management.app.services.employee_service import (
-    get_my_profile,
-    get_my_tasks,
     get_my_compliance,
     get_my_performance,
+    get_my_profile,
+    get_my_tasks,
     get_my_trend,
 )
 from shared.base import success

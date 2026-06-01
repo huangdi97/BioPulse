@@ -7,14 +7,13 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.repositories import (
-    HcpProfilesRepository,
     HcpInteractionsRepository,
+    HcpProfilesRepository,
     HcpSimulationsRepository,
 )
 from cloud.app.services.base import BaseService
-from shared.base import PaginatedResponse
+from shared.base import PaginatedResponse, validate_columns
 from shared.columns import TABLE_HCP_PROFILES_COLS
-from shared.base import validate_columns
 from shared.config import settings
 
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
@@ -50,9 +49,7 @@ def _call_ai(system_prompt: str, user_prompt: str) -> str:
         with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as resp:
             payload = json.loads(resp.read())
     except urllib.error.URLError as exc:
-        raise HTTPException(
-            status.HTTP_502_BAD_GATEWAY, detail=f"AI call failed: {exc}"
-        )
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=f"AI call failed: {exc}")
     choices = payload.get("choices", [])
     return choices[0].get("message", {}).get("content", "") if choices else ""
 
@@ -117,9 +114,7 @@ class HcpSandboxService(BaseService):
         simulations_repo = HcpSimulationsRepository(self.db)
         row = profiles_repo.get_by_id(hcp_id)
         if not row:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="HCP profile not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="HCP profile not found")
         row["interaction_count"] = interactions_repo.count_by_hcp_id(hcp_id)
         row["simulation_count"] = simulations_repo.count_by_hcp_id(hcp_id)
         row["last_interaction"] = interactions_repo.get_last_by_hcp_id(hcp_id)
@@ -144,9 +139,7 @@ class HcpSandboxService(BaseService):
         repo = HcpProfilesRepository(self.db)
         row = repo.get_by_id(hcp_id)
         if not row:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="HCP profile not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="HCP profile not found")
         field_map = {
             "name": name,
             "title": title,
@@ -182,9 +175,7 @@ class HcpSandboxService(BaseService):
         profiles_repo = HcpProfilesRepository(self.db)
         interactions_repo = HcpInteractionsRepository(self.db)
         if not profiles_repo.get_by_id(hcp_id):
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="HCP profile not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="HCP profile not found")
         data = {
             "hcp_id": hcp_id,
             "interaction_type": interaction_type,
@@ -198,18 +189,12 @@ class HcpSandboxService(BaseService):
         row_id = interactions_repo.create(data)
         return interactions_repo.get_by_id(row_id)
 
-    def list_interactions(
-        self, hcp_id: int, page: int = 1, page_size: int = 20
-    ) -> PaginatedResponse:
+    def list_interactions(self, hcp_id: int, page: int = 1, page_size: int = 20) -> PaginatedResponse:
         profiles_repo = HcpProfilesRepository(self.db)
         interactions_repo = HcpInteractionsRepository(self.db)
         if not profiles_repo.get_by_id(hcp_id):
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="HCP profile not found"
-            )
-        total, total_pages, items = interactions_repo.list_by_hcp_id(
-            hcp_id, page=page, page_size=page_size
-        )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="HCP profile not found")
+        total, total_pages, items = interactions_repo.list_by_hcp_id(hcp_id, page=page, page_size=page_size)
         return PaginatedResponse(
             items=items,
             total=total,
@@ -224,13 +209,10 @@ class HcpSandboxService(BaseService):
         simulations_repo = HcpSimulationsRepository(self.db)
         hcp_row = profiles_repo.get_by_id(hcp_id)
         if not hcp_row:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="HCP profile not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="HCP profile not found")
         int_rows = interactions_repo.get_recent_by_hcp_id(hcp_id, limit=5)
         system_prompt = (
-            "你是一名HCP行为模拟专家。请基于HCP档案和历史互动记录，模拟该HCP在给定场景下的行为反应。"
-            "以JSON格式输出："
+            "你是一名HCP行为模拟专家。请基于HCP档案和历史互动记录，模拟该HCP在给定场景下的行为反应。以JSON格式输出："
         )
         user_prompt = (
             f"HCP档案：\n{json.dumps(hcp_row, ensure_ascii=False, indent=2)}\n\n"
@@ -280,9 +262,7 @@ class HcpSandboxService(BaseService):
         page_size: int = 20,
     ) -> PaginatedResponse:
         repo = HcpSimulationsRepository(self.db)
-        total, total_pages, items = repo.list_filtered(
-            hcp_id=hcp_id, status_=status, page=page, page_size=page_size
-        )
+        total, total_pages, items = repo.list_filtered(hcp_id=hcp_id, status_=status, page=page, page_size=page_size)
         return PaginatedResponse(
             items=items,
             total=total,
@@ -295,9 +275,7 @@ class HcpSandboxService(BaseService):
         repo = HcpSimulationsRepository(self.db)
         row = repo.get_by_id(sim_id)
         if not row:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="Simulation not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Simulation not found")
         return row
 
     def dashboard(self) -> dict:

@@ -55,9 +55,7 @@ class HealthRadarService(BaseService):
         repo = HealthRadarRepository(self.db)
         total = repo.count(conditions=["is_active = 1"])
 
-        avg_row = self.db.execute(
-            "SELECT AVG(score) FROM health_radar WHERE is_active = 1"
-        ).fetchone()
+        avg_row = self.db.execute("SELECT AVG(score) FROM health_radar WHERE is_active = 1").fetchone()
         average_score = round(avg_row[0], 1) if avg_row[0] is not None else 0.0
 
         dist_rows = self.db.execute(
@@ -76,9 +74,7 @@ class HealthRadarService(BaseService):
         for r in dist_rows:
             score_distribution[r["risk_level"]] = r["cnt"]
 
-        seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).strftime(
-            "%Y-%m-%d"
-        )
+        seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).strftime("%Y-%m-%d")
         trend_rows = self.db.execute(
             """SELECT assessment_date,
                       AVG(score) AS avg_score,

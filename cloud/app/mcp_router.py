@@ -37,9 +37,7 @@ def _row(r):
 
 
 @router.post("/tools/register", status_code=status.HTTP_201_CREATED)
-def register_tool(
-    body: ToolRegister, current_user=Depends(require_scope("visit")), db=Depends(get_db)
-):
+def register_tool(body: ToolRegister, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     uid = int(current_user["sub"])
     role = current_user.get("role", "rep")
 
@@ -83,9 +81,7 @@ def list_tools(
 
 
 @router.patch("/tools/{tool_id}/toggle")
-def toggle_tool(
-    tool_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)
-):
+def toggle_tool(tool_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     role = current_user.get("role", "rep")
     McpGuardService.check_tool_access("pubmed_search", role)
 
@@ -99,9 +95,7 @@ def toggle_tool(
 
 
 @router.delete("/tools/{tool_id}", status_code=status.HTTP_200_OK)
-def delete_tool(
-    tool_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)
-):
+def delete_tool(tool_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
     role = current_user.get("role", "rep")
     McpGuardService.check_tool_access("market_intel", role)
 

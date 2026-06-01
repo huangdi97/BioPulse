@@ -1,9 +1,9 @@
 """本地缓存数据库。缓存 Cloud API 响应，TTL 30 分钟。"""
 
-import sqlite3
-import os
-import time
 import json
+import os
+import sqlite3
+import time
 
 DB_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
@@ -36,9 +36,7 @@ def init_cache_db():
 
 def get_cache(key: str) -> dict | None:
     conn = sqlite3.connect(DB_PATH)
-    row = conn.execute(
-        "SELECT response, cached_at, ttl FROM api_cache WHERE cache_key=?", (key,)
-    ).fetchone()
+    row = conn.execute("SELECT response, cached_at, ttl FROM api_cache WHERE cache_key=?", (key,)).fetchone()
     conn.close()
     if row:
         if time.time() - row[1] < row[2]:

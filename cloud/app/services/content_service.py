@@ -12,7 +12,6 @@ from shared.columns import TABLE_CONTENTS_COLS
 from shared.compliance import check_content
 from shared.notification_client import send_notification
 
-
 DEFAULT_RULES = [
     {"category": "prohibited_word", "keyword": "绝对安全"},
     {"category": "prohibited_word", "keyword": "无副作用"},
@@ -32,17 +31,13 @@ class ContentStatus:
 
 
 class ContentService(BaseService):
-    def create_content(
-        self, title: str, body: str, category: str, tags: List[str], user_id: int
-    ) -> dict:
+    def create_content(self, title: str, body: str, category: str, tags: List[str], user_id: int) -> dict:
         repo = ContentsRepository(self.db)
         tags_str = json.dumps(tags, ensure_ascii=False)
 
         result = check_content(body, DEFAULT_RULES)
         score = result.score
-        content_status = (
-            ContentStatus.PENDING_REVIEW if score < 1.0 else ContentStatus.DRAFT
-        )
+        content_status = ContentStatus.PENDING_REVIEW if score < 1.0 else ContentStatus.DRAFT
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         content_id = repo.create(
@@ -159,9 +154,7 @@ class ContentService(BaseService):
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Content not found")
         if row["status"] == ContentStatus.APPROVED:
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST, detail="Cannot archive approved content"
-            )
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Cannot archive approved content")
 
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         repo.update(content_id, {"status": ContentStatus.ARCHIVED, "updated_at": now})

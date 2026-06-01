@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
 QUOTATION_TEMPLATES = {
     "reagent": {
@@ -36,9 +36,7 @@ def generate_quotation(template_id: str, items: list[dict]) -> dict:
         for item in items:
             qty = Decimal(str(item.get("quantity", 1)))
             price = Decimal(str(item.get("unit_price", 0)))
-            item["line_total"] = float(
-                (qty * price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-            )
+            item["line_total"] = float((qty * price).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
             subtotal += Decimal(str(item["line_total"]))
 
     elif template_id == "instrument":
@@ -46,11 +44,7 @@ def generate_quotation(template_id: str, items: list[dict]) -> dict:
             host = Decimal(str(item.get("host_price", 0)))
             accessory = Decimal(str(item.get("accessory_price", 0)))
             install = Decimal(str(item.get("install_fee", 0)))
-            item["line_total"] = float(
-                (host + accessory + install).quantize(
-                    Decimal("0.01"), rounding=ROUND_HALF_UP
-                )
-            )
+            item["line_total"] = float((host + accessory + install).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
             subtotal += Decimal(str(item["line_total"]))
 
     elif template_id == "service":
@@ -58,11 +52,7 @@ def generate_quotation(template_id: str, items: list[dict]) -> dict:
             price = Decimal(str(item.get("unit_price", 0)))
             days = Decimal(str(item.get("person_days", 1)))
             travel = Decimal(str(item.get("travel_expense", 0)))
-            item["line_total"] = float(
-                (price * days + travel).quantize(
-                    Decimal("0.01"), rounding=ROUND_HALF_UP
-                )
-            )
+            item["line_total"] = float((price * days + travel).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
             subtotal += Decimal(str(item["line_total"]))
 
     subtotal = subtotal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)

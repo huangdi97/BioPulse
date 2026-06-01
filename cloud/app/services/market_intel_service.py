@@ -1,7 +1,7 @@
 import json
 import math
-import urllib.request
 import urllib.error
+import urllib.request
 from datetime import datetime
 from typing import Optional
 
@@ -87,9 +87,7 @@ def _do_collect(repo, src, user_id):
 
 
 class MarketIntelService(BaseService):
-    def create_source(
-        self, name: str, source_type: str, target_keywords: list, user_id: int
-    ) -> dict:
+    def create_source(self, name: str, source_type: str, target_keywords: list, user_id: int) -> dict:
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         sources_repo = MarketIntelSourcesRepository(self.db)
         row_id = sources_repo.create(
@@ -105,9 +103,7 @@ class MarketIntelService(BaseService):
         row = sources_repo.get_by_id(row_id)
         return sd(row)
 
-    def list_sources(
-        self, source_type: Optional[str] = None, is_active: Optional[int] = None
-    ) -> list:
+    def list_sources(self, source_type: Optional[str] = None, is_active: Optional[int] = None) -> list:
         sources_repo = MarketIntelSourcesRepository(self.db)
         conditions, params = [], []
         if source_type:
@@ -134,9 +130,7 @@ class MarketIntelService(BaseService):
         sources_repo = MarketIntelSourcesRepository(self.db)
         existing = sources_repo.get_by_id(source_id)
         if not existing:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="market_intel_sources not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="market_intel_sources not found")
         updates = {}
         if name is not None:
             updates["name"] = name
@@ -157,9 +151,7 @@ class MarketIntelService(BaseService):
         items_repo = MarketIntelItemsRepository(self.db)
         existing = sources_repo.get_by_id(source_id)
         if not existing:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="market_intel_sources not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="market_intel_sources not found")
         items_repo.delete_by_source(source_id)
         sources_repo.delete(source_id)
 
@@ -168,9 +160,7 @@ class MarketIntelService(BaseService):
         items_repo = MarketIntelItemsRepository(self.db)
         src = sources_repo.get_by_id(source_id)
         if not src:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="market_intel_sources not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="market_intel_sources not found")
         _do_collect(items_repo, src, user_id)
         return {"collected_count": 3}
 
@@ -231,9 +221,7 @@ class MarketIntelService(BaseService):
         sources_repo = MarketIntelSourcesRepository(self.db)
         row = items_repo.get_by_id(item_id)
         if not row:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="market_intel_items not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="market_intel_items not found")
         d = itd(row, parse_ai=True)
         src = sources_repo.get_by_id(row["source_id"])
         d["source_name"] = src["name"] if src else None
@@ -243,9 +231,7 @@ class MarketIntelService(BaseService):
         items_repo = MarketIntelItemsRepository(self.db)
         existing = items_repo.get_by_id(item_id)
         if not existing:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="market_intel_items not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="market_intel_items not found")
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         items_repo.update_fields(item_id, {"status": status_value, "updated_at": now})
 
@@ -253,9 +239,7 @@ class MarketIntelService(BaseService):
         items_repo = MarketIntelItemsRepository(self.db)
         row = items_repo.get_by_id(item_id)
         if not row:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, detail="market_intel_items not found"
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="market_intel_items not found")
         prompt = (
             f"请对以下市场情报进行深度分析，输出JSON格式：\n"
             f"标题：{row['title']}\n摘要：{row['summary']}\n内容：{row['content']}\n"
@@ -286,9 +270,7 @@ class MarketIntelService(BaseService):
                 resp = json.loads(rp.read().decode("utf-8"))
                 ai_result = resp.get("data", {}).get("reply", "")
         except Exception as e:
-            raise HTTPException(
-                status.HTTP_502_BAD_GATEWAY, detail=f"AI analysis failed: {str(e)}"
-            )
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=f"AI analysis failed: {str(e)}")
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         items_repo.update_fields(
             item_id,

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, Query
 
+from cloud.app.services.research_product_service import ResearchProductService
 from shared.auth import get_current_user
 from shared.auth_scope import require_scope
-from cloud.app.services.research_product_service import ResearchProductService
 
 router = APIRouter(
     prefix="/api/research/products",

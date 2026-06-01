@@ -85,15 +85,10 @@ def seed_decision_intel(conn: sqlite3.Connection) -> None:
             ensure_ascii=False,
         )
         attr = _json.dumps(
-            {
-                k: score / max(1, len(ctx.get("input_features", {})))
-                for k in ctx.get("input_features", {})
-            },
+            {k: score / max(1, len(ctx.get("input_features", {}))) for k in ctx.get("input_features", {})},
             ensure_ascii=False,
         )
-        recs = _json.dumps(
-            ["继续强化该策略" if score > 0 else "重新评估策略方向"], ensure_ascii=False
-        )
+        recs = _json.dumps(["继续强化该策略" if score > 0 else "重新评估策略方向"], ensure_ascii=False)
         conn.execute(
             "INSERT INTO causal_analyses (case_id, summary, key_drivers, causal_chain, "
             "attribution_scores, recommendations, ai_response_raw) VALUES (?,?,?,?,?,?,?)",

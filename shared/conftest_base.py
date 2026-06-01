@@ -16,9 +16,7 @@ def _pg_base() -> str:
 
 def is_pg() -> bool:
     url = os.getenv("DATABASE_URL", "")
-    return bool(
-        url and (url.startswith("postgresql://") or url.startswith("postgres://"))
-    )
+    return bool(url and (url.startswith("postgresql://") or url.startswith("postgres://")))
 
 
 def get_pg_url(test_db_path: str) -> str:
@@ -81,9 +79,7 @@ def setup_test_db(module_db, schema_sql: str, test_db_path: str):
         pg_url = get_pg_url(test_db_path)
         conn = psycopg2.connect(pg_url)
         cur = conn.cursor()
-        cur.execute(
-            "SELECT table_name FROM information_schema.tables WHERE table_schema='public'"
-        )
+        cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
         tables = [row[0] for row in cur.fetchall()]
         for t in tables:
             cur.execute(f'DROP TABLE IF EXISTS "{t}" CASCADE')

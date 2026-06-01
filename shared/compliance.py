@@ -64,9 +64,7 @@ def check_content(content: str, rules: List[dict]) -> ComplianceCheckResult:
                 for num_str in numbers:
                     try:
                         if float(num_str) > float(max_value):
-                            violations.append(
-                                f"Dosage exceeds limit: {num_str} > {max_value} '{keyword}'"
-                            )
+                            violations.append(f"Dosage exceeds limit: {num_str} > {max_value} '{keyword}'")
                     except (ValueError, OverflowError):
                         continue
 
