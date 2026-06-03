@@ -83,3 +83,7 @@ benchmarks/
 .coverage
 # SQLite database files
 *.db
+
+# 开发任务文件（不上传GitHub）
+tasks-*.md
+archive/*.md
