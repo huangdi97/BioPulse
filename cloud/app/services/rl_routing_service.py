@@ -87,7 +87,8 @@ class RLRoutingService(BaseService):
             描述
         """
         self.db.execute(
-            "INSERT INTO routing_log (task_id, task_type, source, strategy_used, routed_to, duration_ms, success) VALUES (?,?,?,?,?,?,?)",
+            "INSERT INTO routing_log (task_id, task_type, source, strategy_used, routed_to, duration_ms, success) "
+            "VALUES (?,?,?,?,?,?,?)",
             (task_id, task_type, source, strategy_used, routed_to, duration_ms, success),
         )
 
@@ -103,7 +104,8 @@ class RLRoutingService(BaseService):
             old_avg = row["avg_duration_ms"]
             new_avg = (old_avg * (total - 1) + duration_ms) / total if total > 0 else float(duration_ms)
             self.db.execute(
-                "UPDATE routing_strategies SET success_count=?, fail_count=?, avg_duration_ms=?, updated_at=CURRENT_TIMESTAMP WHERE strategy_key=?",
+                "UPDATE routing_strategies SET success_count=?, fail_count=?, avg_duration_ms=?, updated_at=CURRENT_TIMESTAMP "
+                "WHERE strategy_key=?",
                 (new_success, new_fail, round(new_avg, 2), strategy_used),
             )
 
@@ -168,11 +170,15 @@ class RLRoutingService(BaseService):
         if task_type:
             like_pattern = task_type.replace("%", "%").replace("_", "_")
             rows = self.db.execute(
-                "SELECT * FROM routing_strategies WHERE is_active=1 AND (task_type_pattern='%' OR ? LIKE task_type_pattern) ORDER BY priority ASC",
+                "SELECT * FROM routing_strategies WHERE is_active=1 AND "
+                "(task_type_pattern='%' OR ? LIKE task_type_pattern) "
+                "ORDER BY priority ASC",
                 (like_pattern,),
             ).fetchall()
         else:
-            rows = self.db.execute("SELECT * FROM routing_strategies WHERE is_active=1 ORDER BY priority ASC").fetchall()
+            rows = self.db.execute(
+                "SELECT * FROM routing_strategies WHERE is_active=1 ORDER BY priority ASC"
+            ).fetchall()
 
         return [dict(r) for r in rows]
 
@@ -228,7 +234,11 @@ class RLRoutingService(BaseService):
             max_duration = constraints.get("max_duration_ms", float("inf"))
             max_load = constraints.get("max_load", float("inf"))
             filtered = [
-                s for s in strategies if s["success_rate"] >= min_success_rate and s["avg_duration_ms"] <= max_duration and s["load"] <= max_load
+                s
+                for s in strategies
+                if s["success_rate"] >= min_success_rate
+                and s["avg_duration_ms"] <= max_duration
+                and s["load"] <= max_load
             ]
             if not filtered:
                 return {
@@ -247,10 +257,14 @@ class RLRoutingService(BaseService):
                 if other is s:
                     continue
                 other_better_or_equal = (
-                    other["success_rate"] >= s["success_rate"] and other["avg_duration_ms"] <= s["avg_duration_ms"] and other["load"] <= s["load"]
+                    other["success_rate"] >= s["success_rate"]
+                    and other["avg_duration_ms"] <= s["avg_duration_ms"]
+                    and other["load"] <= s["load"]
                 )
                 other_strictly_better = (
-                    other["success_rate"] > s["success_rate"] or other["avg_duration_ms"] < s["avg_duration_ms"] or other["load"] < s["load"]
+                    other["success_rate"] > s["success_rate"]
+                    or other["avg_duration_ms"] < s["avg_duration_ms"]
+                    or other["load"] < s["load"]
                 )
                 if other_better_or_equal and other_strictly_better:
                     dominated = True

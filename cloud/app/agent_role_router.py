@@ -98,10 +98,7 @@ def list_roles(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
-    """按类型和状态筛选Agent角色列表。
-    Args:role_type (Optional[str]) 角色类型; is_active (Optional[int]) 启用状态; current_user 用户; db SQLite连接。
-    Returns: dict 成功响应
-    """
+    """按类型和状态筛选Agent角色列表。Args: role_type (Optional[str]) 角色类型; is_active (Optional[int]) 启用状态; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     repo = AgentRolesRepository(db)
     conds, pars = [], []
     if is_active is not None:
@@ -131,10 +128,7 @@ def update_role(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
-    """部分更新Agent角色字段。
-    Args:role_id (int) 角色ID; body (RoleUpdate) 角色更新体; current_user 用户; db SQLite连接。
-    Returns: dict 成功响应
-    """
+    """部分更新Agent角色字段。Args: role_id (int) 角色ID; body (RoleUpdate) 角色更新体; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     repo = AgentRolesRepository(db)
     _404(repo, role_id)
     updates = {}

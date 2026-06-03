@@ -17,7 +17,9 @@ class DigitalHumanDifficultyService(BaseService):
             描述
         """
         row = self.db.execute(
-            "SELECT s.*, c.difficulty AS current_level FROM digital_human_sessions s JOIN coach_scenario c ON s.scenario_id = c.id WHERE s.id = ?",
+            "SELECT s.*, c.difficulty AS current_level FROM digital_human_sessions s "
+            "JOIN coach_scenario c ON s.scenario_id = c.id "
+            "WHERE s.id = ?",
             (session_id,),
         ).fetchone()
         if not row:

@@ -63,8 +63,12 @@ class ResearchTrajectoryService:
             if not pi_row:
                 raise HTTPException(status.HTTP_404_NOT_FOUND, detail="PI not found")
             pi_info = dict(pi_row)
-            traj_rows = db.execute("SELECT * FROM pi_trajectories WHERE pi_id = ? ORDER BY observation_date ASC", (pi_id,)).fetchall()
-            pred_rows = db.execute("SELECT * FROM pi_predictions WHERE pi_id = ? ORDER BY created_at DESC LIMIT 2", (pi_id,)).fetchall()
+            traj_rows = db.execute(
+                "SELECT * FROM pi_trajectories WHERE pi_id = ? ORDER BY observation_date ASC", (pi_id,)
+            ).fetchall()
+            pred_rows = db.execute(
+                "SELECT * FROM pi_predictions WHERE pi_id = ? ORDER BY created_at DESC LIMIT 2", (pi_id,)
+            ).fetchall()
             quotation_rows = db.execute(
                 "SELECT * FROM research_quotations WHERE customer_name LIKE ? ORDER BY created_at DESC",
                 (f"%{pi_info['name']}%",),
@@ -245,8 +249,12 @@ class ResearchTrajectoryService:
         db = get_research_db()
         try:
             since = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
-            traj_rows = db.execute("SELECT dominant_area, active_areas FROM pi_trajectories WHERE observation_date >= ?", (since,)).fetchall()
-            pred_rows = db.execute("SELECT predicted_areas FROM pi_predictions WHERE prediction_date >= ?", (since,)).fetchall()
+            traj_rows = db.execute(
+                "SELECT dominant_area, active_areas FROM pi_trajectories WHERE observation_date >= ?", (since,)
+            ).fetchall()
+            pred_rows = db.execute(
+                "SELECT predicted_areas FROM pi_predictions WHERE prediction_date >= ?", (since,)
+            ).fetchall()
             dominant_counter = Counter()
             active_counter = Counter()
             for row in traj_rows:

@@ -103,7 +103,9 @@ def _compare_with_history(session_id: int, current_scores: dict, db) -> dict:
     """
     try:
         rows = db.execute(
-            "SELECT score, auto_assessment FROM coach_session WHERE id != ? AND auto_assessment IS NOT NULL ORDER BY id DESC LIMIT 10",
+            "SELECT score, auto_assessment FROM coach_session "
+            "WHERE id != ? AND auto_assessment IS NOT NULL "
+            "ORDER BY id DESC LIMIT 10",
             (session_id,),
         ).fetchall()
     except Exception:

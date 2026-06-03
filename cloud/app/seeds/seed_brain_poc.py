@@ -4,7 +4,7 @@ import sqlite3
 
 
 def seed_brain_poc(conn: sqlite3.Connection) -> None:
-    count_sm = conn.execute("SELECT COUNT(*) FROM sensory_memory").fetchone()[0]
+    """count_sm = conn.execute("SELECT COUNT(*) FROM sensory_memory").fetchone()[0]"""
     if count_sm == 0:
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         ex1 = (datetime.datetime.now() + datetime.timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")

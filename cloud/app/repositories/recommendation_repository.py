@@ -20,7 +20,9 @@ class RecommendationsRepository(BaseRepository):
         return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE dismissed=1").fetchone()[0]
 
     def count_by_rec_type(self):
-        rows = self.db.execute(f"SELECT rec_type, COUNT(*) as cnt FROM {self.table_name} GROUP BY rec_type ORDER BY cnt DESC").fetchall()
+        rows = self.db.execute(
+            f"SELECT rec_type, COUNT(*) as cnt FROM {self.table_name} GROUP BY rec_type ORDER BY cnt DESC"
+        ).fetchall()
         return [dict(r) for r in rows]
 
     def list_filtered(

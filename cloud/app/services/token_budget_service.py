@@ -158,7 +158,9 @@ class TokenBudgetService(BaseService):
             "  0, ?)",
             (user_id, model, user_id, model, today, now),
         )
-        self.db.execute("DELETE FROM token_budget WHERE rowid NOT IN (SELECT MAX(rowid) FROM token_budget GROUP BY user_id, model)")
+        self.db.execute(
+            "DELETE FROM token_budget WHERE rowid NOT IN (SELECT MAX(rowid) FROM token_budget GROUP BY user_id, model)"
+        )
         return {
             "user_id": user_id,
             "model": model,

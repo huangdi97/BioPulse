@@ -111,7 +111,9 @@ class SyncService(BaseService):
         repo = SyncQueueRepository(self.db)
         total = repo.count()
         pending = repo.count(conditions=["status='pending'"])
-        by_entity = self.db.execute("SELECT entity_type, COUNT(*) as cnt FROM sync_queue GROUP BY entity_type").fetchall()
+        by_entity = self.db.execute(
+            "SELECT entity_type, COUNT(*) as cnt FROM sync_queue GROUP BY entity_type"
+        ).fetchall()
         by_entity_map = {r["entity_type"]: r["cnt"] for r in by_entity}
         synced = repo.count(conditions=["status='synced'"])
         failed = repo.count(conditions=["status='failed'"])

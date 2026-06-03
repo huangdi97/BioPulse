@@ -71,10 +71,7 @@ def working_get(
     slot_key: Optional[str] = Query(None),
     service: BrainMemoryService = Depends(),
 ):
-    """获取工作记忆数据。
-    Args:session_id (str) 会话ID; slot_key (Optional[str]) 槽位键; service BrainMemoryService。
-    Returns: dict 成功响应
-    """
+    """获取工作记忆数据。Args: session_id (str) 会话ID; slot_key (Optional[str]) 槽位键; service BrainMemoryService。Returns: dict 成功响应"""
     result = service.working_get(session_id=session_id, slot_key=slot_key)
     return success(data=result["data"])
 
@@ -100,10 +97,7 @@ def episodic_store(
     current_user=Depends(require_scope("visit")),
     service: BrainMemoryService = Depends(),
 ):
-    """存储情景记忆。
-    Args:body (EpisodicStore) 情景记忆体; request (Request) HTTP请求; current_user 用户; service BrainMemoryService。
-    Returns: dict 成功响应
-    """
+    """存储情景记忆。Args: body (EpisodicStore) 情景记忆体; request (Request) HTTP请求; current_user 用户; service BrainMemoryService。Returns: dict 成功响应"""
     uid = str(current_user["sub"])
     result = service.episodic_store(
         event_type=body.event_type,
@@ -131,10 +125,7 @@ def episodic_list(
     page_size: int = Query(20, ge=1, le=100),
     service: BrainMemoryService = Depends(),
 ):
-    """分页查询情景记忆。
-    Args:event_type/outcome/date_from/date_to 筛选; page/page_size 分页; service BrainMemoryService。
-    Returns: dict 成功响应
-    """
+    """分页查询情景记忆。Args: event_type/outcome/date_from/date_to 筛选; page/page_size 分页; service BrainMemoryService。Returns: dict 成功响应"""
     result = service.episodic_list(
         event_type=event_type,
         outcome=outcome,
@@ -167,10 +158,7 @@ def episodic_consolidate(
     request: Request,
     service: BrainMemoryService = Depends(),
 ):
-    """固话情景记忆为语义记忆。
-    Args:memory_id (int) 记忆ID; request (Request) HTTP请求; service (BrainMemoryService) 记忆服务。
-    Returns: dict 成功响应
-    """
+    """固话情景记忆为语义记忆。Args: memory_id (int) 记忆ID; request (Request) HTTP请求; service (BrainMemoryService) 记忆服务。Returns: dict 成功响应"""
     auth_header = request.headers.get("Authorization", "")
     result = service.episodic_consolidate(memory_id, auth_header)
     return success(data=result)
@@ -185,10 +173,7 @@ def dashboard(service: BrainMemoryService = Depends()):
 
 @router.post("/semantic/abstract")
 def semantic_abstract(body: SemanticAbstract, request: Request, service: BrainMemoryService = Depends()):
-    """从源数据提取语义抽象。
-    Args:body (SemanticAbstract) 语义抽象体; request (Request) HTTP请求; service BrainMemoryService。
-    Returns: dict 成功响应
-    """
+    """从源数据提取语义抽象。Args: body (SemanticAbstract) 语义抽象体; request (Request) HTTP请求; service BrainMemoryService。Returns: dict 成功响应"""
     result = service.semantic_abstract(
         source_type=body.source_type,
         source_id=body.source_id,

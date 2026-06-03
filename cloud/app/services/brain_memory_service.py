@@ -293,9 +293,13 @@ class BrainMemoryService(BaseService):
             "SELECT COUNT(DISTINCT session_id) FROM working_memory WHERE expires_at > ?",
             (now_val,),
         ).fetchone()[0]
-        slot_total = wm_repo.db.execute("SELECT COUNT(*) FROM working_memory WHERE expires_at > ?", (now_val,)).fetchone()[0]
+        slot_total = wm_repo.db.execute(
+            "SELECT COUNT(*) FROM working_memory WHERE expires_at > ?", (now_val,)
+        ).fetchone()[0]
         slot_per_session = round(slot_total / active_sessions, 1) if active_sessions else 0.0
-        episodic_dist = em_repo.db.execute("SELECT event_type, COUNT(*) as cnt FROM episodic_memory GROUP BY event_type ORDER BY cnt DESC").fetchall()
+        episodic_dist = em_repo.db.execute(
+            "SELECT event_type, COUNT(*) as cnt FROM episodic_memory GROUP BY event_type ORDER BY cnt DESC"
+        ).fetchall()
         recent = em_repo.db.execute("SELECT * FROM episodic_memory ORDER BY created_at DESC LIMIT 10").fetchall()
         return {
             "active_sessions": active_sessions,
@@ -405,7 +409,10 @@ class BrainMemoryService(BaseService):
     def procedural_recall(self, trigger_context: str) -> dict:
         rows = (
             MemoryEntriesRepository(self.db)
-            .db.execute("SELECT * FROM memory_entries WHERE memory_type='procedural' AND is_active=1 ORDER BY importance DESC LIMIT 3")
+            .db.execute(
+                "SELECT * FROM memory_entries WHERE memory_type='procedural' AND is_active=1 "
+                "ORDER BY importance DESC LIMIT 3"
+            )
             .fetchall()
         )
         items = []
@@ -428,7 +435,8 @@ class BrainMemoryService(BaseService):
         me_repo = MemoryEntriesRepository(self.db)
         cutoff = (datetime.now() - timedelta(hours=hours_threshold)).strftime("%Y-%m-%d %H:%M:%S")
         rows = me_repo.db.execute(
-            "SELECT id FROM memory_entries WHERE is_active=1 AND (last_accessed IS NULL OR last_accessed < ?) AND created_at < ?",
+            "SELECT id FROM memory_entries WHERE is_active=1 AND "
+            "(last_accessed IS NULL OR last_accessed < ?) AND created_at < ?",
             (cutoff, cutoff),
         ).fetchall()
         for r in rows:

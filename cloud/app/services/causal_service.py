@@ -75,8 +75,12 @@ def _scenario_to_dict(row) -> dict:
         "scenario_id": row["scenario_id"],
         "strategy_id": row["strategy_id"],
         "base_description": row["base_description"],
-        "variable_changes": json.loads(row["variable_changes"]) if isinstance(row["variable_changes"], str) else row["variable_changes"],
-        "predicted_outcome": json.loads(row["predicted_outcome"]) if isinstance(row["predicted_outcome"], str) else row["predicted_outcome"],
+        "variable_changes": json.loads(row["variable_changes"])
+        if isinstance(row["variable_changes"], str)
+        else row["variable_changes"],
+        "predicted_outcome": json.loads(row["predicted_outcome"])
+        if isinstance(row["predicted_outcome"], str)
+        else row["predicted_outcome"],
         "confidence": row["confidence"],
         "created_by": row["created_by"],
         "created_at": row["created_at"],

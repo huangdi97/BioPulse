@@ -301,7 +301,8 @@ async def analyze_conference_trends(months: int = 6) -> dict:
             topic_counter[topic] = topic_counter.get(topic, 0) + 1
 
     trending = [
-        {"topic": topic, "mentions": count, "conferences_covered": count} for topic, count in sorted(topic_counter.items(), key=lambda x: -x[1])
+        {"topic": topic, "mentions": count, "conferences_covered": count}
+        for topic, count in sorted(topic_counter.items(), key=lambda x: -x[1])
     ]
 
     result = {

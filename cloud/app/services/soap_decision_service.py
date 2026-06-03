@@ -93,7 +93,9 @@ class SoapDecisionService(BaseService):
         page_size: int = 20,
     ) -> dict:
         decisions_repo = SoapDecisionsRepository(self.db)
-        total, tp, items = decisions_repo.list_active_filtered(status=status, priority=priority, tag=tag, page=page, page_size=page_size)
+        total, tp, items = decisions_repo.list_active_filtered(
+            status=status, priority=priority, tag=tag, page=page, page_size=page_size
+        )
         return PaginatedResponse(
             items=[_row(r, ["tags"]) for r in items],
             total=total,

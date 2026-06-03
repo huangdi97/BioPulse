@@ -8,7 +8,9 @@ def seed_memory_utility(conn: sqlite3.Connection) -> None:
         return
     from datetime import datetime as _dt
 
-    entries = conn.execute("SELECT id, importance, access_count, last_accessed FROM memory_entries ORDER BY id LIMIT 5").fetchall()
+    entries = conn.execute(
+        "SELECT id, importance, access_count, last_accessed FROM memory_entries ORDER BY id LIMIT 5"
+    ).fetchall()
     if not entries:
         return
     now = "2026-05-25 10:00:00"
@@ -17,7 +19,9 @@ def seed_memory_utility(conn: sqlite3.Connection) -> None:
         imp = entry["importance"]
         ac = entry["access_count"] or 0
         la = entry["last_accessed"]
-        conn_count = conn.execute("SELECT COUNT(*) FROM node_memory_links WHERE memory_entry_id=?", (mid,)).fetchone()[0]
+        conn_count = conn.execute("SELECT COUNT(*) FROM node_memory_links WHERE memory_entry_id=?", (mid,)).fetchone()[
+            0
+        ]
         access_freq = min(ac / 100.0, 1.0)
         if la is None:
             recency = 0.2

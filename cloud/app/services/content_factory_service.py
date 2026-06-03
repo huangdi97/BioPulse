@@ -94,7 +94,8 @@ class ContentFactoryService(BaseService):
             描述
         """
         rows = self.db.execute(
-            "SELECT id, template_key, name, content_type, is_active, created_at FROM content_factory_templates ORDER BY id DESC"
+            "SELECT id, template_key, name, content_type, is_active, created_at "
+            "FROM content_factory_templates ORDER BY id DESC"
         ).fetchall()
         return [dict(r) for r in rows]
 

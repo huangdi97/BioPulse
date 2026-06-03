@@ -77,10 +77,7 @@ def list_tasks(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
-    """按状态和角色筛选任务列表。
-    Args:status_filter (Optional[str]) 状态; agent_role (Optional[str]) 角色; current_user 用户; db SQLite连接。
-    Returns: dict 成功响应
-    """
+    """按状态和角色筛选任务列表。Args: status_filter (Optional[str]) 状态; agent_role (Optional[str]) 角色; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     repo = AgentExecutionTasksRepository(db)
     conds, pars = [], []
     if status_filter:

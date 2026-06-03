@@ -12,7 +12,9 @@ class RouteRulesRepository(BaseRepository):
 
     def list_active_ordered(self):
         placeholders = ", ".join(self.cols)
-        rows = self.db.execute(f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY priority ASC").fetchall()
+        rows = self.db.execute(
+            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY priority ASC"
+        ).fetchall()
         return [dict(r) for r in rows]
 
     def list_all_ordered(self):

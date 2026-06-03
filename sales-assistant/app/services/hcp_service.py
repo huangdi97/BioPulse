@@ -95,7 +95,8 @@ class HcpService(BaseService):
         if hcp_ids:
             placeholders = ",".join("?" * len(hcp_ids))
             edges = self.db.execute(
-                f"SELECT hcp_id, product_id, relation_type, strength FROM hcp_product_relation WHERE is_active = 1 AND hcp_id IN ({placeholders})",
+                f"SELECT hcp_id, product_id, relation_type, strength FROM hcp_product_relation "
+                f"WHERE is_active = 1 AND hcp_id IN ({placeholders})",
                 hcp_ids,
             ).fetchall()
         else:

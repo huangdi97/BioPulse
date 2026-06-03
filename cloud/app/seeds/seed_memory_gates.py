@@ -15,7 +15,8 @@ def seed_memory_gates(conn: sqlite3.Connection) -> None:
         ("compliance_gate", "compliance", 0.5, 60, "normal"),
     ]
     conn.executemany(
-        "INSERT INTO memory_gates (name, source_type, importance_threshold, ttl_days, retention_policy, created_at) VALUES (?,?,?,?,?,?)",
+        "INSERT INTO memory_gates (name, source_type, importance_threshold, ttl_days, retention_policy, created_at) "
+        "VALUES (?,?,?,?,?,?)",
         [(g[0], g[1], g[2], g[3], g[4], now) for g in gates],
     )
     entries = [

@@ -24,7 +24,8 @@ async def trending_kols(
     # 当前简化版本返回说明
     return success(
         data={
-            "message": "Trending KOLs feature requires full PubMed integration. Use /api/kol/search?name=... for individual KOL search.",
+            "message": "Trending KOLs feature requires full PubMed integration. "
+            "Use /api/kol/search?name=... for individual KOL search.",
             "limit": limit,
         }
     )

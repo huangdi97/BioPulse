@@ -46,7 +46,8 @@ def seed_agent_data(conn: sqlite3.Connection) -> None:
         ),
     ]
     conn.executemany(
-        "INSERT INTO agent_roles (name, role_type, system_prompt, description, temperature, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO agent_roles (name, role_type, system_prompt, description, temperature, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
         [(r[0], r[1], r[2], r[3], r[4], now, now) for r in roles],
     )
     pipeline_id = conn.execute(
@@ -70,7 +71,8 @@ def seed_agent_data(conn: sqlite3.Connection) -> None:
         ),
     ]
     conn.executemany(
-        "INSERT INTO pipeline_steps (pipeline_id, step_order, agent_role_id, input_mapping, custom_prompt_override) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO pipeline_steps (pipeline_id, step_order, agent_role_id, input_mapping, custom_prompt_override) "
+        "VALUES (?, ?, ?, ?, ?)",
         steps_data,
     )
     conn.commit()

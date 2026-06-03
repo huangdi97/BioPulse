@@ -74,7 +74,14 @@ def get_test_graph():
 
     Useful for quick smoke tests where persistence is not needed.
     """
-    builder = StateGraph(AgentState).add_node("A", node_a).add_node("B", node_b).add_edge("A", "B").set_entry_point("A").set_finish_point("B")
+    builder = (
+        StateGraph(AgentState)
+        .add_node("A", node_a)
+        .add_node("B", node_b)
+        .add_edge("A", "B")
+        .set_entry_point("A")
+        .set_finish_point("B")
+    )
     graph = builder.compile(checkpointer=MemorySaver())
     return graph
 
@@ -84,7 +91,14 @@ def get_persistent_graph():
 
     Graph state survives process restarts. Suitable for production use.
     """
-    builder = StateGraph(AgentState).add_node("A", node_a).add_node("B", node_b).add_edge("A", "B").set_entry_point("A").set_finish_point("B")
+    builder = (
+        StateGraph(AgentState)
+        .add_node("A", node_a)
+        .add_node("B", node_b)
+        .add_edge("A", "B")
+        .set_entry_point("A")
+        .set_finish_point("B")
+    )
     graph = builder.compile(checkpointer=get_sqlite_checkpointer())
     return graph
 

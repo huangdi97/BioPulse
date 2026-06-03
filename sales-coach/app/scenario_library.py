@@ -22,7 +22,8 @@ def _read_kg_entities(entity_types: List[str]) -> List[dict]:
     try:
         placeholders = ",".join("?" for _ in entity_types)
         rows = conn.execute(
-            f"SELECT entity_id, entity_type, name, properties FROM kg_entities WHERE entity_type IN ({placeholders}) AND status = 'active'",
+            f"SELECT entity_id, entity_type, name, properties FROM kg_entities "
+            f"WHERE entity_type IN ({placeholders}) AND status = 'active'",
             entity_types,
         ).fetchall()
         return [dict(r) for r in rows]

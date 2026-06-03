@@ -59,7 +59,8 @@ class AnomalyService(BaseService):
             return float(row[0])
         elif metric == "strategy_effectiveness":
             row = self.db.execute(
-                "SELECT COALESCE(AVG(CAST(effectiveness AS REAL)), 0) FROM strategy_simulation WHERE effectiveness IS NOT NULL"
+                "SELECT COALESCE(AVG(CAST(effectiveness AS REAL)), 0) "
+                "FROM strategy_simulation WHERE effectiveness IS NOT NULL"
             ).fetchone()
             return float(row[0])
         elif metric == "total_visits":
@@ -141,11 +142,15 @@ class AnomalyService(BaseService):
         return dict(repo.get_by_id(alert_id))
 
     def anomaly_stats(self) -> dict:
-        by_severity = self.db.execute("SELECT severity, COUNT(*) AS cnt FROM anomaly_alert GROUP BY severity").fetchall()
+        by_severity = self.db.execute(
+            "SELECT severity, COUNT(*) AS cnt FROM anomaly_alert GROUP BY severity"
+        ).fetchall()
         by_rule = self.db.execute("SELECT rule_id, COUNT(*) AS cnt FROM anomaly_alert GROUP BY rule_id").fetchall()
         cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
         trend = self.db.execute(
-            "SELECT DATE(detected_at) AS day, COUNT(*) AS cnt FROM anomaly_alert WHERE detected_at >= ? GROUP BY DATE(detected_at) ORDER BY day",
+            "SELECT DATE(detected_at) AS day, COUNT(*) AS cnt "
+            "FROM anomaly_alert WHERE detected_at >= ? "
+            "GROUP BY DATE(detected_at) ORDER BY day",
             (cutoff,),
         ).fetchall()
         return {

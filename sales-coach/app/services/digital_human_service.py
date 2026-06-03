@@ -43,7 +43,9 @@ class DigitalHumanService(BaseService):
 
         now = datetime.now(timezone.utc).isoformat()
         cur = self.db.execute(
-            "INSERT INTO digital_human_sessions (scenario_id, module_id, role, created_by, created_at) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO digital_human_sessions "
+            "(scenario_id, module_id, role, created_by, created_at) "
+            "VALUES (?, ?, ?, ?, ?)",
             (scenario_id, module_id, role, user_id, now),
         )
         session_id = cur.lastrowid
@@ -100,7 +102,8 @@ class DigitalHumanService(BaseService):
         compliance_result = check_compliance(content)
 
         history = self.db.execute(
-            "SELECT sender, content FROM digital_human_messages WHERE session_id = ? ORDER BY round_number ASC LIMIT 20",
+            "SELECT sender, content FROM digital_human_messages "
+            "WHERE session_id = ? ORDER BY round_number ASC LIMIT 20",
             (session_id,),
         ).fetchall()
         context = [{"role": m["sender"], "content": m["content"]} for m in history]
@@ -128,7 +131,10 @@ class DigitalHumanService(BaseService):
 
         violation_inc = 0 if compliance_result["passed"] else len(compliance_result["violations"])
         self.db.execute(
-            "UPDATE digital_human_sessions SET message_count = message_count + 2, compliance_violations = compliance_violations + ? WHERE id = ?",
+            "UPDATE digital_human_sessions SET "
+            "message_count = message_count + 2, "
+            "compliance_violations = compliance_violations + ? "
+            "WHERE id = ?",
             (violation_inc, session_id),
         )
 

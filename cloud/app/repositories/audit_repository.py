@@ -47,7 +47,8 @@ class FedAuditContributionsRepository(BaseRepository):
 
     def get_latest_by_did_and_type(self, contributor_did: str, contribution_type: str):
         row = self.db.execute(
-            f"SELECT {', '.join(self.cols)} FROM {self.table_name} WHERE contributor_did=? AND contribution_type=? ORDER BY id DESC LIMIT 1",
+            f"SELECT {', '.join(self.cols)} FROM {self.table_name} "
+            "WHERE contributor_did=? AND contribution_type=? ORDER BY id DESC LIMIT 1",
             (contributor_did, contribution_type),
         ).fetchone()
         return dict(row) if row else None

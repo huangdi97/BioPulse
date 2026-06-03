@@ -108,7 +108,9 @@ class EventBusMessagesRepository(BaseRepository):
     def count_by_status(self):
         return {
             "pending": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='pending'").fetchone()[0],
-            "delivered": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='delivered'").fetchone()[0],
+            "delivered": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='delivered'").fetchone()[
+                0
+            ],
             "failed": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='failed'").fetchone()[0],
         }
 
@@ -166,7 +168,8 @@ class EventDeliveryLogRepository(BaseRepository):
 
     def reset_pending_by_message(self, message_id: str):
         self.db.execute(
-            "UPDATE event_delivery_log SET delivery_status='pending', error_message='', response_summary='', attempt=attempt+1 WHERE message_id=?",
+            "UPDATE event_delivery_log SET delivery_status='pending', error_message='', "
+            "response_summary='', attempt=attempt+1 WHERE message_id=?",
             (message_id,),
         )
         self.db.commit()
@@ -176,6 +179,10 @@ class EventDeliveryLogRepository(BaseRepository):
 
     def count_by_status(self):
         return {
-            "delivered": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE delivery_status='delivered'").fetchone()[0],
-            "pending": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE delivery_status='pending'").fetchone()[0],
+            "delivered": self.db.execute(
+                f"SELECT COUNT(*) FROM {self.table_name} WHERE delivery_status='delivered'"
+            ).fetchone()[0],
+            "pending": self.db.execute(
+                f"SELECT COUNT(*) FROM {self.table_name} WHERE delivery_status='pending'"
+            ).fetchone()[0],
         }

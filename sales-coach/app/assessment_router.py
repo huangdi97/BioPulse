@@ -168,7 +168,9 @@ def reflect_on_assessment(
     if not assessment:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Assessment not found")
     sessions = db.execute(
-        "SELECT id, dialogue_log, compliance_violations, scenario_id FROM coach_session WHERE trainee_name = ? ORDER BY id DESC LIMIT 1",
+        "SELECT id, dialogue_log, compliance_violations, scenario_id "
+        "FROM coach_session WHERE trainee_name = ? "
+        "ORDER BY id DESC LIMIT 1",
         (assessment.get("trainee_name", ""),),
     ).fetchone()
     if not sessions:

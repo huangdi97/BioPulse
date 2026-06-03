@@ -62,7 +62,8 @@ class PrecallService(BaseService):
         if hcp_rows:
             hcp = hcp_rows[0]
             parts.append(
-                f"HCP信息：姓名={hcp['name']}，医院={hcp['hospital']}，科室={hcp['department']}，职称={hcp['specialty']}，等级={hcp['tier']}"
+                f"HCP信息：姓名={hcp['name']}，医院={hcp['hospital']}，"
+                f"科室={hcp['department']}，职称={hcp['specialty']}，等级={hcp['tier']}"
             )
 
             visits = visit_repo.search(customer_name, limit=5)

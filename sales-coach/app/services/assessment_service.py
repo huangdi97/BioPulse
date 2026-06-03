@@ -115,7 +115,9 @@ class AssessmentService(BaseService):
         """
         repo = SessionRepository(self.db)
         rows = repo.db.execute(
-            "SELECT id, score, created_at, module_id FROM coach_session WHERE created_by = ? AND score IS NOT NULL ORDER BY id DESC LIMIT ?",
+            "SELECT id, score, created_at, module_id FROM coach_session "
+            "WHERE created_by = ? AND score IS NOT NULL "
+            "ORDER BY id DESC LIMIT ?",
             (user_id, limit),
         ).fetchall()
         return [dict(r) for r in rows]

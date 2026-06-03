@@ -92,7 +92,9 @@ class MemoryUtilityService(BaseService):
         tree_repo.update_path(node_id, path, level, _now())
 
     def _refresh_children(self, tree_repo: WorldTreeNodesRepository, parent_id: int) -> None:
-        for child in self.db.execute(f"SELECT id FROM {tree_repo.table_name} WHERE parent_id=?", (parent_id,)).fetchall():
+        for child in self.db.execute(
+            f"SELECT id FROM {tree_repo.table_name} WHERE parent_id=?", (parent_id,)
+        ).fetchall():
             self._refresh_path(tree_repo, child["id"])
             self._refresh_children(tree_repo, child["id"])
 

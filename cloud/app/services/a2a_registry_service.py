@@ -124,7 +124,8 @@ class A2ARegistryService(BaseService):
         task_id = self._task_id()
         input_str = json.dumps(input_data, ensure_ascii=False)
         self.db.execute(
-            "INSERT INTO agent_tasks (task_id, source_agent_key, target_agent_key, task_type, input_data, priority) VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO agent_tasks (task_id, source_agent_key, target_agent_key, "
+            "task_type, input_data, priority) VALUES (?, ?, ?, ?, ?, ?)",
             (task_id, source_key, target_key, task_type, input_str, priority),
         )
         self._event("routing", source_key, {"task_id": task_id, "target": target_key})

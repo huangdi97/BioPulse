@@ -146,7 +146,9 @@ class StrategyService(BaseService):
         user_text = f"客户：{body.hcp_name}，策略：{body.approach}"
         if body.product_name:
             user_text += f"，产品：{body.product_name}"
-        user_text += '。预测此策略有效性（0-1）并给出置信度（高/中/低），回复JSON：{"effectiveness":0.7,"confidence":"中"}'
+        user_text += (
+            '。预测此策略有效性（0-1）并给出置信度（高/中/低），回复JSON：{"effectiveness":0.7,"confidence":"中"}'
+        )
         try:
             req = urllib.request.Request(
                 AI_GATEWAY_URL,

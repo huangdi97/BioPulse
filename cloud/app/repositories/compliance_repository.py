@@ -58,5 +58,7 @@ class DidRegistryRepository(BaseRepository):
         return {r["status"]: r["cnt"] for r in rows}
 
     def count_by_entity_type(self):
-        rows = self.db.execute(f"SELECT entity_type, COUNT(*) as cnt FROM {self.table_name} GROUP BY entity_type").fetchall()
+        rows = self.db.execute(
+            f"SELECT entity_type, COUNT(*) as cnt FROM {self.table_name} GROUP BY entity_type"
+        ).fetchall()
         return {r["entity_type"]: r["cnt"] for r in rows}

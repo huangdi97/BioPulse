@@ -14,7 +14,9 @@ class WorldTreeNodesRepository(BaseRepository):
 
     def list_active_sorted(self):
         placeholders = ", ".join(self.cols)
-        rows = self.db.execute(f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY sort_order, name").fetchall()
+        rows = self.db.execute(
+            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY sort_order, name"
+        ).fetchall()
         return [dict(r) for r in rows]
 
     def descendant_ids(self, node_id):
@@ -22,7 +24,10 @@ class WorldTreeNodesRepository(BaseRepository):
         while stack:
             cur = stack.pop()
             ids.append(cur)
-            stack.extend(c["id"] for c in self.db.execute(f"SELECT id FROM {self.table_name} WHERE parent_id=?", (cur,)).fetchall())
+            stack.extend(
+                c["id"]
+                for c in self.db.execute(f"SELECT id FROM {self.table_name} WHERE parent_id=?", (cur,)).fetchall()
+            )
         return ids
 
     def update_parent(self, node_id, parent_id, now):

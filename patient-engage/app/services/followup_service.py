@@ -33,7 +33,9 @@ async def create_followup_plan(patient_id: str, plan: dict) -> dict:
 
     schedule_data = resp.json() if resp.status_code == 200 else {}
     return {
-        "plan_id": schedule_data.get("data", schedule_data).get("plan_id", f"FLW-{patient_id}-{int(datetime.now().timestamp())}"),
+        "plan_id": schedule_data.get("data", schedule_data).get(
+            "plan_id", f"FLW-{patient_id}-{int(datetime.now().timestamp())}"
+        ),
         "patient_id": patient_id,
         "plan": plan,
         "status": "active",

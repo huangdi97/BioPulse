@@ -76,7 +76,9 @@ class HcpSandboxStrategyService(BaseService):
         strategy = self.db.execute("SELECT * FROM sandbox_strategies WHERE id=?", (strategy_id,)).fetchone()
         if not strategy:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Strategy not found")
-        params = json.loads(strategy["parameters"]) if isinstance(strategy["parameters"], str) else strategy["parameters"]
+        params = (
+            json.loads(strategy["parameters"]) if isinstance(strategy["parameters"], str) else strategy["parameters"]
+        )
         base = {
             "prescription_volume": hcp["prescription_volume"],
             "influence_score": hcp["influence_score"],

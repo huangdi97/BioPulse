@@ -97,7 +97,9 @@ class HcpSandboxService(BaseService):
         page_size: int = 20,
     ) -> PaginatedResponse:
         repo = HcpProfilesRepository(self.db)
-        total, total_pages, items = repo.list_filtered(tier=tier, specialty=specialty, city=city, page=page, page_size=page_size)
+        total, total_pages, items = repo.list_filtered(
+            tier=tier, specialty=specialty, city=city, page=page, page_size=page_size
+        )
         return PaginatedResponse(
             items=items,
             total=total,
@@ -209,7 +211,9 @@ class HcpSandboxService(BaseService):
         if not hcp_row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="HCP profile not found")
         int_rows = interactions_repo.get_recent_by_hcp_id(hcp_id, limit=5)
-        system_prompt = "你是一名HCP行为模拟专家。请基于HCP档案和历史互动记录，模拟该HCP在给定场景下的行为反应。以JSON格式输出："
+        system_prompt = (
+            "你是一名HCP行为模拟专家。请基于HCP档案和历史互动记录，模拟该HCP在给定场景下的行为反应。以JSON格式输出："
+        )
         user_prompt = (
             f"HCP档案：\n{json.dumps(hcp_row, ensure_ascii=False, indent=2)}\n\n"
             f"最近互动：\n{json.dumps(int_rows, ensure_ascii=False, indent=2)}\n\n"

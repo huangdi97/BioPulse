@@ -54,9 +54,9 @@ class MdtParticipantsRepository(BaseRepository):
         return [dict(r) for r in rows]
 
     def avg_per_session(self) -> float:
-        return self.db.execute(f"SELECT COALESCE(ROUND(AVG(c),2),0) FROM (SELECT COUNT(*) c FROM {self.table_name} GROUP BY session_id)").fetchone()[
-            0
-        ]
+        return self.db.execute(
+            f"SELECT COALESCE(ROUND(AVG(c),2),0) FROM (SELECT COUNT(*) c FROM {self.table_name} GROUP BY session_id)"
+        ).fetchone()[0]
 
     def create_raw(self, data: dict) -> int:
         filtered = {k: v for k, v in data.items() if k in self.cols}
@@ -173,11 +173,15 @@ class SoapDecisionsRepository(BaseRepository):
         return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1").fetchone()[0]
 
     def count_by_status(self):
-        rows = self.db.execute(f"SELECT status, COUNT(*) cnt FROM {self.table_name} WHERE is_active=1 GROUP BY status").fetchall()
+        rows = self.db.execute(
+            f"SELECT status, COUNT(*) cnt FROM {self.table_name} WHERE is_active=1 GROUP BY status"
+        ).fetchall()
         return {r["status"]: r["cnt"] for r in rows}
 
     def count_by_priority(self):
-        rows = self.db.execute(f"SELECT priority, COUNT(*) cnt FROM {self.table_name} WHERE is_active=1 GROUP BY priority").fetchall()
+        rows = self.db.execute(
+            f"SELECT priority, COUNT(*) cnt FROM {self.table_name} WHERE is_active=1 GROUP BY priority"
+        ).fetchall()
         return {r["priority"]: r["cnt"] for r in rows}
 
     def list_active_recent(self, limit: int = 5):
@@ -311,7 +315,8 @@ class CausalAnalysesRepository(BaseRepository):
 
     def count_distinct_case_ids(self):
         return self.db.execute(
-            "SELECT COUNT(DISTINCT case_id) FROM causal_analyses ca JOIN decision_cases dc ON ca.case_id=dc.id WHERE dc.is_active=1"
+            "SELECT COUNT(DISTINCT case_id) FROM causal_analyses ca "
+            "JOIN decision_cases dc ON ca.case_id=dc.id WHERE dc.is_active=1"
         ).fetchone()[0]
 
 
@@ -355,7 +360,9 @@ class CrossCaseInsightsRepository(BaseRepository):
         return dict(row) if row else None
 
     def count_by_type(self):
-        rows = self.db.execute(f"SELECT insight_type, COUNT(*) AS cnt FROM {self.table_name} WHERE is_active=1 GROUP BY insight_type").fetchall()
+        rows = self.db.execute(
+            f"SELECT insight_type, COUNT(*) AS cnt FROM {self.table_name} WHERE is_active=1 GROUP BY insight_type"
+        ).fetchall()
         return [{"type": r["insight_type"], "count": r["cnt"]} for r in rows]
 
     def top_by_confidence(self, limit=5):

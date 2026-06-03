@@ -3,11 +3,14 @@ import sqlite3
 
 def seed_market_intel_agent(conn: sqlite3.Connection) -> None:
     """Insert market intel analyst agent template and instance."""
-    count = conn.execute("SELECT COUNT(*) FROM agent_role_templates WHERE template_key='market_intel_analyst'").fetchone()[0]
+    count = conn.execute(
+        "SELECT COUNT(*) FROM agent_role_templates WHERE template_key='market_intel_analyst'"
+    ).fetchone()[0]
     if count > 0:
         return
     conn.execute(
-        "INSERT OR IGNORE INTO agent_role_templates (template_key, name, domain, capabilities, default_config) VALUES (?, ?, ?, ?, ?)",
+        "INSERT OR IGNORE INTO agent_role_templates (template_key, name, domain, capabilities, default_config) "
+        "VALUES (?, ?, ?, ?, ?)",
         (
             "market_intel_analyst",
             "市场情报分析师Agent",

@@ -11,7 +11,8 @@ def seed_s3(conn: sqlite3.Connection) -> None:
 
     if count_cg == 0:
         conn.execute(
-            "INSERT INTO causal_graphs (graph_id, decision_id, graph_data, node_count, edge_count, created_at) VALUES (?,?,?,?,?,?)",
+            "INSERT INTO causal_graphs (graph_id, decision_id, graph_data, node_count, edge_count, created_at) "
+            "VALUES (?,?,?,?,?,?)",
             (
                 "cg:test-001",
                 "decision-01",

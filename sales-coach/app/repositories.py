@@ -196,7 +196,8 @@ class AssessmentRepository(BaseRepository):
         level_dist = {r["current_level"]: r["cnt"] for r in dist_rows}
 
         weakness_rows = self.db.execute(
-            "SELECT weaknesses FROM education_assessment WHERE is_active = 1 AND weaknesses IS NOT NULL AND weaknesses != ''"
+            "SELECT weaknesses FROM education_assessment "
+            "WHERE is_active = 1 AND weaknesses IS NOT NULL AND weaknesses != ''"
         ).fetchall()
         counter: Counter = Counter()
         for row in weakness_rows:
@@ -207,7 +208,8 @@ class AssessmentRepository(BaseRepository):
         top_weaknesses = [{"weakness": w, "count": c} for w, c in counter.most_common(10)]
 
         recent = self.db.execute(
-            "SELECT COUNT(*) FROM education_assessment WHERE assessment_date >= date('now', '-30 days') AND is_active = 1"
+            "SELECT COUNT(*) FROM education_assessment "
+            "WHERE assessment_date >= date('now', '-30 days') AND is_active = 1"
         ).fetchone()[0]
 
         return {

@@ -93,7 +93,9 @@ class TrustAuditService(BaseService):
             "last_heartbeat": last_heartbeat,
         }
 
-    def create_audit_block(self, data: dict, block_type: str = "audit", node_id: str = "", created_by: str = "") -> dict:
+    def create_audit_block(
+        self, data: dict, block_type: str = "audit", node_id: str = "", created_by: str = ""
+    ) -> dict:
         """create_audit_block 操作。
 
         Args:
