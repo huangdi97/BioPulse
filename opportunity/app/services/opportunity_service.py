@@ -13,7 +13,7 @@ class OpportunityService(BaseService):
         repo = OpportunityRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()
         extra = {"created_by": user_id, "created_at": now, "updated_at": now}
-        return repo.create(body.model_dump(), extra)
+        return repo.create(body.model_dump(), extra=extra)
 
     def list_opportunities(
         self,

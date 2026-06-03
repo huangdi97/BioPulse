@@ -2,6 +2,8 @@ import sqlite3
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
+from fastapi import HTTPException
+
 
 class BaseRepository:
     def __init__(self, db: sqlite3.Connection, table_name: str, cols: List[str]):
@@ -23,6 +25,12 @@ class BaseRepository:
         if row:
             return dict(row)
         return None
+
+    def get_or_404(self, record_id: int) -> Dict[str, Any]:
+        row = self.get_by_id(record_id)
+        if not row:
+            raise HTTPException(status_code=404)
+        return dict(row)
 
     def get_all(self) -> List[Dict[str, Any]]:
         placeholders = ", ".join(self.cols)
