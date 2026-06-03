@@ -2,12 +2,17 @@
 功能检测 — 一云四端
 优雅版：处理真实API的字段命名差异和校验要求
 """
-import json, urllib.request, urllib.error, sys, time
+
+import json
+import time
+import urllib.error
+import urllib.request
 
 BASE = "http://localhost:8000"
 TOKEN = None
 PASS, FAIL = 0, 0
 RATE_LIMIT_SLEEP = 0.3
+
 
 def api(method, path, data=None, auth=True, port=8000):
     global TOKEN
@@ -26,10 +31,12 @@ def api(method, path, data=None, auth=True, port=8000):
         raw = e.read().decode()
         return {"code": e.code, "body": json.loads(raw) if raw else {}}
 
+
 def ok(label, check=None):
     global PASS, FAIL
     time.sleep(RATE_LIMIT_SLEEP)
     return lambda resp: _check(label, resp, check)
+
 
 def _check(label, resp, check):
     global PASS, FAIL
@@ -46,34 +53,39 @@ def _check(label, resp, check):
         print(f"  ✓ {label} (no check)")
     return resp
 
+
 def has_field(field):
     return lambda r: field in r.get("body", {}).get("data", {}) or field in r.get("body", {})
 
+
 def field_equals(field, val):
-    return lambda r: r.get("body", {}).get("data", {}).get(field) == val \
-        or r.get("body", {}).get(field) == val
+    return lambda r: r.get("body", {}).get("data", {}).get(field) == val or r.get("body", {}).get(field) == val
+
 
 def code_is(code):
     return lambda r: r.get("body", {}).get("code") == code
 
+
 def status_code_is(code):
     return lambda r: r.get("code") == code
+
 
 def not_error():
     return lambda r: r.get("body", {}).get("code", 0) != 429
 
+
 # ============================================================
 # 登录
 # ============================================================
-r = api("POST", "/auth/login", {"username":"func_test_main","password":"TestPass123!"}, auth=False)
+r = api("POST", "/auth/login", {"username": "func_test_main", "password": "TestPass123!"}, auth=False)
 if r["body"].get("data", {}).get("access_token"):
     TOKEN = r["body"]["data"]["access_token"]
     ok("登录获取Token")(r)
 else:
     # Try register
-    r = api("POST", "/auth/register", {"username":"func_test_main","password":"TestPass123!"}, auth=False)
+    r = api("POST", "/auth/register", {"username": "func_test_main", "password": "TestPass123!"}, auth=False)
     ok("注册")(r)
-    r = api("POST", "/auth/login", {"username":"func_test_main","password":"TestPass123!"}, auth=False)
+    r = api("POST", "/auth/login", {"username": "func_test_main", "password": "TestPass123!"}, auth=False)
     TOKEN = r["body"].get("data", {}).get("access_token", "")
     ok("登录")(r)
 
@@ -83,7 +95,7 @@ else:
 print("\n=== Cloud: Customer CRUD ===")
 
 # Create
-r = api("POST", "/customers/", {"name":"FT-Customer-001","type":"hospital","region":"east","status":"active"})
+r = api("POST", "/customers/", {"name": "FT-Customer-001", "type": "hospital", "region": "east", "status": "active"})
 ok("创建客户", has_field("id"))(r)
 cid = r["body"].get("data", {}).get("id")
 
@@ -109,7 +121,11 @@ if cid:
 # ============================================================
 print("\n=== Cloud: Contents CRUD ===")
 
-r = api("POST", "/contents/", {"title":"FT-Content-001","body":"Body text","category":"article","content_type":"article","status":"draft","tags":["test"]})
+r = api(
+    "POST",
+    "/contents/",
+    {"title": "FT-Content-001", "body": "Body text", "category": "article", "content_type": "article", "status": "draft", "tags": ["test"]},
+)
 ok("创建内容", lambda r: "id" in json.dumps(r["body"], ensure_ascii=False))(r)
 coid = r["body"].get("data", {}).get("id") or r["body"].get("id")
 
@@ -137,10 +153,11 @@ print("\n=== Cloud: Compliance ===")
 r = api("GET", "/compliance/rules")
 ok("合规规则列表", lambda r: len(r["body"].get("data", [])) > 0)(r)
 
-r = api("POST", "/compliance/check", {
-    "content": "This drug is the best on the market",
-    "rules": [{"field": "prohibited_words", "op": "contains", "value": "best"}]
-})
+r = api(
+    "POST",
+    "/compliance/check",
+    {"content": "This drug is the best on the market", "rules": [{"field": "prohibited_words", "op": "contains", "value": "best"}]},
+)
 ok("合规检查", lambda r: r["body"].get("code") in (0, 200, 422))(r)
 
 # ============================================================
@@ -148,11 +165,11 @@ ok("合规检查", lambda r: r["body"].get("code") in (0, 200, 422))(r)
 # ============================================================
 print("\n=== Cloud: Knowledge Graph ===")
 
-r = api("POST", "/kg/entities/create", {
-    "name": "FT-Drug-001",
-    "entity_type": "drug",
-    "properties": json.dumps({"molecule": "TEST", "class": "inhibitor"})
-})
+r = api(
+    "POST",
+    "/kg/entities/create",
+    {"name": "FT-Drug-001", "entity_type": "drug", "properties": json.dumps({"molecule": "TEST", "class": "inhibitor"})},
+)
 ok("创建KG实体", lambda r: "entity_id" in json.dumps(r["body"], ensure_ascii=False) or r["body"].get("code") == 0)(r)
 kgid = r["body"].get("data", {}).get("entity_id") or r["body"].get("entity_id")
 
@@ -206,7 +223,7 @@ print("\n=== Cloud: Collaboration ===")
 r = api("GET", "/collaboration/dashboard")
 ok("协作Dashboard", lambda r: r["body"].get("code") == 0)(r)
 
-r = api("POST", "/collaboration/sessions/create", {"title":"FT-Collab-001","participants":["agent_a","agent_b"]})
+r = api("POST", "/collaboration/sessions/create", {"title": "FT-Collab-001", "participants": ["agent_a", "agent_b"]})
 ok("创建协作会话", lambda r: "session_id" in json.dumps(r["body"], ensure_ascii=False))(r)
 
 # ============================================================
@@ -217,12 +234,12 @@ print("\n=== Cloud: MDT ===")
 r = api("GET", "/mdt/dashboard")
 ok("MDT Dashboard", lambda r: r["body"].get("code") == 0)(r)
 
-r = api("POST", "/mdt/sessions", {"case_description":"Test case for MDT","participants":["dr_a","dr_b"]})
+r = api("POST", "/mdt/sessions", {"case_description": "Test case for MDT", "participants": ["dr_a", "dr_b"]})
 ok("创建MDT会诊", lambda r: "session_id" in json.dumps(r["body"], ensure_ascii=False))(r)
 mdt_id = r["body"].get("data", {}).get("session_id") or r["body"].get("session_id")
 
 if mdt_id:
-    r = api("POST", f"/mdt/sessions/{mdt_id}/consensus", {"decision":"Continue monitoring"})
+    r = api("POST", f"/mdt/sessions/{mdt_id}/consensus", {"decision": "Continue monitoring"})
     ok(f"MDT达成共识[{mdt_id}]")(r)
 
 # ============================================================
@@ -241,10 +258,7 @@ print("\n=== Cloud: Event Bus ===")
 r = api("GET", "/events/dashboard")
 ok("Event Bus Dashboard", lambda r: r["body"].get("code") == 0)(r)
 
-r = api("POST", "/events/definitions/create", {
-    "event_type": "test.event",
-    "description": "Test event for functional testing"
-})
+r = api("POST", "/events/definitions/create", {"event_type": "test.event", "description": "Test event for functional testing"})
 ok("创建事件定义", lambda r: r["body"].get("code") == 0)(r)
 
 # ============================================================
@@ -252,7 +266,7 @@ ok("创建事件定义", lambda r: r["body"].get("code") == 0)(r)
 # ============================================================
 print("\n=== Cloud: Decision Intelligence ===")
 
-r = api("POST", "/decision-intel/cases", {"title":"FT-Decision-001","description":"Test decision case","decision_type":"strategic"})
+r = api("POST", "/decision-intel/cases", {"title": "FT-Decision-001", "description": "Test decision case", "decision_type": "strategic"})
 ok("创建决策案例", lambda r: "case_id" in json.dumps(r["body"], ensure_ascii=False))(r)
 
 # ============================================================
@@ -260,12 +274,9 @@ ok("创建决策案例", lambda r: "case_id" in json.dumps(r["body"], ensure_asc
 # ============================================================
 print("\n=== Cloud: HCP Sandbox ===")
 
-r = api("POST", "/hcp-sandbox/profiles", {
-    "hcp_name": "Dr. Functional Test",
-    "specialty": "cardiology",
-    "hospital": "Test Hospital",
-    "region": "east"
-})
+r = api(
+    "POST", "/hcp-sandbox/profiles", {"hcp_name": "Dr. Functional Test", "specialty": "cardiology", "hospital": "Test Hospital", "region": "east"}
+)
 ok("创建HCP档案", lambda r: "hcp_id" in json.dumps(r["body"], ensure_ascii=False))(r)
 
 # ============================================================
@@ -315,13 +326,12 @@ ok("健康检查", lambda r: "status" in json.dumps(r["body"]))(r)
 r = api("GET", "/opportunities/stats", port=8002)
 ok("机会统计")(r)
 
-r = api("POST", "/opportunities", port=8002, data={
-    "name": "FT-Opp-001",
-    "hospital": "Test Hospital",
-    "product": "Test Drug",
-    "value": 100000,
-    "stage": "qualify"
-})
+r = api(
+    "POST",
+    "/opportunities",
+    port=8002,
+    data={"name": "FT-Opp-001", "hospital": "Test Hospital", "product": "Test Drug", "value": 100000, "stage": "qualify"},
+)
 ok("创建机会", lambda r: "opportunity_id" in json.dumps(r["body"], ensure_ascii=False))(r)
 oid = r["body"].get("opportunity_id") or r["body"].get("data", {}).get("opportunity_id")
 
@@ -339,14 +349,19 @@ ok("健康检查", lambda r: "status" in json.dumps(r["body"]))(r)
 r = api("GET", "/hcp", port=8003)
 ok("HCP列表")(r)
 
-r = api("POST", "/visits", port=8003, data={
-    "hcp_name": "Dr FT-Assistant",
-    "hcp_title": "Cardiologist",
-    "hospital": "Test Hospital",
-    "visit_date": "2026-06-04",
-    "status": "planned",
-    "notes": "Functional test visit"
-})
+r = api(
+    "POST",
+    "/visits",
+    port=8003,
+    data={
+        "hcp_name": "Dr FT-Assistant",
+        "hcp_title": "Cardiologist",
+        "hospital": "Test Hospital",
+        "visit_date": "2026-06-04",
+        "status": "planned",
+        "notes": "Functional test visit",
+    },
+)
 ok("创建拜访", lambda r: "visit_id" in json.dumps(r["body"], ensure_ascii=False))(r)
 
 r = api("GET", "/tasks", port=8003)
@@ -362,13 +377,12 @@ ok("健康检查", lambda r: "status" in json.dumps(r["body"]))(r)
 r = api("GET", "/hcp", port=8004)
 ok("HCP列表")(r)
 
-r = api("POST", "/hcp", port=8004, data={
-    "name": "Dr FT-SA",
-    "title": "Oncologist",
-    "hospital": "Cancer Center",
-    "specialty": "oncology",
-    "region": "east"
-})
+r = api(
+    "POST",
+    "/hcp",
+    port=8004,
+    data={"name": "Dr FT-SA", "title": "Oncologist", "hospital": "Cancer Center", "specialty": "oncology", "region": "east"},
+)
 ok("创建HCP关系", lambda r: "hcp_id" in json.dumps(r["body"], ensure_ascii=False))(r)
 
 r = api("GET", "/products", port=8004)
@@ -383,10 +397,10 @@ ok("销售漏斗")(r)
 # ============================================================
 # 汇总
 # ============================================================
-print(f"\n{'='*40}")
-print(f"功能检测完成")
-print(f"通过: {PASS} / {PASS+FAIL}")
-print(f"失败: {FAIL} / {PASS+FAIL}")
+print(f"\n{'=' * 40}")
+print("功能检测完成")
+print(f"通过: {PASS} / {PASS + FAIL}")
+print(f"失败: {FAIL} / {PASS + FAIL}")
 if FAIL == 0:
     print("🎉 全部通过！")
 else:
