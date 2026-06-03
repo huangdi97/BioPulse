@@ -2,7 +2,7 @@ import sqlite3
 
 
 def seed_a2a(conn: sqlite3.Connection) -> None:
-    """count = conn.execute("SELECT COUNT(*) FROM agent_registry").fetchone()[0]"""
+    count = conn.execute("SELECT COUNT(*) FROM agent_registry").fetchone()[0]
     if count > 0:
         return
 

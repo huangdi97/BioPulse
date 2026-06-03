@@ -2,7 +2,7 @@ import sqlite3
 
 
 def seed_rl_routing(conn: sqlite3.Connection) -> None:
-    """count = conn.execute("SELECT COUNT(*) FROM routing_strategies").fetchone()[0]"""
+    count = conn.execute("SELECT COUNT(*) FROM routing_strategies").fetchone()[0]
     if count > 0:
         return
 

@@ -11,7 +11,7 @@ class BrainSearchService(BaseService):
     """BrainSearch 服务类。"""
 
     def _calc_search_relevance(self, query: str, row: dict, source: str) -> float:
-        """q = query.lower()"""
+        q = query.lower()
         score = 0.5
         if source == "episodic":
             if q in (row.get("title") or "").lower():

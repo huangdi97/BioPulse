@@ -198,7 +198,7 @@ class AgentFrameworkService(BaseService):
         return {"status": instance.get("status"), "last_active_at": row["last_active_at"]}
 
     def _row_to_dict(self, row):
-        """d = dict(row)"""
+        d = dict(row)
         for col in ("capabilities", "default_config", "triggers", "endpoints", "config_overrides", "metrics"):
             if col in d and isinstance(d[col], str) and d[col]:
                 try:
@@ -208,6 +208,6 @@ class AgentFrameworkService(BaseService):
         return d
 
     def _a2a_service(self):
-        """from cloud.app.services.a2a_registry_service import A2ARegistryService"""
+        from cloud.app.services.a2a_registry_service import A2ARegistryService
 
         return A2ARegistryService(db=self.db)

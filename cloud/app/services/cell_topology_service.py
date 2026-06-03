@@ -7,7 +7,7 @@ class CellTopologyService(BaseService):
     """CellTopology 服务类。"""
 
     def _row_to_dict(self, row) -> dict:
-        """d = dict(row)"""
+        d = dict(row)
         for col in ("known_cells", "routing_table", "task_history", "capabilities"):
             if col in d and isinstance(d[col], str) and d[col]:
                 try:

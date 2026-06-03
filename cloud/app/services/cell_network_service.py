@@ -184,13 +184,13 @@ class CellNetworkService(BaseService):
         }
 
     def _get_cell(self, cell_key: str) -> dict:
-        """row = self.db.execute("SELECT * FROM agent_cell_network WHERE cell_key=?", (cell_key,)).fetchone()"""
+        row = self.db.execute("SELECT * FROM agent_cell_network WHERE cell_key=?", (cell_key,)).fetchone()
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="cell not found")
         return self._row_to_dict(row)
 
     def _row_to_dict(self, row) -> dict:
-        """d = dict(row)"""
+        d = dict(row)
         for col in ("known_cells", "routing_table", "task_history", "capabilities"):
             if col in d and isinstance(d[col], str) and d[col]:
                 try:
