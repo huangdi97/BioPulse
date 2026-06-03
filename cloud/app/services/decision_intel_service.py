@@ -160,9 +160,7 @@ class DecisionIntelService(BaseService):
         if not row:
             _e404("Case")
         ctx = _parse_json(row["context"], {})
-        desc = (
-            f"案例名称: {row['name']}\n描述: {row['description']}\n结果: {row['outcome']}\n评分: {row['outcome_score']}"
-        )
+        desc = f"案例名称: {row['name']}\n描述: {row['description']}\n结果: {row['outcome']}\n评分: {row['outcome_score']}"
         if ctx:
             desc += f"\n上下文: {json.dumps(ctx, ensure_ascii=False)}"
         if custom_question:
@@ -228,10 +226,7 @@ class DecisionIntelService(BaseService):
         fail_rows = case_repo.list_fail_cases(limit=limit, filter_tags=filter_tags or None)
 
         def _fmt(rows, label):
-            return (
-                "\n".join(f"{label}: {r['name']} (评分:{r['outcome_score']}) - {r['description']}" for r in rows)
-                or "无"
-            )
+            return "\n".join(f"{label}: {r['name']} (评分:{r['outcome_score']}) - {r['description']}" for r in rows) or "无"
 
         sys_prompt = (
             "你是一名销售策略分析导师。对比以下成功和失败的决策案例，识别可复用的模式和应避免的陷阱。"

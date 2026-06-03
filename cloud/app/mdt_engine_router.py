@@ -317,9 +317,7 @@ def consensus(
     all_ops = opinions_repo.list_by_session_with_participant(session_id)
     if not all_ops:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="No opinions to build consensus from")
-    opinions_text = "\n".join(
-        f"[Round {o['round_number']}] {o['role_name']}({o.get('stance', 'neutral')}): {o['opinion']}" for o in all_ops
-    )
+    opinions_text = "\n".join(f"[Round {o['round_number']}] {o['role_name']}({o.get('stance', 'neutral')}): {o['opinion']}" for o in all_ops)
     sys_msg = (
         "你是一名MDT辩论主持人，负责总结多方观点形成共识。"
         "请基于以下各方辩论意见，生成综合共识报告。"

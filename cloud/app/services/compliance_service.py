@@ -125,22 +125,16 @@ class ComplianceService(BaseService):
         ).fetchone()["c"]
         wt = db.execute("SELECT COUNT(*) AS c FROM visits WHERE created_at >= ?", (w7,)).fetchone()["c"]
         total = db.execute("SELECT COUNT(*) AS c FROM visits").fetchone()["c"]
-        processed = db.execute(
-            "SELECT COUNT(*) AS c FROM visits WHERE compliance_status IS NOT NULL AND compliance_status!=''"
-        ).fetchone()["c"]
+        processed = db.execute("SELECT COUNT(*) AS c FROM visits WHERE compliance_status IS NOT NULL AND compliance_status!=''").fetchone()["c"]
         pr = round(processed / total * 100, 1) if total else 0.0
         hrc = db.execute("SELECT COUNT(*) AS c FROM visits WHERE compliance_status='critical'").fetchone()["c"]
         dt_rows = db.execute(
-            "SELECT DATE(created_at) AS d, COUNT(*) AS c FROM visits "
-            "WHERE created_at >= ? AND compliance_status!='passed' "
-            "GROUP BY d ORDER BY d",
+            "SELECT DATE(created_at) AS d, COUNT(*) AS c FROM visits WHERE created_at >= ? AND compliance_status!='passed' GROUP BY d ORDER BY d",
             (w7,),
         ).fetchall()
         dt = [{"date": (r["d"] or "")[-5:], "count": r["c"]} for r in dt_rows]
         tc_rows = db.execute(
-            "SELECT visit_type AS cat, COUNT(*) AS c FROM visits "
-            "WHERE compliance_status!='passed' "
-            "GROUP BY visit_type ORDER BY c DESC LIMIT 5"
+            "SELECT visit_type AS cat, COUNT(*) AS c FROM visits WHERE compliance_status!='passed' GROUP BY visit_type ORDER BY c DESC LIMIT 5"
         ).fetchall()
         tvc = sum(r["c"] for r in tc_rows) or 1
         tc = [
@@ -152,9 +146,7 @@ class ComplianceService(BaseService):
             for r in tc_rows
         ]
         tr_rows = db.execute(
-            "SELECT hcp_name, COUNT(*) AS c FROM visits "
-            "WHERE compliance_status!='passed' "
-            "GROUP BY hcp_name ORDER BY c DESC LIMIT 5"
+            "SELECT hcp_name, COUNT(*) AS c FROM visits WHERE compliance_status!='passed' GROUP BY hcp_name ORDER BY c DESC LIMIT 5"
         ).fetchall()
         tr = [{"repName": r["hcp_name"], "violationCount": r["c"]} for r in tr_rows]
         return {

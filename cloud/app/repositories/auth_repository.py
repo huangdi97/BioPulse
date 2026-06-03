@@ -72,8 +72,7 @@ class UserBehaviorsRepository(BaseRepository):
 
     def top_action_by_user(self, user_id: int):
         row = self.db.execute(
-            f"SELECT action_type, COUNT(*) AS cnt FROM {self.table_name} "
-            "WHERE user_id=? GROUP BY action_type ORDER BY cnt DESC LIMIT 1",
+            f"SELECT action_type, COUNT(*) AS cnt FROM {self.table_name} WHERE user_id=? GROUP BY action_type ORDER BY cnt DESC LIMIT 1",
             (user_id,),
         ).fetchone()
         return dict(row) if row else None
@@ -109,8 +108,7 @@ class UserBehaviorsRepository(BaseRepository):
     def top_actions_global(self, limit: int = 10):
         ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT action_type, COUNT(*) AS cnt FROM {self.table_name} "
-            "GROUP BY action_type ORDER BY cnt DESC LIMIT ?",
+            f"SELECT action_type, COUNT(*) AS cnt FROM {self.table_name} GROUP BY action_type ORDER BY cnt DESC LIMIT ?",
             (limit,),
         ).fetchall()
         return [dict(r) for r in rows]

@@ -115,8 +115,7 @@ def seed_market_intel(conn: sqlite3.Connection) -> None:
         ),
     ]
     conn.executemany(
-        "INSERT INTO market_intel_items (source_id, item_type, title, summary, url, impact_level, collected_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO market_intel_items (source_id, item_type, title, summary, url, impact_level, collected_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
         items,
     )
     conn.commit()

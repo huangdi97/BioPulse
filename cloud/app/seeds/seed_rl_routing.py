@@ -15,9 +15,7 @@ def seed_rl_routing(conn: sqlite3.Connection) -> None:
     ]
     for key, name, desc, pattern, route_to, priority in strategies:
         conn.execute(
-            "INSERT INTO routing_strategies "
-            "(strategy_key, name, description, task_type_pattern, route_to, priority) "
-            "VALUES (?,?,?,?,?,?)",
+            "INSERT INTO routing_strategies (strategy_key, name, description, task_type_pattern, route_to, priority) VALUES (?,?,?,?,?,?)",
             (key, name, desc, pattern, route_to, priority),
         )
 
@@ -40,9 +38,7 @@ def seed_rl_routing(conn: sqlite3.Connection) -> None:
     ]
     for task_id, task_type, source, strategy, routed_to, duration, success in logs:
         conn.execute(
-            "INSERT INTO routing_log "
-            "(task_id, task_type, source, strategy_used, routed_to, duration_ms, success) "
-            "VALUES (?,?,?,?,?,?,?)",
+            "INSERT INTO routing_log (task_id, task_type, source, strategy_used, routed_to, duration_ms, success) VALUES (?,?,?,?,?,?,?)",
             (task_id, task_type, source, strategy, routed_to, duration, success),
         )
     conn.commit()

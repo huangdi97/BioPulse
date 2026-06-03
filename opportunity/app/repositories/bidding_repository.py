@@ -57,9 +57,7 @@ class BiddingAgentRepository:
     def get_config(self, config_id: int) -> Optional[sqlite3.Row]:
         return self.db.execute("SELECT * FROM bidding_agent_config WHERE id = ?", (config_id,)).fetchone()
 
-    def list_configs(
-        self, conditions: Optional[List[str]] = None, params: Optional[List[Any]] = None
-    ) -> List[sqlite3.Row]:
+    def list_configs(self, conditions: Optional[List[str]] = None, params: Optional[List[Any]] = None) -> List[sqlite3.Row]:
         where = ""
         if conditions:
             where = " WHERE " + " AND ".join(conditions)

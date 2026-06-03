@@ -40,9 +40,7 @@ class CellNetworkService(BaseService):
                 detail="agent already registered as a cell",
             )
         self.db.execute(
-            "INSERT INTO agent_cell_network "
-            "(cell_key, agent_instance_key, known_cells, routing_table) "
-            "VALUES (?, ?, '[]', '{}')",
+            "INSERT INTO agent_cell_network (cell_key, agent_instance_key, known_cells, routing_table) VALUES (?, ?, '[]', '{}')",
             (cell_key, agent_instance_key),
         )
         self.db.commit()
@@ -57,11 +55,7 @@ class CellNetworkService(BaseService):
         Returns:
             描述
         """
-        sql = (
-            "SELECT c.* FROM agent_cell_network c "
-            "LEFT JOIN agent_registry r ON c.agent_instance_key = r.agent_key "
-            "WHERE c.status='active'"
-        )
+        sql = "SELECT c.* FROM agent_cell_network c LEFT JOIN agent_registry r ON c.agent_instance_key = r.agent_key WHERE c.status='active'"
         params: list = []
         if capability:
             sql += " AND r.capabilities LIKE ?"
@@ -134,10 +128,8 @@ class CellNetworkService(BaseService):
         Returns:
             描述
         """
-        cell = self._get_cell(cell_key)
         all_cells = self.db.execute(
-            "SELECT cell_key, agent_instance_key, status FROM agent_cell_network "
-            "WHERE status='active' ORDER BY created_at DESC"
+            "SELECT cell_key, agent_instance_key, status FROM agent_cell_network WHERE status='active' ORDER BY created_at DESC"
         ).fetchall()
         routing_table: dict[str, str] = {}
         known_cells: list[str] = []

@@ -59,7 +59,9 @@ def update_board(
     current_user: dict = Depends(require_scope("visit")),
     service: BoardService = Depends(),
 ) -> Any:
-    """更新面板名称或描述。Args: board_id (int) 面板ID; body (BoardUpdate) 面板更新体; current_user (dict) 用户; service (BoardService) 面板服务。Returns: Any 成功响应"""
+    """更新面板名称或描述。
+    Args: board_id (int) 面板ID; body (BoardUpdate) 面板更新体; current_user (dict) 用户; service (BoardService) 面板服务。
+    Returns: Any 成功响应"""
     result = service.update_board(board_id, name=body.name, description=body.description)
     return success(data=result)
 

@@ -55,8 +55,7 @@ def seed_decision_intel(conn: sqlite3.Connection) -> None:
 
     for name, desc, outcome, score, ctx, tags in cases:
         cur = conn.execute(
-            "INSERT INTO decision_cases (name, description, outcome, outcome_score, "
-            "context, tags, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+            "INSERT INTO decision_cases (name, description, outcome, outcome_score, context, tags, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
             (
                 name,
                 desc,

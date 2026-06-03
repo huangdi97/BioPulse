@@ -166,7 +166,9 @@ def run_pipeline(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
-    """执行指定管道，遍历各步骤并记录运行结果。Args: pipeline_id (int) 管道ID; body (PipelineRunRequest) 运行请求; request (Request) HTTP请求; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
+    """执行指定管道，遍历各步骤并记录运行结果。
+    Args: pipeline_id (int) 管道ID; body (PipelineRunRequest) 运行请求; request (Request) HTTP请求; current_user 用户; db SQLite连接。
+    Returns: dict 成功响应"""
     pipelines_repo = AgentPipelinesRepository(db)
     PipelineStepsRepository(db)
     runs_repo = PipelineRunsRepository(db)
@@ -266,7 +268,9 @@ def list_runs(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
-    """分页查询指定管道的运行历史。Args: pipeline_id (int) 管道ID; page (int) 页码; page_size (int) 每页条数; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
+    """分页查询指定管道的运行历史。
+    Args: pipeline_id (int) 管道ID; page (int) 页码; page_size (int) 每页条数; current_user 用户; db SQLite连接。
+    Returns: dict 成功响应"""
     pipelines_repo = AgentPipelinesRepository(db)
     runs_repo = PipelineRunsRepository(db)
     _p404(pipelines_repo, pipeline_id)

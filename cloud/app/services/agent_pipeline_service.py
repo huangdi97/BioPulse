@@ -106,7 +106,6 @@ class AgentPipelineService(BaseService):
         Returns:
             描述
         """
-        pipelines_repo = AgentPipelinesRepository(self.db)
         steps_repo = PipelineStepsRepository(self.db)
         row = self._p404(pipeline_id)
         steps = steps_repo.list_all(conditions=["pipeline_id=?"], params=[pipeline_id], order_by="step_order ASC")
@@ -165,7 +164,6 @@ class AgentPipelineService(BaseService):
         Returns:
             描述
         """
-        pipelines_repo = AgentPipelinesRepository(self.db)
         runs_repo = PipelineRunsRepository(self.db)
         self._p404(pipeline_id)
         total, total_pages, rows = runs_repo.paginate(
@@ -195,7 +193,6 @@ class AgentPipelineService(BaseService):
         Returns:
             描述
         """
-        pipelines_repo = AgentPipelinesRepository(self.db)
         runs_repo = PipelineRunsRepository(self.db)
         step_runs_repo = PipelineStepRunsRepository(self.db)
 

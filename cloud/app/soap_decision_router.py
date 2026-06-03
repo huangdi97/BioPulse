@@ -150,9 +150,7 @@ def list_decisions(
     Returns:
         分页决策列表。
     """
-    return success(
-        data=service.list_decisions(status=status, priority=priority, tag=tag, page=page, page_size=page_size)
-    )
+    return success(data=service.list_decisions(status=status, priority=priority, tag=tag, page=page, page_size=page_size))
 
 
 @router.get("/decisions/{decision_id}")

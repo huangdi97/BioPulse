@@ -46,9 +46,7 @@ class InteractionService(BaseService):
         page_size: int = 20,
     ) -> dict:
         interactions_repo = CustomerInteractionsRepository(self.db)
-        total, total_pages, items = interactions_repo.list_filtered(
-            type_=type_, conducted_by=conducted_by, page=page, page_size=page_size
-        )
+        total, total_pages, items = interactions_repo.list_filtered(type_=type_, conducted_by=conducted_by, page=page, page_size=page_size)
         return {
             "items": items,
             "total": total,

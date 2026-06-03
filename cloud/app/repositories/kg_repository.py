@@ -18,9 +18,7 @@ class KgEntitiesRepository(BaseRepository):
         return dict(row) if row else None
 
     def exists_entity_id(self, entity_id: str):
-        return (
-            self.db.execute(f"SELECT id FROM {self.table_name} WHERE entity_id=?", (entity_id,)).fetchone() is not None
-        )
+        return self.db.execute(f"SELECT id FROM {self.table_name} WHERE entity_id=?", (entity_id,)).fetchone() is not None
 
     def list_filtered(self, entity_type=None, name=None, status_="active"):
         conditions, params = [], []
@@ -58,9 +56,7 @@ class KgEntitiesRepository(BaseRepository):
         return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='active'").fetchone()[0]
 
     def count_by_entity_type(self):
-        rows = self.db.execute(
-            f"SELECT entity_type, COUNT(*) as cnt FROM {self.table_name} WHERE status='active' GROUP BY entity_type"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT entity_type, COUNT(*) as cnt FROM {self.table_name} WHERE status='active' GROUP BY entity_type").fetchall()
         return [{"type": r["entity_type"], "count": r["cnt"]} for r in rows]
 
     def soft_delete_by_entity_id(self, entity_id: str) -> bool:
@@ -124,9 +120,7 @@ class KgRelationsRepository(BaseRepository):
         return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name}").fetchone()[0]
 
     def count_by_relation_type(self):
-        rows = self.db.execute(
-            f"SELECT relation_type, COUNT(*) as cnt FROM {self.table_name} GROUP BY relation_type"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT relation_type, COUNT(*) as cnt FROM {self.table_name} GROUP BY relation_type").fetchall()
         return [{"type": r["relation_type"], "count": r["cnt"]} for r in rows]
 
     def top_connected(self, limit: int = 10):

@@ -301,9 +301,7 @@ def create_audit_chain(
     )
     if latest_rows:
         prev_hash = latest_rows[0]["current_hash"]
-    current_hash = hashlib.sha256(
-        (prev_hash + json.dumps(body.payload, ensure_ascii=False, sort_keys=True)).encode("utf-8")
-    ).hexdigest()
+    current_hash = hashlib.sha256((prev_hash + json.dumps(body.payload, ensure_ascii=False, sort_keys=True)).encode("utf-8")).hexdigest()
     repo.create(
         {
             "entity_type": body.entity_type,
@@ -368,9 +366,7 @@ def verify_audit_chain(
             broken_at = row["id"]
             break
         payload = _parse_json(row["payload"], {}) if isinstance(row["payload"], str) else row["payload"]
-        recomputed = hashlib.sha256(
-            (row["previous_hash"] + json.dumps(payload, ensure_ascii=False, sort_keys=True)).encode("utf-8")
-        ).hexdigest()
+        recomputed = hashlib.sha256((row["previous_hash"] + json.dumps(payload, ensure_ascii=False, sort_keys=True)).encode("utf-8")).hexdigest()
         if recomputed != row["current_hash"]:
             valid = False
             broken_at = row["id"]

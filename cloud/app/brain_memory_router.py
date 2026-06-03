@@ -97,7 +97,9 @@ def episodic_store(
     current_user=Depends(require_scope("visit")),
     service: BrainMemoryService = Depends(),
 ):
-    """存储情景记忆。Args: body (EpisodicStore) 情景记忆体; request (Request) HTTP请求; current_user 用户; service BrainMemoryService。Returns: dict 成功响应"""
+    """存储情景记忆。
+    Args: body (EpisodicStore) 情景记忆体; request (Request) HTTP请求; current_user 用户; service BrainMemoryService。
+    Returns: dict 成功响应"""
     uid = str(current_user["sub"])
     result = service.episodic_store(
         event_type=body.event_type,
@@ -158,7 +160,9 @@ def episodic_consolidate(
     request: Request,
     service: BrainMemoryService = Depends(),
 ):
-    """固话情景记忆为语义记忆。Args: memory_id (int) 记忆ID; request (Request) HTTP请求; service (BrainMemoryService) 记忆服务。Returns: dict 成功响应"""
+    """固话情景记忆为语义记忆。
+    Args: memory_id (int) 记忆ID; request (Request) HTTP请求; service (BrainMemoryService) 记忆服务。
+    Returns: dict 成功响应"""
     auth_header = request.headers.get("Authorization", "")
     result = service.episodic_consolidate(memory_id, auth_header)
     return success(data=result)
@@ -173,7 +177,9 @@ def dashboard(service: BrainMemoryService = Depends()):
 
 @router.post("/semantic/abstract")
 def semantic_abstract(body: SemanticAbstract, request: Request, service: BrainMemoryService = Depends()):
-    """从源数据提取语义抽象。Args: body (SemanticAbstract) 语义抽象体; request (Request) HTTP请求; service BrainMemoryService。Returns: dict 成功响应"""
+    """从源数据提取语义抽象。
+    Args: body (SemanticAbstract) 语义抽象体; request (Request) HTTP请求; service BrainMemoryService。
+    Returns: dict 成功响应"""
     result = service.semantic_abstract(
         source_type=body.source_type,
         source_id=body.source_id,

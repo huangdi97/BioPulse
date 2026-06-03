@@ -249,8 +249,7 @@ class CausalAnalysesRepository(BaseRepository):
 
     def count_distinct_case_ids(self):
         return self.db.execute(
-            "SELECT COUNT(DISTINCT case_id) FROM causal_analyses ca "
-            "JOIN decision_cases dc ON ca.case_id=dc.id WHERE dc.is_active=1"
+            "SELECT COUNT(DISTINCT case_id) FROM causal_analyses ca JOIN decision_cases dc ON ca.case_id=dc.id WHERE dc.is_active=1"
         ).fetchone()[0]
 
 
@@ -319,9 +318,7 @@ class CrossCaseInsightsRepository(BaseRepository):
         return dict(row) if row else None
 
     def count_by_type(self):
-        rows = self.db.execute(
-            f"SELECT insight_type, COUNT(*) AS cnt FROM {self.table_name} WHERE is_active=1 GROUP BY insight_type"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT insight_type, COUNT(*) AS cnt FROM {self.table_name} WHERE is_active=1 GROUP BY insight_type").fetchall()
         return [{"type": r["insight_type"], "count": r["cnt"]} for r in rows]
 
     def top_by_confidence(self, limit=5):
@@ -500,9 +497,7 @@ class EpisodicMemoryRepository(BaseRepository):
 
     def find_unconsolidated(self):
         placeholders = ", ".join(self.cols)
-        rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE is_consolidated=0 OR is_consolidated IS NULL"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT {placeholders} FROM {self.table_name} WHERE is_consolidated=0 OR is_consolidated IS NULL").fetchall()
         return [dict(r) for r in rows]
 
     def count_by_creator(self, creator_id):
@@ -614,9 +609,7 @@ class EventBusMessagesRepository(BaseRepository):
     def count_by_status(self):
         return {
             "pending": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='pending'").fetchone()[0],
-            "delivered": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='delivered'").fetchone()[
-                0
-            ],
+            "delivered": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='delivered'").fetchone()[0],
             "failed": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='failed'").fetchone()[0],
         }
 
@@ -674,8 +667,7 @@ class EventDeliveryLogRepository(BaseRepository):
 
     def reset_pending_by_message(self, message_id: str):
         self.db.execute(
-            "UPDATE event_delivery_log SET delivery_status='pending', error_message='', "
-            "response_summary='', attempt=attempt+1 WHERE message_id=?",
+            "UPDATE event_delivery_log SET delivery_status='pending', error_message='', response_summary='', attempt=attempt+1 WHERE message_id=?",
             (message_id,),
         )
         self.db.commit()
@@ -685,12 +677,8 @@ class EventDeliveryLogRepository(BaseRepository):
 
     def count_by_status(self):
         return {
-            "delivered": self.db.execute(
-                f"SELECT COUNT(*) FROM {self.table_name} WHERE delivery_status='delivered'"
-            ).fetchone()[0],
-            "pending": self.db.execute(
-                f"SELECT COUNT(*) FROM {self.table_name} WHERE delivery_status='pending'"
-            ).fetchone()[0],
+            "delivered": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE delivery_status='delivered'").fetchone()[0],
+            "pending": self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE delivery_status='pending'").fetchone()[0],
         }
 
 
@@ -717,8 +705,7 @@ class FedAuditContributionsRepository(BaseRepository):
 
     def get_latest_by_did_and_type(self, contributor_did: str, contribution_type: str):
         row = self.db.execute(
-            f"SELECT {', '.join(self.cols)} FROM {self.table_name} "
-            "WHERE contributor_did=? AND contribution_type=? ORDER BY id DESC LIMIT 1",
+            f"SELECT {', '.join(self.cols)} FROM {self.table_name} WHERE contributor_did=? AND contribution_type=? ORDER BY id DESC LIMIT 1",
             (contributor_did, contribution_type),
         ).fetchone()
         return dict(row) if row else None
@@ -801,9 +788,7 @@ class HcpProfilesRepository(BaseRepository):
         return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1").fetchone()[0]
 
     def tier_distribution(self):
-        rows = self.db.execute(
-            f"SELECT tier, COUNT(*) as cnt FROM {self.table_name} WHERE is_active=1 GROUP BY tier"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT tier, COUNT(*) as cnt FROM {self.table_name} WHERE is_active=1 GROUP BY tier").fetchall()
         return {r["tier"]: r["cnt"] for r in rows}
 
 
@@ -854,9 +839,7 @@ class KgEntitiesRepository(BaseRepository):
         return dict(row) if row else None
 
     def exists_entity_id(self, entity_id: str):
-        return (
-            self.db.execute(f"SELECT id FROM {self.table_name} WHERE entity_id=?", (entity_id,)).fetchone() is not None
-        )
+        return self.db.execute(f"SELECT id FROM {self.table_name} WHERE entity_id=?", (entity_id,)).fetchone() is not None
 
     def list_filtered(self, entity_type=None, name=None, status_="active"):
         conditions, params = [], []
@@ -894,9 +877,7 @@ class KgEntitiesRepository(BaseRepository):
         return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE status='active'").fetchone()[0]
 
     def count_by_entity_type(self):
-        rows = self.db.execute(
-            f"SELECT entity_type, COUNT(*) as cnt FROM {self.table_name} WHERE status='active' GROUP BY entity_type"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT entity_type, COUNT(*) as cnt FROM {self.table_name} WHERE status='active' GROUP BY entity_type").fetchall()
         return [{"type": r["entity_type"], "count": r["cnt"]} for r in rows]
 
     def soft_delete_by_entity_id(self, entity_id: str) -> bool:
@@ -960,9 +941,7 @@ class KgRelationsRepository(BaseRepository):
         return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name}").fetchone()[0]
 
     def count_by_relation_type(self):
-        rows = self.db.execute(
-            f"SELECT relation_type, COUNT(*) as cnt FROM {self.table_name} GROUP BY relation_type"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT relation_type, COUNT(*) as cnt FROM {self.table_name} GROUP BY relation_type").fetchall()
         return [{"type": r["relation_type"], "count": r["cnt"]} for r in rows]
 
     def top_connected(self, limit: int = 10):
@@ -1193,9 +1172,9 @@ class MdtParticipantsRepository(BaseRepository):
         return [dict(r) for r in rows]
 
     def avg_per_session(self) -> float:
-        return self.db.execute(
-            f"SELECT COALESCE(ROUND(AVG(c),2),0) FROM (SELECT COUNT(*) c FROM {self.table_name} GROUP BY session_id)"
-        ).fetchone()[0]
+        return self.db.execute(f"SELECT COALESCE(ROUND(AVG(c),2),0) FROM (SELECT COUNT(*) c FROM {self.table_name} GROUP BY session_id)").fetchone()[
+            0
+        ]
 
     def create_raw(self, data: dict) -> int:
         filtered = {k: v for k, v in data.items() if k in self.cols}
@@ -1270,9 +1249,7 @@ class MemoryEntriesRepository(BaseRepository):
 
     def list_active_ordered(self, order_by="importance DESC"):
         placeholders = ", ".join(self.cols)
-        rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY {order_by}"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY {order_by}").fetchall()
         return [dict(r) for r in rows]
 
     def find_active_by_id(self, entry_id):
@@ -1317,8 +1294,7 @@ class MemoryEntriesRepository(BaseRepository):
     def by_type_stats(self):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT memory_type, COUNT(*) AS cnt, AVG(importance) AS avg_imp "
-            f"FROM {self.table_name} WHERE is_active=1 GROUP BY memory_type"
+            f"SELECT memory_type, COUNT(*) AS cnt, AVG(importance) AS avg_imp FROM {self.table_name} WHERE is_active=1 GROUP BY memory_type"
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -1483,9 +1459,7 @@ class NodeMemoryLinksRepository(BaseRepository):
             return []
         ph = ",".join("?" for _ in node_ids)
         rows = self.db.execute(
-            f"SELECT me.importance FROM memory_entries me "
-            f"JOIN {self.table_name} nml ON me.id=nml.memory_entry_id "
-            f"WHERE nml.node_id IN ({ph})",
+            f"SELECT me.importance FROM memory_entries me JOIN {self.table_name} nml ON me.id=nml.memory_entry_id WHERE nml.node_id IN ({ph})",
             node_ids,
         ).fetchall()
         return [dict(r) for r in rows]
@@ -1585,9 +1559,7 @@ class RecommendationsRepository(BaseRepository):
         return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE dismissed=1").fetchone()[0]
 
     def count_by_rec_type(self):
-        rows = self.db.execute(
-            f"SELECT rec_type, COUNT(*) as cnt FROM {self.table_name} GROUP BY rec_type ORDER BY cnt DESC"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT rec_type, COUNT(*) as cnt FROM {self.table_name} GROUP BY rec_type ORDER BY cnt DESC").fetchall()
         return [dict(r) for r in rows]
 
     def list_filtered(
@@ -1691,9 +1663,7 @@ class RouteRulesRepository(BaseRepository):
 
     def list_active_ordered(self):
         placeholders = ", ".join(self.cols)
-        rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY priority ASC"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY priority ASC").fetchall()
         return [dict(r) for r in rows]
 
     def list_all_ordered(self):
@@ -1787,15 +1757,11 @@ class SoapDecisionsRepository(BaseRepository):
         return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1").fetchone()[0]
 
     def count_by_status(self):
-        rows = self.db.execute(
-            f"SELECT status, COUNT(*) cnt FROM {self.table_name} WHERE is_active=1 GROUP BY status"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT status, COUNT(*) cnt FROM {self.table_name} WHERE is_active=1 GROUP BY status").fetchall()
         return {r["status"]: r["cnt"] for r in rows}
 
     def count_by_priority(self):
-        rows = self.db.execute(
-            f"SELECT priority, COUNT(*) cnt FROM {self.table_name} WHERE is_active=1 GROUP BY priority"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT priority, COUNT(*) cnt FROM {self.table_name} WHERE is_active=1 GROUP BY priority").fetchall()
         return {r["priority"]: r["cnt"] for r in rows}
 
     def list_active_recent(self, limit: int = 5):
@@ -1877,8 +1843,7 @@ class UserBehaviorsRepository(BaseRepository):
 
     def top_action_by_user(self, user_id: int):
         row = self.db.execute(
-            f"SELECT action_type, COUNT(*) AS cnt FROM {self.table_name} "
-            "WHERE user_id=? GROUP BY action_type ORDER BY cnt DESC LIMIT 1",
+            f"SELECT action_type, COUNT(*) AS cnt FROM {self.table_name} WHERE user_id=? GROUP BY action_type ORDER BY cnt DESC LIMIT 1",
             (user_id,),
         ).fetchone()
         return dict(row) if row else None
@@ -1914,8 +1879,7 @@ class UserBehaviorsRepository(BaseRepository):
     def top_actions_global(self, limit: int = 10):
         placeholders = ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT action_type, COUNT(*) AS cnt FROM {self.table_name} "
-            "GROUP BY action_type ORDER BY cnt DESC LIMIT ?",
+            f"SELECT action_type, COUNT(*) AS cnt FROM {self.table_name} GROUP BY action_type ORDER BY cnt DESC LIMIT ?",
             (limit,),
         ).fetchall()
         return [dict(r) for r in rows]
@@ -1989,9 +1953,7 @@ class WorldTreeNodesRepository(BaseRepository):
 
     def list_active_sorted(self):
         placeholders = ", ".join(self.cols)
-        rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY sort_order, name"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY sort_order, name").fetchall()
         return [dict(r) for r in rows]
 
     def descendant_ids(self, node_id):
@@ -1999,10 +1961,7 @@ class WorldTreeNodesRepository(BaseRepository):
         while stack:
             cur = stack.pop()
             ids.append(cur)
-            stack.extend(
-                c["id"]
-                for c in self.db.execute(f"SELECT id FROM {self.table_name} WHERE parent_id=?", (cur,)).fetchall()
-            )
+            stack.extend(c["id"] for c in self.db.execute(f"SELECT id FROM {self.table_name} WHERE parent_id=?", (cur,)).fetchall())
         return ids
 
     def update_parent(self, node_id, parent_id, now):

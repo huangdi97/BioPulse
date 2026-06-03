@@ -101,8 +101,7 @@ def seed_kg(conn: sqlite3.Connection) -> None:
     ]
     for source, target, rel_type, weight in relations:
         conn.execute(
-            "INSERT INTO kg_relations (source_entity_id, target_entity_id, relation_type, weight, created_at) "
-            "VALUES (?,?,?,?,?)",
+            "INSERT INTO kg_relations (source_entity_id, target_entity_id, relation_type, weight, created_at) VALUES (?,?,?,?,?)",
             (source, target, rel_type, weight, now),
         )
     conn.commit()

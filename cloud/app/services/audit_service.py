@@ -72,9 +72,7 @@ class AuditService(BaseService):
         action_stats = db.execute("SELECT action, COUNT(*) as cnt FROM audit_logs GROUP BY action").fetchall()
         cutoff = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
         trend = db.execute(
-            "SELECT DATE(created_at) as day, COUNT(*) as cnt "
-            "FROM audit_logs WHERE created_at >= ? "
-            "GROUP BY day ORDER BY day",
+            "SELECT DATE(created_at) as day, COUNT(*) as cnt FROM audit_logs WHERE created_at >= ? GROUP BY day ORDER BY day",
             (cutoff,),
         ).fetchall()
         return {

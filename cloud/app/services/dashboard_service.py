@@ -75,15 +75,10 @@ class DashboardService(BaseService):
     def get_content_stats(self) -> dict:
         db = self.db
         ContentsRepository(db)
-        by_category = db.execute(
-            "SELECT category, COUNT(*) as cnt FROM contents WHERE status!='archived' GROUP BY category"
-        ).fetchall()
-        by_status = db.execute(
-            "SELECT status, COUNT(*) as cnt FROM contents WHERE status!='archived' GROUP BY status"
-        ).fetchall()
+        by_category = db.execute("SELECT category, COUNT(*) as cnt FROM contents WHERE status!='archived' GROUP BY category").fetchall()
+        by_status = db.execute("SELECT status, COUNT(*) as cnt FROM contents WHERE status!='archived' GROUP BY status").fetchall()
         daily_trend = db.execute(
-            "SELECT DATE(created_at) as day, COUNT(*) as cnt FROM contents "
-            "GROUP BY DATE(created_at) ORDER BY day DESC LIMIT 30"
+            "SELECT DATE(created_at) as day, COUNT(*) as cnt FROM contents GROUP BY DATE(created_at) ORDER BY day DESC LIMIT 30"
         ).fetchall()
 
         return {

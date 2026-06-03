@@ -81,9 +81,7 @@ def update_source(
     Returns:
         更新后的情报源信息。
     """
-    return success(
-        data=service.update_source(source_id, body.name, body.source_type, body.target_keywords, body.is_active)
-    )
+    return success(data=service.update_source(source_id, body.name, body.source_type, body.target_keywords, body.is_active))
 
 
 @router.delete("/sources/{source_id}")

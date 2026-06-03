@@ -33,8 +33,7 @@ def seed_training_coach(conn: sqlite3.Connection) -> None:
             "产品深度",
             "product",
             "advanced",
-            "深入解析产品关键临床研究数据、循证医学证据等级、亚组分析结果及跨适应症对比。"
-            "掌握在学术拜访中运用临床证据的核心能力。",
+            "深入解析产品关键临床研究数据、循证医学证据等级、亚组分析结果及跨适应症对比。掌握在学术拜访中运用临床证据的核心能力。",
             _json.dumps(["产品入门"], ensure_ascii=False),
             0.8,
             25,
@@ -43,8 +42,7 @@ def seed_training_coach(conn: sqlite3.Connection) -> None:
             "拜访话术",
             "sales",
             "medium",
-            "医药代表拜访流程标准化训练：开场白结构→需求探询技巧→产品介绍FABE法则→异议应对模式→缔结与跟进。"
-            "包含典型对话示例与分段练习。",
+            "医药代表拜访流程标准化训练：开场白结构→需求探询技巧→产品介绍FABE法则→异议应对模式→缔结与跟进。包含典型对话示例与分段练习。",
             _json.dumps(["产品入门"], ensure_ascii=False),
             0.7,
             20,
@@ -53,8 +51,7 @@ def seed_training_coach(conn: sqlite3.Connection) -> None:
             "竞争策略",
             "competition",
             "expert",
-            "竞品情报分析与应对策略高级课程。包括竞品数据对比方法论、临床价值差异提炼、市场定位博弈、"
-            "多产品线竞争组合策略及合规学术竞争框架。",
+            "竞品情报分析与应对策略高级课程。包括竞品数据对比方法论、临床价值差异提炼、市场定位博弈、多产品线竞争组合策略及合规学术竞争框架。",
             _json.dumps(["产品深度", "拜访话术"], ensure_ascii=False),
             0.85,
             30,
