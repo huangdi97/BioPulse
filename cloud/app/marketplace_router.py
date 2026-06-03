@@ -40,6 +40,14 @@ def log_metric(
     current_user: dict = Depends(require_scope("visit")),
     service: MarketplaceService = Depends(),
 ) -> Any:
+    """记录代理指标数据。
+
+    Args:
+        body: 指标数据（角色、类型、值等）。
+
+    Returns:
+        记录成功的指标信息。
+    """
     return success(
         data=service.log_metric(
             body.agent_role,
@@ -58,6 +66,14 @@ def metrics_dashboard(
     service: MarketplaceService = Depends(),
     agent_role: Optional[str] = Query(None),
 ) -> Any:
+    """获取指标仪表盘数据。
+
+    Args:
+        agent_role: 按代理角色筛选。
+
+    Returns:
+        指标统计概览。
+    """
     return success(data=service.metrics_dashboard(agent_role=agent_role))
 
 
@@ -67,6 +83,14 @@ def generate_benchmark(
     current_user: dict = Depends(require_scope("visit")),
     service: MarketplaceService = Depends(),
 ) -> Any:
+    """生成基准报告。
+
+    Args:
+        body: 报告名称、类型、周期。
+
+    Returns:
+        生成的基准报告数据。
+    """
     return success(data=service.generate_benchmark(body.report_name, body.report_type, body.period))
 
 
@@ -76,6 +100,14 @@ def list_benchmarks(
     service: MarketplaceService = Depends(),
     report_type: Optional[str] = Query(None),
 ) -> Any:
+    """获取基准报告列表。
+
+    Args:
+        report_type: 按报告类型筛选。
+
+    Returns:
+        基准报告列表。
+    """
     return success(data=service.list_benchmarks(report_type=report_type))
 
 
@@ -85,6 +117,14 @@ def publish_item(
     current_user: dict = Depends(require_scope("visit")),
     service: MarketplaceService = Depends(),
 ) -> Any:
+    """发布代理商品到市场。
+
+    Args:
+        body: 商品信息（名称、描述、配置等）。
+
+    Returns:
+        发布后的商品信息。
+    """
     return success(
         data=service.publish_item(
             body.item_name,
@@ -105,4 +145,14 @@ def discover_items(
     price_model: Optional[str] = Query(None),
     enabled: Optional[int] = Query(None),
 ) -> Any:
+    """发现市场商品列表。
+
+    Args:
+        category: 按分类筛选。
+        price_model: 按定价模式筛选。
+        enabled: 按启用状态筛选。
+
+    Returns:
+        可发现的商品列表。
+    """
     return success(data=service.discover_items(category=category, price_model=price_model, enabled=enabled))

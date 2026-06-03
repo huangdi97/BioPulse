@@ -70,6 +70,17 @@ def create_location(
     service: LocationService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """为指定 HCP 创建地址位置。
+
+    Args:
+        hcp_id: HCP ID
+        body: 位置创建数据（地址、经纬度等）
+        service: 位置服务
+        current_user: 当前登录用户
+
+    Returns:
+        包含新创建位置的 JSON 响应
+    """
     user_id = int(current_user["sub"])
     result = service.create(hcp_id, body, user_id)
     return JSONResponse(
@@ -84,6 +95,16 @@ def list_locations(
     service: LocationService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[List[LocationOut]]:
+    """获取指定 HCP 的所有地址位置列表。
+
+    Args:
+        hcp_id: HCP ID
+        service: 位置服务
+        current_user: 当前登录用户
+
+    Returns:
+        位置列表
+    """
     rows = service.list(hcp_id)
     return success(data=[LocationOut(**r) for r in rows])
 
@@ -95,6 +116,17 @@ def update_location(
     service: LocationService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[LocationOut]:
+    """更新指定位置的字段信息。
+
+    Args:
+        location_id: 位置 ID
+        body: 需要更新的字段数据
+        service: 位置服务
+        current_user: 当前登录用户
+
+    Returns:
+        更新后的位置信息
+    """
     updated = service.update(location_id, body)
     return success(data=LocationOut(**updated))
 
@@ -105,6 +137,16 @@ def delete_location(
     service: LocationService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除指定位置。
+
+    Args:
+        location_id: 位置 ID
+        service: 位置服务
+        current_user: 当前登录用户
+
+    Returns:
+        成功删除的消息
+    """
     service.delete(location_id)
     return success(message="deleted")
 
@@ -115,6 +157,16 @@ def optimize_route(
     service: LocationService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[RouteResponse]:
+    """根据起点和 HCP 列表优化行程路线。
+
+    Args:
+        body: 路线请求数据（起点经纬度、HCP ID 列表）
+        service: 位置服务
+        current_user: 当前登录用户
+
+    Returns:
+        优化后的路线及总距离
+    """
     data = service.optimize_route(body)
     return success(
         data=RouteResponse(

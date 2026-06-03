@@ -63,6 +63,7 @@ def create_research_trail(
     service: ResearchService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建research trail。"""
     user_id = int(current_user["sub"])
     new_id = service.create_research_trail(body, user_id)
     return JSONResponse(
@@ -82,6 +83,7 @@ def list_research_trails(
     service: ResearchService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[ResearchTrailOut]]:
+    """获取research trails。"""
     total, total_pages, rows = service.list_research_trails(
         page=page,
         page_size=page_size,
@@ -108,6 +110,7 @@ def get_research_trail(
     service: ResearchService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[ResearchTrailOut]:
+    """获取research trail。"""
     row = service.get_research_trail(trail_id)
     return success(data=ResearchTrailOut(**row))
 
@@ -119,6 +122,7 @@ def update_research_trail(
     service: ResearchService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[ResearchTrailOut]:
+    """更新research trail。"""
     updated = service.update_research_trail(trail_id, body)
     return success(data=ResearchTrailOut(**updated))
 
@@ -129,5 +133,6 @@ def delete_research_trail(
     service: ResearchService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除research trail。"""
     service.delete_research_trail(trail_id)
     return success(message="deleted")

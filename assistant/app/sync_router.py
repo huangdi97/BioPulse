@@ -41,6 +41,16 @@ def sync_push(
     service: SyncService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[SyncPushResponse]:
+    """将客户端离线操作推送到服务端进行同步。
+
+    Args:
+        body: 同步推送请求（客户端 ID 和操作列表）
+        service: 同步服务
+        current_user: 当前登录用户
+
+    Returns:
+        同步结果（成功/失败数量及服务端操作结果）
+    """
     user_id = int(current_user["sub"])
     data = service.push(body, user_id)
     return success(
@@ -58,6 +68,16 @@ def sync_pull(
     service: SyncService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """从服务端拉取自指定时间以来发生变更的数据。
+
+    Args:
+        since: 起始时间（ISO 格式字符串）
+        service: 同步服务
+        current_user: 当前登录用户
+
+    Returns:
+        变更数据
+    """
     data = service.pull(since)
     return success(data=data)
 
@@ -67,5 +87,14 @@ def sync_status(
     service: SyncService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """获取当前同步状态信息（如待同步操作数量等）。
+
+    Args:
+        service: 同步服务
+        current_user: 当前登录用户
+
+    Returns:
+        同步状态数据
+    """
     data = service.get_status()
     return success(data=data)

@@ -35,6 +35,15 @@ def list_users(
     current_user: dict = Depends(require_scope("visit")),
     service: UserService = Depends(),
 ) -> Any:
+    """获取用户列表（需管理员权限）。
+
+    Args:
+        current_user: 当前登录用户信息。
+        service: 用户服务。
+
+    Returns:
+        用户列表。
+    """
     _require_admin(current_user)
     users = service.list_users()
     return success(data=users)
@@ -46,6 +55,16 @@ def get_user(
     current_user: dict = Depends(require_scope("visit")),
     service: UserService = Depends(),
 ) -> Any:
+    """获取指定用户的详细信息（需管理员权限）。
+
+    Args:
+        user_id: 用户 ID。
+        current_user: 当前登录用户信息。
+        service: 用户服务。
+
+    Returns:
+        用户详细信息。
+    """
     _require_admin(current_user)
     row = service.get_user(user_id)
     return success(data=row)
@@ -58,6 +77,17 @@ def update_user(
     current_user: dict = Depends(require_scope("visit")),
     service: UserService = Depends(),
 ) -> Any:
+    """更新指定用户的角色或状态（需管理员权限）。
+
+    Args:
+        user_id: 用户 ID。
+        body: 用户更新请求体。
+        current_user: 当前登录用户信息。
+        service: 用户服务。
+
+    Returns:
+        成功响应。
+    """
     _require_admin(current_user)
 
     updates = {}
@@ -76,6 +106,16 @@ def delete_user(
     current_user: dict = Depends(require_scope("visit")),
     service: UserService = Depends(),
 ) -> Any:
+    """删除指定用户（需管理员权限，不能删除自身）。
+
+    Args:
+        user_id: 用户 ID。
+        current_user: 当前登录用户信息。
+        service: 用户服务。
+
+    Returns:
+        成功响应。
+    """
     _require_admin(current_user)
 
     if str(current_user["sub"]) == str(user_id):

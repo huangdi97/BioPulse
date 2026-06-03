@@ -1,46 +1,16 @@
 import json
-import os
-import sqlite3
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from starlette import status
+from sqlite3 import Connection
 
-from cloud.app.database import DB_PATH
+from cloud.app.database import get_db
+from cloud.app.services.visit_service import VisitService
 from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="", tags=["拜访"])
-
-
-def get_direct_db():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-def init_visits_table(db):
-    db.execute("""
-        CREATE TABLE IF NOT EXISTS visits (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            hcp_id INTEGER NOT NULL,
-            hcp_name TEXT NOT NULL,
-            content TEXT NOT NULL,
-            visit_type TEXT DEFAULT "",
-            evidence_photos TEXT DEFAULT "[]",
-            location TEXT DEFAULT "",
-            location_mode TEXT DEFAULT "",
-            compliance_status TEXT DEFAULT "passed",
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    db.commit()
-
-
-conn = get_direct_db()
-init_visits_table(conn)
-conn.close()
 
 
 class VisitCreate(BaseModel):
@@ -54,38 +24,16 @@ class VisitCreate(BaseModel):
 
 
 @router.post("/visit")
-def create_visit(body: VisitCreate, user: dict = Depends(require_scope("visit"))):
-    db = get_direct_db()
-    cursor = db.execute(
-        """
-        INSERT INTO visits (hcp_id, hcp_name, content, visit_type, evidence_photos, location, location_mode)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            body.hcp_id,
-            body.hcp_name,
-            body.content,
-            body.visit_type,
-            json.dumps(body.evidence_photos),
-            body.location,
-            body.location_mode,
-        ),
-    )
-    db.commit()
-    row = db.execute("SELECT * FROM visits WHERE id = ?", (cursor.lastrowid,)).fetchone()
-    record = dict(row)
-    record["evidence_photos"] = json.loads(record["evidence_photos"])
-    db.close()
+def create_visit(body: VisitCreate, conn: Connection = Depends(get_db), user: dict = Depends(require_scope("visit"))):
+    """创建visit。"""
+    service = VisitService(conn)
+    record = service.create_visit(body)
     return success(data=record)
 
 
 @router.get("/visit/{visit_id}")
-def get_visit(visit_id: int, user: dict = Depends(require_scope("visit"))):
-    db = get_direct_db()
-    row = db.execute("SELECT * FROM visits WHERE id = ?", (visit_id,)).fetchone()
-    db.close()
-    if row is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
-    record = dict(row)
-    record["evidence_photos"] = json.loads(record["evidence_photos"])
+def get_visit(visit_id: int, conn: Connection = Depends(get_db), user: dict = Depends(require_scope("visit"))):
+    """获取visit。"""
+    service = VisitService(conn)
+    record = service.get_visit(visit_id)
     return success(data=record)

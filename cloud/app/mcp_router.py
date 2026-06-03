@@ -38,6 +38,14 @@ def _row(r):
 
 @router.post("/tools/register", status_code=status.HTTP_201_CREATED)
 def register_tool(body: ToolRegister, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """注册一个新的 MCP 工具。
+
+    Args:
+        body: 工具信息（名称、描述、端点、输入/输出 schema）。
+
+    Returns:
+        注册后的工具记录。
+    """
     uid = int(current_user["sub"])
     role = current_user.get("role", "rep")
 
@@ -72,6 +80,14 @@ def list_tools(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """获取已注册的工具列表。
+
+    Args:
+        enabled: 按启用状态筛选。
+
+    Returns:
+        工具列表。
+    """
     role = current_user.get("role", "rep")
     McpGuardService.check_tool_access("pubmed_search", role)
 
@@ -82,6 +98,14 @@ def list_tools(
 
 @router.patch("/tools/{tool_id}/toggle")
 def toggle_tool(tool_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """切换工具的启用/禁用状态。
+
+    Args:
+        tool_id: 工具 ID。
+
+    Returns:
+        更新后的工具信息。
+    """
     role = current_user.get("role", "rep")
     McpGuardService.check_tool_access("pubmed_search", role)
 
@@ -96,6 +120,14 @@ def toggle_tool(tool_id: int, current_user=Depends(require_scope("visit")), db=D
 
 @router.delete("/tools/{tool_id}", status_code=status.HTTP_200_OK)
 def delete_tool(tool_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """删除指定工具。
+
+    Args:
+        tool_id: 要删除的工具 ID。
+
+    Returns:
+        被删除的工具 ID。
+    """
     role = current_user.get("role", "rep")
     McpGuardService.check_tool_access("market_intel", role)
 

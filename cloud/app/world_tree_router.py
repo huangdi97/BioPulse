@@ -34,6 +34,16 @@ def create_node(
     current_user: dict = Depends(require_scope("visit")),
     service: WorldTreeService = Depends(),
 ):
+    """创建新的世界树节点。
+
+    Args:
+        body: 节点创建请求体。
+        current_user: 当前登录用户信息。
+        service: 世界树服务。
+
+    Returns:
+        创建的节点对象。
+    """
     uid = int(current_user["sub"])
     row = service.create_node(
         name=body.name,
@@ -54,6 +64,16 @@ def list_nodes(
     parent_id: Optional[int] = Query(None),
     service: WorldTreeService = Depends(),
 ):
+    """查询世界树节点列表。
+
+    Args:
+        node_type: 可选的按节点类型筛选。
+        parent_id: 可选的按父节点 ID 筛选。
+        service: 世界树服务。
+
+    Returns:
+        节点列表。
+    """
     rows = service.list_nodes(node_type=node_type, parent_id=parent_id)
     return success(data=rows)
 
@@ -61,6 +81,15 @@ def list_nodes(
 # 3
 @router.get("/nodes/{node_id}")
 def get_node(node_id: int, service: WorldTreeService = Depends()):
+    """获取单个世界树节点的详情。
+
+    Args:
+        node_id: 节点 ID。
+        service: 世界树服务。
+
+    Returns:
+        节点详情。
+    """
     d = service.get_node(node_id)
     return success(data=d)
 
@@ -73,6 +102,17 @@ def update_node(
     current_user: dict = Depends(require_scope("visit")),
     service: WorldTreeService = Depends(),
 ):
+    """更新指定世界树节点的信息。
+
+    Args:
+        node_id: 节点 ID。
+        body: 节点更新请求体。
+        current_user: 当前登录用户信息。
+        service: 世界树服务。
+
+    Returns:
+        更新后的节点对象。
+    """
     row = service.update_node(
         node_id=node_id,
         name=body.name,
@@ -87,6 +127,15 @@ def update_node(
 # 5
 @router.delete("/nodes/{node_id}")
 def delete_node(node_id: int, service: WorldTreeService = Depends()):
+    """删除指定的世界树节点。
+
+    Args:
+        node_id: 节点 ID。
+        service: 世界树服务。
+
+    Returns:
+        删除结果消息。
+    """
     message = service.delete_node(node_id)
     return success(message=message)
 
@@ -94,6 +143,15 @@ def delete_node(node_id: int, service: WorldTreeService = Depends()):
 # 6
 @router.get("/nodes/{node_id}/children")
 def get_children(node_id: int, service: WorldTreeService = Depends()):
+    """获取指定节点的直接子节点列表。
+
+    Args:
+        node_id: 节点 ID。
+        service: 世界树服务。
+
+    Returns:
+        子节点列表。
+    """
     rows = service.get_children(node_id)
     return success(data=rows)
 
@@ -101,6 +159,15 @@ def get_children(node_id: int, service: WorldTreeService = Depends()):
 # 7
 @router.get("/nodes/{node_id}/ancestors")
 def get_ancestors(node_id: int, service: WorldTreeService = Depends()):
+    """获取指定节点的所有祖先节点路径。
+
+    Args:
+        node_id: 节点 ID。
+        service: 世界树服务。
+
+    Returns:
+        祖先节点列表。
+    """
     ancestors = service.get_ancestors(node_id)
     return success(data=ancestors)
 
@@ -108,6 +175,16 @@ def get_ancestors(node_id: int, service: WorldTreeService = Depends()):
 # 8
 @router.post("/nodes/{node_id}/link/{memory_id}")
 def link_memory(node_id: int, memory_id: int, service: WorldTreeService = Depends()):
+    """将记忆关联到指定世界树节点。
+
+    Args:
+        node_id: 节点 ID。
+        memory_id: 记忆 ID。
+        service: 世界树服务。
+
+    Returns:
+        关联结果消息。
+    """
     service.link_memory(node_id, memory_id)
     return success(message="Linked")
 
@@ -115,6 +192,16 @@ def link_memory(node_id: int, memory_id: int, service: WorldTreeService = Depend
 # 9
 @router.delete("/nodes/{node_id}/link/{memory_id}")
 def unlink_memory(node_id: int, memory_id: int, service: WorldTreeService = Depends()):
+    """解除记忆与指定世界树节点的关联。
+
+    Args:
+        node_id: 节点 ID。
+        memory_id: 记忆 ID。
+        service: 世界树服务。
+
+    Returns:
+        解除关联结果消息。
+    """
     service.unlink_memory(node_id, memory_id)
     return success(message="Unlinked")
 
@@ -122,6 +209,15 @@ def unlink_memory(node_id: int, memory_id: int, service: WorldTreeService = Depe
 # 10
 @router.get("/nodes/{node_id}/memories")
 def get_node_memories(node_id: int, service: WorldTreeService = Depends()):
+    """获取指定节点关联的所有记忆。
+
+    Args:
+        node_id: 节点 ID。
+        service: 世界树服务。
+
+    Returns:
+        关联的记忆列表。
+    """
     results = service.get_node_memories(node_id)
     return success(data=results)
 
@@ -129,5 +225,13 @@ def get_node_memories(node_id: int, service: WorldTreeService = Depends()):
 # 11
 @router.get("/tree/full")
 def get_full_tree(service: WorldTreeService = Depends()):
+    """获取完整的世界树（从根节点开始）。
+
+    Args:
+        service: 世界树服务。
+
+    Returns:
+        完整的树结构数据。
+    """
     roots = service.get_full_tree()
     return success(data=roots)

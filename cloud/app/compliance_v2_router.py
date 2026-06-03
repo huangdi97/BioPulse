@@ -90,6 +90,7 @@ def scan(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """扫描内容合规性。"""
     uid = int(current_user["sub"])
     n = _now()
     rules_repo = ComplianceRulesRepository(db)
@@ -186,6 +187,7 @@ def list_records(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """分页查询合规审核记录。"""
     repo = ComplianceAuditRecordsRepository(db)
     conditions, params = [], []
     if message_type:
@@ -224,6 +226,7 @@ def list_records(
 
 @router.get("/records/{record_id}")
 def get_record(record_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """获取单条审核记录。"""
     repo = ComplianceAuditRecordsRepository(db)
     row = repo.get_by_id(record_id)
     if not row:
@@ -241,6 +244,7 @@ def review_record(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """人工审核合规记录。"""
     audit_repo = ComplianceAuditRecordsRepository(db)
     chain_repo = AuditChainEntriesRepository(db)
     row = audit_repo.get_by_id(record_id)
@@ -285,6 +289,7 @@ def create_audit_chain(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """创建审计链条目。"""
     repo = AuditChainEntriesRepository(db)
     uid = int(current_user["sub"])
     n = _now()
@@ -330,6 +335,7 @@ def get_audit_chain(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """获取实体的审计链。"""
     repo = AuditChainEntriesRepository(db)
     rows = repo.list_all(
         conditions=["entity_type=?", "entity_id=?"],
@@ -346,6 +352,7 @@ def verify_audit_chain(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """验证审计链完整性。"""
     repo = AuditChainEntriesRepository(db)
     rows = repo.list_all(
         conditions=["entity_type=?", "entity_id=?"],
@@ -386,6 +393,7 @@ def train_correction(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """基于审核记录生成培训纠正。"""
     audit_repo = ComplianceAuditRecordsRepository(db)
     corrections_repo = TrainingCorrectionsRepository(db)
     row = audit_repo.get_by_id(record_id)
@@ -449,6 +457,7 @@ def list_corrections(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """分页查询培训纠正记录。"""
     repo = TrainingCorrectionsRepository(db)
     conditions, params = [], []
     if category:
@@ -486,6 +495,7 @@ def update_correction(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """更新培训纠正状态。"""
     repo = TrainingCorrectionsRepository(db)
     row = repo.get_by_id(correction_id)
     if not row:
@@ -502,6 +512,7 @@ def update_correction(
 
 @router.get("/rules/l2")
 def list_l2_rules(current_user=Depends(require_scope("visit"))):
+    """列出 L2 合规规则。"""
     strategy = ComplianceStrategyService(None)
     return success(data={"rules": strategy.get_l2_rules()})
 
@@ -512,6 +523,7 @@ def evaluate_visit(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """评估拜访数据的合规性。"""
     strategy = ComplianceStrategyService(db)
     result = strategy.evaluate_visit(body.visit_data)
     return success(data=result)
@@ -519,6 +531,7 @@ def evaluate_visit(
 
 @router.get("/dashboard")
 def dashboard(current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """获取合规仪表盘数据。"""
     audit_repo = ComplianceAuditRecordsRepository(db)
     corrections_repo = TrainingCorrectionsRepository(db)
     total_scans = audit_repo.count()

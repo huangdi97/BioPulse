@@ -50,6 +50,16 @@ def create_knowledge(
     service: KnowledgeService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建知识条目。
+
+    Args:
+        body: 知识创建数据（标题、分类、内容等）
+        service: 知识服务
+        current_user: 当前登录用户
+
+    Returns:
+        包含新创建知识条目的 JSON 响应
+    """
     user_id = int(current_user["sub"])
     result = service.create(body, user_id)
     return JSONResponse(
@@ -67,6 +77,19 @@ def list_knowledge(
     service: KnowledgeService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[KnowledgeOut]]:
+    """分页查询知识条目列表，支持按分类和难度筛选。
+
+    Args:
+        page: 页码（从1开始）
+        page_size: 每页数量
+        category: 分类（可选筛选）
+        difficulty: 难度（可选筛选）
+        service: 知识服务
+        current_user: 当前登录用户
+
+    Returns:
+        分页的知识条目列表
+    """
     total, total_pages, rows = service.list(page, page_size, category, difficulty)
     items = [KnowledgeOut(**dict(r)) for r in rows]
     return success(
@@ -85,6 +108,15 @@ def list_categories(
     service: KnowledgeService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[List[str]]:
+    """获取知识库中所有可用的分类列表。
+
+    Args:
+        service: 知识服务
+        current_user: 当前登录用户
+
+    Returns:
+        分类名称列表
+    """
     categories = service.list_categories()
     return success(data=categories)
 
@@ -97,6 +129,18 @@ def search_knowledge(
     service: KnowledgeService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[KnowledgeOut]]:
+    """全文搜索知识条目。
+
+    Args:
+        q: 搜索关键词
+        page: 页码（从1开始）
+        page_size: 每页数量
+        service: 知识服务
+        current_user: 当前登录用户
+
+    Returns:
+        匹配的分页知识条目列表
+    """
     total, total_pages, rows = service.search(q, page, page_size)
     items = [KnowledgeOut(**dict(r)) for r in rows]
     return success(
@@ -116,6 +160,16 @@ def get_knowledge(
     service: KnowledgeService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[KnowledgeOut]:
+    """获取指定知识条目的详细信息。
+
+    Args:
+        knowledge_id: 知识条目 ID
+        service: 知识服务
+        current_user: 当前登录用户
+
+    Returns:
+        知识条目详情
+    """
     row = service.get(knowledge_id)
     return success(data=KnowledgeOut(**row))
 
@@ -127,6 +181,17 @@ def update_knowledge(
     service: KnowledgeService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[KnowledgeOut]:
+    """更新指定知识条目的部分字段。
+
+    Args:
+        knowledge_id: 知识条目 ID
+        body: 需要更新的字段数据
+        service: 知识服务
+        current_user: 当前登录用户
+
+    Returns:
+        更新后的知识条目
+    """
     updated = service.update(knowledge_id, body)
     return success(data=KnowledgeOut(**updated))
 
@@ -137,5 +202,15 @@ def delete_knowledge(
     service: KnowledgeService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除指定知识条目。
+
+    Args:
+        knowledge_id: 知识条目 ID
+        service: 知识服务
+        current_user: 当前登录用户
+
+    Returns:
+        成功删除的消息
+    """
     service.delete(knowledge_id)
     return success(message="deleted")

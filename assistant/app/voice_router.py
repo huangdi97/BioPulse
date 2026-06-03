@@ -25,6 +25,16 @@ async def upload_audio(
     service: VoiceService = Depends(),
     current_user: dict = Depends(get_current_user),
 ):
+    """上传音频文件到语音服务。
+
+    Args:
+        file: 上传的音频文件
+        service: 语音服务
+        current_user: 当前登录用户
+
+    Returns:
+        上传后的文件信息
+    """
     user_id = int(current_user["sub"])
     data = await service.upload(file, user_id)
     return success(data=data)
@@ -38,6 +48,18 @@ async def voice_chat(
     service: VoiceService = Depends(),
     current_user: dict = Depends(get_current_user),
 ):
+    """语音对话：上传音频并获取 AI 语音回复。
+
+    Args:
+        file: 用户输入的音频文件
+        context: 对话上下文（可选）
+        request: 请求对象（用于提取认证头）
+        service: 语音服务
+        current_user: 当前登录用户
+
+    Returns:
+        AI 回复的语音数据
+    """
     user_id = int(current_user["sub"])
     auth_header = request.headers.get("Authorization", "")
     data = await service.chat(file, context, auth_header, user_id)
@@ -50,6 +72,16 @@ async def synthesize(
     voice: str = Query("zh-CN-XiaoxiaoNeural"),
     service: VoiceService = Depends(),
 ):
+    """将文本合成为语音并返回音频文件。
+
+    Args:
+        text: 待合成的文本
+        voice: 语音角色（默认中文女声 Xiaoxiao）
+        service: 语音服务
+
+    Returns:
+        合成的 MP3 音频文件
+    """
     if not text.strip():
         raise HTTPException(status_code=400, detail="text must not be empty")
     tts_path = await service.synthesize(text, voice)
@@ -62,6 +94,16 @@ async def download_audio(
     service: VoiceService = Depends(),
     current_user: dict = Depends(get_current_user),
 ):
+    """下载指定的音频文件。
+
+    Args:
+        file_id: 音频文件 ID
+        service: 语音服务
+        current_user: 当前登录用户
+
+    Returns:
+        音频文件响应
+    """
     row = service.get_audio(file_id)
     return FileResponse(
         row["storage_path"],

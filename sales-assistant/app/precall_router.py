@@ -38,6 +38,7 @@ def precall(
     service: PrecallService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> Any:
+    """precall。"""
     auth_header = request.headers.get("Authorization", "")
     result = service.precall(body, auth_header)
     return success(

@@ -44,6 +44,16 @@ def create_entity(
     user: dict = Depends(require_scope("visit")),
     service: KgService = Depends(),
 ):
+    """创建一个新的知识图谱实体。
+
+    Args:
+        data: 实体创建请求体。
+        user: 当前认证用户。
+        service: 知识图谱服务实例。
+
+    Returns:
+        包含新实体数据的响应。
+    """
     return success(service.create_entity(data, user))
 
 
@@ -55,6 +65,18 @@ def list_entities(
     user: dict = Depends(require_scope("visit")),
     service: KgService = Depends(),
 ):
+    """查询知识图谱实体列表。
+
+    Args:
+        entity_type: 实体类型筛选。
+        name: 实体名称筛选。
+        status_: 实体状态筛选。
+        user: 当前认证用户。
+        service: 知识图谱服务实例。
+
+    Returns:
+        包含实体列表的响应。
+    """
     return success(service.list_entities(entity_type=entity_type, name=name, status_=status_))
 
 
@@ -64,6 +86,16 @@ def get_entity(
     user: dict = Depends(require_scope("visit")),
     service: KgService = Depends(),
 ):
+    """获取指定知识图谱实体的详情。
+
+    Args:
+        entity_id: 实体 ID。
+        user: 当前认证用户。
+        service: 知识图谱服务实例。
+
+    Returns:
+        包含实体数据的响应。
+    """
     return success(service.get_entity(entity_id))
 
 
@@ -73,6 +105,16 @@ def delete_entity(
     user: dict = Depends(require_scope("visit")),
     service: KgService = Depends(),
 ):
+    """删除指定的知识图谱实体。
+
+    Args:
+        entity_id: 实体 ID。
+        user: 当前认证用户。
+        service: 知识图谱服务实例。
+
+    Returns:
+        删除成功的响应。
+    """
     return success(service.delete_entity(entity_id))
 
 
@@ -82,6 +124,16 @@ def create_relation(
     user: dict = Depends(require_scope("visit")),
     service: KgService = Depends(),
 ):
+    """创建一条知识图谱关系。
+
+    Args:
+        data: 关系创建请求体。
+        user: 当前认证用户。
+        service: 知识图谱服务实例。
+
+    Returns:
+        包含新关系数据的响应。
+    """
     return success(service.create_relation(data))
 
 
@@ -93,6 +145,18 @@ def list_relations(
     user: dict = Depends(require_scope("visit")),
     service: KgService = Depends(),
 ):
+    """查询知识图谱关系列表。
+
+    Args:
+        source: 源实体 ID 筛选。
+        target: 目标实体 ID 筛选。
+        relation_type: 关系类型筛选。
+        user: 当前认证用户。
+        service: 知识图谱服务实例。
+
+    Returns:
+        包含关系列表的响应。
+    """
     return success(service.list_relations(source=source, target=target, relation_type=relation_type))
 
 
@@ -102,6 +166,16 @@ def delete_relation(
     user: dict = Depends(require_scope("visit")),
     service: KgService = Depends(),
 ):
+    """删除指定的知识图谱关系。
+
+    Args:
+        relation_id: 关系 ID。
+        user: 当前认证用户。
+        service: 知识图谱服务实例。
+
+    Returns:
+        删除成功的响应。
+    """
     return success(service.delete_relation(relation_id))
 
 
@@ -111,6 +185,16 @@ def search_kg(
     user: dict = Depends(require_scope("visit")),
     service: KgService = Depends(),
 ):
+    """搜索知识图谱，基于实体类型和深度进行查询。
+
+    Args:
+        data: 搜索请求体，包含查询文本和参数。
+        user: 当前认证用户。
+        service: 知识图谱服务实例。
+
+    Returns:
+        包含搜索结果的响应。
+    """
     return success(service.search_kg(data))
 
 
@@ -121,9 +205,29 @@ def get_subgraph(
     user: dict = Depends(require_scope("visit")),
     service: KgService = Depends(),
 ):
+    """获取指定实体在知识图谱中的子图。
+
+    Args:
+        entity_id: 实体 ID。
+        max_depth: 最大遍历深度。
+        user: 当前认证用户。
+        service: 知识图谱服务实例。
+
+    Returns:
+        包含子图数据的响应。
+    """
     return success(service.get_subgraph(entity_id, max_depth))
 
 
 @router.get("/dashboard")
 def dashboard(user: dict = Depends(require_scope("visit")), service: KgService = Depends()):
+    """获取知识图谱仪表盘数据。
+
+    Args:
+        user: 当前认证用户。
+        service: 知识图谱服务实例。
+
+    Returns:
+        包含仪表盘数据的响应。
+    """
     return success(service.dashboard())

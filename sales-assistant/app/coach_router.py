@@ -57,6 +57,7 @@ def create_prompt(
     service: CoachService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建prompt。"""
     user_id = int(current_user["sub"])
     row_id = service.create_prompt(body, user_id)
     return JSONResponse(
@@ -74,6 +75,7 @@ def list_prompts(
     service: CoachService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse]:
+    """获取prompts。"""
     total, total_pages, rows = service.list_prompts(page, page_size, scenario, category)
     items = [dict(r) for r in rows]
     return success(
@@ -94,6 +96,7 @@ def update_prompt(
     service: CoachService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """更新prompt。"""
     row = service.update_prompt(prompt_id, body)
     return success(data=row)
 
@@ -104,6 +107,7 @@ def delete_prompt(
     service: CoachService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除prompt。"""
     service.delete_prompt(prompt_id)
     return success(message="deleted")
 
@@ -114,6 +118,7 @@ def coach_suggest(
     service: CoachService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """coach suggest。"""
     result = service.coach_suggest(body)
     return success(data=result)
 
@@ -124,6 +129,7 @@ def create_session(
     service: CoachService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建session。"""
     user_id = int(current_user["sub"])
     row_id = service.create_session(body, user_id)
     return JSONResponse(
@@ -139,6 +145,7 @@ def list_sessions(
     service: CoachService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse]:
+    """获取sessions。"""
     total, total_pages, rows = service.list_sessions(page, page_size)
     items = [dict(r) for r in rows]
     return success(
@@ -159,5 +166,6 @@ def update_session(
     service: CoachService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """更新session。"""
     row = service.update_session(session_id, body)
     return success(data=row)

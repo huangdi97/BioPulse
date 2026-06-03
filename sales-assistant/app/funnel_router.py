@@ -29,6 +29,7 @@ def funnel_analysis(
     service: FunnelService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> Any:
+    """funnel analysis。"""
     data = service.funnel_analysis()
     return success(
         FunnelData(

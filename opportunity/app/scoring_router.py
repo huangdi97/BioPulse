@@ -18,6 +18,7 @@ class ScoreUpdate(BaseModel):
     @field_validator("heat_score")
     @classmethod
     def validate_heat_score(cls, v: int) -> int:
+        """validate heat score。"""
         if v < 0 or v > 100:
             raise ValueError("heat_score must be between 0 and 100")
         return v
@@ -53,6 +54,7 @@ def leaderboard(
     service: ScoringService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[ScoreLeaderboardItem]]:
+    """leaderboard。"""
     total, total_pages, rows = service.leaderboard(
         page=page,
         page_size=page_size,
@@ -79,6 +81,7 @@ def set_heat_score(
     service: ScoringService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """set heat score。"""
     updated = service.set_heat_score(opportunity_id, body.heat_score)
     return JSONResponse(
         content=success(data=updated).model_dump(),
@@ -91,5 +94,6 @@ def recalculate(
     service: ScoringService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[RecalculateOut]:
+    """recalculate。"""
     result = service.recalculate()
     return success(data=RecalculateOut(**result))

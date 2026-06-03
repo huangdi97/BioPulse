@@ -48,6 +48,7 @@ def _rows(rows):
 
 @router.post("/submit", status_code=status.HTTP_201_CREATED)
 def submit_task(body: TaskSubmit, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """提交Agent执行任务并返回任务记录。Args: body (TaskSubmit) 任务体; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     repo = AgentExecutionTasksRepository(db)
     task_id = f"aet:{uuid.uuid4()}"
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -76,6 +77,7 @@ def list_tasks(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """按状态和角色筛选任务列表。Args: status_filter (Optional[str]) 状态; agent_role (Optional[str]) 角色; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     repo = AgentExecutionTasksRepository(db)
     conds, pars = [], []
     if status_filter:
@@ -90,6 +92,7 @@ def list_tasks(
 
 @router.get("/tasks/{task_id}")
 def get_task(task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """根据task_id获取任务详情。Args: task_id (str) 任务ID; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     repo = AgentExecutionTasksRepository(db)
     row = repo.get_by_task_id(task_id)
     if not row:
@@ -99,6 +102,7 @@ def get_task(task_id: str, current_user=Depends(require_scope("visit")), db=Depe
 
 @router.post("/tasks/{task_id}/retry")
 def retry_task(task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """递增重试次数并重置状态为pending。Args: task_id (str) 任务ID; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     repo = AgentExecutionTasksRepository(db)
     row = repo.get_by_task_id(task_id)
     if not row:
@@ -111,6 +115,7 @@ def retry_task(task_id: str, current_user=Depends(require_scope("visit")), db=De
 
 @router.post("/tasks/{task_id}/approve")
 def approve_task(task_id: str, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """批准任务，标记为completed并记录完成时间。Args: task_id (str) 任务ID; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     repo = AgentExecutionTasksRepository(db)
     row = repo.get_by_task_id(task_id)
     if not row:
@@ -123,6 +128,7 @@ def approve_task(task_id: str, current_user=Depends(require_scope("visit")), db=
 
 @router.get("/a2a/card")
 def a2a_card(current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """返回A2A能力卡片（名称和技能列表）。Args: current_user 用户; db SQLite连接。Returns: dict 能力卡片数据"""
     skills_repo = AgentSkillsRepository(db)
     rows = skills_repo.list_all(conditions=["enabled=1"], order_by="priority ASC")
     skill_names = [s["skill_name"] for s in rows]
@@ -131,6 +137,7 @@ def a2a_card(current_user=Depends(require_scope("visit")), db=Depends(get_db)):
 
 @router.post("/a2a/task", status_code=status.HTTP_201_CREATED)
 def a2a_task(body: A2ATask, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """通过A2A协议提交跨Agent任务。Args: body (A2ATask) A2A任务体; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     repo = AgentExecutionTasksRepository(db)
     task_id = body.task_id or f"aet:{uuid.uuid4()}"
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

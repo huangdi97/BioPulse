@@ -39,6 +39,7 @@ class RoleUpdate(BaseModel):
 
 
 def rd(row) -> dict:
+    """将角色行数据格式化为字典。Args: row (sqlite3.Row) 数据库行。Returns: dict 格式化后的角色字典"""
     return {
         "id": row["id"],
         "name": row["name"],
@@ -66,6 +67,7 @@ def _404(repo, rid):
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_role(body: RoleCreate, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """创建Agent角色并返回角色数据。Args: body (RoleCreate) 角色创建体; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     uid = int(current_user["sub"])
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     repo = AgentRolesRepository(db)
@@ -96,6 +98,7 @@ def list_roles(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """按类型和状态筛选Agent角色列表。Args: role_type (Optional[str]) 角色类型; is_active (Optional[int]) 启用状态; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     repo = AgentRolesRepository(db)
     conds, pars = [], []
     if is_active is not None:
@@ -112,6 +115,7 @@ def list_roles(
 
 @router.get("/{role_id}")
 def get_role(role_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """获取指定角色的详细信息。Args: role_id (int) 角色ID; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     repo = AgentRolesRepository(db)
     row = _404(repo, role_id)
     return success(data=rd(row))
@@ -124,6 +128,7 @@ def update_role(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """部分更新Agent角色字段。Args: role_id (int) 角色ID; body (RoleUpdate) 角色更新体; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     repo = AgentRolesRepository(db)
     _404(repo, role_id)
     updates = {}
@@ -155,6 +160,7 @@ def update_role(
 
 @router.delete("/{role_id}")
 def delete_role(role_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """软删除指定Agent角色。Args: role_id (int) 角色ID; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     repo = AgentRolesRepository(db)
     _404(repo, role_id)
     repo.soft_delete(role_id)

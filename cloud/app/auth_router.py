@@ -32,6 +32,7 @@ class RefreshRequest(BaseModel):
     description="Creates a new user with username and password. Returns user_id on success.",
 )
 def register(body: RegisterRequest, service: AuthService = Depends()) -> Any:
+    """注册新用户。Args: body (RegisterRequest) 注册请求体; service (AuthService) 认证服务。Returns: Any 成功响应"""
     result = service.register(body.username, body.password)
     return success(data=result)
 
@@ -42,6 +43,7 @@ def register(body: RegisterRequest, service: AuthService = Depends()) -> Any:
     description="Validates credentials and returns access_token and refresh_token.",
 )
 def login(body: LoginRequest, service: AuthService = Depends()) -> Any:
+    """用户登录并返回令牌。Args: body (LoginRequest) 登录请求体; service (AuthService) 认证服务。Returns: Any 成功响应"""
     result = service.login(body.username, body.password, body.scope)
     return success(data=result)
 
@@ -52,5 +54,6 @@ def login(body: LoginRequest, service: AuthService = Depends()) -> Any:
     description="Exchange a valid refresh_token for a new access_token.",
 )
 def refresh(body: RefreshRequest, service: AuthService = Depends()) -> Any:
+    """刷新访问令牌。Args: body (RefreshRequest) 刷新请求体; service (AuthService) 认证服务。Returns: Any 成功响应"""
     result = service.refresh(body.refresh_token)
     return success(data=result)

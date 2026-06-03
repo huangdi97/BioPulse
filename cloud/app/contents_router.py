@@ -51,6 +51,7 @@ def create_content(
     current_user: dict = Depends(require_scope("visit")),
     service: ContentService = Depends(),
 ) -> Any:
+    """创建内容。"""
     user_id = int(current_user["sub"])
     row = service.create_content(body.title, body.body, body.category, body.tags, user_id)
     return success(data=row)
@@ -65,6 +66,7 @@ def list_contents(
     current_user: dict = Depends(require_scope("visit")),
     service: ContentService = Depends(),
 ) -> Any:
+    """分页列出内容。"""
     result = service.list_contents(
         status_filter=status_param,
         category_filter=category,
@@ -80,6 +82,7 @@ def get_content(
     current_user: dict = Depends(require_scope("visit")),
     service: ContentService = Depends(),
 ) -> Any:
+    """获取内容详情。"""
     row = service.get_content(content_id)
     return success(data=row)
 
@@ -91,6 +94,7 @@ def update_content(
     current_user: dict = Depends(require_scope("visit")),
     service: ContentService = Depends(),
 ) -> Any:
+    """更新内容。"""
     row = service.update_content(
         content_id,
         title=body.title,
@@ -108,5 +112,6 @@ def delete_content(
     current_user: dict = Depends(require_scope("visit")),
     service: ContentService = Depends(),
 ) -> Any:
+    """删除内容。"""
     service.delete_content(content_id)
     return success()

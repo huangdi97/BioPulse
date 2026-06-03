@@ -17,6 +17,11 @@ def trigger_consolidation(
     current_user=Depends(require_scope("visit")),
     service: MemoryConsolidationService = Depends(),
 ):
+    """触发记忆整合流程。
+
+    Returns:
+        整合任务触发结果。
+    """
     result = service.trigger_consolidation(
         triggered_by=current_user.get("sub", ""),
     )
@@ -28,6 +33,11 @@ def consolidation_status(
     current_user=Depends(require_scope("visit")),
     service: MemoryConsolidationService = Depends(),
 ):
+    """查询记忆整合状态。
+
+    Returns:
+        当前整合任务状态信息。
+    """
     return success(data=service.consolidation_status())
 
 
@@ -37,6 +47,14 @@ def evaluate_memory(
     current_user=Depends(require_scope("visit")),
     service: MemoryConsolidationService = Depends(),
 ):
+    """评估指定代理的记忆质量。
+
+    Args:
+        body: 代理 ID。
+
+    Returns:
+        记忆评估结果。
+    """
     return success(data=service.evaluate_memory(agent_id=body.agent_id))
 
 
@@ -45,4 +63,9 @@ def evaluate_trend(
     current_user=Depends(require_scope("visit")),
     service: MemoryConsolidationService = Depends(),
 ):
+    """获取记忆评估趋势数据。
+
+    Returns:
+        记忆质量变化趋势。
+    """
     return success(data=service.evaluate_trend())

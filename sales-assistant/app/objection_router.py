@@ -31,6 +31,7 @@ def handle_objection(
     service: ObjectionService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> Any:
+    """handle objection。"""
     auth_header = request.headers.get("Authorization", "")
     result = service.handle_objection(body, auth_header)
     return success(ObjectionResponse(**result))

@@ -51,6 +51,7 @@ def create_schedule(
     service: ScheduleService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建schedule。"""
     user_id = int(current_user["sub"])
     new_id = service.create_schedule(body, user_id)
     return JSONResponse(content=success(data={"id": new_id}).model_dump(), status_code=201)
@@ -66,6 +67,7 @@ def list_schedules(
     service: ScheduleService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[ScheduleOut]]:
+    """获取schedules。"""
     total, total_pages, rows = service.list_schedules(
         page,
         page_size,
@@ -91,6 +93,7 @@ def get_schedule(
     service: ScheduleService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[ScheduleOut]:
+    """获取schedule。"""
     row = service.get_schedule(schedule_id)
     return success(data=ScheduleOut(**row))
 
@@ -102,6 +105,7 @@ def update_schedule(
     service: ScheduleService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[ScheduleOut]:
+    """更新schedule。"""
     row = service.update_schedule(schedule_id, body)
     return success(data=ScheduleOut(**row))
 
@@ -112,5 +116,6 @@ def delete_schedule(
     service: ScheduleService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除schedule。"""
     service.delete_schedule(schedule_id)
     return success(message="deleted")

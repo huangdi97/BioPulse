@@ -40,6 +40,16 @@ def create_bookmark(
     service: BookmarkService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建书签。
+
+    Args:
+        body: 书签创建请求体。
+        service: 书签服务实例。
+        current_user: 当前登录用户信息。
+
+    Returns:
+        包含新书签 ID 的 JSON 响应。
+    """
     user_id = int(current_user["sub"])
     new_id = service.create_bookmark(body, user_id)
     return JSONResponse(
@@ -56,6 +66,18 @@ def list_bookmarks(
     service: BookmarkService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[BookmarkOut]]:
+    """获取书签列表（分页，支持按实体类型筛选）。
+
+    Args:
+        page: 页码，从 1 开始。
+        page_size: 每页条数。
+        entity_type: 按实体类型筛选。
+        service: 书签服务实例。
+        current_user: 当前登录用户信息。
+
+    Returns:
+        分页的书签列表响应。
+    """
     user_id = int(current_user["sub"])
     total, total_pages, rows = service.list_bookmarks(
         page,
@@ -82,6 +104,17 @@ def check_bookmark(
     service: BookmarkService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[CheckBookmarkOut]:
+    """检查书签是否存在。
+
+    Args:
+        entity_type: 实体类型。
+        entity_id: 实体 ID。
+        service: 书签服务实例。
+        current_user: 当前登录用户信息。
+
+    Returns:
+        书签状态（是否存在及书签 ID）。
+    """
     user_id = int(current_user["sub"])
     row = service.check_bookmark(entity_type, entity_id, user_id)
     if row:
@@ -95,6 +128,16 @@ def delete_bookmark(
     service: BookmarkService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除书签。
+
+    Args:
+        bookmark_id: 书签 ID。
+        service: 书签服务实例。
+        current_user: 当前登录用户信息。
+
+    Returns:
+        删除成功响应。
+    """
     user_id = int(current_user["sub"])
     service.delete_bookmark(bookmark_id, user_id)
     return success(message="deleted")

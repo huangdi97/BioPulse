@@ -54,6 +54,7 @@ def create_content(
     service: ContentService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建content。"""
     user_id = int(current_user["sub"])
     row_id = service.create_content(body, user_id)
     return JSONResponse(
@@ -73,6 +74,7 @@ def list_contents(
     service: ContentService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[ContentOut]]:
+    """获取contents。"""
     total, total_pages, rows = service.list_contents(
         page,
         page_size,
@@ -98,6 +100,7 @@ def list_content_types(
     service: ContentService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[list]:
+    """获取content types。"""
     return success(data=service.list_content_types())
 
 
@@ -107,6 +110,7 @@ def get_content(
     service: ContentService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[ContentOut]:
+    """获取content。"""
     row = service.get_content(content_id)
     return success(data=ContentOut(**row))
 
@@ -118,6 +122,7 @@ def update_content(
     service: ContentService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[ContentOut]:
+    """更新content。"""
     row = service.update_content(content_id, body)
     return success(data=ContentOut(**row))
 
@@ -128,5 +133,6 @@ def delete_content(
     service: ContentService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除content。"""
     service.delete_content(content_id)
     return success(message="deleted")

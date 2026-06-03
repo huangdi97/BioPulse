@@ -75,6 +75,14 @@ def create_session(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """创建新的 MDT 会诊会话。
+
+    Args:
+        body: 会诊信息（标题、问题、背景、参与者）。
+
+    Returns:
+        创建的会诊会话 ID 及参与者数量。
+    """
     uid = int(current_user["sub"])
     n = _now()
     sessions_repo = MdtSessionsRepository(db)
@@ -125,6 +133,15 @@ def list_sessions(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """分页查询会诊会话列表。
+
+    Args:
+        status_filter: 按状态筛选。
+        page/page_size: 分页参数。
+
+    Returns:
+        分页的会话列表。
+    """
     sessions_repo = MdtSessionsRepository(db)
     conditions, params = [], []
     if status_filter:
@@ -150,6 +167,14 @@ def list_sessions(
 
 @router.get("/sessions/{session_id}")
 def get_session(session_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """获取会诊会话详情，含参与者和意见。
+
+    Args:
+        session_id: 会话 ID。
+
+    Returns:
+        会话详情、参与者列表、意见列表。
+    """
     sessions_repo = MdtSessionsRepository(db)
     participants_repo = MdtParticipantsRepository(db)
     opinions_repo = MdtOpinionsRepository(db)
@@ -169,6 +194,15 @@ def debate(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """在会话中执行多轮 Multi-Disciplinary 辩论。
+
+    Args:
+        session_id: 会话 ID。
+        body: 最大辩论轮数。
+
+    Returns:
+        当前轮次及各参与者结果。
+    """
     sessions_repo = MdtSessionsRepository(db)
     participants_repo = MdtParticipantsRepository(db)
     opinions_repo = MdtOpinionsRepository(db)
@@ -265,6 +299,14 @@ def consensus(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """基于各方辩论意见生成综合共识报告。
+
+    Args:
+        session_id: 会话 ID。
+
+    Returns:
+        共识结论及结构化 JSON。
+    """
     sessions_repo = MdtSessionsRepository(db)
     opinions_repo = MdtOpinionsRepository(db)
     s = sessions_repo.get_by_id(session_id)
@@ -323,6 +365,15 @@ def get_opinions(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """获取会诊会话中的意见列表。
+
+    Args:
+        session_id: 会话 ID。
+        round_number: 可选，按轮次筛选。
+
+    Returns:
+        意见列表。
+    """
     sessions_repo = MdtSessionsRepository(db)
     opinions_repo = MdtOpinionsRepository(db)
     s = sessions_repo.get_by_id(session_id)
@@ -336,6 +387,14 @@ def get_opinions(
 
 @router.get("/sessions/{session_id}/timeline")
 def timeline(session_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """获取会诊的时间线视图，按轮次组织。
+
+    Args:
+        session_id: 会话 ID。
+
+    Returns:
+        会话时间线，含各轮意见及共识（如已完成）。
+    """
     sessions_repo = MdtSessionsRepository(db)
     opinions_repo = MdtOpinionsRepository(db)
     s = sessions_repo.get_by_id(session_id)
@@ -361,6 +420,11 @@ def timeline(session_id: int, current_user=Depends(require_scope("visit")), db=D
 
 @router.get("/dashboard")
 def dashboard(current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """获取 MDT 会诊仪表盘统计。
+
+    Returns:
+        会话总数、完成数、状态分布、平均参与者数等。
+    """
     sessions_repo = MdtSessionsRepository(db)
     participants_repo = MdtParticipantsRepository(db)
     opinions_repo = MdtOpinionsRepository(db)

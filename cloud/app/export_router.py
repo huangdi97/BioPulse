@@ -14,6 +14,15 @@ def export_audit_logs(
     current_user: dict = Depends(require_scope("visit")),
     service: ExportService = Depends(),
 ) -> Any:
+    """导出审计日志数据。
+
+    Args:
+        current_user: 当前认证用户。
+        service: 导出服务实例。
+
+    Returns:
+        包含审计日志导出数据的响应。
+    """
     return success(data=service.export_audit_logs())
 
 
@@ -22,4 +31,13 @@ def export_customers(
     current_user: dict = Depends(require_scope("visit")),
     service: ExportService = Depends(),
 ) -> Any:
+    """导出客户数据。
+
+    Args:
+        current_user: 当前认证用户。
+        service: 导出服务实例。
+
+    Returns:
+        包含客户导出数据的响应。
+    """
     return success(data=service.export_customers())

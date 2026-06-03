@@ -40,6 +40,7 @@ def job_create(
     current_user: dict = Depends(require_scope("visit")),
     service: ComputeService = Depends(),
 ):
+    """创建隐私计算任务。"""
     user_id = int(current_user["sub"])
     row = service.create_job(
         compute_type=body.compute_type,
@@ -57,6 +58,7 @@ def job_list(
     current_user: dict = Depends(require_scope("visit")),
     service: ComputeService = Depends(),
 ):
+    """列出计算任务。"""
     rows = service.list_jobs(status_filter=status, compute_type=compute_type)
     return success(data=rows)
 
@@ -67,6 +69,7 @@ def job_detail(
     current_user: dict = Depends(require_scope("visit")),
     service: ComputeService = Depends(),
 ):
+    """获取计算任务详情。"""
     row = service.get_job(job_id)
     return success(data=row)
 
@@ -77,6 +80,7 @@ def federated_init(
     current_user: dict = Depends(require_scope("visit")),
     service: ComputeService = Depends(),
 ):
+    """初始化联邦学习。"""
     rows = service.init_federated(
         model_name=body.model_name,
         num_rounds=body.num_rounds,
@@ -91,6 +95,7 @@ def federated_submit(
     current_user: dict = Depends(require_scope("visit")),
     service: ComputeService = Depends(),
 ):
+    """提交联邦学习结果。"""
     row = service.submit_federated(
         round_id=body.round_id,
         participant_id=body.participant_id,
@@ -107,6 +112,7 @@ def rounds_list(
     current_user: dict = Depends(require_scope("visit")),
     service: ComputeService = Depends(),
 ):
+    """列出联邦学习轮次。"""
     rows = service.list_federated_rounds(model_name=model_name, status_filter=status)
     return success(data=rows)
 
@@ -117,6 +123,7 @@ def trustfed_prove(
     current_user: dict = Depends(require_scope("visit")),
     service: ComputeService = Depends(),
 ):
+    """生成可信联邦贡献证明。"""
     proof = service.prove_contribution(
         contribution_id=body.contribution_id,
         prover_sub=current_user.get("sub", "unknown"),
@@ -130,5 +137,6 @@ def trustfed_verify(
     current_user: dict = Depends(require_scope("visit")),
     service: ComputeService = Depends(),
 ):
+    """验证贡献证明。"""
     result = service.verify_contribution(contribution_id)
     return success(data=result)

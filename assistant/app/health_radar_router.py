@@ -26,6 +26,7 @@ class HealthRadarCreate(BaseModel):
     @field_validator("score")
     @classmethod
     def score_range(cls, v: Optional[int]) -> Optional[int]:
+        """校验评分范围（0-100）。"""
         if v is not None and (v < 0 or v > 100):
             raise ValueError("score must be between 0 and 100")
         return v
@@ -46,6 +47,7 @@ class HealthRadarUpdate(BaseModel):
     @field_validator("score")
     @classmethod
     def score_range(cls, v: Optional[int]) -> Optional[int]:
+        """校验评分范围（0-100）。"""
         if v is not None and (v < 0 or v > 100):
             raise ValueError("score must be between 0 and 100")
         return v
@@ -74,6 +76,16 @@ def create_health_radar(
     service: HealthRadarService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建健康雷达记录。
+
+    Args:
+        body: 健康雷达创建数据（患者姓名、评分等）
+        service: 健康雷达服务
+        current_user: 当前登录用户
+
+    Returns:
+        包含新创建记录的 JSON 响应
+    """
     user_id = int(current_user["sub"])
     result = service.create(body, user_id)
     return JSONResponse(
@@ -94,6 +106,22 @@ def list_health_radar(
     service: HealthRadarService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[HealthRadarOut]]:
+    """分页查询健康雷达记录列表，支持按患者姓名、评分范围、日期范围筛选。
+
+    Args:
+        page: 页码（从1开始）
+        page_size: 每页数量
+        patient_name: 患者姓名（可选筛选）
+        score_min: 最低评分（可选筛选）
+        score_max: 最高评分（可选筛选）
+        date_from: 开始日期（可选筛选）
+        date_to: 结束日期（可选筛选）
+        service: 健康雷达服务
+        current_user: 当前登录用户
+
+    Returns:
+        分页的健康雷达记录列表
+    """
     total, total_pages, rows = service.list(page, page_size, patient_name, score_min, score_max, date_from, date_to)
     items = [HealthRadarOut(**dict(r)) for r in rows]
     return success(
@@ -112,6 +140,15 @@ def get_health_radar_stats(
     service: HealthRadarService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[dict]:
+    """获取健康雷达统计信息（如总记录数、评分分布等）。
+
+    Args:
+        service: 健康雷达服务
+        current_user: 当前登录用户
+
+    Returns:
+        统计数据的字典
+    """
     data = service.get_stats()
     return success(data=data)
 
@@ -122,6 +159,16 @@ def get_health_radar(
     service: HealthRadarService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[HealthRadarOut]:
+    """获取指定健康雷达记录的详细信息。
+
+    Args:
+        health_radar_id: 健康雷达记录 ID
+        service: 健康雷达服务
+        current_user: 当前登录用户
+
+    Returns:
+        健康雷达记录详情
+    """
     row = service.get(health_radar_id)
     return success(data=HealthRadarOut(**row))
 
@@ -133,6 +180,17 @@ def update_health_radar(
     service: HealthRadarService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[HealthRadarOut]:
+    """更新指定健康雷达记录的部分字段。
+
+    Args:
+        health_radar_id: 健康雷达记录 ID
+        body: 需要更新的字段数据
+        service: 健康雷达服务
+        current_user: 当前登录用户
+
+    Returns:
+        更新后的健康雷达记录
+    """
     updated = service.update(health_radar_id, body)
     return success(data=HealthRadarOut(**updated))
 
@@ -143,5 +201,15 @@ def delete_health_radar(
     service: HealthRadarService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除指定健康雷达记录。
+
+    Args:
+        health_radar_id: 健康雷达记录 ID
+        service: 健康雷达服务
+        current_user: 当前登录用户
+
+    Returns:
+        成功删除的消息
+    """
     service.delete(health_radar_id)
     return success(message="deleted")

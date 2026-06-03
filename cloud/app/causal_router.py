@@ -39,6 +39,7 @@ def build_graph(
     current_user: dict = Depends(require_scope("visit")),
     service: CausalService = Depends(),
 ):
+    """构建因果图。"""
     user_id = int(current_user["sub"])
     result = service.build_graph(
         decision_id=body.decision_id,
@@ -54,6 +55,7 @@ def get_graph(
     current_user: dict = Depends(require_scope("visit")),
     service: CausalService = Depends(),
 ):
+    """获取因果图详情。"""
     result = service.get_graph(graph_id)
     return success(data=result)
 
@@ -64,6 +66,7 @@ def simulate_counterfactual(
     current_user: dict = Depends(require_scope("visit")),
     service: CausalService = Depends(),
 ):
+    """模拟反事实场景。"""
     user_id = int(current_user["sub"])
     result = service.simulate_counterfactual(
         strategy_id=body.strategy_id,
@@ -81,6 +84,7 @@ def list_counterfactuals(
     current_user: dict = Depends(require_scope("visit")),
     service: CausalService = Depends(),
 ):
+    """分页列出反事实模拟记录。"""
     result = service.list_counterfactuals(
         strategy_id=strategy_id,
         page=page,
@@ -95,6 +99,7 @@ def causal_infer(
     current_user: dict = Depends(require_scope("visit")),
     service: CausalService = Depends(),
 ):
+    """执行因果推断。"""
     result = service.causal_infer(
         features=body.features,
         target=body.target,
@@ -109,6 +114,7 @@ def hcp_prescription_attribution(
     current_user: dict = Depends(require_scope("visit")),
     service: CausalService = Depends(),
 ):
+    """归因 HCP 处方影响因素。"""
     result = service.hcp_prescription_attribution(
         hcp_entity_id=body.hcp_entity_id,
         factors=body.factors,

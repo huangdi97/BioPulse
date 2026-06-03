@@ -21,6 +21,9 @@ def nmpa_check(
     user: dict = Depends(require_scope("visit")),
     service: NmpaService = Depends(),
 ):
+    """提交文档进行 NMPA 合规检查。
+    Args: body 请求体. Returns: 检查结果.
+    """
     user_id = int(user["sub"])
     result = service.check(body.document_type, body.content, user_id)
     return success(result)
@@ -34,6 +37,9 @@ def logs_list(
     user: dict = Depends(require_scope("visit")),
     service: NmpaService = Depends(),
 ):
+    """查询 NMPA 检查日志。
+    Args: 按文档类型/检查结果/人工审核筛选. Returns: 日志列表.
+    """
     result = service.list_logs(
         document_type=document_type,
         check_result=check_result,

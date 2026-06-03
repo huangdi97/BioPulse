@@ -45,6 +45,7 @@ def create_note(
     service: NoteService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建note。"""
     user_id = int(current_user["sub"])
     note_id = service.create_note(schedule_id, body, user_id)
     return JSONResponse(
@@ -61,6 +62,7 @@ def list_notes(
     service: NoteService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[NoteOut]]:
+    """获取notes。"""
     total, total_pages, rows = service.list_notes(schedule_id, page, page_size)
     items = [NoteOut(**dict(r)) for r in rows]
     return success(
@@ -80,6 +82,7 @@ def get_note(
     service: NoteService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[NoteOut]:
+    """获取note。"""
     row = service.get_note(note_id)
     return success(data=NoteOut(**row))
 
@@ -91,6 +94,7 @@ def update_note(
     service: NoteService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[NoteOut]:
+    """更新note。"""
     row = service.update_note(note_id, body)
     return success(data=NoteOut(**row))
 
@@ -101,5 +105,6 @@ def delete_note(
     service: NoteService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除note。"""
     service.delete_note(note_id)
     return success(message="deleted")

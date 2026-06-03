@@ -34,6 +34,14 @@ def create_source(
     current_user=Depends(require_scope("visit")),
     service: MarketIntelService = Depends(),
 ):
+    """创建市场情报源。
+
+    Args:
+        body: 源创建参数（名称、类型、关键词）。
+
+    Returns:
+        创建的情报源信息。
+    """
     uid = int(current_user["sub"])
     return success(data=service.create_source(body.name, body.source_type, body.target_keywords, uid))
 
@@ -45,6 +53,15 @@ def list_sources(
     current_user=Depends(require_scope("visit")),
     service: MarketIntelService = Depends(),
 ):
+    """获取情报源列表。
+
+    Args:
+        source_type: 按类型筛选。
+        is_active: 按启用状态筛选。
+
+    Returns:
+        情报源列表。
+    """
     return success(data=service.list_sources(source_type=source_type, is_active=is_active))
 
 
@@ -55,6 +72,15 @@ def update_source(
     current_user=Depends(require_scope("visit")),
     service: MarketIntelService = Depends(),
 ):
+    """更新情报源信息。
+
+    Args:
+        source_id: 情报源 ID。
+        body: 更新字段。
+
+    Returns:
+        更新后的情报源信息。
+    """
     return success(
         data=service.update_source(source_id, body.name, body.source_type, body.target_keywords, body.is_active)
     )
@@ -66,6 +92,14 @@ def delete_source(
     current_user=Depends(require_scope("visit")),
     service: MarketIntelService = Depends(),
 ):
+    """删除指定情报源。
+
+    Args:
+        source_id: 要删除的情报源 ID。
+
+    Returns:
+        操作成功提示。
+    """
     service.delete_source(source_id)
     return success()
 
@@ -76,6 +110,14 @@ def collect_source(
     current_user=Depends(require_scope("visit")),
     service: MarketIntelService = Depends(),
 ):
+    """手动采集指定情报源的数据。
+
+    Args:
+        source_id: 情报源 ID。
+
+    Returns:
+        采集结果。
+    """
     return success(data=service.collect_source(source_id, int(current_user["sub"])))
 
 
@@ -92,6 +134,19 @@ def list_items(
     current_user=Depends(require_scope("visit")),
     service: MarketIntelService = Depends(),
 ):
+    """分页查询情报条目。
+
+    Args:
+        item_type: 条目类型筛选。
+        status_filter: 状态筛选。
+        impact_level: 影响级别筛选。
+        keyword: 关键词搜索。
+        date_from/date_to: 日期范围。
+        page/page_size: 分页参数。
+
+    Returns:
+        分页的情报条目列表。
+    """
     return success(
         data=service.list_items(
             item_type=item_type,
@@ -112,6 +167,14 @@ def get_item(
     current_user=Depends(require_scope("visit")),
     service: MarketIntelService = Depends(),
 ):
+    """获取单条情报详情。
+
+    Args:
+        item_id: 情报条目 ID。
+
+    Returns:
+        情报条目详情。
+    """
     return success(data=service.get_item(item_id))
 
 
@@ -122,6 +185,15 @@ def update_item_status(
     current_user=Depends(require_scope("visit")),
     service: MarketIntelService = Depends(),
 ):
+    """更新情报条目状态。
+
+    Args:
+        item_id: 情报条目 ID。
+        body: 新状态。
+
+    Returns:
+        操作成功提示。
+    """
     service.update_item_status(item_id, body.status)
     return success()
 
@@ -133,6 +205,14 @@ def analyze_item(
     current_user=Depends(require_scope("visit")),
     service: MarketIntelService = Depends(),
 ):
+    """对指定情报条目执行 AI 分析。
+
+    Args:
+        item_id: 情报条目 ID。
+
+    Returns:
+        分析结果。
+    """
     return success(data=service.analyze_item(item_id, request))
 
 
@@ -141,6 +221,11 @@ def collect_all(
     current_user=Depends(require_scope("visit")),
     service: MarketIntelService = Depends(),
 ):
+    """触发全部活跃情报源的数据采集。
+
+    Returns:
+        各源采集结果汇总。
+    """
     return success(data=service.collect_all(int(current_user["sub"])))
 
 
@@ -149,4 +234,9 @@ def dashboard(
     current_user=Depends(require_scope("visit")),
     service: MarketIntelService = Depends(),
 ):
+    """获取市场情报仪表盘统计数据。
+
+    Returns:
+        情报统计概览。
+    """
     return success(data=service.dashboard())

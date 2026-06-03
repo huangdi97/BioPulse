@@ -63,6 +63,16 @@ def create_opportunity(
     service: OpportunityService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建商机。
+
+    Args:
+        body: 商机创建请求体。
+        service: 商机服务实例。
+        current_user: 当前登录用户信息。
+
+    Returns:
+        包含新商机 ID 的 JSON 响应。
+    """
     user_id = int(current_user["sub"])
     id = service.create_opportunity(body, user_id)
     return JSONResponse(
@@ -81,6 +91,20 @@ def list_opportunities(
     service: OpportunityService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[OpportunityOut]]:
+    """获取商机列表（分页，支持筛选）。
+
+    Args:
+        page: 页码，从 1 开始。
+        page_size: 每页条数。
+        stage: 按阶段筛选。
+        product: 按产品筛选。
+        hcp_name: 按医生姓名筛选。
+        service: 商机服务实例。
+        current_user: 当前登录用户信息。
+
+    Returns:
+        分页的商机列表响应。
+    """
     total, total_pages, rows = service.list_opportunities(
         page=page,
         page_size=page_size,
@@ -106,6 +130,16 @@ def get_opportunity(
     service: OpportunityService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[OpportunityOut]:
+    """获取商机详情。
+
+    Args:
+        opportunity_id: 商机 ID。
+        service: 商机服务实例。
+        current_user: 当前登录用户信息。
+
+    Returns:
+        商机详情响应。
+    """
     row = service.get_opportunity(opportunity_id)
     return success(data=OpportunityOut(**row))
 
@@ -117,6 +151,17 @@ def update_opportunity(
     service: OpportunityService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[OpportunityOut]:
+    """更新商机信息。
+
+    Args:
+        opportunity_id: 商机 ID。
+        body: 商机更新请求体。
+        service: 商机服务实例。
+        current_user: 当前登录用户信息。
+
+    Returns:
+        更新后的商机信息响应。
+    """
     updated = service.update_opportunity(opportunity_id, body)
     return success(data=OpportunityOut(**updated))
 
@@ -127,5 +172,15 @@ def delete_opportunity(
     service: OpportunityService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除商机。
+
+    Args:
+        opportunity_id: 商机 ID。
+        service: 商机服务实例。
+        current_user: 当前登录用户信息。
+
+    Returns:
+        删除成功响应。
+    """
     service.delete_opportunity(opportunity_id)
     return success(message="deleted")

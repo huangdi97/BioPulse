@@ -55,6 +55,16 @@ def create_template(
     cu=Depends(require_scope("visit")),
     service: SoapDecisionService = Depends(),
 ):
+    """创建 SOAP 决策模板。
+
+    Args:
+        body: 模板创建请求体（名称、分类、描述、结构）。
+        cu: 当前登录用户信息。
+        service: SOAP 决策服务。
+
+    Returns:
+        创建的模板对象。
+    """
     return success(
         service.create_template(
             name=body.name,
@@ -72,6 +82,16 @@ def list_templates(
     cu=Depends(require_scope("visit")),
     service: SoapDecisionService = Depends(),
 ):
+    """获取 SOAP 决策模板列表。
+
+    Args:
+        category: 可选的分类筛选。
+        cu: 当前登录用户信息。
+        service: SOAP 决策服务。
+
+    Returns:
+        模板列表。
+    """
     return success(service.list_templates(category=category))
 
 
@@ -81,6 +101,16 @@ def create_decision(
     cu=Depends(require_scope("visit")),
     service: SoapDecisionService = Depends(),
 ):
+    """创建一个新的 SOAP 决策记录。
+
+    Args:
+        body: 决策创建请求体（标题、SOAP 内容、优先级等）。
+        cu: 当前登录用户信息。
+        service: SOAP 决策服务。
+
+    Returns:
+        创建的决策对象。
+    """
     return success(
         service.create_decision(
             title=body.title,
@@ -106,6 +136,20 @@ def list_decisions(
     cu=Depends(require_scope("visit")),
     service: SoapDecisionService = Depends(),
 ):
+    """分页查询 SOAP 决策记录。
+
+    Args:
+        status: 可选的按状态筛选。
+        priority: 可选的按优先级筛选。
+        tag: 可选的按标签筛选。
+        page: 页码，从 1 开始。
+        page_size: 每页条数（1-100）。
+        cu: 当前登录用户信息。
+        service: SOAP 决策服务。
+
+    Returns:
+        分页决策列表。
+    """
     return success(
         data=service.list_decisions(status=status, priority=priority, tag=tag, page=page, page_size=page_size)
     )
@@ -117,6 +161,16 @@ def get_decision(
     cu=Depends(require_scope("visit")),
     service: SoapDecisionService = Depends(),
 ):
+    """获取单个 SOAP 决策详情。
+
+    Args:
+        decision_id: 决策 ID。
+        cu: 当前登录用户信息。
+        service: SOAP 决策服务。
+
+    Returns:
+        决策对象详情。
+    """
     return success(service.get_decision(decision_id))
 
 
@@ -127,6 +181,17 @@ def update_decision(
     cu=Depends(require_scope("visit")),
     service: SoapDecisionService = Depends(),
 ):
+    """更新指定 SOAP 决策的部分字段。
+
+    Args:
+        decision_id: 决策 ID。
+        body: 决策更新请求体（可选字段）。
+        cu: 当前登录用户信息。
+        service: SOAP 决策服务。
+
+    Returns:
+        更新后的决策对象。
+    """
     return success(
         service.update_decision(
             decision_id=decision_id,
@@ -146,6 +211,16 @@ def submit_decision(
     cu=Depends(require_scope("visit")),
     service: SoapDecisionService = Depends(),
 ):
+    """提交指定决策以供审批。
+
+    Args:
+        decision_id: 决策 ID。
+        cu: 当前登录用户信息。
+        service: SOAP 决策服务。
+
+    Returns:
+        提交结果。
+    """
     return success(service.submit_decision(decision_id))
 
 
@@ -156,6 +231,17 @@ def add_opinion(
     cu=Depends(require_scope("visit")),
     service: SoapDecisionService = Depends(),
 ):
+    """为指定决策添加意见。
+
+    Args:
+        decision_id: 决策 ID。
+        body: 意见创建请求体（内容、立场、置信度等）。
+        cu: 当前登录用户信息。
+        service: SOAP 决策服务。
+
+    Returns:
+        创建的意见对象。
+    """
     return success(
         service.add_opinion(
             decision_id=decision_id,
@@ -176,6 +262,16 @@ def list_opinions(
     cu=Depends(require_scope("visit")),
     service: SoapDecisionService = Depends(),
 ):
+    """获取指定决策的所有意见列表。
+
+    Args:
+        decision_id: 决策 ID。
+        cu: 当前登录用户信息。
+        service: SOAP 决策服务。
+
+    Returns:
+        意见列表。
+    """
     return success(service.list_opinions(decision_id))
 
 
@@ -186,6 +282,17 @@ def finalize_decision(
     cu=Depends(require_scope("visit")),
     service: SoapDecisionService = Depends(),
 ):
+    """终结指定决策并写入最终总结。
+
+    Args:
+        decision_id: 决策 ID。
+        body: 终结请求体（决策总结）。
+        cu: 当前登录用户信息。
+        service: SOAP 决策服务。
+
+    Returns:
+        终结后的决策对象。
+    """
     return success(
         service.finalize_decision(
             decision_id=decision_id,
@@ -197,4 +304,13 @@ def finalize_decision(
 
 @router.get("/dashboard")
 def dashboard(cu=Depends(require_scope("visit")), service: SoapDecisionService = Depends()):
+    """获取 SOAP 决策仪表盘统计。
+
+    Args:
+        cu: 当前登录用户信息。
+        service: SOAP 决策服务。
+
+    Returns:
+        仪表盘统计数据。
+    """
     return success(service.dashboard())

@@ -64,6 +64,16 @@ def create_surgery(
     service: SurgeryService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建手术提醒记录。
+
+    Args:
+        body: 手术创建数据（患者姓名、手术类型、日期等）
+        service: 手术服务
+        current_user: 当前登录用户
+
+    Returns:
+        包含新创建手术记录的 JSON 响应
+    """
     user_id = int(current_user["sub"])
     result = service.create(body, user_id)
     return JSONResponse(
@@ -77,6 +87,15 @@ def today_surgeries(
     service: SurgeryService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[List[SurgeryOut]]:
+    """获取今日的所有手术安排。
+
+    Args:
+        service: 手术服务
+        current_user: 当前登录用户
+
+    Returns:
+        今日手术列表
+    """
     rows = service.today()
     return success(data=[SurgeryOut(**r) for r in rows])
 
@@ -92,6 +111,21 @@ def list_surgeries(
     service: SurgeryService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[SurgeryOut]]:
+    """分页查询手术提醒列表，支持按患者姓名、状态和日期范围筛选。
+
+    Args:
+        page: 页码（从1开始）
+        page_size: 每页数量
+        patient_name: 患者姓名（可选筛选）
+        surgery_status: 手术状态（可选筛选）
+        date_from: 开始日期（可选筛选）
+        date_to: 结束日期（可选筛选）
+        service: 手术服务
+        current_user: 当前登录用户
+
+    Returns:
+        分页的手术提醒列表
+    """
     total, total_pages, rows = service.list(
         page,
         page_size,
@@ -116,6 +150,15 @@ def check_reminders_now(
     service: SurgeryService = Depends(),
     current_user: dict = Depends(get_current_user),
 ):
+    """立即触发检查手术提醒，发送到期待通知的患者。
+
+    Args:
+        service: 手术服务
+        current_user: 当前登录用户
+
+    Returns:
+        检查结果
+    """
     data = service.check_reminders_now()
     return success(data=data)
 
@@ -127,6 +170,17 @@ def upcoming_surgeries(
     service: SurgeryService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[SurgeryOut]]:
+    """分页查询即将到来的手术安排。
+
+    Args:
+        page: 页码（从1开始）
+        page_size: 每页数量
+        service: 手术服务
+        current_user: 当前登录用户
+
+    Returns:
+        分页的即将到来手术列表
+    """
     total, total_pages, rows = service.upcoming(page, page_size)
     return success(
         data=PaginatedResponse(
@@ -145,6 +199,16 @@ def get_surgery(
     service: SurgeryService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[SurgeryOut]:
+    """获取指定手术提醒的详细信息。
+
+    Args:
+        surgery_id: 手术提醒 ID
+        service: 手术服务
+        current_user: 当前登录用户
+
+    Returns:
+        手术提醒详情
+    """
     row = service.get(surgery_id)
     return success(data=SurgeryOut(**row))
 
@@ -156,6 +220,17 @@ def update_surgery(
     service: SurgeryService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[SurgeryOut]:
+    """更新指定手术提醒的部分字段。
+
+    Args:
+        surgery_id: 手术提醒 ID
+        body: 需要更新的字段数据
+        service: 手术服务
+        current_user: 当前登录用户
+
+    Returns:
+        更新后的手术提醒
+    """
     updated = service.update(surgery_id, body)
     return success(data=SurgeryOut(**updated))
 
@@ -166,5 +241,15 @@ def delete_surgery(
     service: SurgeryService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除指定手术提醒记录。
+
+    Args:
+        surgery_id: 手术提醒 ID
+        service: 手术服务
+        current_user: 当前登录用户
+
+    Returns:
+        成功删除的消息
+    """
     service.delete(surgery_id)
     return success(message="deleted")

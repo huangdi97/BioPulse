@@ -103,6 +103,7 @@ def create_hcp(
     service: HcpService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建hcp。"""
     user_id = int(current_user["sub"])
     hcp_id = service.create_hcp(body, user_id)
     return JSONResponse(
@@ -121,6 +122,7 @@ def list_hcp(
     service: HcpService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[HcpOut]]:
+    """获取hcp。"""
     total, total_pages, rows = service.list_hcps(page, page_size, name, hospital, department)
     return success(
         data=PaginatedResponse(
@@ -140,6 +142,7 @@ def get_graph(
     service: HcpService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """获取graph。"""
     data = service.get_graph(hcp_id, product_id)
     return success(data=data)
 
@@ -150,6 +153,7 @@ def get_hcp(
     service: HcpService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[HcpOut]:
+    """获取hcp。"""
     row = service.get_hcp(hcp_id)
     return success(data=HcpOut(**row))
 
@@ -161,6 +165,7 @@ def update_hcp(
     service: HcpService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[HcpOut]:
+    """更新hcp。"""
     row = service.update_hcp(hcp_id, body)
     return success(data=HcpOut(**row))
 
@@ -171,6 +176,7 @@ def delete_hcp(
     service: HcpService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除hcp。"""
     service.delete_hcp(hcp_id)
     return success(message="deleted")
 
@@ -181,6 +187,7 @@ def create_product(
     service: HcpService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建product。"""
     user_id = int(current_user["sub"])
     product_id = service.create_product(body, user_id)
     return JSONResponse(
@@ -198,6 +205,7 @@ def list_products(
     service: HcpService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[ProductOut]]:
+    """获取products。"""
     total, total_pages, rows = service.list_products(page, page_size, category, company)
     return success(
         data=PaginatedResponse(
@@ -216,6 +224,7 @@ def get_product(
     service: HcpService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[ProductOut]:
+    """获取product。"""
     row = service.get_product(product_id)
     return success(data=ProductOut(**row))
 
@@ -227,6 +236,7 @@ def update_product(
     service: HcpService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[ProductOut]:
+    """更新product。"""
     row = service.update_product(product_id, body)
     return success(data=ProductOut(**row))
 
@@ -237,6 +247,7 @@ def delete_product(
     service: HcpService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除product。"""
     service.delete_product(product_id)
     return success(message="deleted")
 
@@ -248,6 +259,7 @@ def create_relation(
     service: HcpService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建relation。"""
     user_id = int(current_user["sub"])
     relation_id = service.create_relation(hcp_id, body, user_id)
     return JSONResponse(
@@ -262,6 +274,7 @@ def list_relations(
     service: HcpService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[List[RelationOut]]:
+    """获取relations。"""
     rows = service.list_relations(hcp_id)
     return success(data=[RelationOut(**r) for r in rows])
 
@@ -272,5 +285,6 @@ def delete_relation(
     service: HcpService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除relation。"""
     service.delete_relation(relation_id)
     return success(message="deleted")

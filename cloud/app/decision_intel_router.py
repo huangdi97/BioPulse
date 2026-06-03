@@ -52,6 +52,17 @@ def create_case(
     current_user=Depends(require_scope("visit")),
     service: DecisionIntelService = Depends(),
 ):
+    """创建一个新的决策案例。
+
+    Args:
+        body: 案例创建请求体。
+        request: HTTP 请求对象。
+        current_user: 当前认证用户。
+        service: 决策智能服务实例。
+
+    Returns:
+        包含新创建案例数据的响应。
+    """
     uid = int(current_user["sub"])
     row = service.create_case(
         name=body.name,
@@ -77,6 +88,21 @@ def list_cases(
     current_user=Depends(require_scope("visit")),
     service: DecisionIntelService = Depends(),
 ):
+    """分页查询决策案例列表。
+
+    Args:
+        outcome_score_min: 最低结果分数筛选。
+        outcome_score_max: 最高结果分数筛选。
+        tag: 标签筛选。
+        search: 搜索关键字。
+        page: 页码，从1开始。
+        page_size: 每页数量。
+        current_user: 当前认证用户。
+        service: 决策智能服务实例。
+
+    Returns:
+        分页案例列表响应。
+    """
     result = service.list_cases(
         outcome_score_min=outcome_score_min,
         outcome_score_max=outcome_score_max,
@@ -102,6 +128,16 @@ def get_case(
     current_user=Depends(require_scope("visit")),
     service: DecisionIntelService = Depends(),
 ):
+    """获取指定决策案例的详情。
+
+    Args:
+        case_id: 案例 ID。
+        current_user: 当前认证用户。
+        service: 决策智能服务实例。
+
+    Returns:
+        包含案例数据的响应。
+    """
     row = service.get_case(case_id)
     return success(data=row)
 
@@ -113,6 +149,17 @@ def update_case(
     current_user=Depends(require_scope("visit")),
     service: DecisionIntelService = Depends(),
 ):
+    """更新指定决策案例的信息。
+
+    Args:
+        case_id: 案例 ID。
+        body: 案例更新请求体。
+        current_user: 当前认证用户。
+        service: 决策智能服务实例。
+
+    Returns:
+        包含更新后案例数据的响应。
+    """
     row = service.update_case(
         case_id=case_id,
         name=body.name,
@@ -131,6 +178,16 @@ def delete_case(
     current_user=Depends(require_scope("visit")),
     service: DecisionIntelService = Depends(),
 ):
+    """删除指定的决策案例。
+
+    Args:
+        case_id: 案例 ID。
+        current_user: 当前认证用户。
+        service: 决策智能服务实例。
+
+    Returns:
+        删除成功的响应。
+    """
     service.delete_case(case_id)
     return success(message="deleted")
 
@@ -143,6 +200,18 @@ def analyze_case(
     current_user=Depends(require_scope("visit")),
     service: DecisionIntelService = Depends(),
 ):
+    """对指定案例执行智能分析。
+
+    Args:
+        case_id: 案例 ID。
+        body: 分析请求体，包含自定义问题。
+        request: HTTP 请求对象。
+        current_user: 当前认证用户。
+        service: 决策智能服务实例。
+
+    Returns:
+        包含分析结果的响应。
+    """
     auth_header = request.headers.get("Authorization", "")
     result = service.analyze_case(
         case_id=case_id,
@@ -158,6 +227,16 @@ def list_analyses(
     current_user=Depends(require_scope("visit")),
     service: DecisionIntelService = Depends(),
 ):
+    """获取指定案例的所有分析记录。
+
+    Args:
+        case_id: 案例 ID。
+        current_user: 当前认证用户。
+        service: 决策智能服务实例。
+
+    Returns:
+        包含分析记录列表的响应。
+    """
     rows = service.list_analyses(case_id)
     return success(data=rows)
 
@@ -168,6 +247,16 @@ def get_analysis(
     current_user=Depends(require_scope("visit")),
     service: DecisionIntelService = Depends(),
 ):
+    """获取指定分析的详情。
+
+    Args:
+        analysis_id: 分析 ID。
+        current_user: 当前认证用户。
+        service: 决策智能服务实例。
+
+    Returns:
+        包含分析数据的响应。
+    """
     row = service.get_analysis(analysis_id)
     return success(data=row)
 
@@ -179,6 +268,17 @@ def reflect(
     current_user=Depends(require_scope("visit")),
     service: DecisionIntelService = Depends(),
 ):
+    """基于案例集合进行反思分析，生成洞察。
+
+    Args:
+        body: 反思请求体，包含筛选标签和案例数量。
+        request: HTTP 请求对象。
+        current_user: 当前认证用户。
+        service: 决策智能服务实例。
+
+    Returns:
+        包含反思结果的响应。
+    """
     auth_header = request.headers.get("Authorization", "")
     result = service.reflect(
         filter_tags=body.filter_tags,
@@ -197,6 +297,19 @@ def list_insights(
     current_user=Depends(require_scope("visit")),
     service: DecisionIntelService = Depends(),
 ):
+    """分页查询洞察列表。
+
+    Args:
+        insight_type: 洞察类型筛选。
+        confidence_min: 最低置信度筛选。
+        page: 页码，从1开始。
+        page_size: 每页数量。
+        current_user: 当前认证用户。
+        service: 决策智能服务实例。
+
+    Returns:
+        分页洞察列表响应。
+    """
     result = service.list_insights(
         insight_type=insight_type,
         confidence_min=confidence_min,
@@ -220,6 +333,16 @@ def get_insight(
     current_user=Depends(require_scope("visit")),
     service: DecisionIntelService = Depends(),
 ):
+    """获取指定洞察的详情。
+
+    Args:
+        insight_id: 洞察 ID。
+        current_user: 当前认证用户。
+        service: 决策智能服务实例。
+
+    Returns:
+        包含洞察数据的响应。
+    """
     row = service.get_insight(insight_id)
     return success(data=row)
 
@@ -231,6 +354,17 @@ def update_insight(
     current_user=Depends(require_scope("visit")),
     service: DecisionIntelService = Depends(),
 ):
+    """更新指定洞察的信息。
+
+    Args:
+        insight_id: 洞察 ID。
+        body: 洞察更新请求体。
+        current_user: 当前认证用户。
+        service: 决策智能服务实例。
+
+    Returns:
+        包含更新后洞察数据的响应。
+    """
     row = service.update_insight(
         insight_id=insight_id,
         title=body.title,
@@ -246,5 +380,14 @@ def dashboard(
     current_user=Depends(require_scope("visit")),
     service: DecisionIntelService = Depends(),
 ):
+    """获取决策智能仪表盘数据。
+
+    Args:
+        current_user: 当前认证用户。
+        service: 决策智能服务实例。
+
+    Returns:
+        包含仪表盘数据的响应。
+    """
     result = service.dashboard()
     return success(data=result)

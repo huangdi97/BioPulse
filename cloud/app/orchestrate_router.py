@@ -28,6 +28,9 @@ def create_template(
     current_user=Depends(require_scope("visit")),
     service: OrchestrateService = Depends(),
 ):
+    """创建编排模板。
+    Args: body 模板信息. Returns: 创建的模板.
+    """
     uid = int(current_user["sub"])
     row = service.create_template(
         template_name=body.template_name,
@@ -44,6 +47,9 @@ def list_templates(
     current_user=Depends(require_scope("visit")),
     service: OrchestrateService = Depends(),
 ):
+    """获取编排模板列表。
+    Args: enabled 是否启用. Returns: 模板列表.
+    """
     rows = service.list_templates(enabled=enabled)
     return success(data=rows)
 
@@ -54,6 +60,9 @@ def run_orchestration(
     current_user=Depends(require_scope("visit")),
     service: OrchestrateService = Depends(),
 ):
+    """执行编排任务。
+    Args: body 执行参数. Returns: 执行结果.
+    """
     result = service.run_orchestration(
         template_name=body.template_name,
         context=body.context,

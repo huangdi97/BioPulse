@@ -40,6 +40,17 @@ def create_task(
     current_user: dict = Depends(require_scope("visit")),
     service: TaskService = Depends(),
 ) -> Any:
+    """在指定看板上创建新任务。
+
+    Args:
+        board_id: 看板 ID。
+        body: 任务创建请求体。
+        current_user: 当前登录用户信息。
+        service: 任务服务。
+
+    Returns:
+        创建的任务对象。
+    """
     row = service.create_task(
         board_id=board_id,
         title=body.title,
@@ -61,6 +72,17 @@ def list_tasks(
     current_user: dict = Depends(require_scope("visit")),
     service: TaskService = Depends(),
 ) -> Any:
+    """查询指定看板的任务列表。
+
+    Args:
+        board_id: 看板 ID。
+        status_filter: 可选的按状态筛选。
+        current_user: 当前登录用户信息。
+        service: 任务服务。
+
+    Returns:
+        任务列表。
+    """
     rows = service.list_tasks(board_id, status_filter=status_filter)
     return success(data=rows)
 
@@ -73,6 +95,18 @@ def update_task(
     current_user: dict = Depends(require_scope("visit")),
     service: TaskService = Depends(),
 ) -> Any:
+    """更新指定任务的字段。
+
+    Args:
+        board_id: 看板 ID。
+        task_id: 任务 ID。
+        body: 任务更新请求体。
+        current_user: 当前登录用户信息。
+        service: 任务服务。
+
+    Returns:
+        更新后的任务对象。
+    """
     row = service.update_task(
         board_id=board_id,
         task_id=task_id,
@@ -94,6 +128,17 @@ def delete_task(
     current_user: dict = Depends(require_scope("visit")),
     service: TaskService = Depends(),
 ) -> Any:
+    """删除指定任务。
+
+    Args:
+        board_id: 看板 ID。
+        task_id: 任务 ID。
+        current_user: 当前登录用户信息。
+        service: 任务服务。
+
+    Returns:
+        成功响应。
+    """
     service.delete_task(board_id, task_id)
     return success()
 
@@ -103,5 +148,14 @@ def my_tasks(
     current_user: dict = Depends(require_scope("visit")),
     service: TaskService = Depends(),
 ) -> Any:
+    """获取当前用户的任务列表。
+
+    Args:
+        current_user: 当前登录用户信息。
+        service: 任务服务。
+
+    Returns:
+        当前用户的任务列表。
+    """
     rows = service.my_tasks(user_id=int(current_user["sub"]))
     return success(data=rows)

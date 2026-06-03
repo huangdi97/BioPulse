@@ -45,6 +45,9 @@ def create_opportunity(
     current_user: dict = Depends(require_scope("visit")),
     service: OpportunityService = Depends(),
 ) -> Any:
+    """创建商机。
+    Args: body 商机信息. Returns: 创建的商机.
+    """
     user_id = int(current_user["sub"])
     row = service.create_opportunity(
         customer_id=body.customer_id,
@@ -72,6 +75,9 @@ def list_opportunities(
     current_user: dict = Depends(require_scope("visit")),
     service: OpportunityService = Depends(),
 ) -> Any:
+    """查询商机列表。
+    Args: 按阶段/负责人/客户/关键词筛选, 分页. Returns: 商机列表.
+    """
     result = service.list_opportunities(
         stage=stage,
         assigned_to=assigned_to,
@@ -88,6 +94,7 @@ def get_pipeline(
     current_user: dict = Depends(require_scope("visit")),
     service: OpportunityService = Depends(),
 ) -> Any:
+    """获取商机管道概览。Returns: 管道数据."""
     result = service.get_pipeline()
     return success(data=result)
 
@@ -98,6 +105,9 @@ def get_opportunity(
     current_user: dict = Depends(require_scope("visit")),
     service: OpportunityService = Depends(),
 ) -> Any:
+    """获取商机详情。
+    Args: opp_id 商机ID. Returns: 商机详情.
+    """
     row = service.get_opportunity(opp_id)
     return success(data=row)
 
@@ -109,6 +119,9 @@ def update_opportunity(
     current_user: dict = Depends(require_scope("visit")),
     service: OpportunityService = Depends(),
 ) -> Any:
+    """更新商机信息。
+    Args: opp_id 商机ID; body 更新字段. Returns: 更新后的商机.
+    """
     row = service.update_opportunity(
         opp_id=opp_id,
         name=body.name,
@@ -129,6 +142,9 @@ def delete_opportunity(
     current_user: dict = Depends(require_scope("visit")),
     service: OpportunityService = Depends(),
 ) -> Any:
+    """删除商机。
+    Args: opp_id 商机ID.
+    """
     service.delete_opportunity(opp_id)
     return success()
 
@@ -140,6 +156,9 @@ def transition_stage(
     current_user: dict = Depends(require_scope("visit")),
     service: OpportunityService = Depends(),
 ) -> Any:
+    """推进商机阶段。
+    Args: opp_id 商机ID; body 目标阶段. Returns: 更新后的商机.
+    """
     row = service.transition_stage(
         opp_id=opp_id,
         stage=body.stage,

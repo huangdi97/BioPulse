@@ -56,6 +56,7 @@ def trends_by_topic(
     service: TrendService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """trends by topic。"""
     data = service.get_trends_by_topic(topic, period)
     data_points = [TrendPoint(**p) for p in data["data_points"]]
     return success(
@@ -75,6 +76,7 @@ def trend_predict(
     service: TrendService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """trend predict。"""
     auth_header = request.headers.get("Authorization", "")
     user_id = int(current_user["sub"])
     result = service.predict_trend(body, auth_header, user_id)
@@ -88,6 +90,7 @@ def trend_history(
     service: TrendService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse]:
+    """trend history。"""
     total, total_pages, rows = service.list_history(page, page_size)
     items = [TrendAnalysisOut(**dict(r)) for r in rows]
     return success(

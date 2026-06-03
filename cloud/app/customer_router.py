@@ -40,6 +40,7 @@ def create_customer(
     current_user: dict = Depends(require_scope("visit")),
     service: CustomerService = Depends(),
 ) -> Any:
+    """创建客户。"""
     user_id = int(current_user["sub"])
     row = service.create_customer(
         name=body.name,
@@ -66,6 +67,7 @@ def list_customers(
     current_user: dict = Depends(require_scope("visit")),
     service: CustomerService = Depends(),
 ) -> Any:
+    """分页查询客户列表。"""
     result = service.list_customers(
         name=name,
         hospital=hospital,
@@ -83,6 +85,7 @@ def get_customer(
     current_user: dict = Depends(require_scope("visit")),
     service: CustomerService = Depends(),
 ) -> Any:
+    """获取客户详情。"""
     row = service.get_customer(customer_id)
     return success(data=row)
 
@@ -94,6 +97,7 @@ def update_customer(
     current_user: dict = Depends(require_scope("visit")),
     service: CustomerService = Depends(),
 ) -> Any:
+    """更新客户信息。"""
     row = service.update_customer(
         customer_id=customer_id,
         name=body.name,
@@ -115,5 +119,6 @@ def delete_customer(
     current_user: dict = Depends(require_scope("visit")),
     service: CustomerService = Depends(),
 ) -> Any:
+    """删除客户。"""
     service.delete_customer(customer_id)
     return success()

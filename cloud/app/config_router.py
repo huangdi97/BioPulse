@@ -21,6 +21,7 @@ def list_configs(
     current_user: dict = Depends(require_scope("visit")),
     service: ConfigService = Depends(),
 ) -> Any:
+    """列出所有配置项。"""
     rows = service.list_configs()
     return success(data=rows)
 
@@ -31,6 +32,7 @@ def batch_upsert_configs(
     current_user: dict = Depends(require_scope("visit")),
     service: ConfigService = Depends(),
 ) -> Any:
+    """批量更新或插入配置项。"""
     user_id = int(current_user["sub"])
     rows = service.batch_upsert_configs(body, user_id)
     return success(data=rows)
@@ -42,4 +44,5 @@ def get_config(
     current_user: dict = Depends(require_scope("visit")),
     service: ConfigService = Depends(),
 ) -> Any:
+    """获取指定配置项。"""
     return success(data=service.get_config(key))

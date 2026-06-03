@@ -75,3 +75,11 @@ cloud-api.service
 pyproject.toml
 .flake8
 frontend-plan-tg.md
+
+.mypy_cache/
+coverage_html/
+benchmarks/
+*.egg-info/
+.coverage
+# SQLite database files
+*.db

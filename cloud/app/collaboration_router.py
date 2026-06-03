@@ -54,6 +54,7 @@ def register_skill(
     current_user: dict = Depends(require_scope("visit")),
     service: CollaborationService = Depends(),
 ):
+    """注册 Agent 技能。"""
     row = service.register_skill(
         skill_name=body.skill_name,
         agent_role=body.agent_role,
@@ -73,6 +74,7 @@ def list_skills(
     current_user: dict = Depends(require_scope("visit")),
     service: CollaborationService = Depends(),
 ):
+    """列出已注册的技能。"""
     rows = service.list_skills(agent_role=agent_role, enabled=enabled)
     return success(data=rows)
 
@@ -83,6 +85,7 @@ def delete_skill(
     current_user: dict = Depends(require_scope("visit")),
     service: CollaborationService = Depends(),
 ):
+    """删除指定技能。"""
     service.delete_skill(skill_id)
     return success(data={"deleted": skill_id})
 
@@ -93,6 +96,7 @@ def create_session(
     current_user: dict = Depends(require_scope("visit")),
     service: CollaborationService = Depends(),
 ):
+    """创建协作会话。"""
     row = service.create_session(
         task_description=body.task_description,
         source_entity_id=body.source_entity_id,
@@ -110,6 +114,7 @@ def add_session_step(
     current_user: dict = Depends(require_scope("visit")),
     service: CollaborationService = Depends(),
 ):
+    """向会话添加步骤。"""
     row = service.add_session_step(
         session_id=session_id,
         agent_role=body.agent_role,
@@ -128,6 +133,7 @@ def complete_step(
     current_user: dict = Depends(require_scope("visit")),
     service: CollaborationService = Depends(),
 ):
+    """完成指定步骤。"""
     result = service.complete_step(
         session_id=session_id,
         step_id=step_id,
@@ -146,6 +152,7 @@ def list_sessions(
     current_user: dict = Depends(require_scope("visit")),
     service: CollaborationService = Depends(),
 ):
+    """分页列出协作会话。"""
     rows = service.list_sessions(
         status=status,
         source_agent_role=source_agent_role,
@@ -160,6 +167,7 @@ def get_session(
     current_user: dict = Depends(require_scope("visit")),
     service: CollaborationService = Depends(),
 ):
+    """获取会话详情。"""
     result = service.get_session(session_id)
     return success(data=result)
 
@@ -170,6 +178,7 @@ def semantic_route(
     current_user: dict = Depends(require_scope("visit")),
     service: CollaborationService = Depends(),
 ):
+    """语义路由任务到合适的 Agent。"""
     result = service.semantic_route(
         task_description=body.task_description,
         entity_type=body.entity_type,
@@ -184,5 +193,6 @@ def dashboard(
     current_user: dict = Depends(require_scope("visit")),
     service: CollaborationService = Depends(),
 ):
+    """获取协作仪表盘数据。"""
     result = service.dashboard()
     return success(data=result)

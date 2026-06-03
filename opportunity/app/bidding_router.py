@@ -67,6 +67,16 @@ def create_bidding(
     service: BiddingService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建招标记录。
+
+    Args:
+        body: 招标创建请求体。
+        service: 招标服务实例。
+        current_user: 当前登录用户信息。
+
+    Returns:
+        包含新招标 ID 的 JSON 响应。
+    """
     user_id = int(current_user["sub"])
     new_id = service.create_bidding(body, user_id)
     return JSONResponse(
@@ -86,6 +96,21 @@ def list_bidding(
     service: BiddingService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[BiddingOut]]:
+    """获取招标列表（分页，支持筛选）。
+
+    Args:
+        page: 页码，从 1 开始。
+        page_size: 每页条数。
+        status_val: 按状态筛选。
+        hospital: 按医院筛选。
+        department: 按科室筛选。
+        product_category: 按产品类别筛选。
+        service: 招标服务实例。
+        current_user: 当前登录用户信息。
+
+    Returns:
+        分页的招标列表响应。
+    """
     total, total_pages, rows = service.list_bidding(
         page,
         page_size,
@@ -112,6 +137,16 @@ def get_bidding(
     service: BiddingService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[BiddingOut]:
+    """获取招标详情。
+
+    Args:
+        bidding_id: 招标 ID。
+        service: 招标服务实例。
+        current_user: 当前登录用户信息。
+
+    Returns:
+        招标详情响应。
+    """
     row = service.get_bidding(bidding_id)
     return success(data=BiddingOut(**row))
 
@@ -123,6 +158,17 @@ def update_bidding(
     service: BiddingService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[BiddingOut]:
+    """更新招标信息。
+
+    Args:
+        bidding_id: 招标 ID。
+        body: 招标更新请求体。
+        service: 招标服务实例。
+        current_user: 当前登录用户信息。
+
+    Returns:
+        更新后的招标信息响应。
+    """
     updated = service.update_bidding(bidding_id, body)
     return success(data=BiddingOut(**updated))
 
@@ -133,5 +179,15 @@ def delete_bidding(
     service: BiddingService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除招标记录。
+
+    Args:
+        bidding_id: 招标 ID。
+        service: 招标服务实例。
+        current_user: 当前登录用户信息。
+
+    Returns:
+        删除成功响应。
+    """
     service.delete_bidding(bidding_id)
     return success(message="deleted")

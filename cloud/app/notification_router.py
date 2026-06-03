@@ -42,6 +42,9 @@ def create_template(
     current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
+    """创建通知模板。
+    Args: body 模板信息. Returns: 创建的模板.
+    """
     result = service.create_template(
         name=body.name,
         title_template=body.title_template,
@@ -56,6 +59,7 @@ def list_templates(
     current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
+    """获取所有通知模板列表。Returns: 模板列表."""
     return success(data=service.list_templates())
 
 
@@ -65,6 +69,9 @@ def get_template(
     current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
+    """获取指定通知模板详情。
+    Args: template_id 模板ID. Returns: 模板详情.
+    """
     return success(data=service.get_template(template_id))
 
 
@@ -75,6 +82,9 @@ def update_template(
     current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
+    """更新通知模板。
+    Args: template_id 模板ID; body 更新字段. Returns: 更新后的模板.
+    """
     updates = {}
     for field in ("name", "title_template", "body_template", "category"):
         val = getattr(body, field, None)
@@ -90,6 +100,9 @@ def delete_template(
     current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
+    """删除通知模板。
+    Args: template_id 模板ID.
+    """
     service.delete_template(template_id)
     return success()
 
@@ -100,6 +113,9 @@ def send_notification(
     current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
+    """发送通知。
+    Args: body 发送参数. Returns: 发送结果.
+    """
     result = service.send(
         user_id=body.user_id,
         template_name=body.template_name,
@@ -121,6 +137,9 @@ def list_notifications(
     current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
+    """获取当前用户的通知列表。
+    Args: is_read 是否已读; page/page_size 分页. Returns: 通知列表.
+    """
     user_id = int(current_user["sub"])
     result = service.list_notifications(user_id=user_id, is_read=is_read, page=page, page_size=page_size)
     return success(data=result)
@@ -132,6 +151,9 @@ def mark_read(
     current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
+    """标记通知为已读。
+    Args: notification_id 通知ID. Returns: 更新结果.
+    """
     user_id = int(current_user["sub"])
     result = service.mark_read(notification_id, user_id)
     return success(data=result)
@@ -142,5 +164,6 @@ def unread_count(
     current_user: dict = Depends(require_scope("visit")),
     service: NotificationService = Depends(),
 ) -> Any:
+    """获取当前用户未读通知数量。Returns: 未读数."""
     user_id = int(current_user["sub"])
     return success(data=service.unread_count(user_id))

@@ -37,6 +37,7 @@ def get_opportunity_stats(
     service: StatsService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> Any:
+    """获取opportunity stats。"""
     data = service.get_stats(start_date, end_date)
 
     by_stage = {stage: StageStat(count=s["count"], value=s["value"]) for stage, s in data["by_stage"].items()}

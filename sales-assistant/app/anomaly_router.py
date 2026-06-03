@@ -41,6 +41,7 @@ def create_rule(
     service: AnomalyService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建rule。"""
     user_id = int(current_user["sub"])
     row_id = service.create_rule(body, user_id)
     return JSONResponse(
@@ -58,6 +59,7 @@ def list_rules(
     service: AnomalyService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse]:
+    """获取rules。"""
     total, total_pages, rows = service.list_rules(page, page_size, metric, severity)
     items = [dict(r) for r in rows]
     return success(
@@ -78,6 +80,7 @@ def update_rule(
     service: AnomalyService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """更新rule。"""
     row = service.update_rule(rule_id, body)
     return success(data=row)
 
@@ -88,6 +91,7 @@ def delete_rule(
     service: AnomalyService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除rule。"""
     service.delete_rule(rule_id)
     return success(message="deleted")
 
@@ -97,6 +101,7 @@ def check_anomalies(
     service: AnomalyService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """检查anomalies。"""
     created = service.check_anomalies()
     return success(data={"alerts_created": created})
 
@@ -110,6 +115,7 @@ def list_alerts(
     service: AnomalyService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse]:
+    """获取alerts。"""
     total, total_pages, rows = service.list_alerts(page, page_size, severity, status)
     items = [dict(r) for r in rows]
     return success(
@@ -130,6 +136,7 @@ def update_alert(
     service: AnomalyService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """更新alert。"""
     user_id = int(current_user["sub"])
     row = service.update_alert(alert_id, body, user_id)
     return success(data=row)
@@ -140,5 +147,6 @@ def anomaly_stats(
     service: AnomalyService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """anomaly stats。"""
     data = service.anomaly_stats()
     return success(data=data)

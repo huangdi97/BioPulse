@@ -42,6 +42,13 @@ def create_gate(
     current_user=Depends(require_scope("visit")),
     service: MemoryGateService = Depends(),
 ):
+    """创建新的记忆门。
+
+    Args:
+        body: 门创建参数（名称、来源类型、重要性阈值等）
+
+    Returns: 创建成功的门信息
+    """
     result = service.create_gate(
         name=body.name,
         source_type=body.source_type,
@@ -54,6 +61,13 @@ def create_gate(
 
 @router.get("/gates")
 def list_gates(service: MemoryGateService = Depends()):
+    """获取所有记忆门列表。
+
+    Args:
+        service: 记忆门服务
+
+    Returns: 门列表
+    """
     return success(data=service.list_gates())
 
 
@@ -64,6 +78,13 @@ def create_entry(
     current_user=Depends(require_scope("visit")),
     service: MemoryGateService = Depends(),
 ):
+    """创建新的记忆条目。
+
+    Args:
+        body: 条目创建参数（标题、内容、记忆类型等）
+
+    Returns: 创建成功的条目信息
+    """
     uid = int(current_user["sub"])
     result = service.create_entry(
         title=body.title,
@@ -87,6 +108,17 @@ def list_entries(
     page_size: int = Query(20, ge=1, le=100),
     service: MemoryGateService = Depends(),
 ):
+    """分页查询记忆条目，支持按类型、重要性和关键词过滤。
+
+    Args:
+        memory_type:   记忆类型筛选
+        importance_min: 最小重要性阈值
+        keyword:       关键词搜索
+        page:          页码（从1开始）
+        page_size:     每页数量
+
+    Returns: 分页结果（含条目列表、总数、总页数）
+    """
     total, total_pages, items = service.list_entries(
         memory_type=memory_type,
         importance_min=importance_min,
@@ -107,6 +139,13 @@ def list_entries(
 
 @router.get("/entries/{entry_id}")
 def get_entry(entry_id: int, service: MemoryGateService = Depends()):
+    """根据 ID 获取单条记忆条目。
+
+    Args:
+        entry_id: 条目 ID
+
+    Returns: 条目详情
+    """
     return success(data=service.get_entry(entry_id))
 
 
@@ -117,6 +156,13 @@ def recall(
     current_user=Depends(require_scope("visit")),
     service: MemoryGateService = Depends(),
 ):
+    """通过语义查询召回相关记忆。
+
+    Args:
+        body: 召回请求（查询文本、记忆类型、最小重要性等）
+
+    Returns: 匹配的记忆条目列表
+    """
     result = service.recall(
         query=body.query,
         memory_types=body.memory_types,
@@ -134,6 +180,14 @@ def auto_store(
     current_user=Depends(require_scope("visit")),
     service: MemoryGateService = Depends(),
 ):
+    """根据来源类型和 ID 自动提取并存储记忆。
+
+    Args:
+        source_type: 来源类型
+        source_id:   来源 ID
+
+    Returns: 自动存储结果
+    """
     uid = int(current_user["sub"])
     auth = request.headers.get("Authorization", "")
     return success(
@@ -148,4 +202,11 @@ def auto_store(
 
 @router.get("/dashboard")
 def dashboard(service: MemoryGateService = Depends()):
+    """获取记忆系统仪表盘统计数据。
+
+    Args:
+        service: 记忆门服务
+
+    Returns: 仪表盘统计信息
+    """
     return success(data=service.dashboard())

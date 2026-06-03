@@ -42,6 +42,16 @@ def definitions_create(
     current_user: dict = Depends(require_scope("visit")),
     service: EventBusService = Depends(),
 ):
+    """创建一个新的事件定义。
+
+    Args:
+        body: 事件定义创建请求体。
+        current_user: 当前认证用户。
+        service: 事件总线服务实例。
+
+    Returns:
+        包含新事件定义的响应。
+    """
     result = service.create_definition(
         event_type=body.event_type,
         display_name=body.display_name,
@@ -61,6 +71,17 @@ def definitions_list(
     current_user: dict = Depends(require_scope("visit")),
     service: EventBusService = Depends(),
 ):
+    """查询事件定义列表，可按来源端和启用状态筛选。
+
+    Args:
+        source_end: 来源端筛选。
+        enabled: 启用状态筛选（0/1）。
+        current_user: 当前认证用户。
+        service: 事件总线服务实例。
+
+    Returns:
+        包含事件定义列表的响应。
+    """
     rows = service.list_definitions(source_end=source_end, enabled=enabled)
     return success(data=rows)
 
@@ -71,6 +92,16 @@ def definitions_toggle(
     current_user: dict = Depends(require_scope("visit")),
     service: EventBusService = Depends(),
 ):
+    """切换指定事件定义的启用/禁用状态。
+
+    Args:
+        event_type: 事件类型名称。
+        current_user: 当前认证用户。
+        service: 事件总线服务实例。
+
+    Returns:
+        包含更新后事件定义的响应。
+    """
     result = service.toggle_definition(event_type)
     return success(data=result)
 
@@ -81,6 +112,16 @@ def messages_publish(
     current_user: dict = Depends(require_scope("visit")),
     service: EventBusService = Depends(),
 ):
+    """发布一条事件消息到总线。
+
+    Args:
+        body: 事件发布请求体。
+        current_user: 当前认证用户。
+        service: 事件总线服务实例。
+
+    Returns:
+        包含发布结果与消息 ID 的响应。
+    """
     result = service.publish_message(
         event_type=body.event_type,
         source_entity_type=body.source_entity_type,
@@ -101,6 +142,20 @@ def messages_list(
     current_user: dict = Depends(require_scope("visit")),
     service: EventBusService = Depends(),
 ):
+    """查询事件消息列表，支持多种筛选条件。
+
+    Args:
+        event_type: 事件类型筛选。
+        status: 消息状态筛选。
+        source_end: 来源端筛选。
+        start_date: 开始日期筛选。
+        end_date: 结束日期筛选。
+        current_user: 当前认证用户。
+        service: 事件总线服务实例。
+
+    Returns:
+        包含消息列表的响应。
+    """
     rows = service.list_messages(
         event_type=event_type,
         status=status,
@@ -117,6 +172,16 @@ def messages_get(
     current_user: dict = Depends(require_scope("visit")),
     service: EventBusService = Depends(),
 ):
+    """获取指定事件消息的详情。
+
+    Args:
+        message_id: 消息 ID。
+        current_user: 当前认证用户。
+        service: 事件总线服务实例。
+
+    Returns:
+        包含消息数据的响应。
+    """
     result = service.get_message(message_id)
     return success(data=result)
 
@@ -127,6 +192,16 @@ def messages_redeliver(
     current_user: dict = Depends(require_scope("visit")),
     service: EventBusService = Depends(),
 ):
+    """重新投递指定的事件消息。
+
+    Args:
+        message_id: 消息 ID。
+        current_user: 当前认证用户。
+        service: 事件总线服务实例。
+
+    Returns:
+        包含重投结果的响应。
+    """
     result = service.redeliver_message(message_id)
     return success(data=result)
 
@@ -137,6 +212,16 @@ def subscribe(
     current_user: dict = Depends(require_scope("visit")),
     service: EventBusService = Depends(),
 ):
+    """订阅指定类型的事件。
+
+    Args:
+        body: 订阅请求体，包含目标端和事件类型。
+        current_user: 当前认证用户。
+        service: 事件总线服务实例。
+
+    Returns:
+        包含订阅结果的响应。
+    """
     result = service.subscribe(
         target_end=body.target_end,
         event_types=body.event_types,
@@ -153,6 +238,18 @@ def delivery_log_list(
     current_user: dict = Depends(require_scope("visit")),
     service: EventBusService = Depends(),
 ):
+    """查询事件投递日志，可按消息、目标端和投递状态筛选。
+
+    Args:
+        message_id: 消息 ID 筛选。
+        target_end: 目标端筛选。
+        delivery_status: 投递状态筛选。
+        current_user: 当前认证用户。
+        service: 事件总线服务实例。
+
+    Returns:
+        包含投递日志列表的响应。
+    """
     rows = service.list_delivery_log(message_id=message_id, target_end=target_end, delivery_status=delivery_status)
     return success(data=rows)
 
@@ -162,5 +259,14 @@ def dashboard(
     current_user: dict = Depends(require_scope("visit")),
     service: EventBusService = Depends(),
 ):
+    """获取事件总线仪表盘数据。
+
+    Args:
+        current_user: 当前认证用户。
+        service: 事件总线服务实例。
+
+    Returns:
+        包含仪表盘数据的响应。
+    """
     result = service.get_dashboard()
     return success(data=result)

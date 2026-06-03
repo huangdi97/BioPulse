@@ -48,6 +48,7 @@ def check_trail_integrity(
     service: PubpeerService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """检查trail integrity。"""
     user_id = int(current_user["sub"])
     auth_header = request.headers.get("Authorization", "")
     result = service.check_trail_integrity(trail_id, auth_header, user_id)
@@ -60,6 +61,7 @@ def get_trail_integrity(
     service: PubpeerService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """获取trail integrity。"""
     row = service.get_trail_integrity(trail_id)
     if not row:
         return success(data=None, message="No integrity check found")
@@ -73,6 +75,7 @@ def pubpeer_check(
     service: PubpeerService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """pubpeer check。"""
     user_id = int(current_user["sub"])
     auth_header = request.headers.get("Authorization", "")
     result = service.pubpeer_check(body, auth_header, user_id)
@@ -88,6 +91,7 @@ def pubpeer_alerts(
     service: PubpeerService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse]:
+    """pubpeer alerts。"""
     total, total_pages, rows = service.list_alerts(page, page_size)
     items = [IntegrityOut(**dict(r)) for r in rows]
     return success(

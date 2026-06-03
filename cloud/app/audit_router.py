@@ -26,6 +26,7 @@ def create_audit_log(
     current_user: dict = Depends(require_scope("visit")),
     service: AuditService = Depends(),
 ) -> Any:
+    """创建审计日志记录。Args: body (AuditLogCreate) 审计日志创建体; current_user (dict) 用户; service (AuditService) 审计服务。Returns: Any 成功响应"""
     service.create_log(
         user_id=body.user_id,
         action=body.action,
@@ -49,6 +50,7 @@ def list_audit_logs(
     current_user: dict = Depends(require_scope("visit")),
     service: AuditService = Depends(),
 ) -> Any:
+    """分页查询审计日志。Args: entity_type/entity_id/action/user_id (Optional) 筛选条件; page/page_size 分页; current_user 用户; service AuditService。Returns: Any 成功响应"""
     result = service.list_logs(
         entity_type=entity_type,
         entity_id=entity_id,
@@ -65,4 +67,5 @@ def audit_stats(
     current_user: dict = Depends(require_scope("visit")),
     service: AuditService = Depends(),
 ) -> Any:
+    """获取审计日志统计数据。Args: current_user (dict) 用户; service (AuditService) 审计服务。Returns: Any 包含统计数据的成功响应"""
     return success(data=service.get_stats())

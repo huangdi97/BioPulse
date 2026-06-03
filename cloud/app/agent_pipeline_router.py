@@ -37,6 +37,7 @@ class PipelineRunRequest(BaseModel):
 
 
 def pd(row) -> dict:
+    """将pipeline行数据格式化为字典。Args: row (sqlite3.Row) 数据库行。Returns: dict 格式化后的管道字典"""
     return {
         "id": row["id"],
         "name": row["name"],
@@ -49,6 +50,7 @@ def pd(row) -> dict:
 
 
 def sd(row) -> dict:
+    """将step行数据格式化为字典。Args: row (sqlite3.Row) 数据库行。Returns: dict 格式化后的步骤字典"""
     return {
         "id": row["id"],
         "pipeline_id": row["pipeline_id"],
@@ -73,6 +75,7 @@ def create_pipeline(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """创建包含步骤定义的管道。Args: body (PipelineCreate) 管道创建体; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     uid = int(current_user["sub"])
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     pipelines_repo = AgentPipelinesRepository(db)
@@ -101,6 +104,7 @@ def create_pipeline(
 
 @router.get("")
 def list_pipelines(current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """获取所有管道列表（含步骤数）。Args: current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     pipelines_repo = AgentPipelinesRepository(db)
     steps_repo = PipelineStepsRepository(db)
     rows = pipelines_repo.list_all(order_by="created_at DESC")
@@ -114,6 +118,7 @@ def list_pipelines(current_user=Depends(require_scope("visit")), db=Depends(get_
 # IMPORTANT: /runs/{run_id} MUST come before /{pipeline_id} to avoid route conflicts
 @router.get("/runs/{run_id}")
 def get_run(run_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """获取指定运行ID的运行详情及步骤运行记录。Args: run_id (int) 运行ID; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     runs_repo = PipelineRunsRepository(db)
     step_runs_repo = PipelineStepRunsRepository(db)
     row = runs_repo.get_by_id(run_id)
@@ -130,6 +135,7 @@ def get_run(run_id: int, current_user=Depends(require_scope("visit")), db=Depend
 
 @router.get("/{pipeline_id}")
 def get_pipeline(pipeline_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """获取管道详情及其所有步骤。Args: pipeline_id (int) 管道ID; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     pipelines_repo = AgentPipelinesRepository(db)
     steps_repo = PipelineStepsRepository(db)
     row = _p404(pipelines_repo, pipeline_id)
@@ -139,6 +145,7 @@ def get_pipeline(pipeline_id: int, current_user=Depends(require_scope("visit")),
 
 @router.delete("/{pipeline_id}")
 def delete_pipeline(pipeline_id: int, current_user=Depends(require_scope("visit")), db=Depends(get_db)):
+    """删除管道及其关联的步骤和运行记录。Args: pipeline_id (int) 管道ID; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     pipelines_repo = AgentPipelinesRepository(db)
     steps_repo = PipelineStepsRepository(db)
     runs_repo = PipelineRunsRepository(db)
@@ -159,6 +166,7 @@ def run_pipeline(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """执行指定管道，遍历各步骤并记录运行结果。Args: pipeline_id (int) 管道ID; body (PipelineRunRequest) 运行请求; request (Request) HTTP请求; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     pipelines_repo = AgentPipelinesRepository(db)
     PipelineStepsRepository(db)
     runs_repo = PipelineRunsRepository(db)
@@ -258,6 +266,7 @@ def list_runs(
     current_user=Depends(require_scope("visit")),
     db=Depends(get_db),
 ):
+    """分页查询指定管道的运行历史。Args: pipeline_id (int) 管道ID; page (int) 页码; page_size (int) 每页条数; current_user 用户; db SQLite连接。Returns: dict 成功响应"""
     pipelines_repo = AgentPipelinesRepository(db)
     runs_repo = PipelineRunsRepository(db)
     _p404(pipelines_repo, pipeline_id)

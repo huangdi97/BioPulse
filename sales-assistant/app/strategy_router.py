@@ -72,6 +72,7 @@ def create_strategy(
     service: StrategyService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """创建strategy。"""
     user_id = int(current_user["sub"])
     strategy_id = service.create_strategy(body, user_id)
     return JSONResponse(
@@ -90,6 +91,7 @@ def list_strategies(
     service: StrategyService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[StrategyOut]]:
+    """获取strategies。"""
     total, total_pages, rows = service.list_strategies(
         page,
         page_size,
@@ -115,6 +117,7 @@ def get_strategy(
     service: StrategyService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[StrategyOut]:
+    """获取strategy。"""
     row = service.get_strategy(strategy_id)
     return success(data=StrategyOut(**row))
 
@@ -126,6 +129,7 @@ def update_strategy(
     service: StrategyService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[StrategyOut]:
+    """更新strategy。"""
     row = service.update_strategy(strategy_id, body)
     return success(data=StrategyOut(**row))
 
@@ -136,6 +140,7 @@ def delete_strategy(
     service: StrategyService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """删除strategy。"""
     service.delete_strategy(strategy_id)
     return success(message="deleted")
 
@@ -146,6 +151,7 @@ def generate_strategy(
     service: StrategyService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
+    """generate strategy。"""
     user_id = int(current_user["sub"])
     row = service.generate_strategy(body, user_id)
     return JSONResponse(
@@ -160,6 +166,7 @@ def compare_strategies(
     service: StrategyService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """compare strategies。"""
     rows = service.compare_strategies(ids)
     strategies = [StrategyOut(**r) for r in rows]
     effs = [r["effectiveness"] for r in rows if r["effectiveness"] is not None]
@@ -183,5 +190,6 @@ def simulate_strategy(
     service: StrategyService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
+    """simulate strategy。"""
     result = service.simulate_strategy(body)
     return success(data=result)

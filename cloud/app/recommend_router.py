@@ -49,6 +49,9 @@ def create_profile(
     current_user: dict = Depends(require_scope("visit")),
     service: RecommendService = Depends(),
 ):
+    """创建推荐画像。
+    Args: body 画像信息. Returns: 创建的画像.
+    """
     row = service.create_profile(
         body.user_id,
         body.persona_type,
@@ -66,6 +69,9 @@ def get_profile(
     current_user: dict = Depends(require_scope("visit")),
     service: RecommendService = Depends(),
 ):
+    """获取用户推荐画像。
+    Args: user_id 用户ID. Returns: 画像数据.
+    """
     return success(data=service.get_profile(user_id))
 
 
@@ -76,6 +82,9 @@ def update_profile(
     current_user: dict = Depends(require_scope("visit")),
     service: RecommendService = Depends(),
 ):
+    """更新用户推荐画像。
+    Args: user_id 用户ID; body 更新字段. Returns: 更新后的画像.
+    """
     row = service.update_profile(
         user_id,
         body.persona_type,
@@ -93,6 +102,9 @@ def log_behavior(
     current_user: dict = Depends(require_scope("visit")),
     service: RecommendService = Depends(),
 ):
+    """记录用户行为。
+    Args: body 行为数据. Returns: 记录的行.
+    """
     row = service.log_behavior(
         body.user_id,
         body.action_type,
@@ -115,6 +127,9 @@ def behavior_history(
     current_user: dict = Depends(require_scope("visit")),
     service: RecommendService = Depends(),
 ):
+    """查询行为历史。
+    Args: 按用户/动作/目标筛选, 分页. Returns: 行为记录列表.
+    """
     return success(
         data=service.behavior_history(
             user_id=user_id,
@@ -132,6 +147,9 @@ def generate_recommendations(
     current_user: dict = Depends(require_scope("visit")),
     service: RecommendService = Depends(),
 ):
+    """生成推荐结果。
+    Args: body 推荐请求参数. Returns: 推荐列表.
+    """
     results = service.generate_recommendations(body.user_id, body.rec_types, body.limit)
     return success(data=results)
 
@@ -147,6 +165,9 @@ def list_recommendations(
     current_user: dict = Depends(require_scope("visit")),
     service: RecommendService = Depends(),
 ):
+    """查询推荐记录。
+    Args: 按用户/类型/点击/关闭筛选, 分页. Returns: 推荐记录列表.
+    """
     return success(
         data=service.list_recommendations(
             user_id=user_id,
@@ -165,6 +186,9 @@ def mark_clicked(
     current_user: dict = Depends(require_scope("visit")),
     service: RecommendService = Depends(),
 ):
+    """标记推荐为已点击。
+    Args: rec_id 推荐ID.
+    """
     service.mark_clicked(rec_id)
     return success()
 
@@ -175,6 +199,9 @@ def mark_dismissed(
     current_user: dict = Depends(require_scope("visit")),
     service: RecommendService = Depends(),
 ):
+    """标记推荐为已忽略。
+    Args: rec_id 推荐ID.
+    """
     service.mark_dismissed(rec_id)
     return success()
 
@@ -184,4 +211,5 @@ def dashboard(
     current_user: dict = Depends(require_scope("visit")),
     service: RecommendService = Depends(),
 ):
+    """获取推荐仪表盘数据。Returns: 仪表盘数据."""
     return success(data=service.dashboard())

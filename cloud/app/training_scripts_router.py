@@ -59,6 +59,16 @@ def extract_scripts(
     current_user=Depends(require_scope("visit")),
     service: TrainingScriptsService = Depends(),
 ) -> JSONResponse:
+    """从指定角色的协作中提取培训脚本。
+
+    Args:
+        body: 脚本提取请求体。
+        current_user: 当前登录用户信息。
+        service: 培训脚本服务。
+
+    Returns:
+        提取结果。
+    """
     result = service.extract_scripts(
         source_agent_role=body.source_agent_role,
         min_score=body.min_score,
@@ -80,6 +90,20 @@ def list_scripts(
     current_user=Depends(require_scope("visit")),
     service: TrainingScriptsService = Depends(),
 ) -> ApiResponse[PaginatedResponse[ScriptOut]]:
+    """分页查询培训脚本列表。
+
+    Args:
+        page: 页码。
+        page_size: 每页条数（1-100）。
+        source_agent_role: 可选的按来源角色筛选。
+        difficulty: 可选的按难度筛选。
+        target_roles: 可选的按目标角色筛选。
+        current_user: 当前登录用户信息。
+        service: 培训脚本服务。
+
+    Returns:
+        分页脚本列表。
+    """
     result = service.list_scripts(
         page=page,
         page_size=page_size,
@@ -104,6 +128,16 @@ def analyze_roi(
     current_user=Depends(require_scope("visit")),
     service: TrainingScriptsService = Depends(),
 ) -> JSONResponse:
+    """分析指定时间段内的培训投资回报率。
+
+    Args:
+        body: ROI 分析请求体（起止时间）。
+        current_user: 当前登录用户信息。
+        service: 培训脚本服务。
+
+    Returns:
+        ROI 分析结果。
+    """
     result = service.analyze_roi(
         period_start=body.period_start,
         period_end=body.period_end,
@@ -121,6 +155,17 @@ def list_roi(
     current_user=Depends(require_scope("visit")),
     service: TrainingScriptsService = Depends(),
 ) -> ApiResponse[PaginatedResponse[RoiOut]]:
+    """分页查询 ROI 分析记录列表。
+
+    Args:
+        page: 页码。
+        page_size: 每页条数（1-100）。
+        current_user: 当前登录用户信息。
+        service: 培训脚本服务。
+
+    Returns:
+        分页 ROI 记录列表。
+    """
     result = service.list_roi(page=page, page_size=page_size)
     return success(
         data=PaginatedResponse(

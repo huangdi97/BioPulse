@@ -42,6 +42,9 @@ def create_rule(
     current_user=Depends(require_scope("visit")),
     service: RouteService = Depends(),
 ):
+    """创建路由规则。
+    Args: body 规则信息. Returns: 创建的规则.
+    """
     row = service.create_rule(
         name=body.name,
         priority=body.priority,
@@ -59,6 +62,7 @@ def create_rule(
 
 @router.get("/rules")
 def list_rules(current_user=Depends(require_scope("visit")), service: RouteService = Depends()):
+    """获取所有路由规则列表。Returns: 规则列表."""
     return success(data=service.list_rules())
 
 
@@ -69,6 +73,9 @@ def update_rule(
     current_user=Depends(require_scope("visit")),
     service: RouteService = Depends(),
 ):
+    """更新路由规则。
+    Args: rule_id 规则ID; body 更新字段. Returns: 更新后的规则.
+    """
     row = service.update_rule(
         rule_id=rule_id,
         name=body.name,
@@ -86,6 +93,9 @@ def delete_rule(
     current_user=Depends(require_scope("visit")),
     service: RouteService = Depends(),
 ):
+    """删除路由规则。
+    Args: rule_id 规则ID.
+    """
     service.delete_rule(rule_id)
     return success()
 
@@ -96,6 +106,9 @@ def execute_route(
     current_user=Depends(require_scope("visit")),
     service: RouteService = Depends(),
 ):
+    """执行路由分发。
+    Args: body 输入文本和上下文. Returns: 路由执行结果.
+    """
     result = service.execute_route(
         input_text=body.input,
         uid=int(current_user["sub"]),
@@ -115,6 +128,9 @@ def list_logs(
     current_user=Depends(require_scope("visit")),
     service: RouteService = Depends(),
 ):
+    """查询路由日志。
+    Args: 按角色/来源/日期筛选, 分页. Returns: 日志列表.
+    """
     return success(
         data=service.list_logs(
             role_id=role_id,
@@ -133,14 +149,19 @@ def get_log(
     current_user=Depends(require_scope("visit")),
     service: RouteService = Depends(),
 ):
+    """获取路由日志详情。
+    Args: log_id 日志ID. Returns: 日志详情.
+    """
     return success(data=service.get_log(log_id))
 
 
 @router.get("/stats")
 def get_stats(current_user=Depends(require_scope("visit")), service: RouteService = Depends()):
+    """获取路由统计信息。Returns: 统计数据."""
     return success(data=service.get_stats())
 
 
 @router.get("/dashboard")
 def get_dashboard(current_user=Depends(require_scope("visit")), service: RouteService = Depends()):
+    """获取路由仪表盘数据。Returns: 仪表盘数据."""
     return success(data=service.get_dashboard())

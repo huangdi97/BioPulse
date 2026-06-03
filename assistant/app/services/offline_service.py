@@ -1,0 +1,199 @@
+import json
+import os
+from datetime import datetime, timezone
+
+import httpx
+
+from assistant.app.services.base import BaseService
+
+CLOUD_API_URL = os.getenv("CLOUD_API_URL", "http://localhost:8000")
+OFFLINE_MODE_VAR = "OFFLINE_MODE"
+
+ENTITY_ENDPOINTS = {
+    "hcp": "/api/hcp",
+    "visit": "/api/visit",
+    "task": "/api/task",
+    "health_radar": "/api/health-radar",
+    "surgery_reminder": "/api/surgery-reminder",
+    "knowledge": "/api/knowledge",
+}
+
+LOCAL_TABLES = [
+    "hcp",
+    "visit_record",
+    "task",
+    "health_radar",
+    "surgery_reminder",
+    "knowledge_base",
+    "hcp_location",
+]
+
+
+class OfflineService(BaseService):
+    """Offline 服务类。"""
+
+    def get_status(self) -> dict:
+        """获取状态。
+
+        Returns:
+            描述
+        """
+        online = self._check_cloud()
+        pending_count = self._count_unsynced()
+        local_summary = self._local_data_summary()
+        last_sync = self._last_sync_time()
+        return {
+            "online": online,
+            "pending_sync_count": pending_count,
+            "local_data_summary": local_summary,
+            "last_sync_time": last_sync,
+        }
+
+    def sync_pending(self, limit: int = 50) -> dict:
+        """同步待处理项。
+
+        Args:
+            limit: 描述
+
+        Returns:
+            描述
+        """
+        rows = self.db.execute(
+            "SELECT * FROM offline_sync_log WHERE synced = 0 ORDER BY created_at ASC LIMIT ?",
+            (limit,),
+        ).fetchall()
+
+        synced_count = 0
+        failed_count = 0
+        errors = []
+
+        for row in rows:
+            log_id = row["id"]
+            entity_type = row["entity_type"]
+            entity_id = row["entity_id"]
+            action = row["action"]
+            payload = json.loads(row["payload"] or "{}")
+            endpoint = ENTITY_ENDPOINTS.get(entity_type)
+
+            if not endpoint:
+                errors.append({"id": log_id, "error": f"unknown entity_type: {entity_type}"})
+                failed_count += 1
+                self._mark_failed(log_id, f"unknown entity_type: {entity_type}")
+                continue
+
+            url = f"{CLOUD_API_URL}{endpoint}"
+            if action == "update" and entity_id:
+                url = f"{url}/{entity_id}"
+            elif action == "delete" and entity_id:
+                url = f"{url}/{entity_id}"
+
+            method_map = {"create": "POST", "update": "PUT", "delete": "DELETE"}
+            method = method_map.get(action, "POST")
+
+            try:
+                resp = httpx.request(method, url, json=payload, timeout=10)
+                if resp.is_success:
+                    self._mark_synced(log_id)
+                    synced_count += 1
+                else:
+                    msg = f"HTTP {resp.status_code}: {resp.text[:200]}"
+                    errors.append({"id": log_id, "error": msg})
+                    failed_count += 1
+                    self._mark_retry(log_id, msg)
+            except Exception as e:
+                msg = str(e)
+                errors.append({"id": log_id, "error": msg})
+                failed_count += 1
+                self._mark_retry(log_id, msg)
+
+        return {
+            "synced_count": synced_count,
+            "failed_count": failed_count,
+            "errors": errors,
+        }
+
+    def queue_change(self, entity_type: str, entity_id: int, action: str, payload: dict) -> dict:
+        """入队变更。
+
+        Args:
+            entity_type: 描述
+            entity_id: 描述
+            action: 描述
+            payload: 描述
+
+        Returns:
+            描述
+        """
+        cursor = self.db.execute(
+            "INSERT INTO offline_sync_log (entity_type, entity_id, action, payload) VALUES (?, ?, ?, ?)",
+            (entity_type, entity_id, action, json.dumps(payload, ensure_ascii=False)),
+        )
+        self.db.commit()
+        return {"log_id": cursor.lastrowid}
+
+    def enable_offline_mode(self) -> dict:
+        """启用离线模式。
+
+        Returns:
+            描述
+        """
+        os.environ[OFFLINE_MODE_VAR] = "1"
+        pending = self._count_unsynced()
+        return {"mode": "offline", "pending_sync_count": pending}
+
+    def enable_online_mode(self) -> dict:
+        """启用在线模式。
+
+        Returns:
+            描述
+        """
+        self.sync_pending(limit=500)
+        os.environ.pop(OFFLINE_MODE_VAR, None)
+        return {"mode": "online"}
+
+    def _check_cloud(self) -> bool:
+        try:
+            resp = httpx.get(f"{CLOUD_API_URL}/health", timeout=5)
+            return resp.is_success
+        except Exception:
+            return False
+
+    def _count_unsynced(self) -> int:
+        row = self.db.execute("SELECT COUNT(*) AS cnt FROM offline_sync_log WHERE synced = 0").fetchone()
+        return row["cnt"] if row else 0
+
+    def _local_data_summary(self) -> dict:
+        summary = {}
+        for table in LOCAL_TABLES:
+            try:
+                row = self.db.execute(f"SELECT COUNT(*) AS cnt FROM {table}").fetchone()
+                summary[table] = row["cnt"] if row else 0
+            except Exception:
+                summary[table] = 0
+        return summary
+
+    def _last_sync_time(self) -> str:
+        row = self.db.execute("SELECT MAX(synced_at) AS last FROM offline_sync_log WHERE synced = 1").fetchone()
+        return row["last"] or ""
+
+    def _mark_synced(self, log_id: int) -> None:
+        now = datetime.now(timezone.utc).isoformat()
+        self.db.execute(
+            "UPDATE offline_sync_log SET synced = 1, synced_at = ? WHERE id = ?",
+            (now, log_id),
+        )
+        self.db.commit()
+
+    def _mark_failed(self, log_id: int, msg: str) -> None:
+        self.db.execute(
+            "UPDATE offline_sync_log SET retry_count = retry_count + 1, error_msg = ? WHERE id = ?",
+            (msg, log_id),
+        )
+        self.db.commit()
+
+    def _mark_retry(self, log_id: int, msg: str) -> None:
+        self.db.execute(
+            "UPDATE offline_sync_log SET retry_count = retry_count + 1, error_msg = ? WHERE id = ?",
+            (msg, log_id),
+        )
+        self.db.commit()

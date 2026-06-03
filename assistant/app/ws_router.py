@@ -11,6 +11,16 @@ router = APIRouter(tags=["websocket"])
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket) -> None:
+    """WebSocket 端点，用于实时双向通信。
+
+    通过 token 验证用户身份，连接后接收 JSON 消息并交由连接管理器处理。
+
+    Args:
+        websocket: WebSocket 连接实例
+
+    Returns:
+        None
+    """
     token = websocket.query_params.get("token")
     if not token:
         await websocket.close(code=4001)
