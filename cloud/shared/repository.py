@@ -15,6 +15,8 @@ class BaseRepository:
     def execute(self, sql: str, params=None):
         if self._is_sqlite:
             sql = sql.replace("%s", "?")
+        if params is None:
+            return self.db.execute(sql)
         return self.db.execute(sql, params)
 
     def get_by_id(self, record_id: int) -> Optional[Dict[str, Any]]:
@@ -50,9 +52,10 @@ class BaseRepository:
         if not self._is_sqlite:
             query += " RETURNING id"
         cursor = self.execute(query, values)
+        lastrowid = cursor.lastrowid
         self.db.commit()
         if self._is_sqlite:
-            return cursor.lastrowid
+            return lastrowid
         return cursor.fetchone()[0]
 
     def update(self, record_id: int, data: Dict[str, Any]) -> bool:
