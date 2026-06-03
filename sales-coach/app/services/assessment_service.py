@@ -19,7 +19,7 @@ class AssessmentService(BaseService):
         now = datetime.now(timezone.utc).isoformat()
         data = body.model_dump(exclude={"title"})
         extra = {"created_by": user_id, "created_at": now, "updated_at": now}
-        assessment_id = repo.create(data, extra)
+        assessment_id = repo.create(data, extra=extra)
         return {"id": assessment_id}
 
     def list(

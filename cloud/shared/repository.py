@@ -30,7 +30,8 @@ class BaseRepository:
         cursor = self.execute(query)
         return [dict(row) for row in cursor.fetchall()]
 
-    def create(self, data: Dict[str, Any]) -> int:
+    def create(self, data: Dict[str, Any], **kwargs) -> int:
+        data = {**data, **kwargs.get("extra", {})}
         filtered = {k: v for k, v in data.items() if k in self.cols and k != "id"}
         if not filtered:
             return 0
