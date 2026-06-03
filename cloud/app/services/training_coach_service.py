@@ -364,9 +364,7 @@ class TrainingCoachService(BaseService):
         pr = round(prr[0], 2) if prr and prr[0] else 0.0
         cd = {
             r["category"]: r["cnt"]
-            for r in self.db.execute(
-                "SELECT category,COUNT(*) cnt FROM training_modules WHERE is_active=1 GROUP BY category"
-            ).fetchall()
+            for r in self.db.execute("SELECT category,COUNT(*) cnt FROM training_modules WHERE is_active=1 GROUP BY category").fetchall()
         }
         recent = sessions_repo.list_all(order_by="created_at DESC")
         recent = recent[:5]

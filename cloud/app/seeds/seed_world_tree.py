@@ -47,8 +47,7 @@ def seed_world_tree(conn: sqlite3.Connection) -> None:
     ]
     for node_id, memory_id, relevance in links:
         conn.execute(
-            "INSERT OR IGNORE INTO node_memory_links (node_id, memory_entry_id, relevance_score, created_at) "
-            "VALUES (?,?,?,?)",
+            "INSERT OR IGNORE INTO node_memory_links (node_id, memory_entry_id, relevance_score, created_at) VALUES (?,?,?,?)",
             (node_id, memory_id, relevance, now),
         )
     conn.commit()

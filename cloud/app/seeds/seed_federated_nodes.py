@@ -2,7 +2,7 @@ import sqlite3
 
 
 def seed_federated_nodes(conn: sqlite3.Connection) -> None:
-    """count = conn.execute("SELECT COUNT(*) FROM federated_nodes").fetchone()[0]"""
+    count = conn.execute("SELECT COUNT(*) FROM federated_nodes").fetchone()[0]
     if count > 0:
         return
     now = "2026-05-25 10:00:00"

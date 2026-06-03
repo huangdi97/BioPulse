@@ -71,10 +71,7 @@ class MdtEngineService(BaseService):
             from cloud.app.mdt_engine_router import ParticipantDef
 
             roles = roles_repo.list_active(limit=5)
-            parts = [
-                ParticipantDef(agent_role_id=r["id"], role_name=r["name"], stance="neutral", vote_weight=1.0)
-                for r in roles
-            ]
+            parts = [ParticipantDef(agent_role_id=r["id"], role_name=r["name"], stance="neutral", vote_weight=1.0) for r in roles]
         for p in parts:
             participants_repo.create_raw(
                 {
@@ -111,9 +108,7 @@ class MdtEngineService(BaseService):
             params=params or None,
             order_by="created_at DESC",
         )
-        return success(
-            {"items": items, "total": total, "page": page, "page_size": page_size, "total_pages": total_pages}
-        )
+        return success({"items": items, "total": total, "page": page, "page_size": page_size, "total_pages": total_pages})
 
     def get_session(self, session_id: int) -> dict:
         """获取会话。
@@ -172,9 +167,7 @@ class MdtEngineService(BaseService):
                 if prev:
                     user_msg += f"\n\n上一轮各方观点摘要：\n{prev}"
                 try:
-                    ai = self._call_ai(
-                        [{"role": "system", "content": sys_msg}, {"role": "user", "content": user_msg}], auth_header
-                    )
+                    ai = self._call_ai([{"role": "system", "content": sys_msg}, {"role": "user", "content": user_msg}], auth_header)
                     reply = ai.get("reply", "")
                     parsed = self._parse_json(reply, {})
                     if isinstance(parsed, dict):
@@ -237,10 +230,7 @@ class MdtEngineService(BaseService):
         all_ops = opinions_repo.list_by_session_with_participant(session_id)
         if not all_ops:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="No opinions to build consensus from")
-        opinions_text = "\n".join(
-            f"[Round {o['round_number']}] {o['role_name']}({o.get('stance', 'neutral')}): {o['opinion']}"
-            for o in all_ops
-        )
+        opinions_text = "\n".join(f"[Round {o['round_number']}] {o['role_name']}({o.get('stance', 'neutral')}): {o['opinion']}" for o in all_ops)
         sys_msg = '你是一名MDT辩论主持人，负责总结多方观点形成共识。请基于以下各方辩论意见，生成综合共识报告。以JSON格式输出：{"consensus":"综合共识结论","confidence":0.0-1.0,"agreements":["各方一致认同的点"],"disagreements":["存在分歧的点"],"action_items":["建议下一步行动"]}'
         user_msg = f"议题：{s['title']}\n问题：{s['question']}\n背景：{s['context']}\n\n各方观点：\n{opinions_text}"
         try:
@@ -310,9 +300,7 @@ class MdtEngineService(BaseService):
             rounds.setdefault(rn, []).append(o)
         timeline_data = {
             "session": s,
-            "rounds": [
-                {"round_number": int(k), "opinions": v} for k, v in sorted(rounds.items(), key=lambda x: int(x[0]))
-            ],
+            "rounds": [{"round_number": int(k), "opinions": v} for k, v in sorted(rounds.items(), key=lambda x: int(x[0]))],
         }
         if s["status"] == "completed" and s.get("consensus"):
             timeline_data["consensus"] = {

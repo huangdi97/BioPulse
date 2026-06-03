@@ -137,12 +137,7 @@ class KgService(BaseService):
         entities_repo = KgEntitiesRepository(self.db)
         relations_repo = KgRelationsRepository(self.db)
         cache_repo = KgSearchCacheRepository(self.db)
-        seeds = [
-            r["entity_id"]
-            for r in entities_repo.search_by_name_and_types(
-                data.query, entity_types=data.entity_types, limit=data.limit
-            )
-        ]
+        seeds = [r["entity_id"] for r in entities_repo.search_by_name_and_types(data.query, entity_types=data.entity_types, limit=data.limit)]
         ent_dict, rel_dict = _bfs_expand(entities_repo, relations_repo, seeds, data.max_depth)
         qhash = hashlib.md5(json.dumps(data.model_dump(), sort_keys=True).encode()).hexdigest()
         cache_repo.create(

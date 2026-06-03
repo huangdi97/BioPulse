@@ -75,10 +75,7 @@ class TeamService(BaseService):
         row = self._get_team_or_404(team_id)
 
         member_rows = self.db.execute(
-            "SELECT ut.user_id, u.username, ut.role "
-            "FROM user_team ut "
-            "LEFT JOIN users u ON ut.user_id = u.id "
-            "WHERE ut.team_id=?",
+            "SELECT ut.user_id, u.username, ut.role FROM user_team ut LEFT JOIN users u ON ut.user_id = u.id WHERE ut.team_id=?",
             (team_id,),
         ).fetchall()
 

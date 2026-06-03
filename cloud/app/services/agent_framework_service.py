@@ -105,8 +105,7 @@ class AgentFrameworkService(BaseService):
         """
         template = self.get_template(template_key)
         self.db.execute(
-            "INSERT INTO agent_instances (instance_key, template_key, display_name, bind_to_end, config_overrides) "
-            "VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO agent_instances (instance_key, template_key, display_name, bind_to_end, config_overrides) VALUES (?, ?, ?, ?, ?)",
             (instance_key, template_key, display_name, bind_to_end, json.dumps(config_overrides, ensure_ascii=False)),
         )
         self.db.commit()
@@ -192,13 +191,11 @@ class AgentFrameworkService(BaseService):
         agent_key = instance.get("a2a_agent_key")
         if agent_key:
             self._a2a_service().heartbeat(agent_key)
-        row = self.db.execute(
-            "SELECT last_active_at FROM agent_instances WHERE instance_key=?", (instance_key,)
-        ).fetchone()
+        row = self.db.execute("SELECT last_active_at FROM agent_instances WHERE instance_key=?", (instance_key,)).fetchone()
         return {"status": instance.get("status"), "last_active_at": row["last_active_at"]}
 
     def _row_to_dict(self, row):
-        """d = dict(row)"""
+        d = dict(row)
         for col in ("capabilities", "default_config", "triggers", "endpoints", "config_overrides", "metrics"):
             if col in d and isinstance(d[col], str) and d[col]:
                 try:
@@ -208,6 +205,6 @@ class AgentFrameworkService(BaseService):
         return d
 
     def _a2a_service(self):
-        """from cloud.app.services.a2a_registry_service import A2ARegistryService"""
+        from cloud.app.services.a2a_registry_service import A2ARegistryService
 
         return A2ARegistryService(db=self.db)

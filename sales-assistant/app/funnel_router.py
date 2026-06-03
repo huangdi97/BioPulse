@@ -38,8 +38,6 @@ def funnel_analysis(
             completion_rate=data["completion_rate"],
             with_notes=data["with_notes"],
             note_rate=data["note_rate"],
-            by_event_type={
-                k: EventTypeStats(total=v["total"], completed=v["completed"]) for k, v in data["by_event_type"].items()
-            },
+            by_event_type={k: EventTypeStats(total=v["total"], completed=v["completed"]) for k, v in data["by_event_type"].items()},
         )
     )

@@ -7,7 +7,7 @@ class CellTopologyService(BaseService):
     """CellTopology 服务类。"""
 
     def _row_to_dict(self, row) -> dict:
-        """d = dict(row)"""
+        d = dict(row)
         for col in ("known_cells", "routing_table", "task_history", "capabilities"):
             if col in d and isinstance(d[col], str) and d[col]:
                 try:
@@ -57,11 +57,7 @@ class CellTopologyService(BaseService):
                     edges.append({"source": src, "target": tgt, "interaction_count": count})
 
         sorted_by_traffic = sorted(cell_routes.items(), key=lambda x: x[1], reverse=True)
-        hotspots = [
-            {"cell_key": ck, "total_routes": cnt, "agent_type": agent_types.get(ck)}
-            for ck, cnt in sorted_by_traffic[:5]
-            if cnt > 0
-        ]
+        hotspots = [{"cell_key": ck, "total_routes": cnt, "agent_type": agent_types.get(ck)} for ck, cnt in sorted_by_traffic[:5] if cnt > 0]
 
         active_cells = [c for c in cell_list if c["status"] == "active"]
         inactive_cells = [
@@ -80,11 +76,7 @@ class CellTopologyService(BaseService):
                 "agent_type": agent_types.get(c["cell_key"]),
             }
             for c in active_cells
-            if all(
-                tgt != c["cell_key"] and src != c["cell_key"]
-                for e in edges
-                for src, tgt in [(e["source"], e["target"])]
-            )
+            if all(tgt != c["cell_key"] and src != c["cell_key"] for e in edges for src, tgt in [(e["source"], e["target"])])
             and cell_routes.get(c["cell_key"], 0) == 0
         ]
 

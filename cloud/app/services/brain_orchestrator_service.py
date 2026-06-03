@@ -119,9 +119,7 @@ class BrainOrchestratorService(BaseService):
             rows = self.db.execute("SELECT * FROM procedural_memory ORDER BY invocation_count DESC").fetchall()
         return [dict(r) for r in rows]
 
-    def create_procedural(
-        self, procedure_key: str, name: str, description: str, steps: str, trigger_conditions: str
-    ) -> dict:
+    def create_procedural(self, procedure_key: str, name: str, description: str, steps: str, trigger_conditions: str) -> dict:
         """create_procedural 操作。
 
         Args:
@@ -195,17 +193,13 @@ class BrainOrchestratorService(BaseService):
                 ("brain_orchestrator", n),
             ).fetchall()
         ]
-        episodic = [
-            dict(r) for r in self.db.execute("SELECT * FROM episodic_memory ORDER BY valence DESC LIMIT 5").fetchall()
-        ]
+        episodic = [dict(r) for r in self.db.execute("SELECT * FROM episodic_memory ORDER BY valence DESC LIMIT 5").fetchall()]
         kg_rows = self.db.execute(
             "SELECT * FROM kg_entities WHERE name LIKE ? OR entity_type LIKE ? LIMIT 5",
             (f"%{input_text[:20]}%", f"%{input_text[:20]}%"),
         ).fetchall()
         semantic_kv = [dict(r) for r in kg_rows] if kg_rows else []
-        proc_rows = self.db.execute(
-            "SELECT * FROM procedural_memory WHERE invocation_count > 0 ORDER BY invocation_count DESC LIMIT 3"
-        ).fetchall()
+        proc_rows = self.db.execute("SELECT * FROM procedural_memory WHERE invocation_count > 0 ORDER BY invocation_count DESC LIMIT 3").fetchall()
         procedural = [dict(r) for r in proc_rows]
         valences = [e.get("valence", 0.0) or 0.0 for e in episodic]
         avg_valence = sum(valences) / len(valences) if valences else 0.0

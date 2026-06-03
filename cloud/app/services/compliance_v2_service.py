@@ -129,9 +129,7 @@ class ComplianceV2Service(BaseService):
                 "entity_id": str(record_id),
                 "action": "scan",
                 "previous_hash": "",
-                "current_hash": hashlib.sha256(
-                    json.dumps({"action": "scan", "record_id": record_id}).encode()
-                ).hexdigest(),
+                "current_hash": hashlib.sha256(json.dumps({"action": "scan", "record_id": record_id}).encode()).hexdigest(),
                 "payload": json.dumps(
                     {"record_id": record_id, "passed": passed, "risk_level": risk_level},
                     ensure_ascii=False,
@@ -293,9 +291,7 @@ class ComplianceV2Service(BaseService):
         )
         if latest_rows:
             prev_hash = latest_rows[0]["current_hash"]
-        current_hash = hashlib.sha256(
-            (prev_hash + json.dumps(body.payload, ensure_ascii=False, sort_keys=True)).encode("utf-8")
-        ).hexdigest()
+        current_hash = hashlib.sha256((prev_hash + json.dumps(body.payload, ensure_ascii=False, sort_keys=True)).encode("utf-8")).hexdigest()
         repo.create(
             {
                 "entity_type": body.entity_type,
@@ -362,9 +358,7 @@ class ComplianceV2Service(BaseService):
                 broken_at = row["id"]
                 break
             payload = _parse_json(row["payload"], {}) if isinstance(row["payload"], str) else row["payload"]
-            recomputed = hashlib.sha256(
-                (row["previous_hash"] + json.dumps(payload, ensure_ascii=False, sort_keys=True)).encode("utf-8")
-            ).hexdigest()
+            recomputed = hashlib.sha256((row["previous_hash"] + json.dumps(payload, ensure_ascii=False, sort_keys=True)).encode("utf-8")).hexdigest()
             if recomputed != row["current_hash"]:
                 valid = False
                 broken_at = row["id"]
@@ -563,9 +557,7 @@ class ComplianceV2Service(BaseService):
             "SELECT DATE(created_at) as d, COUNT(*) as cnt, SUM(passed) as passed_cnt FROM compliance_audit_records WHERE created_at >= ? GROUP BY d ORDER BY d",
             (week_ago,),
         ).fetchall()
-        daily_trend = [
-            {"date": (r["d"] or "")[-5:], "count": (r["cnt"] or 0) - (r["passed_cnt"] or 0)} for r in trend_7d
-        ]
+        daily_trend = [{"date": (r["d"] or "")[-5:], "count": (r["cnt"] or 0) - (r["passed_cnt"] or 0)} for r in trend_7d]
         risk_map = {3: "critical", 2: "high", 1: "medium", 0: "low"}
         top_reps = []
         rep_rows = self.db.execute(

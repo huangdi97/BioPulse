@@ -35,9 +35,7 @@ async def create_reminder(patient_id: str, drug: str, schedule: dict) -> dict:
 
     reminder_data = resp.json() if resp.status_code == 200 else {}
     return {
-        "reminder_id": reminder_data.get("data", reminder_data).get(
-            "reminder_id", f"REM-{patient_id}-{int(datetime.now().timestamp())}"
-        ),
+        "reminder_id": reminder_data.get("data", reminder_data).get("reminder_id", f"REM-{patient_id}-{int(datetime.now().timestamp())}"),
         "patient_id": patient_id,
         "drug": drug,
         "schedule": schedule,

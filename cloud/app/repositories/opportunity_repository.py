@@ -112,9 +112,7 @@ class HcpProfilesRepository(BaseRepository):
         return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name} WHERE is_active=1").fetchone()[0]
 
     def tier_distribution(self):
-        rows = self.db.execute(
-            f"SELECT tier, COUNT(*) as cnt FROM {self.table_name} WHERE is_active=1 GROUP BY tier"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT tier, COUNT(*) as cnt FROM {self.table_name} WHERE is_active=1 GROUP BY tier").fetchall()
         return {r["tier"]: r["cnt"] for r in rows}
 
 

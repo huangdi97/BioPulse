@@ -18,9 +18,7 @@ class MemoryEntriesRepository(BaseRepository):
 
     def list_active_ordered(self, order_by="importance DESC"):
         placeholders = ", ".join(self.cols)
-        rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY {order_by}"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT {placeholders} FROM {self.table_name} WHERE is_active=1 ORDER BY {order_by}").fetchall()
         return [dict(r) for r in rows]
 
     def find_active_by_id(self, entry_id):
@@ -65,8 +63,7 @@ class MemoryEntriesRepository(BaseRepository):
     def by_type_stats(self):
         ", ".join(self.cols)
         rows = self.db.execute(
-            f"SELECT memory_type, COUNT(*) AS cnt, AVG(importance) AS avg_imp "
-            f"FROM {self.table_name} WHERE is_active=1 GROUP BY memory_type"
+            f"SELECT memory_type, COUNT(*) AS cnt, AVG(importance) AS avg_imp FROM {self.table_name} WHERE is_active=1 GROUP BY memory_type"
         ).fetchall()
         return [dict(r) for r in rows]
 
@@ -211,9 +208,7 @@ class EpisodicMemoryRepository(BaseRepository):
 
     def find_unconsolidated(self):
         placeholders = ", ".join(self.cols)
-        rows = self.db.execute(
-            f"SELECT {placeholders} FROM {self.table_name} WHERE is_consolidated=0 OR is_consolidated IS NULL"
-        ).fetchall()
+        rows = self.db.execute(f"SELECT {placeholders} FROM {self.table_name} WHERE is_consolidated=0 OR is_consolidated IS NULL").fetchall()
         return [dict(r) for r in rows]
 
     def count_by_creator(self, creator_id):
@@ -261,9 +256,7 @@ class NodeMemoryLinksRepository(BaseRepository):
             return []
         ph = ",".join("?" for _ in node_ids)
         rows = self.db.execute(
-            f"SELECT me.importance FROM memory_entries me "
-            f"JOIN {self.table_name} nml ON me.id=nml.memory_entry_id "
-            f"WHERE nml.node_id IN ({ph})",
+            f"SELECT me.importance FROM memory_entries me JOIN {self.table_name} nml ON me.id=nml.memory_entry_id WHERE nml.node_id IN ({ph})",
             node_ids,
         ).fetchall()
         return [dict(r) for r in rows]

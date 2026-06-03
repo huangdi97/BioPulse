@@ -32,8 +32,7 @@ def seed_mdt_engine(conn: sqlite3.Connection) -> None:
     session_ids = []
     for title, q, ctx, st, rc, ca, ua in sessions:
         cur = conn.execute(
-            "INSERT INTO mdt_sessions (title, question, context, status, round_count, created_at, updated_at) "
-            "VALUES (?,?,?,?,?,?,?)",
+            "INSERT INTO mdt_sessions (title, question, context, status, round_count, created_at, updated_at) VALUES (?,?,?,?,?,?,?)",
             (title, q, ctx, st, rc, ca, ua),
         )
         session_ids.append(cur.lastrowid)
@@ -53,8 +52,7 @@ def seed_mdt_engine(conn: sqlite3.Connection) -> None:
     part_ids = []
     for sid, arid, rn, stance, vw in all_participants:
         cur = conn.execute(
-            "INSERT INTO mdt_participants (session_id, agent_role_id, role_name, stance, vote_weight, created_at) "
-            "VALUES (?,?,?,?,?,?)",
+            "INSERT INTO mdt_participants (session_id, agent_role_id, role_name, stance, vote_weight, created_at) VALUES (?,?,?,?,?,?)",
             (sid, arid, rn, stance, vw, now),
         )
         part_ids.append(cur.lastrowid)

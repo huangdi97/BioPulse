@@ -5,7 +5,7 @@ _OLD_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file_
 
 
 def _load_old_schema():
-    """spec = importlib.util.spec_from_file_location("cloud.app.schema_old", _OLD_FILE)"""
+    spec = importlib.util.spec_from_file_location("cloud.app.schema_old", _OLD_FILE)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod

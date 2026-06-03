@@ -39,8 +39,7 @@ def seed_s2(conn: sqlite3.Connection) -> None:
 
     if count_ot == 0:
         conn.execute(
-            "INSERT INTO orchestration_templates (template_name, description, steps, "
-            "created_at, updated_at) VALUES (?,?,?,?,?)",
+            "INSERT INTO orchestration_templates (template_name, description, steps, created_at, updated_at) VALUES (?,?,?,?,?)",
             (
                 "竞品分析流水线",
                 "市场情报→合规审查→HCP策略",
@@ -57,8 +56,7 @@ def seed_s2(conn: sqlite3.Connection) -> None:
             ),
         )
         conn.execute(
-            "INSERT INTO orchestration_templates (template_name, description, steps, "
-            "created_at, updated_at) VALUES (?,?,?,?,?)",
+            "INSERT INTO orchestration_templates (template_name, description, steps, created_at, updated_at) VALUES (?,?,?,?,?)",
             (
                 "HCP策略生成",
                 "HCP画像分析→推荐策略",

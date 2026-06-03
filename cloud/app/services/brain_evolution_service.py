@@ -75,9 +75,7 @@ class BrainEvolutionService(BaseService):
         merged = merged[:1000]
 
         confidence_before = _calc_confidence(memory_type, memory.get("importance", 0.5), memory.get("valence", 0.0))
-        confidence_after = _calc_confidence(
-            memory_type, memory.get("importance", 0.5) + 0.05, memory.get("valence", 0.0) + 0.05
-        )
+        confidence_after = _calc_confidence(memory_type, memory.get("importance", 0.5) + 0.05, memory.get("valence", 0.0) + 0.05)
         confidence_after = min(confidence_after + 0.05, 1.0)
 
         ok = self._update_memory_field(memory_id, memory_type, field, merged)
@@ -234,9 +232,9 @@ class BrainEvolutionService(BaseService):
 
         fold_chain = []
         for log in logs:
-            l = dict(log)
-            l["details"] = json.loads(l.get("details", "{}"))
-            fold_chain.append(l)
+            entry = dict(log)
+            entry["details"] = json.loads(entry.get("details", "{}"))
+            fold_chain.append(entry)
 
         context = json.loads(folded.get("context", "{}"))
         source_ids = context.get("source_ids", [])

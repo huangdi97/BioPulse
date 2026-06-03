@@ -27,7 +27,10 @@ def create_board(
     current_user: dict = Depends(require_scope("visit")),
     service: BoardService = Depends(),
 ) -> Any:
-    """创建团队面板。Args: body (BoardCreate) 面板创建体; current_user (dict) 用户; service (BoardService) 面板服务。Returns: Any 成功响应"""
+    """创建团队面板。
+    Args: body (BoardCreate) 面板创建体; current_user (dict) 用户; service (BoardService) 面板服务。
+    Returns: Any 成功响应
+    """
     user_id = int(current_user["sub"])
     result = service.create_board(name=body.name, description=body.description, owner_id=user_id)
     return success(data=result)
@@ -48,7 +51,10 @@ def get_board(
     current_user: dict = Depends(require_scope("visit")),
     service: BoardService = Depends(),
 ) -> Any:
-    """获取指定面板详情。Args: board_id (int) 面板ID; current_user (dict) 用户; service (BoardService) 面板服务。Returns: Any 成功响应"""
+    """获取指定面板详情。
+    Args: board_id (int) 面板ID; current_user (dict) 用户; service (BoardService) 面板服务。
+    Returns: Any 成功响应
+    """
     return success(data=service.get_board(board_id))
 
 
@@ -59,7 +65,10 @@ def update_board(
     current_user: dict = Depends(require_scope("visit")),
     service: BoardService = Depends(),
 ) -> Any:
-    """更新面板名称或描述。Args: board_id (int) 面板ID; body (BoardUpdate) 面板更新体; current_user (dict) 用户; service (BoardService) 面板服务。Returns: Any 成功响应"""
+    """更新面板名称或描述。
+    Args:board_id (int) 面板ID; body (BoardUpdate) 面板更新体; current_user (dict) 用户; service (BoardService) 面板服务。
+    Returns: Any 成功响应
+    """
     result = service.update_board(board_id, name=body.name, description=body.description)
     return success(data=result)
 
@@ -81,5 +90,8 @@ def kanban_view(
     current_user: dict = Depends(require_scope("visit")),
     service: BoardService = Depends(),
 ) -> Any:
-    """获取面板看板视图数据。Args: board_id (int) 面板ID; current_user (dict) 用户; service (BoardService) 面板服务。Returns: Any 成功响应"""
+    """获取面板看板视图数据。
+    Args: board_id (int) 面板ID; current_user (dict) 用户; service (BoardService) 面板服务。
+    Returns: Any 成功响应
+    """
     return success(data=service.kanban_view(board_id))

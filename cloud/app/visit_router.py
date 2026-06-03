@@ -1,9 +1,7 @@
-import json
-
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
-from starlette import status
 from sqlite3 import Connection
+
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 
 from cloud.app.database import get_db
 from cloud.app.services.visit_service import VisitService

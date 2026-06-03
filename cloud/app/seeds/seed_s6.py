@@ -23,8 +23,7 @@ def seed_s6(conn):
         ),
     )
     conn.execute(
-        "INSERT OR IGNORE INTO benchmark_reports (report_id, report_name, report_type, summary, metrics, period, created_at) "
-        "VALUES (?,?,?,?,?,?,?)",
+        "INSERT OR IGNORE INTO benchmark_reports (report_id, report_name, report_type, summary, metrics, period, created_at) VALUES (?,?,?,?,?,?,?)",
         (
             "bm:test-001",
             "2026Q1行业对标",

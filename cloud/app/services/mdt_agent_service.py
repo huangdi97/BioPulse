@@ -159,10 +159,10 @@ class MdtAgentService(BaseService):
         return results
 
     def _get_task(self, task_id):
-        """row = self.db.execute("SELECT * FROM mdt_agent_tasks WHERE id=?", (task_id,)).fetchone()"""
+        row = self.db.execute("SELECT * FROM mdt_agent_tasks WHERE id=?", (task_id,)).fetchone()
         return dict(row) if row else {}
 
     def _a2a_service(self):
-        """from cloud.app.services.a2a_registry_service import A2ARegistryService"""
+        from cloud.app.services.a2a_registry_service import A2ARegistryService
 
         return A2ARegistryService(db=self.db)

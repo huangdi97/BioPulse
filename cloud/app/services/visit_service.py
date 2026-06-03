@@ -1,9 +1,8 @@
 import json
 
-from fastapi import Depends, HTTPException
+from fastapi import HTTPException
 from starlette import status
 
-from cloud.app.database import get_db
 from cloud.app.services.base import BaseService
 
 

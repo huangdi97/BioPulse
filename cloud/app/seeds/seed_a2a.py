@@ -2,7 +2,7 @@ import sqlite3
 
 
 def seed_a2a(conn: sqlite3.Connection) -> None:
-    """count = conn.execute("SELECT COUNT(*) FROM agent_registry").fetchone()[0]"""
+    count = conn.execute("SELECT COUNT(*) FROM agent_registry").fetchone()[0]
     if count > 0:
         return
 
@@ -46,8 +46,7 @@ def seed_a2a(conn: sqlite3.Connection) -> None:
             ),
         )
         conn.execute(
-            "INSERT INTO agent_tasks (task_id, source_agent_key, target_agent_key, task_type, input_data, status) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO agent_tasks (task_id, source_agent_key, target_agent_key, task_type, input_data, status) VALUES (?, ?, ?, ?, ?, ?)",
             (
                 "a2a:seed-002",
                 "copilot_hcp_outreach",

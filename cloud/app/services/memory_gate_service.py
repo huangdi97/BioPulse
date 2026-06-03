@@ -149,8 +149,7 @@ class MemoryGateService(BaseService):
             params.extend(memory_types)
         where = " WHERE " + " AND ".join(conditions)
         rows = entry_repo.db.execute(
-            f"SELECT id, title, content, memory_type, importance, context_tags "
-            f"FROM {entry_repo.table_name}{where} ORDER BY importance DESC LIMIT ?",
+            f"SELECT id, title, content, memory_type, importance, context_tags FROM {entry_repo.table_name}{where} ORDER BY importance DESC LIMIT ?",
             params + [max_results],
         ).fetchall()
         results = [dict(r) for r in rows]

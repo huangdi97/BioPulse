@@ -303,9 +303,7 @@ class ComplianceEnforcer:
                 from datetime import datetime, timedelta
 
                 since = (datetime.now() - timedelta(days=window_days)).isoformat()
-                total = self.db.execute("SELECT COUNT(*) AS c FROM visits WHERE created_at >= ?", (since,)).fetchone()[
-                    "c"
-                ]
+                total = self.db.execute("SELECT COUNT(*) AS c FROM visits WHERE created_at >= ?", (since,)).fetchone()["c"]
                 if total > 0:
                     dept_count = self.db.execute(
                         f"SELECT COUNT(*) AS c FROM visits WHERE {field} = ? AND created_at >= ?",
