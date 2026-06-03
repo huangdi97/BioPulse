@@ -108,37 +108,12 @@ one-cloud-four-ends/
 └── frontend/       # React SPA（前管理端界面）
 ```
 
-## 开发准则
-
-本项目遵循 18 条编码准则：
-
-1. **Think Before Coding** — 先想后写
-2. **Simplicity First** — 简单优先，不 YAGNI
-3. **Surgical Changes** — 一次只改一件事
-4. **Goal-Driven** — 改动有明确目标
-5. **架构优先，拒绝补丁** — 架构缺陷先重构
-6. **面向组件** — 组件可独立替换
-7. **显式优于隐式** — 不依赖魔法
-8. **代码即文档** — 好的命名消灭 80% 注释
-9. **单一职责** — 一个函数做一件事
-10. **组合优于继承**
-11. **单一状态源**
-12. **避免语法糖**
-13. **命名一致性**
-14. **≤ 300 行** 每文件
-15. **低耦合**
-16. **外部 Agent 写代码** — 若衡架构师，OpenCode 程序员
-17. **Review Gate** — 先评审再动手
-18. **业务语言** — 不用工程行话堆砌
 
 ## 测试
 
 ```bash
 # 运行全部测试
 python -m pytest cloud/app/tests/ -v
-
-# 含性能基准
-python -m pytest cloud/app/tests/ --benchmark-only
 
 # 代码风格检查
 pre-commit run --all-files
