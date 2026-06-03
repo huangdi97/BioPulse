@@ -6,13 +6,15 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.research_database import get_research_db
-
-QUALITY_MAP = {"high": 1.0, "medium": 0.8, "low": 0.5}
+from cloud.app.services.research_trajectory_features import (
+    causal_attribution,
+    extract_time_series,
+    normalize_areas,
+    run_prediction_fallback,
+)
 
 
 class ResearchTrajectoryService:
-    """ResearchTrajectory 服务类。"""
-
     def _init_db_table(self):
         db = get_research_db()
         try:
@@ -38,25 +40,7 @@ class ResearchTrajectoryService:
         finally:
             db.close()
 
-    def _normalize_areas(self, obj):
-        if isinstance(obj, str):
-            try:
-                return json.loads(obj)
-            except (json.JSONDecodeError, TypeError):
-                return []
-        if isinstance(obj, (list, dict)):
-            return obj
-        return []
-
     def get_trajectory(self, pi_id: int) -> dict:
-        """get_trajectory 操作。
-
-        Args:
-            pi_id: 描述
-
-        Returns:
-            描述
-        """
         db = get_research_db()
         try:
             pi_row = db.execute("SELECT * FROM research_pi_profiles WHERE pi_id = ?", (pi_id,)).fetchone()
@@ -79,15 +63,6 @@ class ResearchTrajectoryService:
             db.close()
 
     def predict_trajectory(self, pi_id: int, horizon_days: int = 90) -> dict:
-        """predict_trajectory 操作。
-
-        Args:
-            pi_id: 描述
-            horizon_days: 描述
-
-        Returns:
-            描述
-        """
         self._init_db_table()
         db = get_research_db()
         try:
@@ -106,7 +81,22 @@ class ResearchTrajectoryService:
             ).fetchall()
             points = [dict(r) for r in traj_rows]
             quotations = [dict(r) for r in quotation_rows]
-            result = self._run_prediction(points, quotations, pi_info, horizon_days)
+
+            features = extract_time_series(pi_id)
+            ai_result = self._ai_predict_transition(pi_info, features, horizon_days)
+
+            if ai_result:
+                result = ai_result
+                result["area_transition"] = {
+                    "from_areas": [t["from_area"] for t in features["dominant_transitions"][-2:]] if features["dominant_transitions"] else [],
+                    "to_areas": [p["area"] for p in ai_result["predicted_areas"][:2]],
+                    "transition_path": ai_result.get("transition_path", []),
+                }
+                result["confidence"] = round(result["confidence"] * features["stat_features"]["latest_stability_measure"], 2)
+                causal_attribution(result, features)
+            else:
+                result = run_prediction_fallback(points, quotations, pi_info, horizon_days)
+
             now_str = datetime.now().strftime("%Y-%m-%d")
             db.execute(
                 "INSERT INTO pi_predictions (pi_id, prediction_date, horizon_days, "
@@ -119,7 +109,7 @@ class ResearchTrajectoryService:
                     json.dumps(result["predicted_areas"], ensure_ascii=False),
                     result["confidence"],
                     result["rationale"],
-                    json.dumps(result["area_transition"], ensure_ascii=False),
+                    json.dumps(result.get("area_transition", {}), ensure_ascii=False),
                 ),
             )
             db.commit()
@@ -127,121 +117,77 @@ class ResearchTrajectoryService:
         finally:
             db.close()
 
-    def _run_prediction(self, points, quotations, pi_info, horizon_days):
-        n = len(points)
-        quality_factor = QUALITY_MAP.get(points[-1].get("data_quality", "medium"), 0.8) if n >= 1 else 0.8
+    def _ai_predict_transition(self, pi_info: dict, features: dict, horizon_days: int) -> dict | None:
+        from cloud.app.services.research_trajectory_ai import build_prediction_prompt, call_llm_for_prediction
 
-        if n == 0:
-            areas = self._extract_areas_from_quotations(quotations)
-            if not areas:
-                default_areas = self._normalize_areas(pi_info.get("research_areas", "[]"))
-                areas = default_areas if default_areas else ["通用科研"]
-            predicted = [{"area": a, "probability": round(1.0 / len(areas), 2), "trend": "stable"} for a in areas]
-            return {
-                "predicted_areas": predicted,
-                "confidence": 0.1,
-                "rationale": "无轨迹数据，基于PI资料和询价历史推测",
-                "area_transition": {"from_areas": [], "to_areas": areas[:2], "transition_path": []},
-            }
+        prompt = build_prediction_prompt(pi_info, features, horizon_days)
+        result = call_llm_for_prediction(prompt)
+        if not result.get("predicted_areas"):
+            return None
+        return result
 
-        if n < 2:
-            areas = self._extract_areas_from_quotations(quotations)
-            if not areas:
-                last_active = self._normalize_areas(points[-1].get("active_areas", "[]"))
-                areas = last_active if last_active else ["通用科研"]
-            predicted = [{"area": a, "probability": round(1.0 / len(areas), 2), "trend": "stable"} for a in areas]
-            return {
-                "predicted_areas": predicted,
-                "confidence": round(min(n / 12, 0.9) * quality_factor * 0.5, 2),
-                "rationale": f"轨迹点不足2个，基于{len(points)}个点及询价记录推测",
-                "area_transition": {
-                    "from_areas": [points[-1].get("dominant_area", "")] if points[-1].get("dominant_area") else [],
-                    "to_areas": areas[:2],
-                    "transition_path": [],
-                },
-            }
+    def get_pi_trajectory_score(self, pi_id: int, area: str | None = None) -> dict:
+        QUALITY_MAP = {"high": 1.0, "medium": 0.8, "low": 0.5}
+        db = get_research_db()
+        try:
+            pred_row = db.execute(
+                "SELECT * FROM pi_predictions WHERE pi_id = ? ORDER BY created_at DESC LIMIT 1",
+                (pi_id,),
+            ).fetchone()
+            if not pred_row:
+                return {
+                    "pi_id": pi_id,
+                    "area": area or "all",
+                    "trajectory_score": 0,
+                    "data_quality": "low",
+                    "recommendation": "尚无预测数据，请先执行预测",
+                    "source_prediction_id": None,
+                }
+            pred = dict(pred_row)
+            predicted_areas = normalize_areas(pred.get("predicted_areas", "[]"))
+            quality = pred.get("data_quality", "medium") if "data_quality" in pred else "medium"
+            quality_factor = QUALITY_MAP.get(quality, 0.8)
 
-        area_counter = Counter()
-        total_weight = 0.0
-        for i, pt in enumerate(points):
-            recency = (i + 1) / n
-            weights = self._normalize_areas(pt.get("area_weights", "{}"))
-            if isinstance(weights, dict) and weights:
-                for area, w in weights.items():
-                    weighted = w * recency
-                    area_counter[area] += weighted
-                    total_weight += weighted
+            if area:
+                target = [p for p in predicted_areas if isinstance(p, dict) and p.get("area") == area]
             else:
-                for area in self._normalize_areas(pt.get("active_areas", "[]")):
-                    area_counter[area] += recency
-                    total_weight += recency
+                target = [p for p in predicted_areas if isinstance(p, dict)]
 
-        last_dominant = points[-1].get("dominant_area", "")
-        dominant_areas = [p.get("dominant_area", "") for p in points if p.get("dominant_area")]
-        from_areas = list(dict.fromkeys(dominant_areas[:-1])) if len(dominant_areas) > 1 else []
-        to_areas = [dominant_areas[-1]] if dominant_areas else []
-        transition_path = dominant_areas.copy()
+            if not target:
+                return {
+                    "pi_id": pi_id,
+                    "area": area or "all",
+                    "trajectory_score": 0,
+                    "data_quality": quality,
+                    "recommendation": "指定领域无预测数据",
+                    "source_prediction_id": pred["id"],
+                }
 
-        for qa in self._extract_areas_from_quotations(quotations):
-            area_counter[qa] += 0.1 * quality_factor
-            total_weight += 0.1 * quality_factor
+            max_prob = max(p.get("probability", 0) for p in target)
+            best = max(target, key=lambda x: x.get("probability", 0))
+            trend = best.get("trend", "stable")
+            trend_bonus = 10 if trend == "up" else -10 if trend == "down" else 0
+            trajectory_score = min(100, round(max_prob * 100 * quality_factor + trend_bonus))
 
-        if total_weight > 0 and area_counter:
-            predicted = []
-            for area, weight in area_counter.most_common(5):
-                prob = round(weight / total_weight, 2)
-                trend = "up"
-                if last_dominant and area == last_dominant:
-                    trend = "stable"
-                if area in from_areas and area not in to_areas:
-                    trend = "down"
-                predicted.append({"area": area, "probability": prob, "trend": trend})
-            predicted.sort(key=lambda x: x["probability"], reverse=True)
-        else:
-            predicted = []
+            if trajectory_score >= 70:
+                recommendation = "高潜力领域，建议重点跟进"
+            elif trajectory_score >= 40:
+                recommendation = "中等潜力，建议保持关注"
+            else:
+                recommendation = "低活跃度，建议观察"
 
-        confidence = round(min(n / 12, 0.9) * quality_factor, 2)
-        if predicted:
-            to_areas = [p["area"] for p in predicted[:2]]
-        rationale_parts = [f"基于{len(points)}个轨迹点"]
-        if transition_path:
-            rationale_parts.append(f"领域迁移路径: {'→'.join(transition_path)}")
-        rationale_parts.append("短期预测" if horizon_days <= 90 else "中长期预测")
-        return {
-            "predicted_areas": predicted,
-            "confidence": confidence,
-            "rationale": "；".join(rationale_parts),
-            "area_transition": {"from_areas": from_areas, "to_areas": to_areas, "transition_path": transition_path},
-        }
-
-    def _extract_areas_from_quotations(self, quotations):
-        areas = set()
-        for q in quotations:
-            items = self._normalize_areas(q.get("items_json", "[]"))
-            for item in items:
-                if isinstance(item, dict):
-                    cat = item.get("category", "")
-                    name = item.get("product_name", "") or item.get("name", "")
-                    if cat:
-                        areas.add(cat)
-                    elif name:
-                        areas.add(name)
-            title = q.get("title", "")
-            if title:
-                for kw in ["试剂盒", "抗体", "测序", "PCR", "细胞", "基因", "蛋白"]:
-                    if kw in title:
-                        areas.add(kw)
-        return list(areas)
+            return {
+                "pi_id": pi_id,
+                "area": area or "all",
+                "trajectory_score": trajectory_score,
+                "data_quality": quality,
+                "recommendation": recommendation,
+                "source_prediction_id": pred["id"],
+            }
+        finally:
+            db.close()
 
     def get_trends(self, days: int = 90) -> dict:
-        """get_trends 操作。
-
-        Args:
-            days: 描述
-
-        Returns:
-            描述
-        """
         db = get_research_db()
         try:
             since = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
@@ -252,12 +198,12 @@ class ResearchTrajectoryService:
             for row in traj_rows:
                 if row["dominant_area"]:
                     dominant_counter[row["dominant_area"]] += 1
-                for a in self._normalize_areas(row["active_areas"]):
+                for a in normalize_areas(row["active_areas"]):
                     if isinstance(a, str):
                         active_counter[a] += 1
             pred_area_counter = Counter()
             for row in pred_rows:
-                for p in self._normalize_areas(row["predicted_areas"]):
+                for p in normalize_areas(row["predicted_areas"]):
                     if isinstance(p, dict):
                         area = p.get("area", "")
                         if area:

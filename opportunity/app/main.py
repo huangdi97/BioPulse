@@ -1,8 +1,5 @@
-import sqlite3
-import time
-
 from fastapi import FastAPI
-from starlette import status
+from fastapi.middleware.cors import CORSMiddleware
 
 from opportunity.app.bidding_agent_router import (
     router as bidding_agent_router,
@@ -13,7 +10,8 @@ from opportunity.app.bidding_agent_router import (
 from opportunity.app.bidding_router import router as bidding_router
 from opportunity.app.bookmark_router import router as bookmark_router
 from opportunity.app.contact_router import router as contact_router
-from opportunity.app.database import DB_PATH, init_db
+from opportunity.app.database import init_db
+from opportunity.app.health_router import router as health_router
 from opportunity.app.opportunity_router import router as opportunity_router
 from opportunity.app.pubpeer_router import router as pubpeer_router
 from opportunity.app.research_router import router as research_router
@@ -25,12 +23,17 @@ from shared.rate_limiter import RateLimiterMiddleware
 from shared.request_id_middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 
-START_TIME = time.time()
-
 setup_logging("opportunity")
 
 app = FastAPI(title="Opportunity Service", version="1.0.0")
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(RateLimiterMiddleware, default_rate=100, window=60)
 register_exception_handlers(app)
@@ -43,23 +46,7 @@ def on_startup() -> None:
     start_bidding_scheduler()
 
 
-@app.get("/health", status_code=status.HTTP_200_OK)
-def health_check() -> dict:
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        conn.execute("SELECT 1")
-        conn.close()
-        db_status = "connected"
-    except Exception:
-        db_status = "disconnected"
-    return {
-        "status": "ok",
-        "db": db_status,
-        "uptime": int(time.time() - START_TIME),
-        "version": "0.1.0",
-    }
-
-
+app.include_router(health_router)
 app.include_router(stats_router)
 app.include_router(opportunity_router)
 app.include_router(contact_router)

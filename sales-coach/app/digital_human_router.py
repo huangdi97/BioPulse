@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Path, Query
@@ -254,4 +255,26 @@ def transfer_skills(
     return JSONResponse(
         content=success(data=result).model_dump(),
         status_code=status.HTTP_200_OK,
+    )
+
+
+@router.post("/sessions/{session_id}/voice-input", summary="Voice Input (预留)")
+def voice_input(session_id: int, current_user: dict = Depends(get_current_user)):
+    return success(
+        data={
+            "provider": os.getenv("DIGITAL_HUMAN_PROVIDER", "internal"),
+            "status": "not_implemented",
+            "message": "多模态语音输入，等待数字人供应商接入",
+        }
+    )
+
+
+@router.post("/sessions/{session_id}/video-input", summary="Video Input (预留)")
+def video_input(session_id: int, current_user: dict = Depends(get_current_user)):
+    return success(
+        data={
+            "provider": os.getenv("DIGITAL_HUMAN_PROVIDER", "internal"),
+            "status": "not_implemented",
+            "message": "多模态视频输入，等待数字人供应商接入",
+        }
     )

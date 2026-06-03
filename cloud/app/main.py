@@ -53,6 +53,7 @@ from cloud.app.routers.compliance_dashboard_router import (
 )
 from cloud.app.routers.enforcer_router import router as enforcer_router
 from cloud.app.routers.langgraph_test_router import router as langgraph_test_router
+from cloud.app.routers.model_compression_router import router as model_compression_router
 from cloud.app.routers.pi_router import router as pi_router
 from cloud.app.routers.product_router import router as product_router
 from cloud.app.routers.pubmed_router import router as pubmed_router
@@ -72,6 +73,8 @@ from cloud.app.routers.research_quotation_workflow_router import (
     router as research_quotation_workflow_router,
 )
 from cloud.app.routers.research_route_router import router as research_route_router
+from cloud.app.routers.research_trajectory_router import router as research_trajectory_router
+from cloud.app.routers.sage_engine_router import router as sage_engine_router
 from cloud.app.routers.switch_router import router as switch_router
 
 # from cloud.app.edge_router import router as edge_router  # ❄️ 冻结
@@ -185,6 +188,7 @@ app.include_router(recommend_router)
 app.include_router(collaboration_router)
 app.include_router(event_bus_router)
 app.include_router(memory_consolidation_router)
+app.include_router(sage_engine_router)
 app.include_router(agent_execution_router)
 app.include_router(mcp_router)
 app.include_router(orchestrate_router)
@@ -194,6 +198,7 @@ app.include_router(nmpa_router)
 app.include_router(training_scripts_router)
 app.include_router(marketplace_router)
 # app.include_router(edge_router)  # ❄️ 冻结
+app.include_router(model_compression_router)
 app.include_router(settings_router)
 app.include_router(visit_router)
 app.include_router(pubmed_router)
@@ -209,6 +214,7 @@ app.include_router(research_enforcer_router)
 app.include_router(research_export_router)
 app.include_router(research_matching_router)
 app.include_router(research_route_router)
+app.include_router(research_trajectory_router)
 app.include_router(research_quotation_workflow_router)
 app.include_router(switch_router)
 app.include_router(token_budget_router)

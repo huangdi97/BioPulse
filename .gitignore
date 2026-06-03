@@ -72,8 +72,6 @@ vibecoding/
 start_*.sh
 test_*.sh
 cloud-api.service
-pyproject.toml
-.flake8
 frontend-plan-tg.md
 
 .mypy_cache/
@@ -87,3 +85,6 @@ benchmarks/
 # 开发任务文件（不上传GitHub）
 tasks-*.md
 archive/*.md
+S*-*.md
+生产硬化-*.md
+test_s8_integration.py

@@ -1,12 +1,10 @@
-import sqlite3
-import time
-
 from fastapi import FastAPI
-from starlette import status
+from fastapi.middleware.cors import CORSMiddleware
 
-from assistant.app.database import DB_PATH, init_db
+from assistant.app.database import init_db
 from assistant.app.hcp_router import router as hcp_router
 from assistant.app.health_radar_router import router as health_radar_router
+from assistant.app.health_router import router as health_router
 from assistant.app.knowledge_router import router as knowledge_router
 from assistant.app.knowledge_seed import seed_knowledge
 from assistant.app.location_router import router as location_router
@@ -22,11 +20,19 @@ from assistant.app.ws_router import router as ws_router
 from shared.exception_handlers import register_exception_handlers
 from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
-
-START_TIME = time.time()
+from shared.structured_logging import setup_logging
 
 app = FastAPI(title="Assistant Service", version="1.0.0")
 
+setup_logging("assistant")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(RateLimiterMiddleware, default_rate=100, window=60)
 register_exception_handlers(app)
@@ -40,23 +46,7 @@ def on_startup() -> None:
     start_scheduler()
 
 
-@app.get("/health", status_code=status.HTTP_200_OK)
-def health_check() -> dict:
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        conn.execute("SELECT 1")
-        conn.close()
-        db_status = "connected"
-    except Exception:
-        db_status = "disconnected"
-    return {
-        "status": "ok",
-        "db": db_status,
-        "uptime": int(time.time() - START_TIME),
-        "version": "0.1.0",
-    }
-
-
+app.include_router(health_router)
 app.include_router(hcp_router)
 app.include_router(visit_router)
 app.include_router(task_router)

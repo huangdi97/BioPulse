@@ -28,6 +28,7 @@ from cloud.app.seeds import (
     seed_training_coach,
     seed_world_tree,
 )
+from cloud.app.seeds.seed_model_compression import seed_model_compression
 from cloud.seed_data import seed_products
 from shared.db import PGCompatConnection
 
@@ -118,6 +119,26 @@ def init_db() -> None:
         seed_s4(conn)
         seed_s5(conn)
         seed_s6(conn)
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS model_compression_jobs ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "job_id TEXT NOT NULL UNIQUE, "
+            "model_name TEXT NOT NULL, "
+            "compression_type TEXT NOT NULL, "
+            "original_size_bytes INTEGER NOT NULL DEFAULT 0, "
+            "compressed_size_bytes INTEGER NOT NULL DEFAULT 0, "
+            "compression_ratio REAL NOT NULL DEFAULT 0.0, "
+            "accuracy_impact REAL NOT NULL DEFAULT 0.0, "
+            "parameters_before INTEGER NOT NULL DEFAULT 0, "
+            "parameters_after INTEGER NOT NULL DEFAULT 0, "
+            "status TEXT NOT NULL DEFAULT 'pending', "
+            "result_detail TEXT DEFAULT '', "
+            "started_at TEXT, "
+            "completed_at TEXT, "
+            "created_at TEXT DEFAULT CURRENT_TIMESTAMP"
+            ")"
+        )
+        seed_model_compression(conn)
         seed_products(conn)
         conn.execute(
             "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",

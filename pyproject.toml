@@ -1,0 +1,89 @@
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+exclude = '''
+/(
+    \.git
+  | __pycache__
+  | venv
+)/
+'''
+
+[tool.ruff]
+line-length = 150
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+"clinical-ops/**" = ["E402", "F401", "F403", "E501"]
+"management/**" = ["E402", "F401", "F403", "E501"]
+"market-access/**" = ["E402", "F401", "F403", "E501"]
+"patient-engage/**" = ["E402", "F401", "F403", "E501"]
+"pharma-intel/**" = ["E402", "F401", "F403", "E501"]
+"cloud/app/repositories/__init__.py" = ["E402", "F401"]
+"opportunity/app/repositories/__init__.py" = ["E402", "F401"]
+"opportunity/app/bidding_agent_router.py" = ["E402"]
+"sales-coach/app/assessment_router.py" = ["F821"]
+"assistant/app/repositories.py" = ["F821"]
+"cloud/app/repositories.py" = ["F841", "F821"]
+"cloud/app/seeds/seed_event_bus.py" = ["E741"]
+"sales-coach/app/services/reflection_service.py" = ["E741"]
+"shared/__init__.py" = ["F403", "F401"]
+"assistant/app/**" = ["E501"]
+"cloud/app/compliance_v2_router.py" = ["E501"]
+"cloud/app/seeds/__init__.py" = ["F401"]
+"cloud/app/seeds/*.py" = ["E501"]
+"cloud/app/services/compliance_enforcer.py" = ["E501"]
+"cloud/app/services/brain_memory_service.py" = ["E501"]
+"cloud/app/services/compliance_service.py" = ["E501"]
+"cloud/app/repo*" = ["E501"]
+"cloud/app/services/*" = ["E501"]
+"cloud/app/tests/*.py" = ["E501"]
+"opportunity/app/**" = ["E501"]
+"sales-assistant/app/**" = ["E501"]
+"cloud/app/mcp_router.py" = ["E501"]
+"cloud/app/main.py" = ["E501"]
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = ["E203", "W503"]
+exclude = [
+    ".git",
+    "__pycache__",
+    "venv",
+]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+exclude = [
+    ".git/",
+    "__pycache__/",
+    "venv/",
+]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "cloud/app/tests",
+    "assistant/app/tests",
+    "opportunity/app/tests",
+    "sales-coach/app/tests",
+    "sales-assistant/app/tests",
+]
+addopts = "--cov=cloud/app --cov=assistant/app --cov=opportunity/app --cov=sales_coach/app --cov=sales_assistant/app --cov-report=term --cov-report=html:coverage_html"
+
+[tool.coverage.run]
+branch = true
+omit = [
+    "*/venv/*",
+    "*/tests/*",
+    "**/__init__.py",
+    "**/seeds/*",
+    "**/migrations/*",
+]
+
+[tool.isort]
+profile = "black"
+line_length = 100

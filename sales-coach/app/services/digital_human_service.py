@@ -1,20 +1,23 @@
 import json
+import os
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException
 from starlette import status
 
-from sales_coach.app.digital_human import (
-    check_compliance,
-    initiate_scenario,
-    simulate_dialogue,
-)
+from sales_coach.app.database import get_db
+from sales_coach.app.digital_human import check_compliance, initiate_scenario
 from sales_coach.app.services.base import BaseService
+from sales_coach.app.services.digital_human_provider import get_provider
 
 
 class DigitalHumanService(BaseService):
     """DigitalHuman 服务类。"""
+
+    def __init__(self, db=Depends(get_db)):
+        super().__init__(db)
+        self._provider = get_provider(os.getenv("DIGITAL_HUMAN_PROVIDER", "internal"))
 
     def create_session(
         self,
@@ -23,17 +26,6 @@ class DigitalHumanService(BaseService):
         role: str,
         user_id: int,
     ) -> dict:
-        """创建会话。
-
-        Args:
-            scenario_id: 描述
-            module_id: 描述
-            role: 描述
-            user_id: 描述
-
-        Returns:
-            描述
-        """
         scenario = self.db.execute(
             "SELECT * FROM coach_scenario WHERE id = ? AND is_active = 1",
             (scenario_id,),
@@ -42,9 +34,12 @@ class DigitalHumanService(BaseService):
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Scenario not found")
 
         now = datetime.now(timezone.utc).isoformat()
+        ext_session_id = self._provider.create_session(dict(scenario), user_id)
         cur = self.db.execute(
-            "INSERT INTO digital_human_sessions (scenario_id, module_id, role, created_by, created_at) VALUES (?, ?, ?, ?, ?)",
-            (scenario_id, module_id, role, user_id, now),
+            "INSERT INTO digital_human_sessions "
+            "(scenario_id, module_id, role, created_by, created_at, external_session_id) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (scenario_id, module_id, role, user_id, now, ext_session_id),
         )
         session_id = cur.lastrowid
 
@@ -77,17 +72,6 @@ class DigitalHumanService(BaseService):
         ai_gateway_url: str,
         user_id: int,
     ) -> dict:
-        """发送消息。
-
-        Args:
-            session_id: 描述
-            content: 描述
-            ai_gateway_url: 描述
-            user_id: 描述
-
-        Returns:
-            描述
-        """
         row = self.db.execute(
             "SELECT * FROM digital_human_sessions WHERE id = ?",
             (session_id,),
@@ -105,7 +89,9 @@ class DigitalHumanService(BaseService):
         ).fetchall()
         context = [{"role": m["sender"], "content": m["content"]} for m in history]
 
-        ai_result = simulate_dialogue(row["role"], context, content, ai_gateway_url)
+        msg = {"content": content, "role": row["role"], "ai_gateway_url": ai_gateway_url}
+        ext_id = row.get("external_session_id", "")
+        provider_result = self._provider.send_message(ext_id, msg, context)
 
         round_number = len(history)
         self.db.execute(
@@ -123,7 +109,7 @@ class DigitalHumanService(BaseService):
         )
         self.db.execute(
             "INSERT INTO digital_human_messages (session_id, sender, content, round_number) VALUES (?, ?, ?, ?)",
-            (session_id, "ai", ai_result["reply"], round_number + 1),
+            (session_id, "ai", provider_result["reply"], round_number + 1),
         )
 
         violation_inc = 0 if compliance_result["passed"] else len(compliance_result["violations"])
@@ -133,21 +119,13 @@ class DigitalHumanService(BaseService):
         )
 
         return {
-            "reply": ai_result["reply"],
+            "reply": provider_result["reply"],
             "compliance": compliance_result,
-            "round": ai_result["round"],
+            "round": round_number // 2 + 1,
             "role": row["role"],
         }
 
     def get_session(self, session_id: int) -> dict:
-        """获取会话。
-
-        Args:
-            session_id: 描述
-
-        Returns:
-            描述
-        """
         row = self.db.execute(
             "SELECT * FROM digital_human_sessions WHERE id = ?",
             (session_id,),
@@ -166,21 +144,14 @@ class DigitalHumanService(BaseService):
         }
 
     def end_session(self, session_id: int, user_id: int) -> dict:
-        """结束会话。
-
-        Args:
-            session_id: 描述
-            user_id: 描述
-
-        Returns:
-            描述
-        """
         row = self.db.execute(
             "SELECT * FROM digital_human_sessions WHERE id = ?",
             (session_id,),
         ).fetchone()
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Session not found")
+
+        self._provider.end_session(row.get("external_session_id", ""))
 
         messages = self.db.execute(
             "SELECT * FROM digital_human_messages WHERE session_id = ? AND sender = 'user' ORDER BY round_number ASC",
@@ -251,22 +222,15 @@ class DigitalHumanService(BaseService):
             "user_rounds": user_rounds,
         }
 
+    def get_provider_info(self) -> dict:
+        return self._provider.get_provider_info()
+
     def list_sessions(
         self,
         user_id: Optional[int] = None,
         status: Optional[str] = None,
         limit: int = 20,
     ) -> list:
-        """获取会话列表。
-
-        Args:
-            user_id: 描述
-            status: 描述
-            limit: 描述
-
-        Returns:
-            描述
-        """
         conditions = []
         params = []
 

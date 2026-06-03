@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import httpx
 
@@ -8,6 +8,7 @@ from assistant.app.services.base import BaseService
 
 CLOUD_API_URL = os.getenv("CLOUD_API_URL", "http://localhost:8000")
 OFFLINE_MODE_VAR = "OFFLINE_MODE"
+AI_CACHE_TTL_HOURS = 24
 
 ENTITY_ENDPOINTS = {
     "hcp": "/api/hcp",
@@ -150,6 +151,53 @@ class OfflineService(BaseService):
         self.sync_pending(limit=500)
         os.environ.pop(OFFLINE_MODE_VAR, None)
         return {"mode": "online"}
+
+    def init_ai_cache_table(self) -> None:
+        self.db.execute("""
+            CREATE TABLE IF NOT EXISTS offline_ai_cache (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cache_key TEXT UNIQUE,
+                request_hash TEXT,
+                response_json TEXT,
+                ai_model TEXT,
+                created_at TEXT,
+                expires_at TEXT,
+                access_count INTEGER DEFAULT 0,
+                last_accessed_at TEXT
+            )
+        """)
+        self.db.commit()
+
+    def cache_ai_response(self, cache_key, request_hash, response_json, ttl_hours=24) -> int:
+        now = datetime.now(timezone.utc)
+        expires_at = now + timedelta(hours=ttl_hours)
+        cursor = self.db.execute(
+            "INSERT OR REPLACE INTO offline_ai_cache (cache_key, request_hash, response_json, ai_model, created_at, expires_at, access_count, last_accessed_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?)",
+            (cache_key, request_hash, json.dumps(response_json, ensure_ascii=False), "", now.isoformat(), expires_at.isoformat(), now.isoformat()),
+        )
+        self.db.commit()
+        return cursor.rowcount
+
+    def get_cached_response(self, cache_key, request_hash) -> dict | None:
+        now = datetime.now(timezone.utc).isoformat()
+        row = self.db.execute(
+            "SELECT * FROM offline_ai_cache WHERE cache_key = ? AND expires_at > ?",
+            (cache_key, now),
+        ).fetchone()
+        if row:
+            self.db.execute(
+                "UPDATE offline_ai_cache SET access_count = access_count + 1, last_accessed_at = ? WHERE id = ?",
+                (now, row["id"]),
+            )
+            self.db.commit()
+            return json.loads(row["response_json"])
+        return None
+
+    def clear_expired_cache(self) -> int:
+        now = datetime.now(timezone.utc).isoformat()
+        cursor = self.db.execute("DELETE FROM offline_ai_cache WHERE expires_at < ?", (now,))
+        self.db.commit()
+        return cursor.rowcount
 
     def _check_cloud(self) -> bool:
         try:

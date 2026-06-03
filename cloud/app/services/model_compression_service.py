@@ -35,6 +35,12 @@ COMPRESSION_TYPES = {
         "accuracy_impact": 0.015,
         "description": "组合量化+剪枝+蒸馏等多种策略",
     },
+    "quantum_inspired": {
+        "name": "量子启发压缩",
+        "compression_ratio": 0.90,
+        "accuracy_impact": 0.005,
+        "description": "基于CompactifAI的量子启发张量网络压缩，理论压缩比90%，精度损失<0.5%",
+    },
 }
 
 BASE_PARAM_COUNTS = {
@@ -55,7 +61,7 @@ class ModelCompressionService(BaseService):
     """ModelCompression 服务类。"""
 
     def _estimate_size(self, param_count: int) -> int:
-        """return param_count * 4"""
+        return param_count * 4
 
     def compress(self, model_name: str, compression_type: str) -> dict:
         """compress 操作。

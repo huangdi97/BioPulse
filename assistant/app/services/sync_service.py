@@ -56,7 +56,9 @@ class SyncService(BaseService):
         results = []
         synced_count = 0
         failed_count = 0
+        conflict_count = 0
         repo = SyncQueueRepository(self.db)
+        self._init_conflict_table()
 
         for op in body.operations:
             op_id = repo.create(
@@ -74,6 +76,8 @@ class SyncService(BaseService):
 
             result = self._apply_operation(op, user_id, now)
             result["operation_id"] = op_id
+            if result.get("conflict_id"):
+                conflict_count += 1
             if result["status"] == "synced":
                 repo.update(op_id, {"status": "synced", "synced_at": now})
                 synced_count += 1
@@ -85,6 +89,7 @@ class SyncService(BaseService):
         return {
             "synced": synced_count,
             "failed": failed_count,
+            "conflict_count": conflict_count,
             "server_operations": results,
         }
 
@@ -122,6 +127,26 @@ class SyncService(BaseService):
             "failed": failed,
             "by_entity": by_entity_map,
         }
+
+    def _init_conflict_table(self) -> None:
+        self.db.execute(
+            "CREATE TABLE IF NOT EXISTS sync_conflict_log (id INTEGER PRIMARY KEY AUTOINCREMENT, entity_type TEXT NOT NULL, entity_id INTEGER, local_version TEXT, server_version TEXT, conflict_type TEXT DEFAULT 'last_write_wins', resolution TEXT DEFAULT 'pending', resolved_by TEXT, resolved_at TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)"
+        )
+        self.db.commit()
+
+    def _detect_conflict(self, entity_type, entity_id, local_version, server_version) -> bool:
+        try:
+            return abs((datetime.fromisoformat(local_version) - datetime.fromisoformat(server_version)).total_seconds()) < 60
+        except (ValueError, TypeError):
+            return False
+
+    def _log_conflict(self, entity_type, entity_id, local_version, server_version) -> int:
+        cursor = self.db.execute(
+            "INSERT INTO sync_conflict_log (entity_type, entity_id, local_version, server_version) VALUES (?, ?, ?, ?)",
+            (entity_type, entity_id, local_version, server_version),
+        )
+        self.db.commit()
+        return cursor.lastrowid
 
     def _apply_operation(self, op, user_id: int, now: str) -> dict:
         table = ENTITY_TABLE_MAP.get(op.entity_type)
@@ -162,44 +187,44 @@ class SyncService(BaseService):
                             "status": "failed",
                             "server_entity_id": None,
                         }
+                conflict_id = None
+                if table in TABLES_WITH_UPDATED_AT:
+                    server_row = self.db.execute(
+                        f"SELECT updated_at FROM {table} WHERE id = ?",
+                        (op.entity_id,),
+                    ).fetchone()
+                    if server_row and server_row["updated_at"]:
+                        local_version = op.payload.get("updated_at") or getattr(op, "client_created_at", None)
+                        if local_version and self._detect_conflict(
+                            op.entity_type,
+                            op.entity_id,
+                            local_version,
+                            server_row["updated_at"],
+                        ):
+                            conflict_id = self._log_conflict(
+                                op.entity_type,
+                                op.entity_id,
+                                local_version,
+                                server_row["updated_at"],
+                            )
                 if table in TABLES_WITH_UPDATED_AT:
                     op.payload["updated_at"] = now
                 payload_for_update = {k: v for k, v in op.payload.items() if k != "id"}
                 set_clause = ", ".join(f"{k} = ?" for k in payload_for_update)
-                self.db.execute(
-                    f"UPDATE {table} SET {set_clause} WHERE id = ?",
-                    list(payload_for_update.values()) + [op.entity_id],
-                )
-                return {
-                    "operation_id": 0,
-                    "status": "synced",
-                    "server_entity_id": op.entity_id,
-                }
-
+                self.db.execute(f"UPDATE {table} SET {set_clause} WHERE id = ?", list(payload_for_update.values()) + [op.entity_id])
+                result = {"operation_id": 0, "status": "synced", "server_entity_id": op.entity_id}
+                if conflict_id:
+                    result["conflict_id"] = conflict_id
+                return result
             elif op.action == "delete" and op.entity_id:
-                self.db.execute(
-                    f"UPDATE {table} SET is_active = 0, updated_at = ? WHERE id = ?",
-                    (now, op.entity_id),
-                )
-                return {
-                    "operation_id": 0,
-                    "status": "synced",
-                    "server_entity_id": op.entity_id,
-                }
-
+                self.db.execute(f"UPDATE {table} SET is_active = 0, updated_at = ? WHERE id = ?", (now, op.entity_id))
+                return {"operation_id": 0, "status": "synced", "server_entity_id": op.entity_id}
             return {"operation_id": 0, "status": "failed", "server_entity_id": None}
         except Exception:
             return {"operation_id": 0, "status": "failed", "server_entity_id": None}
 
     def _collect_table_changes(self, table: str, since: str) -> dict:
-        has_updated = table in (
-            "hcp",
-            "health_radar",
-            "surgery_reminder",
-            "knowledge_base",
-            "hcp_location",
-        )
-        time_col = "updated_at" if has_updated else "created_at"
+        time_col = "updated_at" if table in TABLES_WITH_UPDATED_AT | {"hcp_location"} else "created_at"
         condition = "AND is_active = 1" if table in TABLES_WITH_IS_ACTIVE else ""
         changes = self.db.execute(f"SELECT * FROM {table} WHERE {time_col} > ? {condition}", (since,)).fetchall()
         if table in TABLES_WITH_IS_ACTIVE:
