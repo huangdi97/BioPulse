@@ -1,0 +1,468 @@
+import json
+import time
+import urllib.request
+import uuid
+from datetime import datetime
+from functools import partial
+
+from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
+from cloud.app.agent_runtime.guard import sanitize_tool_output
+from cloud.app.agent_runtime.memory import AgentBrain
+from cloud.app.agent_runtime.models import RuntimeResult
+from cloud.app.agent_runtime.notifier import AgentNotifier
+from cloud.app.agent_runtime.retry import retry_with_backoff
+from cloud.app.agent_runtime.tool_bridge import ToolRegistry
+
+
+class AgentRuntime:
+    def __init__(self, db, auth_header: str, notifier: AgentNotifier | None = None):
+        self._db = db
+        self._auth_header = auth_header
+        self._notifier = notifier
+        self._tool_registry = ToolRegistry(db)
+        self._tool_registry.register_default_tools()
+        self._brain = AgentBrain(db)
+        self._tool_registry.set_brain(self._brain)
+        self._stats = {"total_runs": 0, "success_count": 0, "fail_count": 0}
+        self._trace_id = str(uuid.uuid4())
+        self._cost_tracker = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+
+    def execute(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
+        spec = AGENT_SPECS.get(agent_key)
+        if spec is None:
+            return RuntimeResult(
+                status="error",
+                result=f"unknown agent_key: {agent_key}",
+                iterations=0,
+                tool_calls=0,
+                logs=[],
+            )
+
+        logs = []
+        tool_calls = 0
+        max_iter = min(spec["max_iterations"], 15)
+        started_at = datetime.now().isoformat()
+
+        checkpoint = self._load_checkpoint(agent_key, goal)
+        if checkpoint:
+            messages = checkpoint["messages"]
+            logs = checkpoint["logs"]
+            tool_calls = checkpoint["tool_calls_so_far"]
+            start_step = checkpoint["step"] + 1
+        else:
+            system_prompt = (
+                f"你是一个{spec['role_desc']}\n\n"
+                f"可用工具（JSON格式）：{json.dumps(self._tool_registry.list_tools(), ensure_ascii=False)}\n\n"
+                f"当前上下文：{json.dumps(context or {}, ensure_ascii=False)}\n\n"
+                '请回复JSON格式：{"action": "call_tool"|"complete"|"error", "tool": "tool_name", "params": {...}, "reasoning": "..."}'
+            )
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": goal},
+            ]
+            start_step = 0
+
+        # 检查是否有已批准的审批（resume 流程）
+        approved_tool = None
+        approved_tool_params = None
+        if checkpoint:
+            app = self._db.execute(
+                "SELECT tool, params FROM agent_runtime_approvals WHERE agent_key=? AND goal=? AND status='approved' ORDER BY id DESC LIMIT 1",
+                (agent_key, goal),
+            ).fetchone()
+            if app:
+                approved_tool = app["tool"]
+                approved_tool_params = json.loads(app["params"]) if app["params"] else {}
+
+        for step in range(start_step, max_iter):
+            messages = self._compress_messages(messages)
+            step_start = time.time()
+
+            # 如果有已批准的审批，直接执行该工具（跳过 LLM 思考）
+            if approved_tool and step == start_step:
+                tool_result = self._tool_registry.call(approved_tool, approved_tool_params, self._auth_header, caller_permission="write")
+                if tool_result.get("needs_approval"):
+                    tool_result = {"success": False, "data": None, "error": "still requires approval"}
+                tool_calls += 1
+                tool_output_text = json.dumps(tool_result, ensure_ascii=False)
+                safe_output = sanitize_tool_output(tool_output_text)
+                duration_ms = int((time.time() - step_start) * 1000)
+                logs.append(
+                    {
+                        "step": step,
+                        "action": "call_tool",
+                        "tool": approved_tool,
+                        "params": approved_tool_params,
+                        "result": safe_output,
+                        "duration_ms": duration_ms,
+                        "llm_prompt": None,
+                        "llm_raw_response": None,
+                        "llm_token_usage": None,
+                        "tool_input": json.dumps(approved_tool_params, ensure_ascii=False),
+                        "tool_output": tool_output_text,
+                        "retry_count": 0,
+                        "trace_id": self._trace_id,
+                    }
+                )
+                self._save_checkpoint(
+                    agent_key,
+                    goal,
+                    {
+                        "trace_id": self._trace_id,
+                        "step": step,
+                        "messages": messages,
+                        "logs": logs,
+                        "tool_calls_so_far": tool_calls,
+                        "goal": goal,
+                        "agent_key": agent_key,
+                        "context": context,
+                    },
+                )
+                messages.append(
+                    {
+                        "role": "assistant",
+                        "content": json.dumps({"action": "call_tool", "tool": approved_tool, "params": approved_tool_params}, ensure_ascii=False),
+                    }
+                )
+                messages.append({"role": "user", "content": f"工具返回：{safe_output}"})
+                approved_tool = None
+                continue  # 跳过 LLM 解析，直接下一轮
+            else:
+                try:
+                    ai_resp = self._call_ai(messages, spec["default_temperature"])
+                    usage = ai_resp.get("usage", {})
+                    self._cost_tracker["prompt_tokens"] += usage.get("prompt_tokens", 0)
+                    self._cost_tracker["completion_tokens"] += usage.get("completion_tokens", 0)
+                    self._cost_tracker["total_tokens"] += usage.get("total_tokens", 0)
+                except Exception as e:
+                    logs.append(
+                        {
+                            "step": step,
+                            "action": "error",
+                            "tool": None,
+                            "params": None,
+                            "result": str(e),
+                            "duration_ms": int((time.time() - step_start) * 1000),
+                            "llm_prompt": None,
+                            "llm_raw_response": None,
+                            "llm_token_usage": None,
+                            "tool_input": None,
+                            "tool_output": None,
+                            "retry_count": 0,
+                            "trace_id": self._trace_id,
+                        }
+                    )
+                    continue
+
+            duration_ms = int((time.time() - step_start) * 1000)
+            reply = ai_resp["reply"]
+
+            try:
+                decision = json.loads(reply) if isinstance(reply, str) else reply
+            except (json.JSONDecodeError, TypeError):
+                logs.append(
+                    {
+                        "step": step,
+                        "action": "error",
+                        "tool": None,
+                        "params": None,
+                        "result": "failed to parse LLM response",
+                        "duration_ms": duration_ms,
+                        "llm_prompt": ai_resp.get("prompt"),
+                        "llm_raw_response": ai_resp.get("raw_response"),
+                        "llm_token_usage": ai_resp.get("usage"),
+                        "tool_input": None,
+                        "tool_output": None,
+                        "retry_count": ai_resp.get("retry_count", 0),
+                        "trace_id": self._trace_id,
+                    }
+                )
+                continue
+
+            action = decision.get("action", "error")
+            tool_name = decision.get("tool")
+            tool_params = decision.get("params", {})
+
+            if action == "complete":
+                logs.append(
+                    {
+                        "step": step,
+                        "action": "complete",
+                        "tool": None,
+                        "params": None,
+                        "result": decision.get("reasoning", ""),
+                        "duration_ms": duration_ms,
+                        "llm_prompt": ai_resp.get("prompt"),
+                        "llm_raw_response": ai_resp.get("raw_response"),
+                        "llm_token_usage": ai_resp.get("usage"),
+                        "tool_input": None,
+                        "tool_output": None,
+                        "retry_count": ai_resp.get("retry_count", 0),
+                        "trace_id": self._trace_id,
+                    }
+                )
+                self._save_log(agent_key, goal, "completed", step + 1, tool_calls, logs, started_at)
+                if self._notifier:
+                    elapsed = (datetime.now() - datetime.fromisoformat(started_at)).total_seconds()
+                    self._notifier.notify(agent_key, goal, "completed", elapsed, self._cost_tracker)
+                self._delete_checkpoint(agent_key, goal)
+                self._stats["total_runs"] += 1
+                self._stats["success_count"] += 1
+                return RuntimeResult(
+                    status="completed",
+                    result=decision.get("reasoning", "任务完成"),
+                    iterations=step + 1,
+                    tool_calls=tool_calls,
+                    logs=logs,
+                )
+
+            if action == "call_tool" and tool_name:
+                tool_result = self._tool_registry.call(
+                    tool_name, tool_params, self._auth_header, caller_permission=spec.get("max_permission", "read")
+                )
+
+                if tool_result.get("needs_approval"):
+                    # 先保存检查点，以便恢复后能找到已批准的审批
+                    self._save_checkpoint(
+                        agent_key,
+                        goal,
+                        {
+                            "trace_id": self._trace_id,
+                            "step": step,
+                            "messages": messages,
+                            "logs": logs,
+                            "tool_calls_so_far": tool_calls,
+                            "goal": goal,
+                            "agent_key": agent_key,
+                            "context": None,
+                        },
+                    )
+                    approval_id = self._create_approval(agent_key, goal, step, tool_name, tool_params, decision.get("reasoning", ""))
+                    self._save_log(agent_key, goal, "awaiting_approval", step, tool_calls, logs, started_at)
+                    if self._notifier:
+                        elapsed = (datetime.now() - datetime.fromisoformat(started_at)).total_seconds()
+                        self._notifier.notify(agent_key, goal, "awaiting_approval", elapsed, self._cost_tracker)
+                    return RuntimeResult(
+                        status="awaiting_approval",
+                        result=f"需要人工审批: {tool_name}",
+                        iterations=step,
+                        tool_calls=tool_calls,
+                        logs=logs,
+                        metadata={"approval_id": approval_id, "trace_id": self._trace_id},
+                    )
+
+                tool_calls += 1
+                tool_output_text = json.dumps(tool_result, ensure_ascii=False)
+                safe_output = sanitize_tool_output(tool_output_text)
+                logs.append(
+                    {
+                        "step": step,
+                        "action": "call_tool",
+                        "tool": tool_name,
+                        "params": tool_params,
+                        "result": safe_output,
+                        "duration_ms": duration_ms,
+                        "llm_prompt": ai_resp.get("prompt"),
+                        "llm_raw_response": ai_resp.get("raw_response"),
+                        "llm_token_usage": ai_resp.get("usage"),
+                        "tool_input": json.dumps(tool_params, ensure_ascii=False),
+                        "tool_output": tool_output_text,
+                        "retry_count": ai_resp.get("retry_count", 0),
+                        "trace_id": self._trace_id,
+                    }
+                )
+                messages.append({"role": "assistant", "content": json.dumps(decision, ensure_ascii=False)})
+                messages.append({"role": "user", "content": f"工具返回：{safe_output}"})
+                if action == "call_tool" and step != start_step:
+                    self._save_checkpoint(
+                        agent_key,
+                        goal,
+                        {
+                            "trace_id": self._trace_id,
+                            "step": step,
+                            "messages": messages,
+                            "logs": logs,
+                            "tool_calls_so_far": tool_calls,
+                            "goal": goal,
+                            "agent_key": agent_key,
+                            "context": context,
+                        },
+                    )
+            else:
+                logs.append(
+                    {
+                        "step": step,
+                        "action": "error",
+                        "tool": tool_name,
+                        "params": tool_params,
+                        "result": f"invalid action: {action}",
+                        "duration_ms": duration_ms,
+                        "llm_prompt": ai_resp.get("prompt"),
+                        "llm_raw_response": ai_resp.get("raw_response"),
+                        "llm_token_usage": ai_resp.get("usage"),
+                        "tool_input": None,
+                        "tool_output": None,
+                        "retry_count": ai_resp.get("retry_count", 0),
+                        "trace_id": self._trace_id,
+                    }
+                )
+
+        self._save_log(agent_key, goal, "max_iterations", max_iter, tool_calls, logs, started_at)
+        if self._notifier:
+            elapsed = (datetime.now() - datetime.fromisoformat(started_at)).total_seconds()
+            self._notifier.notify(agent_key, goal, "max_iterations", elapsed, self._cost_tracker)
+        self._stats["total_runs"] += 1
+        self._stats["fail_count"] += 1
+        return RuntimeResult(
+            status="max_iterations",
+            result="达到最大迭代次数",
+            iterations=max_iter,
+            tool_calls=tool_calls,
+            logs=logs,
+        )
+
+    @staticmethod
+    def _estimate_token_count(messages: list[dict]) -> int:
+        total = 0
+        for msg in messages:
+            total += len(msg.get("content", "")) // 4
+            total += len(msg.get("role", "")) // 4
+        return total
+
+    def _compress_messages(self, messages: list[dict]) -> list[dict]:
+        if self._estimate_token_count(messages) < 4000:
+            return messages
+        compressed = [m for m in messages if m["role"] == "system"]
+        recent = [m for m in messages if m["role"] != "system"][-6:]
+        compressed.extend(recent)
+        if compressed:
+            compressed[0]["content"] += f"\n\n[上下文已压缩。保留了最近{len(recent) // 2}轮对话。当前步骤：继续执行。]"
+        return compressed
+
+    def _raw_llm_call(self, request_body: dict) -> dict:
+        req = urllib.request.Request(
+            "http://localhost:8000/ai/chat",
+            data=json.dumps(request_body).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": self._auth_header,
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=120) as rp:
+            return json.loads(rp.read().decode("utf-8"))
+
+    def _call_ai(self, messages: list[dict], temperature: float) -> dict:
+        prompt_text = json.dumps(messages, ensure_ascii=False)
+        request_body = {
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": 2048,
+        }
+        fn = partial(self._raw_llm_call, request_body)
+        result = retry_with_backoff(fn, max_attempts=4, base_delay=1.0)
+        if result["success"]:
+            ai_response = result["data"]
+            data = ai_response.get("data", {})
+            return {
+                "reply": data.get("reply", ""),
+                "usage": data.get("usage", {}),
+                "prompt": prompt_text,
+                "raw_response": json.dumps(ai_response, ensure_ascii=False),
+                "retry_count": result["attempts"] - 1,
+            }
+        raise RuntimeError(f"LLM call failed after {result['attempts']} attempts: {result['error']}")
+
+    def _save_log(self, agent_key, goal, status, iterations, tool_calls, logs, started_at):
+        try:
+            self._db.execute("ALTER TABLE agent_runtime_logs ADD COLUMN cost_data TEXT DEFAULT '{}'")
+        except Exception:
+            pass
+        self._db.execute(
+            "INSERT INTO agent_runtime_logs (agent_key, goal, status, iterations, tool_calls, log_detail, "
+            "started_at, completed_at, trace_id, cost_data) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                agent_key,
+                goal,
+                status,
+                iterations,
+                tool_calls,
+                json.dumps(logs, ensure_ascii=False),
+                started_at,
+                datetime.now().isoformat(),
+                self._trace_id,
+                json.dumps(self._cost_tracker),
+            ),
+        )
+        self._db.commit()
+
+    def _save_checkpoint(self, agent_key, goal, data):
+        json_data = json.dumps(data, ensure_ascii=False)
+        cur = self._db.execute(
+            "UPDATE agent_runtime_logs SET checkpoint_data=? WHERE agent_key=? AND goal=? AND status IN ('running', 'pending')",
+            (json_data, agent_key, goal),
+        )
+        if cur.rowcount == 0:
+            self._db.execute(
+                "INSERT INTO agent_runtime_logs (agent_key, goal, status, checkpoint_data, trace_id) VALUES (?, ?, 'running', ?, ?)",
+                (agent_key, goal, json_data, self._trace_id),
+            )
+        self._db.commit()
+
+    def _load_checkpoint(self, agent_key, goal):
+        cur = self._db.execute(
+            "SELECT checkpoint_data FROM agent_runtime_logs "
+            "WHERE agent_key=? AND goal=? AND status='running' AND checkpoint_data IS NOT NULL "
+            "ORDER BY id DESC LIMIT 1",
+            (agent_key, goal),
+        )
+        row = cur.fetchone()
+        if row and row["checkpoint_data"]:
+            return json.loads(row["checkpoint_data"])
+        return None
+
+    def _delete_checkpoint(self, agent_key, goal):
+        self._db.execute(
+            "UPDATE agent_runtime_logs SET checkpoint_data=NULL WHERE agent_key=? AND goal=?",
+            (agent_key, goal),
+        )
+        self._db.commit()
+
+    def _create_approval(self, agent_key: str, goal: str, step: int, tool: str, params: dict, reasoning: str) -> int:
+        cur = self._db.execute(
+            "INSERT INTO agent_runtime_approvals (trace_id, agent_key, goal, step, tool, params, reasoning, status) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')",
+            (self._trace_id, agent_key, goal, step, tool, json.dumps(params, ensure_ascii=False), reasoning),
+        )
+        self._db.commit()
+        return cur.lastrowid
+
+    def resume(self, agent_key: str, goal: str, auth_header: str) -> RuntimeResult:
+        checkpoint = self._load_checkpoint(agent_key, goal)
+        if not checkpoint:
+            return RuntimeResult(status="error", result="no checkpoint found", iterations=0, tool_calls=0, logs=[])
+
+        approval = self._db.execute(
+            "SELECT * FROM agent_runtime_approvals WHERE trace_id=? AND status='approved' ORDER BY id DESC LIMIT 1",
+            (checkpoint["trace_id"],),
+        ).fetchone()
+
+        if not approval:
+            return RuntimeResult(status="awaiting_approval", result="still pending approval", iterations=0, tool_calls=0, logs=[])
+
+        self._trace_id = checkpoint["trace_id"]
+        self._auth_header = auth_header
+        return self.execute(goal, agent_key, checkpoint.get("context"))
+
+    def get_status(self) -> dict:
+        cur = self._db.execute("SELECT status, COUNT(*) as cnt FROM agent_runtime_logs GROUP BY status")
+        by_status = {r["status"]: r["cnt"] for r in cur.fetchall()}
+        return {
+            **self._stats,
+            "by_status": by_status,
+        }
+
+    @property
+    def brain(self) -> AgentBrain:
+        return self._brain

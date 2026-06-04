@@ -1,122 +1,85 @@
-# 一云四端 · Cloud API
+# 一云四端 · OneCloud4Ends
 
-面向**医药+生物双主线**的智能 CRM SaaS 平台。一云（Cloud API）承载全部业务引擎，四端（Assistant / Opportunity / Sales-Assistant / Sales-Coach）按职责分发。
-
-## 架构概览
-
-```
-┌──────────────────────────────────────────────────┐
-│                  Cloud API (8000)                │
-│  认证 │ 合规 │ 商机 │ 拜访 │ Agent │ MDT │ 记忆   │
-│  知识图谱 │ 因果推理 │ 团队 │ 审计 │ 导出 │ 配置   │
-│          ┌─────────── 双主线隔离 ───────────┐    │
-│          医药线 (pharma)     科研线 (research)  │
-│          JWT scope: pharma   JWT scope: research │
-│          独立规则库+审计链    独立规则库+审计链    │
-└──────────────────────┬───────────────────────────┘
-                       │
-    ┌──────────┬───────┼────────┬──────────────┐
-    │          │       │        │              │
- Assistant  Opport.  SalesAsst  SalesCoach    ...(Flutter)
- (8003)    (8002)   (8004)    (8001)
-```
+> 生命科学行业全场景 AI 工作台 — 医药代表拜访管理、商机挖掘、销售助理、销售教练
 
 ## 技术栈
 
-| 层 | 技术 | 说明 |
-|----|------|------|
-| 运行时 | Python 3.12 + FastAPI | ASGI 异步框架 |
-| 数据库 | SQLite（开发）/ PostgreSQL（生产） | 双模式支持，环境变量切换 |
-| AI Agent | LangGraph | 状态机、可中断/恢复、Token追踪 |
-| 合规引擎 | 数据驱动 (JSON rules) | 新增规则无需改代码 |
-| API 文档 | OpenAPI / Swagger | 访问 /docs 交互式文档 |
-| CI/CD | GitHub Actions (pytest + benchmark) | 性能基线自动比较 |
-| 测试 | pytest + pytest-benchmark | 62+ 测试用例，含集成和 E2E |
+**后端** — Python 3.12 / FastAPI / SQLite / LangGraph  
+**前端** — React 18 / Vite 6 / TypeScript / Tailwind CSS  
+**移动端** — Flutter / Dart / Provider / SQLite (offline-first)  
+**AI** — DeepSeek / 多 Agent 运行时 / MCP 工具总线
 
-## 核心特性
+## 架构
 
-### 1. 双主线物理隔离
-医药代表拜访管理和科研销售线索管理在同一平台上物理隔离：
-- 独立数据库（`cloud.db` / `research.db`）
-- 独立 JWT scope（`pharma` / `research`）
-- 独立合规规则库（`pharma_rules.json` / `research_rules.json`）
-- 独立审计链
-- 代码审查验证无跨模式 SQL JOIN
+```
+一云（Cloud）  ────  四端（Assistant / Opportunity / Sales-Assistant / Sales-Coach）
+                        ├── 扩展服务（Management / Pharma-Intel / MarketAccess / ClinicalOps / PatientEngage）
+                        └── 移动端（Flutter App）
+```
 
-### 2. 数据驱动合规引擎
-- 5 条 L1 硬红线规则（备案身份核验、统方、回扣、利益输送、场所异常）
-- 3 条科研线规则
-- 规则文件 JSON 格式，新增规则无需改代码
-- 仪表板展示拦截统计
-
-### 3. 多专家会诊系统（MDT）
-- 多位 AI Agent 以辩论形式分析复杂决策
-- Analyst（分析师）、Explorer（探索者）、Critic（评论家）、Judge（裁判）四角色
-- LangGraph 状态机保证执行可回溯
-
-### 4. 可信 AI 框架
-- 记忆门控与巩固
-- 世界树知识推理
-- 因果推理引擎
-- 隐私计算（差分隐私 + 联邦学习）
+- **一云厚、四端专**：Cloud 承载全量业务引擎，各端专注场景交互
+- **独立部署**：各端独立仓库、独立数据库、独立发布
+- **故障隔离**：一个端不影响其他，Cloud 停机时四端照常运行（JWT 本地解码）
+- **离线优先**：移动端本地 SQLite + 定时同步
 
 ## 快速启动
 
 ```bash
-# 1. 克隆
-git clone https://github.com/your-org/one-cloud-four-ends.git
-cd one-cloud-four-ends
-
-# 2. 创建虚拟环境
-python3 -m venv venv
-source venv/bin/activate
-
-# 3. 安装依赖
+# 安装依赖
 pip install -r requirements.txt
 
-# 4. 初始化数据库
-python -c "from cloud.app.database import init_db; init_db()"
-python -c "from cloud.app.research_database import init_research_db; init_research_db()"
+# 启动 Cloud（核心服务）
+uvicorn cloud.app.main:app --port 8000
 
-# 5. 启动
-venv/bin/uvicorn cloud.app.main:app --host 0.0.0.0 --port 8000
+# 启动各端（独立终端）
+uvicorn assistant.app.main:app --port 8001
+uvicorn opportunity.app.main:app --port 8002
+uvicorn sales_assistant.app.main:app --port 8003
+uvicorn sales_coach.app.main:app --port 8004
 
-# 访问 http://localhost:8000/docs 查看 API 文档
+# 启动 Flutter 移动端
+cd mobile_app && flutter run
 ```
 
 ## 项目结构
 
 ```
 one-cloud-four-ends/
-├── cloud/           # Cloud API（业务引擎中心，179文件）
+├── cloud/                 # Cloud 核心服务（250 文件 / 41K 行）
 │   └── app/
-│       ├── main.py           # 入口 + 中间件 + 路由注册
-│       ├── database.py       # 数据库连接管理
-│       ├── schema.py         # 87张表 CREATE TABLE SQL
-│       ├── routers/          # 路由（29+ 文件）
-│       ├── services/         # 业务逻辑层（56 个 Service 类）
-│       ├── repositories/     # 数据访问层（19 文件，桥接旧文件）
-│       └── tests/            # 62 个测试
-├── shared/         # 共享基础设施
-│   ├── base.py, auth.py, middleware.py
-│   ├── repository.py, csv_export.py
-│   └── models/
-├── assistant/      # 全能助理端 (8003)
-├── opportunity/    # 商机挖掘端 (8002)
-├── sales-assistant/ # 销售助手端 (8004)
-├── sales-coach/    # 销售教练端 (8001)
-└── frontend/       # React SPA（前管理端界面）
+│       ├── routers/       # 74 个路由模块
+│       ├── services/      # 83 个业务服务
+│       ├── repositories/  # 21 个数据仓库
+│       ├── schemas/       # 91 张数据库表模型
+│       ├── agent_runtime/ # Agent 运行时引擎
+│       └── langgraph/     # LangGraph 集成管线
+├── assistant/             # 跟台助手（38 文件）
+├── opportunity/           # 商机挖掘（34 文件）
+├── sales-assistant/       # 销售助理（30 文件）
+├── sales-coach/           # 销售教练（29 文件）
+├── mobile_app/            # Flutter 移动端
+├── frontend/              # React SPA（临时方案）
+└── shared/                # 共享模块（auth/compliance/base）
 ```
 
+## 核心功能
+
+| 模块 | 功能 |
+|------|------|
+| **AI Agent** | 自主 Agent 运行时（LLM 思考→工具调用→反思循环），支持检查点/审批/断路器/工作队列 |
+| **合规引擎** | 全消息类型合规检测 + 决策链 SHA256 审计 |
+| **记忆系统** | 类脑六机制记忆（门控/巩固/效用/WorldDB/SAGE/编排器） |
+| **因果推断** | 归因评分 + 决策 OSA |
+| **MCP 工具总线** | 280 端点统一工具注册与调用 |
+| **MDT 会诊** | 多角色 LLM 辩论 → 共识生成 |
+| **数字人陪练** | Provider 架构（InternalLLM/WaveCloud/MoShang） |
+| **Bidding Agent** | 招标扫描 + AI 决策支持 |
+| **离线同步** | 离线优先架构，断网可用，上线自动同步 |
 
 ## 测试
 
 ```bash
-# 运行全部测试
-python -m pytest cloud/app/tests/ -v
-
-# 代码风格检查
-pre-commit run --all-files
+python3 -m pytest cloud/app/tests/ -v
 ```
 
 ## 许可证

@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from cloud.app.agent_execution_router import router as agent_execution_router
 from cloud.app.agent_pipeline_router import router as agent_pipeline_router
 from cloud.app.agent_role_router import router as agent_role_router
+from cloud.app.agent_runtime_router import router as agent_runtime_router
 from cloud.app.ai_gateway import router as ai_router
 from cloud.app.api_tokens import router as tokens_router
 from cloud.app.audit_router import router as audit_router
@@ -190,6 +191,7 @@ app.include_router(event_bus_router)
 app.include_router(memory_consolidation_router)
 app.include_router(sage_engine_router)
 app.include_router(agent_execution_router)
+app.include_router(agent_runtime_router)
 app.include_router(mcp_router)
 app.include_router(orchestrate_router)
 app.include_router(causal_router)

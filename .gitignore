@@ -88,3 +88,7 @@ archive/*.md
 S*-*.md
 生产硬化-*.md
 test_s8_integration.py
+
+# 独立开发文档
+P0-systemd*.md
+frontend-plan-tg.md
