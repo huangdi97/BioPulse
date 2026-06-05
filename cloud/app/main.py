@@ -52,6 +52,7 @@ from cloud.app.route_router import router as route_router
 from cloud.app.routers.compliance_dashboard_router import (
     router as compliance_dashboard_router,
 )
+from cloud.app.routers.demo_router import router as demo_router
 from cloud.app.routers.enforcer_router import router as enforcer_router
 from cloud.app.routers.langgraph_test_router import router as langgraph_test_router
 from cloud.app.routers.model_compression_router import router as model_compression_router
@@ -210,6 +211,7 @@ app.include_router(product_router)
 app.include_router(langgraph_test_router)
 app.include_router(enforcer_router)
 app.include_router(compliance_dashboard_router)
+app.include_router(demo_router)
 app.include_router(research_audit_router)
 app.include_router(research_pi_router)
 app.include_router(research_product_router)
