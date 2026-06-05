@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:one_cloud_app/models/visit.dart';
 import 'package:one_cloud_app/services/database_service.dart';
+import 'package:one_cloud_app/services/sync_service.dart';
 import 'package:one_cloud_app/screens/pharma/visit_form_screen.dart';
 
 class VisitListScreen extends StatefulWidget {
@@ -60,6 +64,28 @@ class _VisitListScreenState extends State<VisitListScreen>
         }
       }).toList());
     if (mounted) setState(() => _loading = false);
+  }
+
+  Future<void> _onRefresh() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString('backend_urls');
+      String? baseUrl;
+      if (saved != null) {
+        final urls = Map<String, String>.from(jsonDecode(saved) as Map);
+        baseUrl = urls['assistant'] ?? urls['sales_assistant'];
+      }
+      if (baseUrl != null) {
+        await context.read<SyncService>().pullVisits(baseUrl);
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('同步服务暂不可用')),
+        );
+      }
+    }
+    await _loadVisits();
   }
 
   Color _complianceColor(String? status) {
@@ -134,7 +160,7 @@ class _VisitListScreenState extends State<VisitListScreen>
                         ),
                       )
                     : RefreshIndicator(
-                        onRefresh: _loadVisits,
+                        onRefresh: _onRefresh,
                         child: ListView.builder(
                           padding: const EdgeInsets.all(12),
                           itemCount: _visits.length,

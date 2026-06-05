@@ -19,8 +19,8 @@ from opportunity.app.scoring_router import router as scoring_router
 from opportunity.app.stats_router import router as stats_router
 from opportunity.app.trend_router import router as trend_router
 from shared.exception_handlers import register_exception_handlers
+from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
-from shared.request_id_middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 
 setup_logging("opportunity")

@@ -19,6 +19,7 @@ DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
 TIMEOUT_SECONDS = 30
 
 DIFFICULTY_LEVELS = ["beginner", "medium", "advanced", "expert"]
+VALID_DIFFICULTIES = {"beginner", "medium", "advanced", "expert"}
 
 MODULE_COLS = [
     "id",
@@ -256,6 +257,8 @@ class TrainingCoachService(BaseService):
             }
         avg_score = sum(r["score"] for r in rows) / len(rows)
         suggested = self._suggest_diff(avg_score)
+        if suggested not in VALID_DIFFICULTIES:
+            suggested = "beginner"
         completed_ids = [r["module_id"] for r in rows]
         ph = ",".join("?" * len(completed_ids))
         candidates = self.db.execute(

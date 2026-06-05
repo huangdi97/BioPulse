@@ -7,6 +7,13 @@ import 'package:one_cloud_app/screens/splash_screen.dart';
 import 'package:one_cloud_app/screens/login_screen.dart';
 import 'package:one_cloud_app/screens/home_screen.dart';
 import 'package:one_cloud_app/screens/settings_screen.dart';
+import 'package:one_cloud_app/screens/surgery/surgery_home_screen.dart';
+import 'package:one_cloud_app/screens/opportunity/opportunity_list_screen.dart';
+import 'package:one_cloud_app/screens/opportunity/opportunity_detail_screen.dart';
+import 'package:one_cloud_app/screens/opportunity/opportunity_form_screen.dart';
+import 'package:one_cloud_app/screens/management/management_dashboard_screen.dart';
+import 'package:one_cloud_app/screens/management/compliance_record_screen.dart';
+import 'package:one_cloud_app/screens/management/notification_screen.dart';
 
 /// Root MaterialApp widget with provider tree and route configuration.
 ///
@@ -43,8 +50,22 @@ class App extends StatelessWidget {
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case '/home':
         return MaterialPageRoute(builder: (_) => const HomeScreen());
+      case '/surgery_home':
+        return MaterialPageRoute(builder: (_) => const SurgeryHomeScreen());
       case '/settings':
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
+      case '/opportunity_list':
+        return MaterialPageRoute(builder: (_) => const OpportunityListScreen());
+      case '/opportunity_detail':
+        return MaterialPageRoute(builder: (_) => const OpportunityDetailScreen());
+      case '/opportunity_form':
+        return MaterialPageRoute(builder: (_) => const OpportunityFormScreen());
+      case '/management':
+        return MaterialPageRoute(builder: (_) => const ManagementDashboardScreen());
+      case '/management/compliance':
+        return MaterialPageRoute(builder: (_) => const ComplianceRecordScreen());
+      case '/management/notifications':
+        return MaterialPageRoute(builder: (_) => const NotificationScreen());
       default:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
     }

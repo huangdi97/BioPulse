@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:one_cloud_app/models/hcp.dart';
 import 'package:one_cloud_app/services/database_service.dart';
+import 'package:one_cloud_app/services/sync_service.dart';
 import 'package:one_cloud_app/screens/pharma/hcp_detail_screen.dart';
 
 class HcpListScreen extends StatefulWidget {
@@ -35,6 +39,28 @@ class _HcpListScreenState extends State<HcpListScreen> {
     _allHCPs = await db.getHCPs();
     _applyFilter();
     if (mounted) setState(() => _loading = false);
+  }
+
+  Future<void> _onRefresh() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString('backend_urls');
+      String? baseUrl;
+      if (saved != null) {
+        final urls = Map<String, String>.from(jsonDecode(saved) as Map);
+        baseUrl = urls['assistant'] ?? urls['sales_assistant'];
+      }
+      if (baseUrl != null) {
+        await context.read<SyncService>().pullHcps(baseUrl);
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('同步服务暂不可用')),
+        );
+      }
+    }
+    await _loadHCPs();
   }
 
   void _applyFilter() {
@@ -157,7 +183,7 @@ class _HcpListScreenState extends State<HcpListScreen> {
                         ),
                       )
                     : RefreshIndicator(
-                        onRefresh: _loadHCPs,
+                        onRefresh: _onRefresh,
                         child: ListView.builder(
                           padding: const EdgeInsets.all(12),
                           itemCount: _filteredHCPs.length,

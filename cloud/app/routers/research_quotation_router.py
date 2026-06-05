@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from starlette import status
 
+from cloud.app.research_database import log_research_audit
 from cloud.app.services.quotations_service import (
     QUOTATION_TEMPLATES,
     generate_quotation,
@@ -44,6 +45,13 @@ def create_quotation(
         result = generate_quotation(body.template_id, body.items)
         if body.customer_info:
             result["customer_info"] = body.customer_info
+        log_research_audit(
+            event_type="create",
+            entity_type="quotation",
+            entity_id=0,
+            new_value=str(result),
+            operator=current_user.get("username", ""),
+        )
         return {"code": 0, "data": result, "message": "success"}
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

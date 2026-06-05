@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:one_cloud_app/providers/auth_provider.dart';
+import 'package:one_cloud_app/services/sync_service.dart';
 
 /// Login screen with username/password fields and loading state.
 ///
@@ -26,6 +30,16 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> _triggerSync() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString('backend_urls');
+      if (saved == null) return;
+      final urls = Map<String, String>.from(jsonDecode(saved) as Map);
+      context.read<SyncService>().pullAll(urls);
+    } catch (_) {}
+  }
+
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -36,7 +50,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (success && mounted) {
-      Navigator.pushReplacementNamed(context, '/home');
+      _triggerSync();
+      final prefs = await SharedPreferences.getInstance();
+      final launchMode = prefs.getString('launch_mode') ?? 'standard';
+      final route = launchMode == 'surgery' ? '/surgery_home' : '/home';
+      Navigator.pushReplacementNamed(context, route);
     }
   }
 

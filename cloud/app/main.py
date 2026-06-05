@@ -58,6 +58,7 @@ from cloud.app.routers.model_compression_router import router as model_compressi
 from cloud.app.routers.pi_router import router as pi_router
 from cloud.app.routers.product_router import router as product_router
 from cloud.app.routers.pubmed_router import router as pubmed_router
+from cloud.app.routers.research_audit_router import router as research_audit_router
 from cloud.app.routers.research_enforcer_router import (
     router as research_enforcer_router,
 )
@@ -91,8 +92,8 @@ from cloud.app.visit_router import router as visit_router
 from cloud.app.world_tree_router import router as world_tree_router
 from shared.config import settings
 from shared.exception_handlers import register_exception_handlers
+from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
-from shared.request_id_middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 
 # Serve frontend SPA
@@ -209,6 +210,7 @@ app.include_router(product_router)
 app.include_router(langgraph_test_router)
 app.include_router(enforcer_router)
 app.include_router(compliance_dashboard_router)
+app.include_router(research_audit_router)
 app.include_router(research_pi_router)
 app.include_router(research_product_router)
 app.include_router(research_quotation_router)

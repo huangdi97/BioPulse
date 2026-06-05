@@ -7,11 +7,13 @@ from functools import partial
 
 from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
 from cloud.app.agent_runtime.guard import sanitize_tool_output
+from cloud.app.agent_runtime.loop_detector import LoopDetector
 from cloud.app.agent_runtime.memory import AgentBrain
 from cloud.app.agent_runtime.models import RuntimeResult
 from cloud.app.agent_runtime.notifier import AgentNotifier
 from cloud.app.agent_runtime.retry import retry_with_backoff
 from cloud.app.agent_runtime.tool_bridge import ToolRegistry
+from cloud.app.agent_runtime.validator import AgentOutputValidator
 
 
 class AgentRuntime:
@@ -26,6 +28,7 @@ class AgentRuntime:
         self._stats = {"total_runs": 0, "success_count": 0, "fail_count": 0}
         self._trace_id = str(uuid.uuid4())
         self._cost_tracker = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+        self._loop_detector = LoopDetector()
 
     def execute(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
         spec = AGENT_SPECS.get(agent_key)
@@ -157,16 +160,15 @@ class AgentRuntime:
             duration_ms = int((time.time() - step_start) * 1000)
             reply = ai_resp["reply"]
 
-            try:
-                decision = json.loads(reply) if isinstance(reply, str) else reply
-            except (json.JSONDecodeError, TypeError):
+            decision, validation_error = AgentOutputValidator.validate(reply)
+            if validation_error or decision is None:
                 logs.append(
                     {
                         "step": step,
                         "action": "error",
                         "tool": None,
                         "params": None,
-                        "result": "failed to parse LLM response",
+                        "result": validation_error or "invalid decision",
                         "duration_ms": duration_ms,
                         "llm_prompt": ai_resp.get("prompt"),
                         "llm_raw_response": ai_resp.get("raw_response"),
@@ -179,9 +181,9 @@ class AgentRuntime:
                 )
                 continue
 
-            action = decision.get("action", "error")
-            tool_name = decision.get("tool")
-            tool_params = decision.get("params", {})
+            action = decision.action
+            tool_name = decision.tool
+            tool_params = decision.params or {}
 
             if action == "complete":
                 logs.append(
@@ -271,8 +273,40 @@ class AgentRuntime:
                         "trace_id": self._trace_id,
                     }
                 )
-                messages.append({"role": "assistant", "content": json.dumps(decision, ensure_ascii=False)})
+                messages.append(
+                    {
+                        "role": "assistant",
+                        "content": json.dumps(decision.model_dump() if hasattr(decision, "model_dump") else decision, ensure_ascii=False),
+                    }
+                )
                 messages.append({"role": "user", "content": f"工具返回：{safe_output}"})
+
+                # 循环检测
+                self._loop_detector.record(decision)
+                loop_result = self._loop_detector.detect()
+                if loop_result:
+                    logs.append(
+                        {
+                            "step": step,
+                            "action": "loop_detected",
+                            "tool": tool_name,
+                            "params": tool_params,
+                            "result": loop_result,
+                            "duration_ms": duration_ms,
+                            "trace_id": self._trace_id,
+                        }
+                    )
+                    self._save_log(agent_key, goal, "escalated", step + 1, tool_calls, logs, started_at)
+                    self._stats["total_runs"] += 1
+                    self._stats["fail_count"] += 1
+                    return RuntimeResult(
+                        status="escalated",
+                        result=f"检测到循环: {loop_result}",
+                        iterations=step + 1,
+                        tool_calls=tool_calls,
+                        logs=logs,
+                    )
+
                 if action == "call_tool" and step != start_step:
                     self._save_checkpoint(
                         agent_key,

@@ -123,6 +123,86 @@ class ApiClient {
   }
 }
 
+/// Manages multiple named [ApiClient] instances for different backends.
+///
+/// Each backend is identified by a unique name (e.g. "main", "sync") and
+/// configured with its own [baseUrl]. All clients share the same [AuthService]
+/// for token management.
+class MultiBackendApiClient {
+  final Map<String, ApiClient> _clients = {};
+  final AuthService _authService;
+  final String _defaultName;
+
+  /// Creates a [MultiBackendApiClient] with the given [backends].
+  ///
+  /// [backends] is a map of backend names to their base URLs.
+  /// The first entry becomes the default backend unless [defaultName] is set.
+  /// All backends share the provided [authService].
+  MultiBackendApiClient({
+    required AuthService authService,
+    required Map<String, String> backends,
+    String? defaultName,
+  })  : _authService = authService,
+      _defaultName = defaultName ?? backends.keys.first {
+    for (final entry in backends.entries) {
+      _clients[entry.key] = ApiClient(
+        baseUrl: entry.value,
+        authService: authService,
+      );
+    }
+  }
+
+  /// Retrieve the [ApiClient] registered under [name].
+  /// Throws [ArgumentError] if no backend with that name exists.
+  ApiClient getClient(String name) {
+    final client = _clients[name];
+    if (client == null) {
+      throw ArgumentError('Unknown backend: $name. Available: ${_clients.keys.join(", ")}');
+    }
+    return client;
+  }
+
+  /// The default [ApiClient] (first registered backend or the one specified).
+  ApiClient get defaultClient => getClient(_defaultName);
+
+  /// Register or replace a backend with the given [name] and [baseUrl].
+  void addBackend(String name, String baseUrl) {
+    _clients[name] = ApiClient(
+      baseUrl: baseUrl,
+      authService: _authService,
+    );
+  }
+
+  /// List all registered backend names.
+  Iterable<String> get backendNames => _clients.keys;
+
+  // -- Convenience delegates to the default client --
+
+  Future<ApiResponse<T>> get<T>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) =>
+      defaultClient.get<T>(path, queryParameters: queryParameters);
+
+  Future<ApiResponse<T>> post<T>(
+    String path, {
+    dynamic data,
+  }) =>
+      defaultClient.post<T>(path, data: data);
+
+  Future<ApiResponse<T>> put<T>(
+    String path, {
+    dynamic data,
+  }) =>
+      defaultClient.put<T>(path, data: data);
+
+  Future<ApiResponse<T>> delete<T>(
+    String path, {
+    dynamic data,
+  }) =>
+      defaultClient.delete<T>(path, data: data);
+}
+
 /// Standard API response wrapper matching {code, message, data, request_id}.
 class ApiResponse<T> {
   final int code;

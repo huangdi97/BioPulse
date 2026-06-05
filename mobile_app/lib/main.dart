@@ -1,16 +1,17 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:one_cloud_app/app.dart';
 import 'package:one_cloud_app/services/auth_service.dart';
 import 'package:one_cloud_app/services/database_service.dart';
 import 'package:one_cloud_app/services/api_client.dart';
+import 'package:one_cloud_app/services/sync_service.dart';
 import 'package:one_cloud_app/providers/auth_provider.dart';
 import 'package:one_cloud_app/providers/mode_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-/// Application entry point.
-///
-/// Initializes Flutter bindings, local database, and services
-/// before launching the [App] widget tree with providers.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -18,11 +19,36 @@ Future<void> main() async {
   await databaseService.initDatabase();
 
   final authService = AuthService();
+
+  final prefs = await SharedPreferences.getInstance();
+  final savedUrls = prefs.getString('backend_urls');
+  const defaultUrls = {
+    'sales_assistant': 'https://api.example.com',
+    'cloud': 'https://api.example.com',
+    'opportunity': 'https://api.example.com',
+    'sales_coach': 'https://api.example.com',
+    'sync': 'https://api.example.com',
+  };
+  final urls = savedUrls != null
+      ? Map<String, String>.from(jsonDecode(savedUrls) as Map)
+      : defaultUrls;
+
   final apiClient = ApiClient(
-    baseUrl: 'https://api.example.com',
+    baseUrl: urls['cloud'] ?? 'https://api.example.com',
     authService: authService,
   );
   authService.setApiClient(apiClient);
+
+  final multiBackendClient = MultiBackendApiClient(
+    authService: authService,
+    backends: urls,
+    defaultName: 'cloud',
+  );
+
+  final syncService = SyncService(
+    databaseService,
+    Dio(BaseOptions(connectTimeout: const Duration(seconds: 10))),
+  );
 
   final authProvider = AuthProvider(authService);
   final modeProvider = ModeProvider();
@@ -38,6 +64,8 @@ Future<void> main() async {
         Provider.value(value: databaseService),
         Provider.value(value: authService),
         Provider.value(value: apiClient),
+        Provider.value(value: multiBackendClient),
+        Provider.value(value: syncService),
       ],
       child: const App(),
     ),

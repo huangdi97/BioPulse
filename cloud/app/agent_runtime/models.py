@@ -55,3 +55,10 @@ class CheckpointData:
     goal: str
     agent_key: str
     context: dict | None = None
+
+
+class AgentDecision(BaseModel):
+    action: str
+    tool: str | None = None
+    params: dict | None = None
+    reasoning: str | None = None

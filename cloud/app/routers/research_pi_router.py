@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
+from cloud.app.research_database import log_research_audit
 from cloud.app.services.research_pi_service import ResearchPiService
 from shared.auth import get_current_user
 from shared.auth_scope import require_scope
@@ -64,5 +65,12 @@ def create_pi(
         total_papers=body.total_papers,
         total_grants=body.total_grants,
         h_index=body.h_index,
+    )
+    log_research_audit(
+        event_type="create",
+        entity_type="pi",
+        entity_id=pi["pi_id"],
+        new_value=str(pi),
+        operator=current_user.get("username", ""),
     )
     return {"code": 0, "data": pi, "message": "success"}

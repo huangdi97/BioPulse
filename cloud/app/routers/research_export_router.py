@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from starlette import status
 from starlette.responses import Response
 
+from cloud.app.research_database import log_research_audit
 from cloud.app.services.research_export_service import export_pi_csv, export_quotation
 from shared.auth import get_current_user
 from shared.auth_scope import require_scope
@@ -21,6 +22,13 @@ def export_pi(
     if format != "csv":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only CSV format supported")
     content = export_pi_csv()
+    log_research_audit(
+        event_type="export",
+        entity_type="pi",
+        entity_id=0,
+        new_value="export_format=csv",
+        operator=current_user.get("username", ""),
+    )
     return Response(
         content=content,
         media_type="text/csv",
@@ -35,6 +43,13 @@ def export_quotation_endpoint(
 ):
     try:
         data = export_quotation(quotation_id)
+        log_research_audit(
+            event_type="export",
+            entity_type="quotation",
+            entity_id=quotation_id,
+            new_value="export_format=json",
+            operator=current_user.get("username", ""),
+        )
         return {"code": 0, "data": data, "message": "success"}
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

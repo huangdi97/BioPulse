@@ -1,0 +1,99 @@
+/* ========================================
+   一云四端 Design System — CSS Variables
+   来源: design-tokens/tokens.json (单一源)
+   生成方式: 手动转译，以 tokens.json 为准
+   ======================================== */
+
+:root {
+  /* Brand */
+  --clr-brand: #0f62fe;
+  --clr-brand-hover: #0353e9;
+  --clr-brand-active: #002d9c;
+  --clr-brand-light: #edf5ff;
+
+  /* Mode */
+  --clr-mode-pharma: #0f62fe;
+  --clr-mode-research: #8b5cf6;
+  --clr-mode-warn: #f59e0b;
+  --clr-mode-pass: #10b981;
+
+  /* Status */
+  --clr-success: #24a148;
+  --clr-error: #da1e28;
+  --clr-warning: #f1c21b;
+  --clr-info: #0f62fe;
+
+  /* Neutral */
+  --clr-white: #ffffff;
+  --clr-gray-10: #f4f4f4;
+  --clr-gray-20: #e0e0e0;
+  --clr-gray-30: #c6c6c6;
+  --clr-gray-50: #8d8d8d;
+  --clr-gray-60: #6f6f6f;
+  --clr-gray-70: #525252;
+  --clr-gray-90: #262626;
+  --clr-gray-100: #161616;
+
+  /* Text */
+  --clr-text-primary: #161616;
+  --clr-text-secondary: #525252;
+  --clr-text-placeholder: #6f6f6f;
+  --clr-text-disabled: #8d8d8d;
+  --clr-text-inverse: #ffffff;
+
+  /* Surface */
+  --clr-surface-page: #ffffff;
+  --clr-surface-card: #ffffff;
+  --clr-surface-card-alt: #f4f4f4;
+  --clr-surface-hover: #e8e8e8;
+  --clr-surface-selected: #edf5ff;
+  --clr-surface-overlay: rgba(22, 22, 22, 0.5);
+
+  /* Border */
+  --clr-border-default: #e0e0e0;
+  --clr-border-subtle: #c6c6c6;
+  --clr-border-input: #f4f4f4;
+  --clr-border-focus: #0f62fe;
+  --clr-border-error: #da1e28;
+
+  /* Typography */
+  --font-primary: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-xxl: 48px;
+  --space-xxxl: 64px;
+  --space-section: 80px;
+
+  /* Border Radius */
+  --radius-none: 0px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-pill: 9999px;
+
+  /* Shadows */
+  --shadow-border: 0 0 0 1px rgba(0,0,0,0.08);
+  --shadow-card: 0 0 0 1px rgba(0,0,0,0.08), 0 2px 2px rgba(0,0,0,0.04);
+  --shadow-raised: 0 0 0 1px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.06);
+  --shadow-modal: 0 0 0 1px rgba(0,0,0,0.08), 0 8px 16px rgba(0,0,0,0.08);
+}
+
+/* Utility: text truncate */
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Utility: focus ring */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--clr-border-focus);
+  outline-offset: 2px;
+}

@@ -7,14 +7,16 @@ import 'package:one_cloud_app/screens/pharma/visit_list_screen.dart';
 import 'package:one_cloud_app/screens/pharma/hcp_list_screen.dart';
 import 'package:one_cloud_app/screens/pharma/compliance_screen.dart';
 import 'package:one_cloud_app/screens/surgery/surgery_list_screen.dart';
+import 'package:one_cloud_app/screens/surgery/scan_screen.dart';
 import 'package:one_cloud_app/screens/research/pi_search_screen.dart';
 import 'package:one_cloud_app/screens/research/product_matching_screen.dart';
 import 'package:one_cloud_app/screens/research/quotation_screen.dart';
+import 'package:one_cloud_app/screens/opportunity/opportunity_list_screen.dart';
+import 'package:one_cloud_app/screens/sales_coach/training_list_screen.dart';
+import 'package:one_cloud_app/screens/sales_coach/analysis_report_screen.dart';
+import 'package:one_cloud_app/screens/sales_coach/recommendation_screen.dart';
+import 'package:one_cloud_app/screens/management/management_dashboard_screen.dart';
 
-/// Main home screen with mode switching, bottom navigation, and drawer.
-///
-/// Pharma mode shows: Visit / HCP / Compliance / Settings
-/// Research mode shows: PI Search / Product / Quote / Settings
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -25,12 +27,18 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
-  void _onItemTapped(int index) {
-    setState(() => _currentIndex = index);
-  }
+  static const _modeLabels = {
+    AppMode.pharma: '医药模式',
+    AppMode.surgery: '手术模式',
+    AppMode.opportunity: '商机模式',
+    AppMode.salesCoach: '销售教练模式',
+    AppMode.research: '研究模式',
+  };
 
-  void _switchMode() {
-    context.read<ModeProvider>().toggleMode();
+  void _onItemTapped(int index) => setState(() => _currentIndex = index);
+
+  Future<void> _switchMode(AppMode mode) async {
+    await context.read<ModeProvider>().switchMode(mode);
     setState(() => _currentIndex = 0);
   }
 
@@ -46,10 +54,95 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
-
     if (confirmed == true && mounted) {
       await context.read<AuthProvider>().logout();
       if (mounted) Navigator.pushReplacementNamed(context, '/login');
+    }
+  }
+
+  List<Widget> _pages(AppMode mode) {
+    switch (mode) {
+      case AppMode.pharma:
+        return const [
+          VisitListScreen(),
+          HcpListScreen(),
+          ComplianceScreen(),
+          SurgeryListScreen(),
+          ManagementDashboardScreen(),
+          SettingsScreen(),
+        ];
+      case AppMode.surgery:
+        return const [
+          SurgeryListScreen(),
+          ScanScreen(),
+          ManagementDashboardScreen(),
+          SettingsScreen(),
+        ];
+      case AppMode.opportunity:
+        return const [
+          OpportunityListScreen(),
+          ManagementDashboardScreen(),
+          SettingsScreen(),
+        ];
+      case AppMode.salesCoach:
+        return const [
+          TrainingListScreen(),
+          AnalysisReportScreen(),
+          RecommendationScreen(),
+          ManagementDashboardScreen(),
+          SettingsScreen(),
+        ];
+      case AppMode.research:
+        return const [
+          PISearchScreen(),
+          ProductMatchingScreen(),
+          QuotationScreen(),
+          ManagementDashboardScreen(),
+          SettingsScreen(),
+        ];
+    }
+  }
+
+  List<NavigationDestination> _destinations(AppMode mode) {
+    switch (mode) {
+      case AppMode.pharma:
+        return const [
+          NavigationDestination(icon: Icon(Icons.calendar_today_outlined), selectedIcon: Icon(Icons.calendar_today), label: '拜访'),
+          NavigationDestination(icon: Icon(Icons.people_outline), selectedIcon: Icon(Icons.people), label: 'HCP'),
+          NavigationDestination(icon: Icon(Icons.verified_outlined), selectedIcon: Icon(Icons.verified), label: '合规'),
+          NavigationDestination(icon: Icon(Icons.local_hospital_outlined), selectedIcon: Icon(Icons.local_hospital), label: '手术'),
+          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: '管理'),
+          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: '设置'),
+        ];
+      case AppMode.surgery:
+        return const [
+          NavigationDestination(icon: Icon(Icons.local_hospital_outlined), selectedIcon: Icon(Icons.local_hospital), label: '手术'),
+          NavigationDestination(icon: Icon(Icons.qr_code_scanner_outlined), selectedIcon: Icon(Icons.qr_code_scanner), label: '扫描'),
+          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: '管理'),
+          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: '设置'),
+        ];
+      case AppMode.opportunity:
+        return const [
+          NavigationDestination(icon: Icon(Icons.trending_up_outlined), selectedIcon: Icon(Icons.trending_up), label: '商机'),
+          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: '管理'),
+          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: '设置'),
+        ];
+      case AppMode.salesCoach:
+        return const [
+          NavigationDestination(icon: Icon(Icons.school_outlined), selectedIcon: Icon(Icons.school), label: '培训'),
+          NavigationDestination(icon: Icon(Icons.assessment_outlined), selectedIcon: Icon(Icons.assessment), label: '报告'),
+          NavigationDestination(icon: Icon(Icons.lightbulb_outline), selectedIcon: Icon(Icons.lightbulb), label: '推荐'),
+          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: '管理'),
+          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: '设置'),
+        ];
+      case AppMode.research:
+        return const [
+          NavigationDestination(icon: Icon(Icons.search_outlined), selectedIcon: Icon(Icons.search), label: 'PI搜索'),
+          NavigationDestination(icon: Icon(Icons.mediation_outlined), selectedIcon: Icon(Icons.mediation), label: '匹配'),
+          NavigationDestination(icon: Icon(Icons.request_quote_outlined), selectedIcon: Icon(Icons.request_quote), label: '报价'),
+          NavigationDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: '管理'),
+          NavigationDestination(icon: Icon(Icons.settings_outlined), selectedIcon: Icon(Icons.settings), label: '设置'),
+        ];
     }
   }
 
@@ -57,18 +150,24 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final mode = context.watch<ModeProvider>();
     final auth = context.watch<AuthProvider>();
-    final isPharma = mode.isPharmaMode;
+    final pages = _pages(mode.currentMode);
+    final destinations = _destinations(mode.currentMode);
 
-    final pages = isPharma ? _pharmaPages : _researchPages;
+    if (_currentIndex >= pages.length) _currentIndex = 0;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isPharma ? '销售助手' : '科研助手'),
+        title: Text(_modeLabels[mode.currentMode]!),
         actions: [
-          IconButton(
-            icon: Icon(isPharma ? Icons.science : Icons.medication),
-            tooltip: isPharma ? '切换到科研模式' : '切换到销售模式',
-            onPressed: _switchMode,
+          PopupMenuButton<AppMode>(
+            icon: const Icon(Icons.swap_horiz),
+            tooltip: '切换模式',
+            onSelected: _switchMode,
+            itemBuilder: (context) => [
+              for (final m in AppMode.values)
+                if (m != mode.currentMode)
+                  PopupMenuItem(value: m, child: Text(_modeLabels[m]!)),
+            ],
           ),
         ],
       ),
@@ -77,76 +176,10 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: _onItemTapped,
-        destinations: isPharma ? _pharmaDestinations : _researchDestinations,
+        destinations: destinations,
       ),
     );
   }
-
-  List<Widget> get _pharmaPages => [
-        const VisitListScreen(),
-        const HcpListScreen(),
-        const ComplianceScreen(),
-        const SurgeryListScreen(),
-        const SettingsScreen(),
-      ];
-
-  List<Widget> get _researchPages => [
-        const PISearchScreen(),
-        const ProductMatchingScreen(),
-        const QuotationScreen(),
-        const SettingsScreen(),
-      ];
-
-  List<NavigationDestination> get _pharmaDestinations => [
-        const NavigationDestination(
-          icon: Icon(Icons.calendar_today_outlined),
-          selectedIcon: Icon(Icons.calendar_today),
-          label: '拜访',
-        ),
-        const NavigationDestination(
-          icon: Icon(Icons.people_outline),
-          selectedIcon: Icon(Icons.people),
-          label: 'HCP',
-        ),
-        const NavigationDestination(
-          icon: Icon(Icons.verified_outlined),
-          selectedIcon: Icon(Icons.verified),
-          label: '合规',
-        ),
-        const NavigationDestination(
-          icon: Icon(Icons.local_hospital_outlined),
-          selectedIcon: Icon(Icons.local_hospital),
-          label: '手术',
-        ),
-        const NavigationDestination(
-          icon: Icon(Icons.settings_outlined),
-          selectedIcon: Icon(Icons.settings),
-          label: '设置',
-        ),
-      ];
-
-  List<NavigationDestination> get _researchDestinations => [
-        const NavigationDestination(
-          icon: Icon(Icons.search_outlined),
-          selectedIcon: Icon(Icons.search),
-          label: 'PI搜索',
-        ),
-        const NavigationDestination(
-          icon: Icon(Icons.mediation_outlined),
-          selectedIcon: Icon(Icons.mediation),
-          label: '匹配',
-        ),
-        const NavigationDestination(
-          icon: Icon(Icons.request_quote_outlined),
-          selectedIcon: Icon(Icons.request_quote),
-          label: '报价',
-        ),
-        const NavigationDestination(
-          icon: Icon(Icons.settings_outlined),
-          selectedIcon: Icon(Icons.settings),
-          label: '设置',
-        ),
-      ];
 
   Widget _buildDrawer(BuildContext context, AuthProvider auth, ModeProvider mode) {
     final theme = Theme.of(context);
@@ -161,30 +194,26 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                const CircleAvatar(
-                  radius: 28,
-                  child: Icon(Icons.person, size: 32),
-                ),
+                const CircleAvatar(radius: 28, child: Icon(Icons.person, size: 32)),
                 const SizedBox(height: 12),
-                Text(
-                  auth.user?['username'] as String? ?? '用户',
-                  style: const TextStyle(color: Colors.white, fontSize: 18),
-                ),
-                Text(
-                  mode.isPharmaMode ? '销售助手模式' : '科研模式',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
-                ),
+                Text(auth.user?['username'] as String? ?? '用户',
+                    style: const TextStyle(color: Colors.white, fontSize: 18)),
+                Text(_modeLabels[mode.currentMode]!,
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.8))),
               ],
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.swap_horiz),
-            title: Text(mode.isPharmaMode ? '切换到科研模式' : '切换到销售模式'),
-            onTap: () {
-              _switchMode();
-              Navigator.pop(context);
-            },
-          ),
+          for (final m in AppMode.values)
+            ListTile(
+              leading: Icon(m == mode.currentMode ? Icons.radio_button_checked : Icons.radio_button_off),
+              title: Text(_modeLabels[m]!),
+              selected: m == mode.currentMode,
+              onTap: () {
+                Navigator.pop(context);
+                if (m != mode.currentMode) _switchMode(m);
+              },
+            ),
+          const Divider(),
           ListTile(
             leading: const Icon(Icons.settings),
             title: const Text('设置'),
@@ -207,5 +236,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-

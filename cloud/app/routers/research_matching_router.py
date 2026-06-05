@@ -7,7 +7,7 @@ or free-text method descriptions using keyword overlap scoring.
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from cloud.app.research_database import get_research_db
+from cloud.app.research_database import get_research_db, log_research_audit
 from cloud.app.services.product_matching_service import (
     match_products_by_method,
     match_products_for_pi,
@@ -39,14 +39,17 @@ def match_for_pi(
     body: PiMatchRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    """Return top 3 product recommendations for a given PI profile.
-
-    Matching is based on keyword overlap between the PI's research areas
-    and product keywords/name tokens.
-    """
+    """Return top 3 product recommendations for a given PI profile."""
     db = get_research_db()
     try:
         results = match_products_for_pi(body.pi_id, top_k=3, research_db=db)
+        log_research_audit(
+            event_type="create",
+            entity_type="matching",
+            entity_id=body.pi_id,
+            new_value=str(results),
+            operator=current_user.get("username", ""),
+        )
         return {"code": 0, "data": results, "message": "success"}
     finally:
         db.close()
@@ -57,14 +60,17 @@ def match_by_method(
     body: MethodMatchRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    """Return top 3 product recommendations matching a method description.
-
-    The description is tokenized (with English stop-word filtering) and
-    matched against product keywords and name tokens.
-    """
+    """Return top 3 product recommendations matching a method description."""
     db = get_research_db()
     try:
         results = match_products_by_method(body.method_description, top_k=3, research_db=db)
+        log_research_audit(
+            event_type="create",
+            entity_type="matching",
+            entity_id=0,
+            new_value=f"method={body.method_description[:100]}",
+            operator=current_user.get("username", ""),
+        )
         return {"code": 0, "data": results, "message": "success"}
     finally:
         db.close()

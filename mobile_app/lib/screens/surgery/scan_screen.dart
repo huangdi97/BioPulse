@@ -1,5 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:one_cloud_app/services/sync_service.dart';
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});
@@ -68,6 +73,27 @@ class _ScanScreenState extends State<ScanScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('拍照失败，请检查相机权限')),
+        );
+      }
+    }
+  }
+
+  Future<void> _onRefresh() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString('backend_urls');
+      String? baseUrl;
+      if (saved != null) {
+        final urls = Map<String, String>.from(jsonDecode(saved) as Map);
+        baseUrl = urls['assistant'] ?? urls['sales_assistant'];
+      }
+      if (baseUrl != null) {
+        await context.read<SyncService>().pullSurgeries(baseUrl);
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('同步服务暂不可用')),
         );
       }
     }
@@ -164,23 +190,34 @@ class _ScanScreenState extends State<ScanScreen>
             ),
           ),
           Expanded(
-            child: _scanResults.isEmpty
-                ? Center(
-                    child: Text('暂无扫码记录',
-                        style: TextStyle(color: Colors.grey[500])))
-                : ListView.builder(
-                    itemCount: _scanResults.length,
-                    itemBuilder: (_, i) => ListTile(
-                      leading: Icon(
-                        _scanResults[i].startsWith('[图片]')
-                            ? Icons.image
-                            : Icons.qr_code,
-                        color: theme.colorScheme.primary,
+            child: RefreshIndicator(
+              onRefresh: _onRefresh,
+              child: _scanResults.isEmpty
+                  ? ListView(
+                      children: [
+                        SizedBox(
+                          height: 200,
+                          child: Center(
+                            child: Text('暂无扫码记录',
+                                style: TextStyle(color: Colors.grey[500])),
+                          ),
+                        ),
+                      ],
+                    )
+                  : ListView.builder(
+                      itemCount: _scanResults.length,
+                      itemBuilder: (_, i) => ListTile(
+                        leading: Icon(
+                          _scanResults[i].startsWith('[图片]')
+                              ? Icons.image
+                              : Icons.qr_code,
+                          color: theme.colorScheme.primary,
+                        ),
+                        title: Text(_scanResults[i], style: const TextStyle(fontSize: 13)),
+                        dense: true,
                       ),
-                      title: Text(_scanResults[i], style: const TextStyle(fontSize: 13)),
-                      dense: true,
                     ),
-                  ),
+            ),
           ),
         ],
       ),

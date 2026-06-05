@@ -106,3 +106,23 @@ def init_research_db():
         )
 
         conn.commit()
+
+
+def log_research_audit(
+    event_type: str,
+    entity_type: str,
+    entity_id: int,
+    old_value: str | None = None,
+    new_value: str | None = None,
+    operator: str = "",
+) -> None:
+    db = get_research_db()
+    try:
+        db.execute(
+            "INSERT INTO research_audit_log (event_type, entity_type, entity_id, old_value, new_value, operator, timestamp) "
+            "VALUES (?, ?, ?, ?, ?, ?, datetime('now'))",
+            (event_type, entity_type, entity_id, old_value, new_value, operator),
+        )
+        db.commit()
+    finally:
+        db.close()

@@ -1,34 +1,12 @@
-import json
 import logging
 import time
 import uuid
-from contextvars import ContextVar
-from datetime import datetime, timezone
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-request_id_var: ContextVar[str] = ContextVar("request_id", default="")
-
-
-class JSONFormatter(logging.Formatter):
-    """JSON结构化日志格式化器"""
-
-    def format(self, record: logging.LogRecord) -> str:
-        log_entry = {
-            "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            "level": record.levelname,
-            "logger": record.name,
-            "message": record.getMessage(),
-        }
-        if hasattr(record, "request_id"):
-            log_entry["request_id"] = record.request_id
-        elif request_id_var.get():
-            log_entry["request_id"] = request_id_var.get()
-        if record.exc_info and record.exc_info[0]:
-            log_entry["exception"] = self.formatException(record.exc_info)
-        return json.dumps(log_entry, ensure_ascii=False)
+from shared.structured_logging import JSONFormatter, request_id_var
 
 
 def setup_json_logging(name: str = "app") -> logging.Logger:

@@ -2,12 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Modes the application can operate in.
-enum AppMode { pharma, research }
+enum AppMode { pharma, surgery, opportunity, salesCoach, research }
 
 /// ChangeNotifier managing the current application mode.
 ///
-/// Supports switching between [AppMode.pharma] (sales assistant) and
-/// [AppMode.research] (research assistant), and records switch history.
+/// Supports switching between [AppMode] values and records switch history.
 class ModeProvider extends ChangeNotifier {
   static const _modeKey = 'app_mode';
   static const _historyKey = 'mode_switch_history';
@@ -19,6 +18,36 @@ class ModeProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get history => List.unmodifiable(_history);
   bool get isPharmaMode => _currentMode == AppMode.pharma;
   bool get isResearchMode => _currentMode == AppMode.research;
+
+  String get backendKeyForCurrentMode {
+    switch (_currentMode) {
+      case AppMode.pharma:
+        return 'sales_assistant';
+      case AppMode.surgery:
+        return 'cloud';
+      case AppMode.opportunity:
+        return 'opportunity';
+      case AppMode.salesCoach:
+        return 'sales_coach';
+      case AppMode.research:
+        return 'cloud';
+    }
+  }
+
+  String get modeLabel {
+    switch (_currentMode) {
+      case AppMode.pharma:
+        return '医药模式';
+      case AppMode.surgery:
+        return '手术模式';
+      case AppMode.opportunity:
+        return '商机模式';
+      case AppMode.salesCoach:
+        return '销售教练模式';
+      case AppMode.research:
+        return '研究模式';
+    }
+  }
 
   /// Load persisted mode from SharedPreferences.
   Future<void> init() async {

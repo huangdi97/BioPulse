@@ -4,7 +4,7 @@ import time
 
 from fastapi import FastAPI
 
-from shared.request_id_middleware import RequestIDMiddleware
+from shared.middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 
 START_TIME = time.time()
