@@ -3,11 +3,15 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
+from cloud.app.decision_analyst import DecisionAnalyst
+from cloud.app.intel_reporter import IntelReporter
 from cloud.app.services.decision_intel_service import DecisionIntelService
 from shared.auth_scope import require_scope
-from shared.base import PaginatedResponse, success
 
 router = APIRouter(prefix="/decision-intel", tags=["Decision Intelligence"])
+
+_analyst = DecisionAnalyst()
+_reporter = IntelReporter()
 
 
 class CaseCreate(BaseModel):
@@ -63,18 +67,7 @@ def create_case(
     Returns:
         包含新创建案例数据的响应。
     """
-    uid = int(current_user["sub"])
-    row = service.create_case(
-        name=body.name,
-        pipeline_run_id=body.pipeline_run_id,
-        description=body.description,
-        outcome=body.outcome,
-        outcome_score=body.outcome_score,
-        context=body.context,
-        tags=body.tags,
-        uid=uid,
-    )
-    return success(data=row)
+    return _analyst.create_case(body, request, current_user, service)
 
 
 @router.get("/cases")
@@ -103,22 +96,15 @@ def list_cases(
     Returns:
         分页案例列表响应。
     """
-    result = service.list_cases(
+    return _analyst.list_cases(
         outcome_score_min=outcome_score_min,
         outcome_score_max=outcome_score_max,
         tag=tag,
         search=search,
         page=page,
         page_size=page_size,
-    )
-    return success(
-        data=PaginatedResponse(
-            items=result["items"],
-            total=result["total"],
-            page=result["page"],
-            page_size=result["page_size"],
-            total_pages=result["total_pages"],
-        )
+        current_user=current_user,
+        service=service,
     )
 
 
@@ -138,8 +124,7 @@ def get_case(
     Returns:
         包含案例数据的响应。
     """
-    row = service.get_case(case_id)
-    return success(data=row)
+    return _analyst.get_case(case_id, current_user, service)
 
 
 @router.patch("/cases/{case_id}")
@@ -160,16 +145,7 @@ def update_case(
     Returns:
         包含更新后案例数据的响应。
     """
-    row = service.update_case(
-        case_id=case_id,
-        name=body.name,
-        description=body.description,
-        outcome=body.outcome,
-        outcome_score=body.outcome_score,
-        context=body.context,
-        tags=body.tags,
-    )
-    return success(data=row)
+    return _analyst.update_case(case_id, body, current_user, service)
 
 
 @router.delete("/cases/{case_id}")
@@ -188,8 +164,7 @@ def delete_case(
     Returns:
         删除成功的响应。
     """
-    service.delete_case(case_id)
-    return success(message="deleted")
+    return _analyst.delete_case(case_id, current_user, service)
 
 
 @router.post("/cases/{case_id}/analyze")
@@ -212,13 +187,7 @@ def analyze_case(
     Returns:
         包含分析结果的响应。
     """
-    auth_header = request.headers.get("Authorization", "")
-    result = service.analyze_case(
-        case_id=case_id,
-        custom_question=body.custom_question,
-        auth_header=auth_header,
-    )
-    return success(data=result)
+    return _analyst.analyze_case(case_id, body, request, current_user, service)
 
 
 @router.get("/cases/{case_id}/analyses")
@@ -237,8 +206,7 @@ def list_analyses(
     Returns:
         包含分析记录列表的响应。
     """
-    rows = service.list_analyses(case_id)
-    return success(data=rows)
+    return _analyst.list_analyses(case_id, current_user, service)
 
 
 @router.get("/analyses/{analysis_id}")
@@ -257,8 +225,7 @@ def get_analysis(
     Returns:
         包含分析数据的响应。
     """
-    row = service.get_analysis(analysis_id)
-    return success(data=row)
+    return _analyst.get_analysis(analysis_id, current_user, service)
 
 
 @router.post("/reflect")
@@ -279,13 +246,7 @@ def reflect(
     Returns:
         包含反思结果的响应。
     """
-    auth_header = request.headers.get("Authorization", "")
-    result = service.reflect(
-        filter_tags=body.filter_tags,
-        max_cases=body.max_cases,
-        auth_header=auth_header,
-    )
-    return success(data=result)
+    return _analyst.reflect(body, request, current_user, service)
 
 
 @router.get("/insights")
@@ -310,20 +271,13 @@ def list_insights(
     Returns:
         分页洞察列表响应。
     """
-    result = service.list_insights(
+    return _reporter.list_insights(
         insight_type=insight_type,
         confidence_min=confidence_min,
         page=page,
         page_size=page_size,
-    )
-    return success(
-        data=PaginatedResponse(
-            items=result["items"],
-            total=result["total"],
-            page=result["page"],
-            page_size=result["page_size"],
-            total_pages=result["total_pages"],
-        )
+        current_user=current_user,
+        service=service,
     )
 
 
@@ -343,8 +297,7 @@ def get_insight(
     Returns:
         包含洞察数据的响应。
     """
-    row = service.get_insight(insight_id)
-    return success(data=row)
+    return _reporter.get_insight(insight_id, current_user, service)
 
 
 @router.patch("/insights/{insight_id}")
@@ -365,14 +318,7 @@ def update_insight(
     Returns:
         包含更新后洞察数据的响应。
     """
-    row = service.update_insight(
-        insight_id=insight_id,
-        title=body.title,
-        summary=body.summary,
-        confidence=body.confidence,
-        applicability=body.applicability,
-    )
-    return success(data=row)
+    return _reporter.update_insight(insight_id, body, current_user, service)
 
 
 @router.get("/dashboard")
@@ -389,5 +335,4 @@ def dashboard(
     Returns:
         包含仪表盘数据的响应。
     """
-    result = service.dashboard()
-    return success(data=result)
+    return _reporter.dashboard(current_user, service)
