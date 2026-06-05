@@ -15,6 +15,12 @@ jobs:
           pip install ruff
       - name: Ruff check
         run: ruff check
+      - name: Debug env
+        run: |
+          python -c "import fastapi; print('fastapi', fastapi.__version__)"
+          python -c "import sqlite3; print('sqlite3 OK')"
+          python -c "import pytest; print('pytest', pytest.__version__)"
+          python --version
       - name: Pytest
         run: python -m pytest cloud/app/tests/test_auth.py cloud/app/tests/test_compliance.py cloud/app/tests/test_mdt.py cloud/app/tests/test_memory.py cloud/app/tests/test_repositories.py cloud/app/tests/test_research_trajectory.py cloud/app/tests/test_sage_engine.py cloud/app/tests/test_decision.py cloud/app/tests/test_market.py cloud/app/tests/test_e2e_scope_isolation.py -x --tb=long --no-cov -v
 
