@@ -12,7 +12,7 @@ from cloud.app.agent_runtime.loop_detector import LoopDetector
 from cloud.app.agent_runtime.memory import AgentBrain
 from cloud.app.agent_runtime.models import RuntimeResult
 from cloud.app.agent_runtime.notifier import AgentNotifier
-from cloud.app.agent_runtime.planner import Planner
+from cloud.app.agent_runtime.planner import PlanGenerator
 from cloud.app.agent_runtime.retry import retry_with_backoff
 from cloud.app.agent_runtime.state_snapshot import SnapshotManager
 from cloud.app.agent_runtime.tool_bridge import ToolRegistry
@@ -21,21 +21,22 @@ from cloud.app.agent_runtime.verifier import Verifier
 
 
 class AgentRuntime:
-    def __init__(self, db, auth_header: str, notifier: AgentNotifier | None = None):
-        self._db = db
+    def __init__(self, agent_db, business_db, auth_header: str, notifier: AgentNotifier | None = None):
+        self._agent_db = agent_db
+        self._db = business_db
         self._auth_header = auth_header
         self._notifier = notifier
-        self._tool_registry = ToolRegistry(db)
+        self._tool_registry = ToolRegistry(business_db)
         self._tool_registry.register_default_tools()
-        self._brain = AgentBrain(db)
+        self._brain = AgentBrain(agent_db)
         self._tool_registry.set_brain(self._brain)
         self._stats = {"total_runs": 0, "success_count": 0, "fail_count": 0}
         self._trace_id = str(uuid.uuid4())
         self._cost_tracker = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
         self._loop_detector = LoopDetector()
-        self._snapshot_manager = SnapshotManager(db)
+        self._snapshot_manager = SnapshotManager(agent_db)
         self._cost_governor = CostGovernor()
-        self._planner = Planner()
+        self._planner = PlanGenerator()
         self._verifier = Verifier()
 
     def execute(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
@@ -84,7 +85,7 @@ class AgentRuntime:
         approved_tool = None
         approved_tool_params = None
         if checkpoint:
-            app = self._db.execute(
+            app = self._agent_db.execute(
                 "SELECT tool, params FROM agent_runtime_approvals WHERE agent_key=? AND goal=? AND status='approved' ORDER BY id DESC LIMIT 1",
                 (agent_key, goal),
             ).fetchone()
@@ -478,10 +479,10 @@ class AgentRuntime:
 
     def _save_log(self, agent_key, goal, status, iterations, tool_calls, logs, started_at):
         try:
-            self._db.execute("ALTER TABLE agent_runtime_logs ADD COLUMN cost_data TEXT DEFAULT '{}'")
+            self._agent_db.execute("ALTER TABLE agent_runtime_logs ADD COLUMN cost_data TEXT DEFAULT '{}'")
         except Exception:
             pass
-        self._db.execute(
+        self._agent_db.execute(
             "INSERT INTO agent_runtime_logs (agent_key, goal, status, iterations, tool_calls, log_detail, "
             "started_at, completed_at, trace_id, cost_data) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -498,23 +499,23 @@ class AgentRuntime:
                 json.dumps(self._cost_tracker),
             ),
         )
-        self._db.commit()
+        self._agent_db.commit()
 
     def _save_checkpoint(self, agent_key, goal, data):
         json_data = json.dumps(data, ensure_ascii=False)
-        cur = self._db.execute(
+        cur = self._agent_db.execute(
             "UPDATE agent_runtime_logs SET checkpoint_data=? WHERE agent_key=? AND goal=? AND status IN ('running', 'pending')",
             (json_data, agent_key, goal),
         )
         if cur.rowcount == 0:
-            self._db.execute(
+            self._agent_db.execute(
                 "INSERT INTO agent_runtime_logs (agent_key, goal, status, checkpoint_data, trace_id) VALUES (?, ?, 'running', ?, ?)",
                 (agent_key, goal, json_data, self._trace_id),
             )
-        self._db.commit()
+        self._agent_db.commit()
 
     def _load_checkpoint(self, agent_key, goal):
-        cur = self._db.execute(
+        cur = self._agent_db.execute(
             "SELECT checkpoint_data FROM agent_runtime_logs "
             "WHERE agent_key=? AND goal=? AND status='running' AND checkpoint_data IS NOT NULL "
             "ORDER BY id DESC LIMIT 1",
@@ -526,19 +527,19 @@ class AgentRuntime:
         return None
 
     def _delete_checkpoint(self, agent_key, goal):
-        self._db.execute(
+        self._agent_db.execute(
             "UPDATE agent_runtime_logs SET checkpoint_data=NULL WHERE agent_key=? AND goal=?",
             (agent_key, goal),
         )
-        self._db.commit()
+        self._agent_db.commit()
 
     def _create_approval(self, agent_key: str, goal: str, step: int, tool: str, params: dict, reasoning: str) -> int:
-        cur = self._db.execute(
+        cur = self._agent_db.execute(
             "INSERT INTO agent_runtime_approvals (trace_id, agent_key, goal, step, tool, params, reasoning, status) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')",
             (self._trace_id, agent_key, goal, step, tool, json.dumps(params, ensure_ascii=False), reasoning),
         )
-        self._db.commit()
+        self._agent_db.commit()
         return cur.lastrowid
 
     def resume(self, agent_key: str, goal: str, auth_header: str) -> RuntimeResult:
@@ -546,7 +547,7 @@ class AgentRuntime:
         if not checkpoint:
             return RuntimeResult(status="error", result="no checkpoint found", iterations=0, tool_calls=0, logs=[])
 
-        approval = self._db.execute(
+        approval = self._agent_db.execute(
             "SELECT * FROM agent_runtime_approvals WHERE trace_id=? AND status='approved' ORDER BY id DESC LIMIT 1",
             (checkpoint["trace_id"],),
         ).fetchone()
@@ -559,7 +560,7 @@ class AgentRuntime:
         return self.execute(goal, agent_key, checkpoint.get("context"))
 
     def get_status(self) -> dict:
-        cur = self._db.execute("SELECT status, COUNT(*) as cnt FROM agent_runtime_logs GROUP BY status")
+        cur = self._agent_db.execute("SELECT status, COUNT(*) as cnt FROM agent_runtime_logs GROUP BY status")
         by_status = {r["status"]: r["cnt"] for r in cur.fetchall()}
         return {
             **self._stats,

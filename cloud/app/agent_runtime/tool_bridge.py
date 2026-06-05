@@ -70,15 +70,15 @@ class ToolRegistry:
             ToolDef(
                 name="search_memory",
                 description="查记忆",
-                params={},
-                endpoint="sql:SELECT * FROM memory_gates",
+                params={"endpoint": "/memory/recall"},
+                endpoint="POST /memory/recall",
                 permission_level="read",
             ),
             ToolDef(
                 name="write_memory",
                 description="写入记忆",
-                params={},
-                endpoint="sql:INSERT INTO memory_gates",
+                params={"endpoint": "/memory/entries"},
+                endpoint="POST /memory/entries",
                 permission_level="write",
             ),
             ToolDef(

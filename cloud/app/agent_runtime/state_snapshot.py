@@ -3,12 +3,12 @@ from datetime import datetime
 
 
 class SnapshotManager:
-    def __init__(self, db):
-        self._db = db
+    def __init__(self, agent_db):
+        self._agent_db = agent_db
         self._create_table()
 
     def _create_table(self):
-        self._db.execute(
+        self._agent_db.execute(
             "CREATE TABLE IF NOT EXISTS agent_state_snapshots ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT, "
             "agent_id TEXT NOT NULL, "
@@ -20,9 +20,9 @@ class SnapshotManager:
             "status TEXT DEFAULT 'active'"
             ")"
         )
-        self._db.execute("CREATE INDEX IF NOT EXISTS idx_state_snapshots_agent ON agent_state_snapshots(agent_id)")
-        self._db.execute("CREATE INDEX IF NOT EXISTS idx_state_snapshots_status ON agent_state_snapshots(status)")
-        self._db.commit()
+        self._agent_db.execute("CREATE INDEX IF NOT EXISTS idx_state_snapshots_agent ON agent_state_snapshots(agent_id)")
+        self._agent_db.execute("CREATE INDEX IF NOT EXISTS idx_state_snapshots_status ON agent_state_snapshots(status)")
+        self._agent_db.commit()
 
     def _serialize(self, obj):
         return json.dumps(obj, ensure_ascii=False, default=str)
@@ -39,20 +39,20 @@ class SnapshotManager:
         context_json = self._serialize(context)
         created_at = datetime.now().isoformat()
 
-        cur = self._db.execute(
+        cur = self._agent_db.execute(
             "INSERT INTO agent_state_snapshots "
             "(agent_id, step_id, plan_json, results_json, context_json, created_at, status) "
             "VALUES (?, ?, ?, ?, ?, ?, ?)",
             (agent_id, step_id, plan_json, results_json, context_json, created_at, status),
         )
-        self._db.commit()
+        self._agent_db.commit()
 
         snapshot_id = cur.lastrowid
         self._cleanup(agent_id)
         return snapshot_id
 
     def load(self, snapshot_id):
-        row = self._db.execute(
+        row = self._agent_db.execute(
             "SELECT * FROM agent_state_snapshots WHERE id=?",
             (snapshot_id,),
         ).fetchone()
@@ -70,7 +70,7 @@ class SnapshotManager:
         }
 
     def list_snapshots(self, agent_id, limit=10):
-        rows = self._db.execute(
+        rows = self._agent_db.execute(
             "SELECT id, agent_id, step_id, created_at, status FROM agent_state_snapshots WHERE agent_id=? ORDER BY id DESC LIMIT ?",
             (agent_id, limit),
         ).fetchall()
@@ -86,7 +86,7 @@ class SnapshotManager:
         ]
 
     def get_latest(self, agent_id):
-        row = self._db.execute(
+        row = self._agent_db.execute(
             "SELECT * FROM agent_state_snapshots WHERE agent_id=? AND status='active' ORDER BY id DESC LIMIT 1",
             (agent_id,),
         ).fetchone()
@@ -104,18 +104,18 @@ class SnapshotManager:
         }
 
     def mark_rolled_back(self, snapshot_id):
-        self._db.execute(
+        self._agent_db.execute(
             "UPDATE agent_state_snapshots SET status='rolled_back' WHERE id=?",
             (snapshot_id,),
         )
-        self._db.commit()
+        self._agent_db.commit()
 
     def _cleanup(self, agent_id):
-        self._db.execute(
+        self._agent_db.execute(
             "DELETE FROM agent_state_snapshots WHERE agent_id=? AND id NOT IN ("
             "SELECT id FROM agent_state_snapshots WHERE agent_id=? "
             "ORDER BY id DESC LIMIT 50"
             ")",
             (agent_id, agent_id),
         )
-        self._db.commit()
+        self._agent_db.commit()

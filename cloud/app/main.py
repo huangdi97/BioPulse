@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from cloud.app.a2a_registry_router import router as a2a_registry_router
+from cloud.app.agent_database import init_agent_db
 from cloud.app.agent_execution_router import router as agent_execution_router
 from cloud.app.agent_framework_router import router as agent_framework_router
 from cloud.app.agent_pipeline_router import router as agent_pipeline_router
@@ -256,6 +257,7 @@ app.include_router(cell_network_router)
 
 @app.on_event("startup")
 def startup():
+    init_agent_db()
     init_db()
     init_research()
 
