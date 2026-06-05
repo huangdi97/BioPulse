@@ -47,3 +47,94 @@ class EffectMetricsRepository(BaseRepository):
             params,
         ).fetchall()
         return [dict(r) for r in rows]
+
+    def metrics_by_dimension(
+        self,
+        agent_role=None,
+        metric_type=None,
+        period_start=None,
+        period_end=None,
+    ) -> list:
+        conditions, params = [], []
+        if agent_role:
+            conditions.append("agent_role = ?")
+            params.append(agent_role)
+        if metric_type:
+            conditions.append("metric_type = ?")
+            params.append(metric_type)
+        if period_start:
+            conditions.append("period_start >= ?")
+            params.append(period_start)
+        if period_end:
+            conditions.append("period_end <= ?")
+            params.append(period_end)
+        where = " WHERE " + " AND ".join(conditions) if conditions else ""
+        placeholders = ", ".join(self.cols)
+        rows = self.db.execute(
+            f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY created_at",
+            params,
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def distinct_sources(
+        self,
+        agent_role,
+        metric_type,
+        period_start=None,
+        period_end=None,
+    ) -> int:
+        conditions = ["agent_role = ?", "metric_type = ?"]
+        params = [agent_role, metric_type]
+        if period_start:
+            conditions.append("period_start >= ?")
+            params.append(period_start)
+        if period_end:
+            conditions.append("period_end <= ?")
+            params.append(period_end)
+        where = " WHERE " + " AND ".join(conditions)
+        row = self.db.execute(
+            f"SELECT COUNT(DISTINCT source_row_id) AS cnt FROM {self.table_name}{where}",
+            params,
+        ).fetchone()
+        return int(row["cnt"]) if row else 0
+
+    def all_dimension_groups(self, period_start=None, period_end=None) -> list:
+        conditions, params = [], []
+        if period_start:
+            conditions.append("period_start >= ?")
+            params.append(period_start)
+        if period_end:
+            conditions.append("period_end <= ?")
+            params.append(period_end)
+        where = " WHERE " + " AND ".join(conditions) if conditions else ""
+        rows = self.db.execute(
+            f"SELECT DISTINCT agent_role, metric_type FROM {self.table_name}{where} ORDER BY agent_role, metric_type",
+            params,
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def user_metrics(
+        self,
+        source_sub: str,
+        agent_role=None,
+        period_start=None,
+        period_end=None,
+    ) -> list:
+        conditions = ["source_sub = ?"]
+        params = [source_sub]
+        if agent_role:
+            conditions.append("agent_role = ?")
+            params.append(agent_role)
+        if period_start:
+            conditions.append("period_start >= ?")
+            params.append(period_start)
+        if period_end:
+            conditions.append("period_end <= ?")
+            params.append(period_end)
+        where = " WHERE " + " AND ".join(conditions)
+        placeholders = ", ".join(self.cols)
+        rows = self.db.execute(
+            f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY period_start",
+            params,
+        ).fetchall()
+        return [dict(r) for r in rows]

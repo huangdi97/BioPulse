@@ -172,6 +172,17 @@ def init_db() -> None:
         )
         seed_model_compression(conn)
         seed_products(conn)
+        for col in [
+            "source_sub TEXT DEFAULT ''",
+        ]:
+            try:
+                conn.execute(f"ALTER TABLE effect_metrics ADD COLUMN {col}")
+            except Exception:
+                pass
+        try:
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_em_source_sub ON effect_metrics(source_sub)")
+        except Exception:
+            pass
         conn.execute(
             "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
             ("photo_watermark", "off"),

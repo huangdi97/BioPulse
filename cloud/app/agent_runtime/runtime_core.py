@@ -12,10 +12,12 @@ from cloud.app.agent_runtime.loop_detector import LoopDetector
 from cloud.app.agent_runtime.memory import AgentBrain
 from cloud.app.agent_runtime.models import RuntimeResult
 from cloud.app.agent_runtime.notifier import AgentNotifier
+from cloud.app.agent_runtime.planner import Planner
 from cloud.app.agent_runtime.retry import retry_with_backoff
 from cloud.app.agent_runtime.state_snapshot import SnapshotManager
 from cloud.app.agent_runtime.tool_bridge import ToolRegistry
 from cloud.app.agent_runtime.validator import AgentOutputValidator
+from cloud.app.agent_runtime.verifier import Verifier
 
 
 class AgentRuntime:
@@ -33,6 +35,8 @@ class AgentRuntime:
         self._loop_detector = LoopDetector()
         self._snapshot_manager = SnapshotManager(db)
         self._cost_governor = CostGovernor()
+        self._planner = Planner()
+        self._verifier = Verifier()
 
     def execute(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
         try:
@@ -88,6 +92,9 @@ class AgentRuntime:
                 approved_tool = app["tool"]
                 approved_tool_params = json.loads(app["params"]) if app["params"] else {}
 
+        plan = self._planner.plan(goal, agent_key, context)
+        logs.append(plan)
+
         for step in range(start_step, max_iter):
             messages = self._compress_messages(messages)
             step_start = time.time()
@@ -95,6 +102,7 @@ class AgentRuntime:
             # 如果有已批准的审批，直接执行该工具（跳过 LLM 思考）
             if approved_tool and step == start_step:
                 tool_result = self._tool_registry.call(approved_tool, approved_tool_params, self._auth_header, caller_permission="write")
+                self._verifier.verify(tool_result)
                 if tool_result.get("needs_approval"):
                     tool_result = {"success": False, "data": None, "error": "still requires approval"}
                 tool_calls += 1
@@ -257,6 +265,7 @@ class AgentRuntime:
                     tool_result = self._tool_registry.call(
                         tool_name, tool_params, self._auth_header, caller_permission=spec.get("max_permission", "read")
                     )
+                    self._verifier.verify(tool_result)
                 except Exception as e:
                     logs.append(
                         {

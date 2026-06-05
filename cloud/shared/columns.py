@@ -362,6 +362,7 @@ TABLE_EFFECT_METRICS_COLS = [
     "metric_unit",
     "source_table",
     "source_row_id",
+    "source_sub",
     "period_start",
     "period_end",
     "created_at",

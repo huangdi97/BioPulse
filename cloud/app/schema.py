@@ -1205,11 +1205,13 @@ SCHEMA_SQL = """
                 metric_unit TEXT,
                 source_table TEXT,
                 source_row_id TEXT,
+                source_sub TEXT DEFAULT '',
                 period_start TEXT,
                 period_end TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
             CREATE INDEX IF NOT EXISTS idx_em_agent ON effect_metrics(agent_role);
+            CREATE INDEX IF NOT EXISTS idx_em_source_sub ON effect_metrics(source_sub);
 
             CREATE TABLE IF NOT EXISTS benchmark_reports (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

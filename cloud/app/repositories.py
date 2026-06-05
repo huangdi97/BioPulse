@@ -492,6 +492,25 @@ class EffectMetricsRepository(BaseRepository):
         ).fetchall()
         return [dict(r) for r in rows]
 
+    def list_all_metrics(self, period_start=None, period_end=None) -> list:
+        conditions = []
+        params = []
+        if period_start:
+            conditions.append("period_start >= ?")
+            params.append(period_start)
+        if period_end:
+            conditions.append("period_end <= ?")
+            params.append(period_end)
+        where = ""
+        if conditions:
+            where = "WHERE " + " AND ".join(conditions)
+        placeholders = ", ".join(self.cols)
+        rows = self.db.execute(
+            f"SELECT {placeholders} FROM {self.table_name} {where} ORDER BY agent_role, metric_type, metric_value",
+            params,
+        ).fetchall()
+        return [dict(r) for r in rows]
+
 
 class EpisodicMemoryRepository(BaseRepository):
     def __init__(self, db):

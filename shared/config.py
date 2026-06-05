@@ -36,6 +36,13 @@ class Settings(BaseSettings):
     sales_assistant_port: int = 8004
     sales_coach_port: int = 8001
 
+    # Pareto routing objectives — direction must be "maximize" or "minimize"
+    PARETO_OBJECTIVES: dict = {
+        "success_rate": {"direction": "maximize", "weight": 1.0},
+        "avg_duration_ms": {"direction": "minimize", "weight": 1.0},
+        "load": {"direction": "minimize", "weight": 0.5},
+    }
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 

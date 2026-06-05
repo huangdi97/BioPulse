@@ -1,3 +1,4 @@
+import logging
 import os
 import sqlite3
 import time
@@ -48,6 +49,10 @@ from cloud.app.mdt_engine_router import router as mdt_engine_router
 from cloud.app.memory_consolidation_router import router as memory_consolidation_router
 from cloud.app.memory_gate_router import router as memory_gate_router
 from cloud.app.memory_utility_router import router as memory_utility_router
+from cloud.app.middleware.logging_middleware import (
+    JSONFormatter,
+    logging_middleware,
+)
 from cloud.app.nmpa_router import router as nmpa_router
 from cloud.app.notification_router import router as notification_router
 from cloud.app.opportunity_router import router as opportunity_router
@@ -103,14 +108,17 @@ from cloud.app.visit_router import router as visit_router
 from cloud.app.world_tree_router import router as world_tree_router
 from shared.config import settings
 from shared.exception_handlers import register_exception_handlers
-from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
-from shared.structured_logging import setup_logging
 
 # Serve frontend SPA
 START_TIME = time.time()
 
-setup_logging("cloud")
+_logger = logging.getLogger("cloud")
+_logger.setLevel(logging.INFO)
+_handler = logging.StreamHandler()
+_handler.setFormatter(JSONFormatter())
+if not _logger.handlers:
+    _logger.addHandler(_handler)
 
 app = FastAPI(
     title="一云四端 · Cloud API",
@@ -148,7 +156,7 @@ async def api_path_rewrite(request: Request, call_next):
     return await call_next(request)
 
 
-app.add_middleware(RequestIDMiddleware)
+app.middleware("http")(logging_middleware)
 register_exception_handlers(app)
 
 

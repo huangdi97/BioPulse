@@ -46,6 +46,51 @@ class CellNetworkService(BaseService):
         self.db.commit()
         return self._get_cell(cell_key)
 
+    def auto_discover(self) -> dict:
+        """auto_discover 操作。
+
+        扫描 agent_registry 表中所有 online 状态的 agent，
+        对每个尚未注册为 cell 的 agent_instance_key 尝试注册连接。
+
+        Returns:
+            描述
+        """
+        online_agents = self.db.execute("SELECT agent_key FROM agent_registry WHERE status='online'").fetchall()
+
+        registered = 0
+        failed: list[dict] = []
+        cells: list[str] = []
+
+        for agent in online_agents:
+            agent_key = agent["agent_key"]
+            existing = self.db.execute(
+                "SELECT id FROM agent_cell_network WHERE agent_instance_key=?",
+                (agent_key,),
+            ).fetchone()
+            if existing:
+                continue
+
+            try:
+                cell_key = f"cell:{uuid.uuid4().hex}"
+                self.db.execute(
+                    "INSERT INTO agent_cell_network (cell_key, agent_instance_key, known_cells, routing_table) VALUES (?, ?, '[]', '{}')",
+                    (cell_key, agent_key),
+                )
+                registered += 1
+                cells.append(cell_key)
+            except Exception as e:
+                failed.append({"agent_instance_key": agent_key, "error": str(e)})
+
+        self.db.commit()
+
+        return {
+            "total_online_agents": len(online_agents),
+            "newly_registered": registered,
+            "registered_cells": cells,
+            "failed": failed,
+            "failed_count": len(failed),
+        }
+
     def discover_cells(self, capability: str | None = None) -> list:
         """discover_cells 操作。
 
@@ -173,6 +218,85 @@ class CellNetworkService(BaseService):
             "active_cells": sum(1 for c in cell_list if c["status"] == "active"),
             "cells": cell_list,
             "routing_map": routing_map,
+        }
+
+    def get_topology_for_visualization(self) -> dict:
+        """get_topology_for_visualization 操作。
+
+        返回适合前端可视化的图拓扑数据，包含 nodes 和 edges。
+
+        Returns:
+            描述
+        """
+        cells = self.db.execute(
+            "SELECT c.*, r.agent_name, r.agent_type, r.capabilities "
+            "FROM agent_cell_network c "
+            "LEFT JOIN agent_registry r ON c.agent_instance_key = r.agent_key "
+            "ORDER BY c.created_at DESC"
+        ).fetchall()
+        cell_list = [self._row_to_dict(r) for r in cells]
+
+        nodes: list[dict] = []
+        edges: list[dict] = []
+        seen_edges: set[tuple[str, str]] = set()
+
+        for cell in cell_list:
+            nodes.append(
+                {
+                    "id": cell["cell_key"],
+                    "label": cell.get("agent_name") or cell.get("agent_instance_key", ""),
+                    "type": cell.get("agent_type", "agent"),
+                    "status": cell["status"],
+                    "capabilities": cell.get("capabilities"),
+                }
+            )
+            known = json.loads(cell.get("known_cells", "[]"))
+            for target in known:
+                edge_key = (cell["cell_key"], target)
+                reverse_key = (target, cell["cell_key"])
+                if edge_key not in seen_edges and reverse_key not in seen_edges:
+                    seen_edges.add(edge_key)
+                    edges.append(
+                        {
+                            "source": cell["cell_key"],
+                            "target": target,
+                        }
+                    )
+
+        return {
+            "nodes": nodes,
+            "edges": edges,
+            "total_nodes": len(nodes),
+            "total_edges": len(edges),
+        }
+
+    def health_check(self) -> dict:
+        """health_check 操作。
+
+        检查 CellNetwork 服务及相关数据库的健康状态。
+
+        Returns:
+            描述
+        """
+        try:
+            self.db.execute("SELECT 1 FROM agent_cell_network LIMIT 1")
+        except Exception:
+            return {
+                "status": "unhealthy",
+                "db_connected": False,
+                "total_cells": 0,
+                "active_cells": 0,
+                "detail": "database connection failed",
+            }
+
+        total = self.db.execute("SELECT COUNT(*) as count FROM agent_cell_network").fetchone()["count"]
+        active = self.db.execute("SELECT COUNT(*) as count FROM agent_cell_network WHERE status='active'").fetchone()["count"]
+
+        return {
+            "status": "healthy",
+            "db_connected": True,
+            "total_cells": total,
+            "active_cells": active,
         }
 
     def _get_cell(self, cell_key: str) -> dict:

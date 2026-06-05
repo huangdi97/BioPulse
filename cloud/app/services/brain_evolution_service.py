@@ -121,13 +121,14 @@ class BrainEvolutionService(BaseService):
         return [dict(r) for r in rows]
 
     def fold_memories(self, memory_ids: list[int]) -> dict:
-        """fold_memories 操作。
+        """将多条记忆折叠压缩为一条摘要记忆。
 
         Args:
-            memory_ids: 描述
+            memory_ids: 待折叠的记忆 ID 列表（可混合 episodic / sensory / procedural 类型）。
 
         Returns:
-            描述
+            折叠结果字典，包含 folded_id、title、description、source_count、
+            source_ids 和 avg_importance；若无有效记忆则返回 error。
         """
         sources = []
         descriptions = []
@@ -257,3 +258,40 @@ class BrainEvolutionService(BaseService):
             "fold_chain": fold_chain,
             "sources": sources,
         }
+
+    def unfold_memory(self, pattern_id: int) -> list[dict]:
+        """展开一条 cognitive_fold 合并记忆，返回其原始来源记忆列表。
+
+        Args:
+            pattern_id: cognitive_fold 类型 episodic_memory 的 ID。
+
+        Returns:
+            原始来源记忆的字典列表，每条包含 _memory_type 字段；
+            若未找到则返回空列表。
+        """
+        row = self.db.execute(
+            "SELECT * FROM episodic_memory WHERE id=? AND event_type='cognitive_fold'",
+            (pattern_id,),
+        ).fetchone()
+        if not row:
+            return []
+
+        folded = dict(row)
+        context = json.loads(folded.get("context", "{}"))
+        source_ids = context.get("source_ids", [])
+
+        result = []
+        for sid in source_ids:
+            for table, mtype in [
+                ("episodic_memory", "episodic"),
+                ("sensory_memory", "sensory"),
+                ("procedural_memory", "procedural"),
+            ]:
+                r = self.db.execute(f"SELECT * FROM {table} WHERE id=?", (sid,)).fetchone()
+                if r:
+                    r = dict(r)
+                    r["_memory_type"] = mtype
+                    result.append(r)
+                    break
+
+        return result
