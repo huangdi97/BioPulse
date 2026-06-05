@@ -95,14 +95,12 @@ class Verifier:
     @staticmethod
     def _layer1_assertions(step: PlanStep, result: dict) -> CheckResult:
         """Basic Python-level assertions on the result."""
-        assertions_passed = True
         details = []
         if result is None:
             return CheckResult(name="assertions", passed=False, detail="Result is None")
 
         success = result.get("success", False)
         if not success:
-            assertions_passed = False
             details.append(f"Result success=False: {result.get('error', 'no error')}")
 
         if details:

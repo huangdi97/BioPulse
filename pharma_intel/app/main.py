@@ -4,6 +4,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from pharma_intel.app.competitor_router import router as competitor_router
+from pharma_intel.app.conference_router import router as conference_router
+from pharma_intel.app.health_router import router as health_router
+from pharma_intel.app.intel_router import router as intel_router
+from pharma_intel.app.kol_router import router as kol_router
+from pharma_intel.app.pipeline_router import router as pipeline_router
+from pharma_intel.app.target_router import router as target_router
 from shared.exception_handlers import register_exception_handlers
 from shared.middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
@@ -28,15 +35,6 @@ def startup():
     from pharma_intel.app.database import init_cache_db
 
     init_cache_db()
-
-
-from pharma_intel.app.competitor_router import router as competitor_router
-from pharma_intel.app.conference_router import router as conference_router
-from pharma_intel.app.health_router import router as health_router
-from pharma_intel.app.intel_router import router as intel_router
-from pharma_intel.app.kol_router import router as kol_router
-from pharma_intel.app.pipeline_router import router as pipeline_router
-from pharma_intel.app.target_router import router as target_router
 
 app.include_router(health_router)
 app.include_router(intel_router)
