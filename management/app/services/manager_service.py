@@ -1,73 +1,53 @@
 import httpx
 
-from management.app.database import get_cache, set_cache
-
 CLOUD_API = "http://localhost:8000"
-CACHE_TTL = 60
+
+
+async def _fetch(path: str) -> dict:
+    async with httpx.AsyncClient() as client:
+        try:
+            resp = await client.get(f"{CLOUD_API}{path}", timeout=10)
+            return resp.json() if resp.status_code == 200 else {}
+        except Exception:
+            return {}
 
 
 async def get_team_stats(team_id: int) -> dict:
-    """获取团队统计信息。
-
-    调用 /teams/{id}/members 和 /board/stats 聚合。
-    """
-    cache_key = f"manager:team_stats:{team_id}"
-    cached = get_cache(cache_key)
-    if cached:
-        return cached
-
-    async with httpx.AsyncClient() as client:
-        r1 = await client.get(f"{CLOUD_API}/teams/{team_id}/members")
-        r2 = await client.get(f"{CLOUD_API}/board/stats")
-
-    result = {
-        "members": r1.json() if r1.status_code == 200 else {},
-        "board_stats": r2.json() if r2.status_code == 200 else {},
+    dashboard = await _fetch("/api/demo/dashboard")
+    users = await _fetch("/api/demo/dashboard/users")
+    compliance = await _fetch("/api/demo/dashboard/compliance")
+    return {
+        "team_id": team_id,
+        "overview": dashboard,
+        "users": users,
+        "compliance": compliance,
     }
-    set_cache(cache_key, result, ttl=CACHE_TTL)
-    return result
 
 
 async def get_team_members(team_id: int) -> dict:
-    """获取团队成员列表。"""
-    cache_key = f"manager:team_members:{team_id}"
-    cached = get_cache(cache_key)
-    if cached:
-        return cached
-
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/teams/{team_id}/members")
-
-    result = resp.json() if resp.status_code == 200 else {}
-    set_cache(cache_key, result, ttl=CACHE_TTL)
-    return result
+    data = await _fetch("/api/demo/dashboard")
+    members = data.get("members", []) if data else []
+    return {
+        "team_id": team_id,
+        "members": members,
+        "total": len(members),
+    }
 
 
 async def get_team_compliance(team_id: int) -> dict:
-    """获取团队合规数据。"""
-    cache_key = f"manager:team_compliance:{team_id}"
-    cached = get_cache(cache_key)
-    if cached:
-        return cached
-
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/compliance-v2/enforce/stats")
-
-    result = resp.json() if resp.status_code == 200 else {}
-    set_cache(cache_key, result, ttl=CACHE_TTL)
-    return result
+    data = await _fetch("/api/demo/dashboard/compliance")
+    if not data:
+        return {"team_id": team_id, "compliance": {}}
+    return {
+        "team_id": team_id,
+        "compliance": data,
+    }
 
 
 async def get_team_performance(team_id: int) -> dict:
-    """获取团队绩效数据。"""
-    cache_key = f"manager:team_performance:{team_id}"
-    cached = get_cache(cache_key)
-    if cached:
-        return cached
-
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(f"{CLOUD_API}/board/stats")
-
-    result = resp.json() if resp.status_code == 200 else {}
-    set_cache(cache_key, result, ttl=CACHE_TTL)
-    return result
+    dashboard = await _fetch("/api/demo/dashboard")
+    perf = dashboard.get("performance", {}) if dashboard else {}
+    return {
+        "team_id": team_id,
+        "performance": perf,
+    }

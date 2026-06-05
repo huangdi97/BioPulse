@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:one_cloud_app/models/visit.dart';
 import 'package:one_cloud_app/services/database_service.dart';
 import 'package:one_cloud_app/services/sync_service.dart';
+import 'package:one_cloud_app/services/api_client.dart';
 import 'package:one_cloud_app/screens/pharma/visit_form_screen.dart';
 
 class VisitListScreen extends StatefulWidget {
@@ -39,6 +40,30 @@ class _VisitListScreenState extends State<VisitListScreen>
 
   Future<void> _loadVisits() async {
     setState(() => _loading = true);
+    try {
+      final api = context.read<MultiBackendApiClient>();
+      final response = await api
+          .getClient('cloud')
+          .get<Map<String, dynamic>>('/api/demo/team-ranks');
+      if (response.isSuccess && response.data != null) {
+        final ranks = response.data!['ranks'] as List<dynamic>? ?? [];
+        final now = DateTime.now();
+        _visits
+          ..clear()
+          ..addAll(ranks.map((r) => Visit(
+                hcpName: r['name'] as String? ?? '',
+                hospital: 'Demo医院',
+                visitDate: now.toIso8601String(),
+                visitType: 'routine',
+                notes: '拜访${r['visits'] ?? 0}次 · 合规率${r['compliance_rate'] ?? 0}% · 成交${r['deals'] ?? 0}单',
+                complianceStatus: (r['compliance_rate'] as num?)?.toDouble() ?? 0 >= 80
+                    ? 'compliant'
+                    : 'non_compliant',
+              )));
+        if (mounted) setState(() => _loading = false);
+        return;
+      }
+    } catch (_) {}
     final db = context.read<DatabaseService>();
     final all = await db.getVisits();
     final now = DateTime.now();

@@ -6,12 +6,14 @@ from datetime import datetime
 from functools import partial
 
 from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
+from cloud.app.agent_runtime.cost_governor import CostGovernor
 from cloud.app.agent_runtime.guard import sanitize_tool_output
 from cloud.app.agent_runtime.loop_detector import LoopDetector
 from cloud.app.agent_runtime.memory import AgentBrain
 from cloud.app.agent_runtime.models import RuntimeResult
 from cloud.app.agent_runtime.notifier import AgentNotifier
 from cloud.app.agent_runtime.retry import retry_with_backoff
+from cloud.app.agent_runtime.state_snapshot import SnapshotManager
 from cloud.app.agent_runtime.tool_bridge import ToolRegistry
 from cloud.app.agent_runtime.validator import AgentOutputValidator
 
@@ -29,8 +31,17 @@ class AgentRuntime:
         self._trace_id = str(uuid.uuid4())
         self._cost_tracker = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
         self._loop_detector = LoopDetector()
+        self._snapshot_manager = SnapshotManager(db)
+        self._cost_governor = CostGovernor()
 
     def execute(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
+        try:
+            return self._execute_impl(goal, agent_key, context)
+        except Exception:
+            self._save_snapshot(agent_key, -1, [], [], context or {}, "failed")
+            raise
+
+    def _execute_impl(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
         spec = AGENT_SPECS.get(agent_key)
         if spec is None:
             return RuntimeResult(
@@ -129,14 +140,31 @@ class AgentRuntime:
                 )
                 messages.append({"role": "user", "content": f"工具返回：{safe_output}"})
                 approved_tool = None
+                self._save_snapshot(agent_key, step, messages, logs, context)
                 continue  # 跳过 LLM 解析，直接下一轮
             else:
+                estimated_input = self._estimate_token_count(messages)
+                estimated_output = 2048
+                if not self._cost_governor.check("deepseek-chat", estimated_input, estimated_output):
+                    logs.append(
+                        {
+                            "step": step,
+                            "action": "budget_exceeded",
+                            "tool": None,
+                            "params": None,
+                            "result": "cost budget exceeded",
+                            "duration_ms": int((time.time() - step_start) * 1000),
+                            "trace_id": self._trace_id,
+                        }
+                    )
+                    continue
                 try:
                     ai_resp = self._call_ai(messages, spec["default_temperature"])
                     usage = ai_resp.get("usage", {})
                     self._cost_tracker["prompt_tokens"] += usage.get("prompt_tokens", 0)
                     self._cost_tracker["completion_tokens"] += usage.get("completion_tokens", 0)
                     self._cost_tracker["total_tokens"] += usage.get("total_tokens", 0)
+                    self._cost_governor.record("deepseek-chat", usage.get("prompt_tokens", 0), usage.get("completion_tokens", 0))
                 except Exception as e:
                     logs.append(
                         {
@@ -155,7 +183,12 @@ class AgentRuntime:
                             "trace_id": self._trace_id,
                         }
                     )
-                    continue
+                    self._save_snapshot(agent_key, step, messages, logs, context, "failed")
+                    rolled_back = self._try_rollback(agent_key)
+                    if rolled_back:
+                        messages, logs, context = rolled_back
+                        continue
+                    raise
 
             duration_ms = int((time.time() - step_start) * 1000)
             reply = ai_resp["reply"]
@@ -203,6 +236,7 @@ class AgentRuntime:
                         "trace_id": self._trace_id,
                     }
                 )
+                self._save_snapshot(agent_key, step, messages, logs, context)
                 self._save_log(agent_key, goal, "completed", step + 1, tool_calls, logs, started_at)
                 if self._notifier:
                     elapsed = (datetime.now() - datetime.fromisoformat(started_at)).total_seconds()
@@ -219,9 +253,34 @@ class AgentRuntime:
                 )
 
             if action == "call_tool" and tool_name:
-                tool_result = self._tool_registry.call(
-                    tool_name, tool_params, self._auth_header, caller_permission=spec.get("max_permission", "read")
-                )
+                try:
+                    tool_result = self._tool_registry.call(
+                        tool_name, tool_params, self._auth_header, caller_permission=spec.get("max_permission", "read")
+                    )
+                except Exception as e:
+                    logs.append(
+                        {
+                            "step": step,
+                            "action": "error",
+                            "tool": tool_name,
+                            "params": tool_params,
+                            "result": str(e),
+                            "duration_ms": duration_ms,
+                            "llm_prompt": ai_resp.get("prompt"),
+                            "llm_raw_response": ai_resp.get("raw_response"),
+                            "llm_token_usage": ai_resp.get("usage"),
+                            "tool_input": json.dumps(tool_params, ensure_ascii=False),
+                            "tool_output": None,
+                            "retry_count": ai_resp.get("retry_count", 0),
+                            "trace_id": self._trace_id,
+                        }
+                    )
+                    self._save_snapshot(agent_key, step, messages, logs, context, "failed")
+                    rolled_back = self._try_rollback(agent_key)
+                    if rolled_back:
+                        messages, logs, context = rolled_back
+                        continue
+                    raise
 
                 if tool_result.get("needs_approval"):
                     # 先保存检查点，以便恢复后能找到已批准的审批
@@ -322,6 +381,7 @@ class AgentRuntime:
                             "context": context,
                         },
                     )
+                self._save_snapshot(agent_key, step, messages, logs, context)
             else:
                 logs.append(
                     {
@@ -496,6 +556,38 @@ class AgentRuntime:
             **self._stats,
             "by_status": by_status,
         }
+
+    def _save_snapshot(self, agent_key, step, plan, results, context, status="active"):
+        try:
+            self._snapshot_manager.save(agent_key, step, plan, results, context, status)
+        except Exception:
+            pass
+
+    def _restore_from_snapshot(self, snapshot_id):
+        data = self._snapshot_manager.load(snapshot_id)
+        if data is None:
+            return None
+        return data
+
+    def _try_rollback(self, agent_key):
+        latest = self._snapshot_manager.get_latest(agent_key)
+        if latest is None:
+            return None
+        self._snapshot_manager.mark_rolled_back(latest["id"])
+        return (latest["plan"], latest["results"], latest["context"])
+
+    def rollback_to(self, snapshot_id):
+        data = self._restore_from_snapshot(snapshot_id)
+        if data is None:
+            return None
+        self._snapshot_manager.mark_rolled_back(snapshot_id)
+        return (data["plan"], data["results"], data["context"])
+
+    def list_snapshots(self, agent_key, limit=10):
+        return self._snapshot_manager.list_snapshots(agent_key, limit)
+
+    def get_cost_usage(self) -> dict:
+        return self._cost_governor.get_usage()
 
     @property
     def brain(self) -> AgentBrain:

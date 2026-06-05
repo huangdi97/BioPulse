@@ -2,8 +2,9 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card"
 import { Button } from "../../components/ui/Button"
 import { Input } from "../../components/ui/Input"
-import { Badge } from "../../components/ui/Badge"
 import { cn } from "../../lib/utils"
+import { useAuth } from "../../auth/AuthContext"
+import { changePasswordApi } from "../../api/client"
 
 type TabId = "profile" | "api" | "notify" | "about"
 
@@ -19,8 +20,6 @@ const SIDEBAR_ITEMS: { id: TabId; label: string }[] = [
   { id: "notify", label: "通知设置" },
   { id: "about", label: "关于" },
 ]
-
-const ROLE_MAP = { admin: "管理员", manager: "经理", staff: "员工" } as const
 
 const NOTIFY_ITEMS = [
   { key: "compliance", label: "合规预警推送", desc: "接收合规风险预警通知" },
@@ -46,14 +45,8 @@ const DEFAULT_ENDPOINTS: ApiEndpoint[] = [
 ]
 
 export default function SettingsPage() {
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<TabId>("profile")
-
-  const [profile, setProfile] = useState({
-    name: "张明",
-    email: "zhangming@yysd.io",
-    role: "admin" as keyof typeof ROLE_MAP,
-    institution: "一云四端科技有限公司",
-  })
 
   const [endpoints, setEndpoints] = useState<ApiEndpoint[]>(DEFAULT_ENDPOINTS)
   const [notifications, setNotifications] = useState({
@@ -97,7 +90,7 @@ export default function SettingsPage() {
 
       <div className="flex-1 min-w-0">
         {activeTab === "profile" && (
-          <ProfileTab profile={profile} setProfile={setProfile} />
+          <ProfileTab user={user} />
         )}
         {activeTab === "api" && (
           <ApiTab
@@ -118,56 +111,166 @@ export default function SettingsPage() {
   )
 }
 
-function ProfileTab({
-  profile,
-  setProfile,
-}: {
-  profile: { name: string; email: string; role: keyof typeof ROLE_MAP; institution: string }
-  setProfile: (p: typeof profile) => void
-}) {
+function ProfileTab({ user }: { user: { id: number; username: string } | null }) {
+  const [oldPassword, setOldPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+  const [notAvailable, setNotAvailable] = useState(false)
+
+  const displayName = user?.username ?? ""
+  const avatarChar = displayName.charAt(0) || "?"
+
+  const handleChangePassword = async () => {
+    setError(null)
+    setSuccess(false)
+    setNotAvailable(false)
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      setError("请填写所有密码字段")
+      return
+    }
+    if (newPassword.length < 6) {
+      setError("新密码长度至少为 6 个字符")
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setError("两次输入的新密码不一致")
+      return
+    }
+
+    setLoading(true)
+    try {
+      await changePasswordApi(user!.username, oldPassword, newPassword)
+      setSuccess(true)
+      setOldPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "修改密码失败"
+      // 404 means the backend does not have this endpoint yet
+      if (msg.includes("404") || msg.includes("Not Found") || msg.includes("not found")) {
+        setNotAvailable(true)
+      } else {
+        setError(msg)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // If the backend endpoint doesn't exist, show a teaser placeholder
+  if (notAvailable) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>个人信息</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-[var(--clr-brand)] text-[var(--clr-text-inverse)] flex items-center justify-center text-xl font-semibold">
+                {avatarChar}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-[var(--clr-text-primary)]">{displayName || "未登录"}</p>
+                <p className="text-xs text-[var(--clr-text-secondary)]">ID: {user?.id ?? "-"}</p>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-[var(--clr-text-primary)]">用户名</label>
+              <Input value={displayName} readOnly />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>修改密码</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center py-6 text-center">
+              <span className="text-3xl mb-3">🚧</span>
+              <p className="text-sm font-medium text-[var(--clr-text-primary)]">密码修改功能即将推出</p>
+              <p className="text-xs text-[var(--clr-text-secondary)] mt-1">敬请期待后续版本更新</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>个人信息</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-[var(--clr-brand)] text-[var(--clr-text-inverse)] flex items-center justify-center text-xl font-semibold">
-            {profile.name.charAt(0)}
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>个人信息</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-[var(--clr-brand)] text-[var(--clr-text-inverse)] flex items-center justify-center text-xl font-semibold">
+              {avatarChar}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-[var(--clr-text-primary)]">{displayName || "未登录"}</p>
+              <p className="text-xs text-[var(--clr-text-secondary)]">ID: {user?.id ?? "-"}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-[var(--clr-text-primary)]">{profile.name}</p>
-            <p className="text-xs text-[var(--clr-text-secondary)]">{profile.email}</p>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-[var(--clr-text-primary)]">用户名</label>
+            <Input value={displayName} readOnly />
           </div>
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-[var(--clr-text-primary)]">姓名</label>
-          <Input value={profile.name} onChange={e => setProfile({ ...profile, name: e.target.value })} />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-[var(--clr-text-primary)]">邮箱</label>
-          <Input value={profile.email} readOnly />
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-[var(--clr-text-primary)]">角色</label>
-          <Badge
-            variant={
-              profile.role === "admin" ? "default" : profile.role === "manager" ? "warning" : "neutral"
-            }
-          >
-            {ROLE_MAP[profile.role]}
-          </Badge>
-        </div>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-[var(--clr-text-primary)]">所属机构</label>
-          <Input
-            value={profile.institution}
-            onChange={e => setProfile({ ...profile, institution: e.target.value })}
-          />
-        </div>
-        <Button>保存</Button>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>修改密码</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-[var(--clr-text-primary)]">旧密码</label>
+            <Input
+              type="password"
+              value={oldPassword}
+              onChange={e => setOldPassword(e.target.value)}
+              placeholder="请输入旧密码"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-[var(--clr-text-primary)]">新密码</label>
+            <Input
+              type="password"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              placeholder="请输入新密码"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-[var(--clr-text-primary)]">确认新密码</label>
+            <Input
+              type="password"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              placeholder="请再次输入新密码"
+            />
+          </div>
+
+          {error && (
+            <p className="text-xs text-[var(--clr-error)]">{error}</p>
+          )}
+          {success && (
+            <p className="text-xs text-[var(--clr-success)]">✅ 密码修改成功</p>
+          )}
+
+          <Button onClick={handleChangePassword} disabled={loading}>
+            {loading ? "修改中..." : "修改密码"}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 

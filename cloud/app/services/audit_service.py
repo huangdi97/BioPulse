@@ -68,10 +68,10 @@ class AuditService(BaseService):
         }
 
     def get_stats(self) -> dict:
-        db = self.db
-        action_stats = db.execute("SELECT action, COUNT(*) as cnt FROM audit_logs GROUP BY action").fetchall()
+        repo = AuditLogsRepository(self.db)
+        action_stats = repo.execute("SELECT action, COUNT(*) as cnt FROM audit_logs GROUP BY action").fetchall()
         cutoff = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
-        trend = db.execute(
+        trend = repo.execute(
             "SELECT DATE(created_at) as day, COUNT(*) as cnt FROM audit_logs WHERE created_at >= ? GROUP BY day ORDER BY day",
             (cutoff,),
         ).fetchall()

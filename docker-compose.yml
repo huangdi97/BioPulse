@@ -1,0 +1,145 @@
+version: "3.8"
+
+services:
+  cloud:
+    build:
+      context: .
+      dockerfile: cloud/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data/cloud.db:/app/data/cloud.db
+    env_file:
+      - .env
+    environment:
+      - DSN=sqlite:///data/cloud.db
+    networks:
+      - yysd-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  sales-coach:
+    build:
+      context: .
+      dockerfile: sales_coach/Dockerfile
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    environment:
+      - DSN=sqlite:///data/sales_coach.db
+    networks:
+      - yysd-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8001/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  opportunity:
+    build:
+      context: .
+      dockerfile: opportunity/Dockerfile
+    ports:
+      - "8002:8002"
+    env_file:
+      - .env
+    environment:
+      - DSN=sqlite:///data/opportunity.db
+    networks:
+      - yysd-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8002/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  assistant:
+    build:
+      context: .
+      dockerfile: assistant/Dockerfile
+    ports:
+      - "8003:8003"
+    env_file:
+      - .env
+    environment:
+      - DSN=sqlite:///data/assistant.db
+    networks:
+      - yysd-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8003/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  sales-assistant:
+    build:
+      context: .
+      dockerfile: sales_assistant/Dockerfile
+    ports:
+      - "8004:8004"
+    env_file:
+      - .env
+    environment:
+      - DSN=sqlite:///data/sales_assistant.db
+    networks:
+      - yysd-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8004/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  pharma-intel:
+    build:
+      context: .
+      dockerfile: pharma_intel/Dockerfile
+    ports:
+      - "8006:8006"
+    volumes:
+      - ./data/pharma_intel.db:/app/data/pharma_intel.db
+    env_file:
+      - .env
+    environment:
+      - DSN=sqlite:///data/pharma_intel.db
+    networks:
+      - yysd-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8006/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  management:
+    build:
+      context: .
+      dockerfile: management/Dockerfile
+    ports:
+      - "8012:8012"
+    volumes:
+      - ./data/management.db:/app/data/management.db
+    env_file:
+      - .env
+    environment:
+      - DSN=sqlite:///data/management.db
+    networks:
+      - yysd-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8012/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+networks:
+  yysd-net:
+    driver: bridge

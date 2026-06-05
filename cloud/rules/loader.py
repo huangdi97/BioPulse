@@ -1,12 +1,28 @@
 import functools
+import hashlib
 import json
 import os
 
 _RULES_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
+def _verify_signature(filename: str) -> None:
+    """Verify SHA256 signature of a rules file. Raises ValueError on mismatch."""
+    filepath = os.path.join(_RULES_DIR, filename)
+    sigpath = os.path.join(_RULES_DIR, f".{filename}.sig")
+    if not os.path.exists(sigpath):
+        return  # no signature file, skip check
+    with open(filepath, "rb") as f:
+        actual = hashlib.sha256(f.read()).hexdigest()
+    with open(sigpath) as f:
+        expected = f.read().strip()
+    if actual != expected:
+        raise ValueError(f"Signature mismatch for {filename}: expected {expected}, got {actual}. Rule file may be corrupted or mis-loaded.")
+
+
 def _load_json(filename: str) -> list[dict]:
     """Load a JSON file from the rules directory and return parsed content."""
+    _verify_signature(filename)
     filepath = os.path.join(_RULES_DIR, filename)
     with open(filepath, encoding="utf-8") as f:
         return json.load(f)

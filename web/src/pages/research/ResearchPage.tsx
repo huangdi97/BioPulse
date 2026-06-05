@@ -1,8 +1,9 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
 import KpiCard from "../../components/dashboard/KpiCard"
 import DataTable from "../../components/dashboard/DataTable"
-import { researchKpis, piSources, productMatchStats } from "../../api/mockData"
+import { getResearchKpis, getPiSources, getProductMatchStats } from "../../api/client"
+import { researchKpis as defaultResearchKpis, piSources as defaultPiSources, productMatchStats as defaultProductMatchStats } from "../../api/mockData"
 import type { KpiCard as KpiCardType } from "../../types/dashboard"
 
 const modeTabs = ["标准版", "高级版"]
@@ -39,6 +40,15 @@ const matchPieColors = ["#0f62fe", "#8b5cf6", "#f59e0b", "#24a148"]
 
 export default function ResearchPage() {
   const [mode, setMode] = useState(0)
+  const [researchKpis, setResearchKpis] = useState(defaultResearchKpis)
+  const [piSources, setPiSources] = useState(defaultPiSources)
+  const [productMatchStats, setProductMatchStats] = useState(defaultProductMatchStats)
+
+  useEffect(() => {
+    getResearchKpis().then(setResearchKpis)
+    getPiSources().then(setPiSources)
+    getProductMatchStats().then(setProductMatchStats)
+  }, [])
 
   const kpiCards: KpiCardType[] = researchKpis.map((k) => ({
     title: k.title,

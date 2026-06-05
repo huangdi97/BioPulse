@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:one_cloud_app/models/pi_profile.dart';
 import 'package:one_cloud_app/services/database_service.dart';
+import 'package:one_cloud_app/services/api_client.dart';
 import 'package:one_cloud_app/screens/research/pi_detail_screen.dart';
 
 class PISearchScreen extends StatefulWidget {
@@ -26,6 +27,34 @@ class _PISearchScreenState extends State<PISearchScreen> {
     final query = _searchController.text.trim();
     if (query.isEmpty) return;
     setState(() => _loading = true);
+    try {
+      final api = context.read<MultiBackendApiClient>();
+      final response = await api
+          .getClient('cloud')
+          .get<Map<String, dynamic>>('/api/demo/pi-sources');
+      if (response.isSuccess && response.data != null) {
+        final sources = response.data!['pi_sources'] as List<dynamic>? ?? [];
+        final matched = sources.where((s) {
+          final name = s['name'] as String? ?? '';
+          final inst = s['institution'] as String? ?? '';
+          return name.contains(query) || inst.contains(query);
+        }).map((s) => PIProfile(
+              name: s['name'] as String? ?? '',
+              institution: s['institution'] as String? ?? '',
+              papersCount: s['matches'] as int? ?? 0,
+              hIndex: 0,
+              researchAreas: '',
+            )).toList();
+        if (mounted) {
+          setState(() {
+            _results = matched;
+            _loading = false;
+            _searched = true;
+          });
+        }
+        return;
+      }
+    } catch (_) {}
     final db = context.read<DatabaseService>();
     final results = await db.searchPIProfiles(query);
     if (results.isEmpty) {

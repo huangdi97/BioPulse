@@ -1,23 +1,30 @@
-import { useState, useMemo } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent } from "../ui/Card"
 import { Badge } from "../ui/Badge"
 import { Button } from "../ui/Button"
 import { Input } from "../ui/Input"
-import { piProfiles } from "../../api/mockIntel"
+import { getIntelPiProfiles } from "../../api/client"
+import type { PiProfile } from "../../api/mockIntel"
 
 export default function PiProfileTab() {
   const [piQuery, setPiQuery] = useState('')
   const [selectedPi, setSelectedPi] = useState<number | null>(null)
+  const [piProfiles, setPiProfiles] = useState<PiProfile[]>([])
+  const [loading, setLoading] = useState(false)
 
-  const filteredPis = useMemo(() => {
-    if (!piQuery.trim()) return piProfiles
-    const q = piQuery.toLowerCase()
-    return piProfiles.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.institution.toLowerCase().includes(q) ||
-      p.research_areas.some(a => a.toLowerCase().includes(q))
-    )
-  }, [piQuery])
+  useEffect(() => {
+    setLoading(true)
+    getIntelPiProfiles('').then(data => {
+      setPiProfiles(data.items)
+    })
+  }, [])
+
+  function handleSearch() {
+    setLoading(true)
+    getIntelPiProfiles(piQuery).then(data => {
+      setPiProfiles(data.items)
+    })
+  }
 
   return (
     <div className="space-y-4">
@@ -27,13 +34,15 @@ export default function PiProfileTab() {
           value={piQuery}
           onChange={e => setPiQuery(e.target.value)}
         />
-        <Button>搜索</Button>
+        <Button onClick={handleSearch}>搜索</Button>
       </div>
-      {filteredPis.length === 0 ? (
+      {loading ? (
+        <p className="text-center py-8 text-sm" style={{color: 'var(--clr-text-secondary)'}}>加载中...</p>
+      ) : piProfiles.length === 0 ? (
         <p className="text-center py-8 text-sm" style={{color: 'var(--clr-text-secondary)'}}>未找到相关PI</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredPis.map(pi => (
+          {piProfiles.map(pi => (
             <Card key={pi.id} className="cursor-pointer" onClick={() => setSelectedPi(selectedPi === pi.id ? null : pi.id)}>
               <CardContent className="p-4 space-y-2">
                 <h4 className="font-semibold" style={{color: 'var(--clr-text-primary)'}}>{pi.name}</h4>

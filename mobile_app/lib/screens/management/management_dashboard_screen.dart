@@ -2,11 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:one_cloud_app/providers/mode_provider.dart';
 import 'package:one_cloud_app/theme/design_tokens.dart';
+import 'package:one_cloud_app/services/api_client.dart';
 import 'package:one_cloud_app/screens/management/dashboard_compliance_section.dart';
 import 'package:one_cloud_app/screens/management/dashboard_notification_section.dart';
 
-class ManagementDashboardScreen extends StatelessWidget {
+class ManagementDashboardScreen extends StatefulWidget {
   const ManagementDashboardScreen({super.key});
+
+  @override
+  State<ManagementDashboardScreen> createState() => _ManagementDashboardScreenState();
+}
+
+class _ManagementDashboardScreenState extends State<ManagementDashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboard();
+  }
+
+  Future<void> _loadDashboard() async {
+    try {
+      final api = context.read<MultiBackendApiClient>();
+      await api.getClient('cloud').get('/api/demo/dashboard');
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -7,6 +7,7 @@ from cloud.shared.columns import (
     TABLE_AGENT_ROLES_COLS,
     TABLE_AGENT_SKILLS_COLS,
     TABLE_ASYNC_MDT_OPINIONS_COLS,
+    TABLE_AUDIT_CHAIN_BLOCKS_COLS,
     TABLE_AUDIT_CHAIN_ENTRIES_COLS,
     TABLE_AUDIT_LOGS_COLS,
     TABLE_BENCHMARK_REPORTS_COLS,
@@ -31,6 +32,7 @@ from cloud.shared.columns import (
     TABLE_EVENT_BUS_MESSAGES_COLS,
     TABLE_EVENT_DELIVERY_LOG_COLS,
     TABLE_FED_AUDIT_CONTRIBUTIONS_COLS,
+    TABLE_FEDERATED_NODES_COLS,
     TABLE_FEDERATED_ROUNDS_COLS,
     TABLE_HCP_INTERACTIONS_COLS,
     TABLE_HCP_PROFILES_COLS,
@@ -725,6 +727,37 @@ class FedAuditContributionsRepository(BaseRepository):
 class FederatedRoundsRepository(BaseRepository):
     def __init__(self, db):
         super().__init__(db, "federated_rounds", TABLE_FEDERATED_ROUNDS_COLS)
+
+
+class FederatedNodesRepository(BaseRepository):
+    def __init__(self, db):
+        super().__init__(db, "federated_nodes", TABLE_FEDERATED_NODES_COLS)
+
+    def get_by_node_id(self, node_id):
+        row = self.db.execute(
+            f"SELECT {', '.join(self.cols)} FROM {self.table_name} WHERE node_id=?",
+            (node_id,),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def get_all(self):
+        return super().get_all()
+
+
+class AuditChainBlocksRepository(BaseRepository):
+    def __init__(self, db):
+        super().__init__(db, "audit_chain_blocks", TABLE_AUDIT_CHAIN_BLOCKS_COLS)
+
+    def get_latest(self):
+        row = self.db.execute(f"SELECT {', '.join(self.cols)} FROM {self.table_name} ORDER BY id DESC LIMIT 1").fetchone()
+        return dict(row) if row else None
+
+    def get_chain(self, node_id: str, limit: int = 100):
+        rows = self.db.execute(
+            f"SELECT {', '.join(self.cols)} FROM {self.table_name} WHERE node_id=? ORDER BY id DESC LIMIT ?",
+            (node_id, limit),
+        ).fetchall()
+        return [dict(r) for r in rows]
 
 
 class HcpInteractionsRepository(BaseRepository):

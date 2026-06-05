@@ -26,7 +26,7 @@ class AuthService(BaseService):
             )
 
         users_repo = UsersRepository(self.db)
-        existing = users_repo.db.execute("SELECT id FROM users WHERE username=?", (username,)).fetchone()
+        existing = users_repo.list_all(conditions=["username=?"], params=[username])
         if existing:
             raise HTTPException(status.HTTP_409_CONFLICT, detail="Username already exists")
 
@@ -37,12 +37,12 @@ class AuthService(BaseService):
 
     def login(self, username: str, password: str, scope: str = "visit") -> dict:
         users_repo = UsersRepository(self.db)
-        row = users_repo.db.execute(
-            "SELECT id, username, hashed_password, role, is_active FROM users WHERE username=?",
-            (username,),
-        ).fetchone()
+        rows = users_repo.list_all(conditions=["username=?"], params=[username])
+        if not rows:
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
+        row = rows[0]
 
-        if not row or not verify_password(password, row["hashed_password"]):
+        if not verify_password(password, row["hashed_password"]):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
 
         if not row["is_active"]:

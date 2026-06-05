@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:one_cloud_app/models/hcp.dart';
 import 'package:one_cloud_app/services/database_service.dart';
 import 'package:one_cloud_app/services/sync_service.dart';
+import 'package:one_cloud_app/services/api_client.dart';
 import 'package:one_cloud_app/screens/pharma/hcp_detail_screen.dart';
 
 class HcpListScreen extends StatefulWidget {
@@ -35,6 +36,25 @@ class _HcpListScreenState extends State<HcpListScreen> {
 
   Future<void> _loadHCPs() async {
     setState(() => _loading = true);
+    try {
+      final api = context.read<MultiBackendApiClient>();
+      final response = await api
+          .getClient('cloud')
+          .get<Map<String, dynamic>>('/api/demo/team-ranks');
+      if (response.isSuccess && response.data != null) {
+        final ranks = response.data!['ranks'] as List<dynamic>? ?? [];
+        _allHCPs = ranks.map((r) => HCP(
+              name: r['name'] as String? ?? '',
+              hospital: 'Demo医院',
+              department: '待确认',
+              title: '拜访${r['visits'] ?? 0}次 · 合规${r['compliance_rate'] ?? 0}% · 成交${r['deals'] ?? 0}单',
+              createdAt: DateTime.now().toIso8601String(),
+            )).toList();
+        _applyFilter();
+        if (mounted) setState(() => _loading = false);
+        return;
+      }
+    } catch (_) {}
     final db = context.read<DatabaseService>();
     _allHCPs = await db.getHCPs();
     _applyFilter();

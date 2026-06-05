@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:one_cloud_app/services/api_client.dart';
 
 class TrainingRecord {
   final String id;
@@ -51,6 +53,7 @@ class _TrainingListScreenState extends State<TrainingListScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() => setState(() {}));
+    _loadFromApi();
   }
 
   @override
@@ -62,6 +65,13 @@ class _TrainingListScreenState extends State<TrainingListScreen>
   Future<void> _refresh() async {
     await Future.delayed(const Duration(milliseconds: 300));
     setState(() {});
+  }
+
+  Future<void> _loadFromApi() async {
+    try {
+      final api = context.read<MultiBackendApiClient>();
+      await api.getClient('coach').get('/coach/training-sessions');
+    } catch (_) {}
   }
 
   Color _statusColor(String status) {

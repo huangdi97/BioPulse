@@ -28,5 +28,5 @@ def chat(
     current_user: dict = Depends(get_current_user),
     service: AiGatewayService = Depends(),
 ) -> Any:
-    result = service.chat(body.messages, body.temperature, body.max_tokens)
+    result = service.chat(body.messages, body.temperature, body.max_tokens, current_user.get("id"))
     return success(ChatResponse(reply=result["reply"], usage=result["usage"]))

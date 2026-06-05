@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:one_cloud_app/models/quotation.dart';
 import 'package:one_cloud_app/services/database_service.dart';
+import 'package:one_cloud_app/services/api_client.dart';
 
 class QuotationScreen extends StatefulWidget {
   const QuotationScreen({super.key});
@@ -22,6 +23,34 @@ class _QuotationScreenState extends State<QuotationScreen> {
 
   Future<void> _loadQuotations() async {
     setState(() => _loading = true);
+    try {
+      final api = context.read<MultiBackendApiClient>();
+      final response = await api
+          .getClient('cloud')
+          .get<Map<String, dynamic>>('/api/demo/research-kpis');
+      if (response.isSuccess && response.data != null) {
+        final kpis = response.data!['kpis'] as List<dynamic>? ?? [];
+        final list = kpis.map((k) => Quotation(
+              piName: k['title'] as String? ?? '',
+              products: jsonEncode([
+                {
+                  'name': k['title'] ?? '',
+                  'spec': k['change']?.toString() ?? '',
+                  'price': 0,
+                  'match': 0,
+                }
+              ]),
+              totalAmount: (k['value'] as num?)?.toDouble() ?? 0,
+            )).toList();
+        if (mounted) {
+          setState(() {
+            _quotations = list;
+            _loading = false;
+          });
+        }
+        return;
+      }
+    } catch (_) {}
     final db = context.read<DatabaseService>();
     final list = await db.getQuotations();
     if (mounted) {

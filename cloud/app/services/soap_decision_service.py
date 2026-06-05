@@ -37,7 +37,7 @@ class SoapDecisionService(BaseService):
                 "updated_at": "NOW()",
             }
         )
-        self.db.execute("UPDATE soap_templates SET updated_at=NOW() WHERE id=?", (tmpl_id,))
+        templates_repo.execute("UPDATE soap_templates SET updated_at=NOW() WHERE id=?", (tmpl_id,))
         self.db.commit()
         row = templates_repo.get_by_id(tmpl_id)
         return _row(row, ["structure"])
@@ -79,7 +79,7 @@ class SoapDecisionService(BaseService):
                 "updated_at": "NOW()",
             }
         )
-        self.db.execute("UPDATE soap_decisions SET updated_at=NOW() WHERE id=?", (dec_id,))
+        decisions_repo.execute("UPDATE soap_decisions SET updated_at=NOW() WHERE id=?", (dec_id,))
         self.db.commit()
         row = decisions_repo.get_by_id(dec_id)
         return _row(row, ["tags"])
@@ -135,7 +135,7 @@ class SoapDecisionService(BaseService):
             validate_columns(updates, "soap_decisions", TABLE_SOAP_DECISIONS_COLS)
             updates_to_save = {k: v for k, v in updates.items() if v != "NOW()"}
             decisions_repo.update(decision_id, updates_to_save)
-            self.db.execute("UPDATE soap_decisions SET updated_at=NOW() WHERE id=?", (decision_id,))
+            decisions_repo.execute("UPDATE soap_decisions SET updated_at=NOW() WHERE id=?", (decision_id,))
             self.db.commit()
         row = decisions_repo.get_by_id(decision_id)
         return _row(row, ["tags"])
@@ -151,7 +151,7 @@ class SoapDecisionService(BaseService):
                 detail="Only draft decisions can be submitted",
             )
         decisions_repo.update(decision_id, {"status": "collecting"})
-        self.db.execute("UPDATE soap_decisions SET updated_at=NOW() WHERE id=?", (decision_id,))
+        decisions_repo.execute("UPDATE soap_decisions SET updated_at=NOW() WHERE id=?", (decision_id,))
         self.db.commit()
         row = decisions_repo.get_by_id(decision_id)
         return _row(row, ["tags"])
@@ -185,7 +185,7 @@ class SoapDecisionService(BaseService):
                 "updated_at": "NOW()",
             }
         )
-        self.db.execute("UPDATE async_mdt_opinions SET updated_at=NOW() WHERE id=?", (opinion_id,))
+        opinions_repo.execute("UPDATE async_mdt_opinions SET updated_at=NOW() WHERE id=?", (opinion_id,))
         self.db.commit()
         row = opinions_repo.get_by_id(opinion_id)
         return _row(row, ["attachments"])
@@ -217,7 +217,7 @@ class SoapDecisionService(BaseService):
                 "decided_by": user_id,
             },
         )
-        self.db.execute(
+        decisions_repo.execute(
             "UPDATE soap_decisions SET decided_at=NOW(), updated_at=NOW() WHERE id=?",
             (decision_id,),
         )

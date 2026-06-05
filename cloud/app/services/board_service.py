@@ -42,10 +42,11 @@ def _task_to_dict(row) -> dict:
 
 class BoardService(BaseService):
     def _get_board_or_404(self, board_id: int):
-        row = self.db.execute("SELECT * FROM task_boards WHERE id=? AND is_active=1", (board_id,)).fetchone()
-        if not row:
+        boards_repo = TaskBoardsRepository(self.db)
+        rows = boards_repo.list_all(conditions=["id=?", "is_active=1"], params=[board_id])
+        if not rows:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Board not found")
-        return row
+        return rows[0]
 
     def create_board(self, name: str, description: str, owner_id: int) -> dict:
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -59,7 +60,7 @@ class BoardService(BaseService):
                 "updated_at": now,
             }
         )
-        row = self.db.execute("SELECT * FROM task_boards WHERE id=?", (board_id,)).fetchone()
+        row = boards_repo.get_by_id(board_id)
         return _board_to_dict(row)
 
     def list_boards(self) -> list:

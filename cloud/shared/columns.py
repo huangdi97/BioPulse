@@ -452,6 +452,36 @@ TABLE_FEDERATED_ROUNDS_COLS = [
     "completed_at",
 ]
 
+TABLE_FEDERATED_NODES_COLS = [
+    "id",
+    "node_id",
+    "node_name",
+    "node_type",
+    "organization",
+    "status",
+    "endpoint_url",
+    "public_key",
+    "data_summary",
+    "last_heartbeat",
+    "round_count",
+    "total_samples",
+    "reliability_score",
+    "is_active",
+    "registered_at",
+    "updated_at",
+]
+
+TABLE_AUDIT_CHAIN_BLOCKS_COLS = [
+    "id",
+    "block_hash",
+    "prev_block_hash",
+    "block_data",
+    "block_type",
+    "created_by",
+    "node_id",
+    "timestamp",
+]
+
 TABLE_HCP_INTERACTIONS_COLS = [
     "id",
     "hcp_id",

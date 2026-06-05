@@ -120,13 +120,10 @@ class NotificationService(BaseService):
 
         if template_name:
             tmpl_repo = NotificationTemplatesRepository(db)
-            placeholders = ", ".join(tmpl_repo.cols)
-            template = db.execute(
-                f"SELECT {placeholders} FROM {tmpl_repo.table_name} WHERE name=?",
-                (template_name,),
-            ).fetchone()
-            if not template:
+            rows = tmpl_repo.list_all(conditions=["name=?"], params=[template_name])
+            if not rows:
                 raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Template not found")
+            template = rows[0]
             ctx = context or {}
             title = _render_template(template["title_template"], ctx)
             body_text = _render_template(template["body_template"], ctx)

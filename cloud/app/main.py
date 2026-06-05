@@ -6,7 +6,9 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from cloud.app.a2a_registry_router import router as a2a_registry_router
 from cloud.app.agent_execution_router import router as agent_execution_router
+from cloud.app.agent_framework_router import router as agent_framework_router
 from cloud.app.agent_pipeline_router import router as agent_pipeline_router
 from cloud.app.agent_role_router import router as agent_role_router
 from cloud.app.agent_runtime_router import router as agent_runtime_router
@@ -16,6 +18,8 @@ from cloud.app.audit_router import router as audit_router
 from cloud.app.auth_router import router as auth_router
 from cloud.app.board_router import router as board_router
 from cloud.app.brain_memory_router import router as brain_memory_router
+from cloud.app.brain_orchestrator_router import router as brain_orchestrator_router
+from cloud.app.causal_attribution_router import router as causal_attribution_router
 from cloud.app.causal_router import router as causal_router
 from cloud.app.collaboration_router import router as collaboration_router
 from cloud.app.compliance_router import router as compliance_router
@@ -29,6 +33,7 @@ from cloud.app.database import DB_PATH, init_db
 from cloud.app.decision_intel_router import router as decision_intel_router
 from cloud.app.event_bus_router import router as event_bus_router
 from cloud.app.export_router import router as export_router
+from cloud.app.federated_node_router import router as federated_node_router
 from cloud.app.hcp_sandbox_router import router as hcp_sandbox_router
 from cloud.app.interaction_router import router as interaction_router
 
@@ -38,6 +43,7 @@ from cloud.app.kg_router import router as kg_router
 from cloud.app.market_intel_router import router as market_intel_router
 from cloud.app.marketplace_router import router as marketplace_router
 from cloud.app.mcp_router import router as mcp_router
+from cloud.app.mdt_agent_router import router as mdt_agent_router
 from cloud.app.mdt_engine_router import router as mdt_engine_router
 from cloud.app.memory_consolidation_router import router as memory_consolidation_router
 from cloud.app.memory_gate_router import router as memory_gate_router
@@ -48,10 +54,13 @@ from cloud.app.opportunity_router import router as opportunity_router
 from cloud.app.orchestrate_router import router as orchestrate_router
 from cloud.app.recommend_router import router as recommend_router
 from cloud.app.research_database import init_research_db as init_research
+from cloud.app.rl_routing_router import router as rl_routing_router
 from cloud.app.route_router import router as route_router
+from cloud.app.routers.cell_network_router import router as cell_network_router
 from cloud.app.routers.compliance_dashboard_router import (
     router as compliance_dashboard_router,
 )
+from cloud.app.routers.content_factory_router import router as content_factory_router
 from cloud.app.routers.demo_router import router as demo_router
 from cloud.app.routers.enforcer_router import router as enforcer_router
 from cloud.app.routers.langgraph_test_router import router as langgraph_test_router
@@ -79,6 +88,7 @@ from cloud.app.routers.research_route_router import router as research_route_rou
 from cloud.app.routers.research_trajectory_router import router as research_trajectory_router
 from cloud.app.routers.sage_engine_router import router as sage_engine_router
 from cloud.app.routers.switch_router import router as switch_router
+from cloud.app.routers.trust_audit_router import router as trust_audit_router
 
 # from cloud.app.edge_router import router as edge_router  # ❄️ 冻结
 from cloud.app.settings_router import router as settings_router
@@ -224,6 +234,16 @@ app.include_router(research_trajectory_router)
 app.include_router(research_quotation_workflow_router)
 app.include_router(switch_router)
 app.include_router(token_budget_router)
+app.include_router(a2a_registry_router)
+app.include_router(agent_framework_router)
+app.include_router(brain_orchestrator_router)
+app.include_router(causal_attribution_router)
+app.include_router(federated_node_router)
+app.include_router(mdt_agent_router)
+app.include_router(rl_routing_router)
+app.include_router(trust_audit_router)
+app.include_router(content_factory_router)
+app.include_router(cell_network_router)
 
 
 @app.on_event("startup")

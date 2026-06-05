@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from sales_coach.app.assessment_router import router as assessment_router
 from sales_coach.app.database import init_db
+from sales_coach.app.digital_human_router import router as digital_human_router
 from sales_coach.app.health_router import router as health_router
 from sales_coach.app.module_router import router as module_router
 from sales_coach.app.reflection_router import router as reflection_router
@@ -43,3 +44,4 @@ app.include_router(scenario_router)
 app.include_router(stats_router)
 app.include_router(assessment_router)
 app.include_router(reflection_router)
+app.include_router(digital_human_router)

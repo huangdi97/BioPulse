@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { X } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 import { Card, CardContent } from "../ui/Card"
 import { Button } from "../ui/Button"
-import { targets, type Target } from "../../api/mockIntel"
+import { getIntelTargets, getIntelTargetCategories } from "../../api/client"
+import type { Target } from "../../api/mockIntel"
 
 const CHART_COLORS = ['#0f62fe', '#8b5cf6', '#f59e0b', '#10b981', '#da1e28', '#24a148', '#f1c21b', '#525252', '#002d9c', '#6f6f6f']
 
@@ -12,37 +13,34 @@ export default function TargetHeatmapTab() {
   const [selectedTarget, setSelectedTarget] = useState<Target | null>(null)
   const [sortKey, setSortKey] = useState('paper_count')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [targets, setTargets] = useState<Target[]>([])
+  const [targetCategories, setTargetCategories] = useState<string[]>(['全部'])
 
-  const targetCategories = useMemo(() => {
-    return ['全部', ...new Set(targets.map(t => t.category))]
+  useEffect(() => {
+getIntelTargetCategories().then(data => {
+      setTargetCategories(data)
+    })
   }, [])
 
-  const filteredTargets = useMemo(() => {
-    if (categoryFilter === '全部') return targets
-    return targets.filter(t => t.category === categoryFilter)
-  }, [categoryFilter])
+  useEffect(() => {
+    const category = categoryFilter === '全部' ? '' : categoryFilter
+    getIntelTargets(category, sortKey, sortDir).then(data => {
+      setTargets(data)
+    })
+  }, [categoryFilter, sortKey, sortDir])
 
   const chartData = useMemo(() => {
+    if (targets.length === 0) return []
     const months = targets[0].trend_data.map(td => td.month)
     return months.map(month => {
       const point: Record<string, string | number> = { month: month.slice(5) + '月' }
-      filteredTargets.forEach(t => {
+      targets.forEach(t => {
         const td = t.trend_data.find(d => d.month === month)
         if (td) point[t.name] = td.count
       })
       return point
     })
-  }, [filteredTargets])
-
-  const sortedTargets = useMemo(() => {
-    const list = [...filteredTargets]
-    list.sort((a, b) => {
-      const aVal = a[sortKey as keyof Target] as number
-      const bVal = b[sortKey as keyof Target] as number
-      return sortDir === 'asc' ? aVal - bVal : bVal - aVal
-    })
-    return list
-  }, [filteredTargets, sortKey, sortDir])
+  }, [targets])
 
   function handleSort(key: string) {
     if (sortKey === key) {
@@ -75,7 +73,7 @@ export default function TargetHeatmapTab() {
       <Card>
         <CardContent className="p-5">
           <h3 className="text-sm font-semibold mb-4" style={{color: 'var(--clr-text-primary)'}}>论文数量趋势 (近12个月)</h3>
-          {filteredTargets.length === 0 ? (
+          {targets.length === 0 ? (
             <p className="text-center py-8 text-sm" style={{color: 'var(--clr-text-secondary)'}}>暂无数据</p>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
@@ -85,7 +83,7 @@ export default function TargetHeatmapTab() {
                 <YAxis tick={{fontSize: 11, fill: 'var(--clr-text-secondary)'}} stroke="var(--clr-gray-30)" />
                 <Tooltip contentStyle={{background: 'var(--clr-white)', border: '1px solid var(--clr-gray-20)', borderRadius: 6, fontSize: 12}} />
                 <Legend />
-                {filteredTargets.map((t, i) => (
+                {targets.map((t, i) => (
                   <Line key={t.id} type="monotone" dataKey={t.name} stroke={CHART_COLORS[i % CHART_COLORS.length]} strokeWidth={2} dot={{r: 2}} name={t.name} />
                 ))}
               </LineChart>
@@ -141,7 +139,7 @@ export default function TargetHeatmapTab() {
               </tr>
             </thead>
             <tbody>
-              {sortedTargets.map(t => (
+              {targets.map(t => (
                 <tr
                   key={t.id}
                   className="border-b last:border-0 cursor-pointer transition-colors hover:bg-[var(--clr-surface-hover)]"

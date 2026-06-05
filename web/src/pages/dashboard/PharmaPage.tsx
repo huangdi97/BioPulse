@@ -1,11 +1,12 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
 import { useNavigate } from "react-router-dom"
 import KpiCard from "../../components/dashboard/KpiCard"
 import TrendChart from "../../components/dashboard/TrendChart"
 import DataTable from "../../components/dashboard/DataTable"
 import { Badge } from "../../components/ui/Badge"
-import { pharmaKpis, visitTrends, teamRanks, violations } from "../../api/mockData"
+import { getPharmaKpis, getVisitTrends, getTeamRanks, getViolations } from "../../api/client"
+import { pharmaKpis as defaultPharmaKpis, visitTrends as defaultVisitTrends, teamRanks as defaultTeamRanks, violations as defaultViolations } from "../../api/mockData"
 
 const dateTabs = ["今日", "本周", "本月"]
 
@@ -23,7 +24,18 @@ const severityVariant: Record<string, "error" | "warning" | "neutral"> = {
 
 export default function PharmaPage() {
   const [tab, setTab] = useState(2)
+  const [pharmaKpis, setPharmaKpis] = useState(defaultPharmaKpis)
+  const [visitTrends, setVisitTrends] = useState(defaultVisitTrends)
+  const [teamRanks, setTeamRanks] = useState(defaultTeamRanks)
+  const [violations, setViolations] = useState(defaultViolations)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    getPharmaKpis().then(setPharmaKpis)
+    getVisitTrends().then(setVisitTrends)
+    getTeamRanks().then(setTeamRanks)
+    getViolations().then(setViolations)
+  }, [])
 
   const rankColumns = [
     { header: "代表", accessorKey: "name" },

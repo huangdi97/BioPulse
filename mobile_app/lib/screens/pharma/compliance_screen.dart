@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:one_cloud_app/models/compliance_result.dart';
+import 'package:one_cloud_app/services/api_client.dart';
 
 class ComplianceScreen extends StatefulWidget {
   const ComplianceScreen({super.key});
@@ -12,6 +14,30 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
   final _controller = TextEditingController();
   ComplianceResult? _result;
   bool _checking = false;
+  List<Map<String, dynamic>> _violations = [];
+  bool _violationsLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadViolations();
+  }
+
+  Future<void> _loadViolations() async {
+    try {
+      final api = context.read<MultiBackendApiClient>();
+      final response = await api
+          .getClient('cloud')
+          .get<Map<String, dynamic>>('/api/demo/violations');
+      if (response.isSuccess && response.data != null) {
+        final list = response.data!['violations'] as List<dynamic>? ?? [];
+        _violations = list
+            .map((v) => Map<String, dynamic>.from(v as Map))
+            .toList();
+      }
+    } catch (_) {}
+    if (mounted) setState(() => _violationsLoading = false);
+  }
 
   static final _ruleSet = [
     _Rule(r'保证[治愈|有效|痊愈|康复]', '禁止使用保证性疗效承诺'),

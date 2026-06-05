@@ -65,6 +65,25 @@ class AuthService {
   }
 
   /// Log out by clearing all stored auth data.
+  Future<Map<String, dynamic>?> register(String username, String password) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/auth/register',
+      data: {'username': username, 'password': password},
+    );
+    if (!response.isSuccess || response.data == null) return null;
+    final data = response.data!;
+    final token = data['token'] as String?;
+    final refreshToken = data['refresh_token'] as String?;
+    final expiry = data['expires_in'] as int?;
+    if (token != null) {
+      await saveToken(token);
+      if (refreshToken != null) await _saveRefreshToken(refreshToken);
+      if (expiry != null) await _saveTokenExpiry(DateTime.now().millisecondsSinceEpoch + expiry * 1000);
+      await _saveUser(data);
+    }
+    return data;
+  }
+
   Future<void> logout() async {
     final prefs = await _preferences;
     await prefs.remove(_tokenKey);

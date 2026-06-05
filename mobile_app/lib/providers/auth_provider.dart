@@ -58,6 +58,32 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Log out and clear all user state.
+  Future<bool> register(String username, String password) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final data = await _authService.register(username, password);
+      if (data != null) {
+        _user = data;
+        _isLoggedIn = true;
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _error = '注册失败，请重试';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _error = '注册失败: $e';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     await _authService.logout();
     _user = null;

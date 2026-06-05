@@ -18,7 +18,7 @@ class SyncService {
 
   Future<int> addToSyncQueue(String table, int recordId, String action) async {
     final prefs = await SharedPreferences.getInstance();
-    final serverUrl = prefs.getString(_serverUrlKey) ?? 'https://api.example.com';
+    final serverUrl = prefs.getString(_serverUrlKey) ?? 'http://43.153.166.191:8000';
     return _db.addToSyncQueue(
       tableName: table,
       recordId: recordId,

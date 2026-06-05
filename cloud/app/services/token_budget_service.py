@@ -39,9 +39,18 @@ def _load_rules() -> dict:
 
 
 class TokenBudgetService(BaseService):
+    PRICING = {
+        "deepseek-chat": {"input_per_million": 0.14, "output_per_million": 0.28},
+        "deepseek-v4-pro": {"input_per_million": 0.14, "output_per_million": 0.28},
+    }
+
     def __init__(self, db=Depends(get_db)):
         super().__init__(db=db)
         self._rules = _load_rules()
+
+    @classmethod
+    def get_pricing(cls, model: str) -> dict:
+        return cls.PRICING.get(model, {"input_per_million": 0.14, "output_per_million": 0.28})
 
     def _get_model_config(self, model: str) -> dict:
         models = self._rules.get("models", {})

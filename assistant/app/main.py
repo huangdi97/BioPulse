@@ -9,6 +9,7 @@ from assistant.app.knowledge_router import router as knowledge_router
 from assistant.app.knowledge_seed import seed_knowledge
 from assistant.app.location_router import router as location_router
 from assistant.app.media_router import router as media_router
+from assistant.app.offline_router import router as offline_router
 from assistant.app.qa_router import router as qa_router
 from assistant.app.reminder_scheduler import start_scheduler
 from assistant.app.surgery_router import router as surgery_router
@@ -59,3 +60,4 @@ app.include_router(ws_router)
 app.include_router(sync_router)
 app.include_router(voice_router)
 app.include_router(media_router)
+app.include_router(offline_router)

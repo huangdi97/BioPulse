@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:one_cloud_app/services/api_client.dart';
 
 const _mockReports = {
   '1': {
@@ -32,8 +34,26 @@ const _mockReports = {
   },
 };
 
-class AnalysisReportScreen extends StatelessWidget {
+class AnalysisReportScreen extends StatefulWidget {
   const AnalysisReportScreen({super.key});
+
+  @override
+  State<AnalysisReportScreen> createState() => _AnalysisReportScreenState();
+}
+
+class _AnalysisReportScreenState extends State<AnalysisReportScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _loadFromApi();
+  }
+
+  Future<void> _loadFromApi() async {
+    try {
+      final api = context.read<MultiBackendApiClient>();
+      await api.getClient('coach').get('/coach/analysis-report');
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {

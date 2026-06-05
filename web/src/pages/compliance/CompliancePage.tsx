@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import KpiCard from "../../components/dashboard/KpiCard"
 import DataTable from "../../components/dashboard/DataTable"
 import { Badge } from "../../components/ui/Badge"
 import { Button } from "../../components/ui/Button"
-import { violations, complianceKpis } from "../../api/mockData"
+import { getViolations, getComplianceKpis } from "../../api/client"
+import { violations as defaultViolations, complianceKpis as defaultComplianceKpis } from "../../api/mockData"
 
 const severityOptions = ["全部", "高", "中", "低"] as const
 const statusOptions = ["全部", "待处理", "已解决"] as const
@@ -28,6 +29,13 @@ export default function CompliancePage() {
   const [sevFilter, setSevFilter] = useState("全部")
   const [statFilter, setStatFilter] = useState("全部")
   const [resolved, setResolved] = useState<Set<number>>(new Set())
+  const [violations, setViolations] = useState(defaultViolations)
+  const [complianceKpis, setComplianceKpis] = useState(defaultComplianceKpis)
+
+  useEffect(() => {
+    getViolations().then(setViolations)
+    getComplianceKpis().then(setComplianceKpis)
+  }, [])
 
   const filtered = useMemo(() => {
     return violations.filter((v) => {

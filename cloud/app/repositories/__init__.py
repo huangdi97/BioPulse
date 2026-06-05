@@ -33,11 +33,13 @@ from cloud.app.repositories.agent_repository import (
     PipelineStepsRepository,
 )
 from cloud.app.repositories.audit_repository import (
+    AuditChainBlocksRepository,
     AuditChainEntriesRepository,
     AuditLogsRepository,
     BenchmarkReportsRepository,
     DpAuditLogRepository,
     FedAuditContributionsRepository,
+    FederatedNodesRepository,
     FederatedRoundsRepository,
 )
 from cloud.app.repositories.auth_repository import (

@@ -37,7 +37,10 @@ class _SplashScreenState extends State<SplashScreen> {
       final route = launchMode == 'surgery' ? '/surgery_home' : '/home';
       Navigator.pushReplacementNamed(context, route);
     } else {
-      Navigator.pushReplacementNamed(context, '/login');
+      final prefs = await SharedPreferences.getInstance();
+      final onboardingDone = prefs.getBool('onboarding_done') ?? false;
+      final route = onboardingDone ? '/login' : '/onboarding';
+      Navigator.pushReplacementNamed(context, route);
     }
   }
 

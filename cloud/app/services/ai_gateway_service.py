@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.services.base import BaseService
+from cloud.app.services.token_budget_service import TokenBudgetService
 from shared.config import settings
 
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
@@ -29,7 +30,7 @@ class AiGatewayService(BaseService):
         message = choices[0].get("message", {})
         return message.get("content", "")
 
-    def chat(self, messages: list[dict], temperature: float, max_tokens: int) -> dict:
+    def chat(self, messages: list[dict], temperature: float, max_tokens: int, user_id: int) -> dict:
         api_key = self._get_api_key()
 
         req_body = {
@@ -62,5 +63,10 @@ class AiGatewayService(BaseService):
         payload = json.loads(raw)
         reply = self._extract_reply(payload)
         usage = payload.get("usage", {})
+
+        prompt_tokens = usage.get("prompt_tokens", 0)
+        completion_tokens = usage.get("completion_tokens", 0)
+        cost = prompt_tokens * 0.14 / 1e6 + completion_tokens * 0.28 / 1e6
+        TokenBudgetService().record_usage(user_id, "deepseek-chat", usage.get("total_tokens", 0), cost)
 
         return {"reply": reply, "usage": usage}

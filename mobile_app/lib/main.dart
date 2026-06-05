@@ -23,11 +23,11 @@ Future<void> main() async {
   final prefs = await SharedPreferences.getInstance();
   final savedUrls = prefs.getString('backend_urls');
   const defaultUrls = {
-    'sales_assistant': 'https://api.example.com',
-    'cloud': 'https://api.example.com',
-    'opportunity': 'https://api.example.com',
-    'sales_coach': 'https://api.example.com',
-    'sync': 'https://api.example.com',
+    'sales_assistant': 'http://43.153.166.191:8004',
+    'cloud': 'http://43.153.166.191:8000',
+    'opportunity': 'http://43.153.166.191:8002',
+    'sales_coach': 'http://43.153.166.191:8001',
+    'sync': 'http://43.153.166.191:8000',
   };
   final urls = savedUrls != null
       ? Map<String, String>.from(jsonDecode(savedUrls) as Map)

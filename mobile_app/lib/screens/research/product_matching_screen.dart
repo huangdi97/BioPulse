@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:one_cloud_app/models/pi_profile.dart';
 import 'package:one_cloud_app/models/quotation.dart';
 import 'package:one_cloud_app/services/database_service.dart';
+import 'package:one_cloud_app/services/api_client.dart';
 
 class ProductMatchingScreen extends StatefulWidget {
   final PIProfile? profile;
@@ -14,8 +15,10 @@ class ProductMatchingScreen extends StatefulWidget {
 
 class _ProductMatchingScreenState extends State<ProductMatchingScreen> {
   final List<Map<String, dynamic>> _selectedProducts = [];
+  List<Map<String, dynamic>> _allProducts = [];
+  bool _productsLoading = true;
 
-  static const _allProducts = [
+  static const _defaultProducts = [
     {'name': '靶向免疫抑制剂-PD1', 'match': 92, 'spec': '100mg/瓶', 'price': 12800},
     {'name': '肿瘤微环境调节剂-TME1', 'match': 88, 'spec': '50mg/片', 'price': 9500},
     {'name': 'VEGF单克隆抗体', 'match': 85, 'spec': '400mg/支', 'price': 15600},
@@ -25,6 +28,39 @@ class _ProductMatchingScreenState extends State<ProductMatchingScreen> {
     {'name': 'CDK4/6抑制剂', 'match': 72, 'spec': '125mg/粒', 'price': 11000},
     {'name': 'PARP抑制剂', 'match': 68, 'spec': '100mg/粒', 'price': 9800},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMatchStats();
+  }
+
+  Future<void> _loadMatchStats() async {
+    try {
+      final api = context.read<MultiBackendApiClient>();
+      final response = await api
+          .getClient('cloud')
+          .get<Map<String, dynamic>>('/api/demo/product-match-stats');
+      if (response.isSuccess && response.data != null) {
+        final categories =
+            response.data!['categories'] as List<dynamic>? ?? [];
+        setState(() {
+          _allProducts = categories.map((c) => {
+                'name': c['category'] as String? ?? '',
+                'match': ((c['rate'] as num?)?.toDouble() ?? 0 * 100).round(),
+                'spec': '共${c['total'] ?? 0}项',
+                'price': ((c['matched'] as num?)?.toDouble() ?? 0) * 1000,
+              }).toList();
+          _productsLoading = false;
+        });
+        return;
+      }
+    } catch (_) {}
+    setState(() {
+      _allProducts = List<Map<String, dynamic>>.from(_defaultProducts);
+      _productsLoading = false;
+    });
+  }
 
   bool _isSelected(Map<String, dynamic> product) {
     return _selectedProducts.any((p) => p['name'] == product['name']);

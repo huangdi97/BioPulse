@@ -24,3 +24,33 @@ def dashboard_compliance(service: DashboardService = Depends()):
 @router.get("/compliance/summary")
 def compliance_summary(service: ComplianceService = Depends()):
     return service.dashboard_summary()
+
+
+@router.get("/visit-trends")
+def visit_trends(service: DashboardService = Depends()):
+    return service.get_visit_trends()
+
+
+@router.get("/team-ranks")
+def team_ranks(service: DashboardService = Depends()):
+    return service.get_team_ranks()
+
+
+@router.get("/violations")
+def violations(service: DashboardService = Depends()):
+    return service.get_violations()
+
+
+@router.get("/research-kpis")
+def research_kpis(service: DashboardService = Depends()):
+    return service.get_research_kpis()
+
+
+@router.get("/pi-sources")
+def pi_sources(service: DashboardService = Depends()):
+    return service.get_pi_sources()
+
+
+@router.get("/product-match-stats")
+def product_match_stats(service: DashboardService = Depends()):
+    return service.get_product_match_stats()

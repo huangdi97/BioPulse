@@ -93,6 +93,38 @@ def init_db() -> None:
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
         conn.executescript(SCHEMA_SQL)
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS federated_nodes ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "node_id TEXT UNIQUE NOT NULL, "
+            "node_name TEXT DEFAULT '', "
+            "node_type TEXT DEFAULT 'partner', "
+            "organization TEXT DEFAULT '', "
+            "status TEXT DEFAULT 'pending', "
+            "endpoint_url TEXT DEFAULT '', "
+            "public_key TEXT DEFAULT '', "
+            "data_summary TEXT DEFAULT '{}', "
+            "last_heartbeat TEXT DEFAULT '', "
+            "round_count INTEGER DEFAULT 0, "
+            "total_samples INTEGER DEFAULT 0, "
+            "reliability_score REAL DEFAULT 0.0, "
+            "is_active INTEGER DEFAULT 1, "
+            "registered_at TEXT DEFAULT CURRENT_TIMESTAMP, "
+            "updated_at TEXT DEFAULT CURRENT_TIMESTAMP"
+            ")"
+        )
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS audit_chain_blocks ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "block_hash TEXT UNIQUE NOT NULL, "
+            "prev_block_hash TEXT DEFAULT '', "
+            "block_data TEXT DEFAULT '{}', "
+            "block_type TEXT DEFAULT 'audit', "
+            "created_by TEXT DEFAULT '', "
+            "node_id TEXT DEFAULT '', "
+            "timestamp TEXT DEFAULT CURRENT_TIMESTAMP"
+            ")"
+        )
         _ensure_token_budget_tables(conn)
         seed_market_intel(conn)
         seed_agent_data(conn)

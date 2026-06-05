@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react"
+import { useState, useEffect } from "react"
 import { Search, ChevronLeft, ChevronRight } from "lucide-react"
 import { Card, CardContent } from "../ui/Card"
 import { Badge } from "../ui/Badge"
 import { Button } from "../ui/Button"
 import { Input } from "../ui/Input"
-import { papers } from "../../api/mockIntel"
+import { getIntelPapers } from "../../api/client"
+import type { Paper } from "../../api/mockIntel"
 
 const PAGE_SIZE = 5
 
@@ -12,23 +13,39 @@ export default function PaperSearchTab() {
   const [paperQuery, setPaperQuery] = useState('')
   const [page, setPage] = useState(1)
   const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [papers, setPapers] = useState<Paper[]>([])
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(false)
 
-  const filteredPapers = useMemo(() => {
-    if (!paperQuery.trim()) return papers
-    const q = paperQuery.toLowerCase()
-    return papers.filter(p =>
-      p.title.toLowerCase().includes(q) ||
-      p.authors.some(a => a.toLowerCase().includes(q)) ||
-      p.keywords.some(k => k.toLowerCase().includes(q))
-    )
-  }, [paperQuery])
+  useEffect(() => {
+    setLoading(true)
+    getIntelPapers('', 1, PAGE_SIZE).then(data => {
+      setPapers(data.items)
+      setTotal(data.total)
+      setLoading(false)
+    })
+  }, [])
 
-  const pagedPapers = useMemo(() => {
-    const start = (page - 1) * PAGE_SIZE
-    return filteredPapers.slice(start, start + PAGE_SIZE)
-  }, [filteredPapers, page])
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
-  const totalPages = Math.max(1, Math.ceil(filteredPapers.length / PAGE_SIZE))
+  function doSearch(q: string, p: number) {
+    setLoading(true)
+    getIntelPapers(q, p, PAGE_SIZE).then(data => {
+      setPapers(data.items)
+      setTotal(data.total)
+      setLoading(false)
+    })
+  }
+
+  function handleSearch() {
+    setPage(1)
+    doSearch(paperQuery, 1)
+  }
+
+  function handlePageChange(newPage: number) {
+    setPage(newPage)
+    doSearch(paperQuery, newPage)
+  }
 
   return (
     <div className="space-y-4">
@@ -38,18 +55,20 @@ export default function PaperSearchTab() {
           <Input
             placeholder="搜索论文、关键词、作者..."
             value={paperQuery}
-            onChange={e => { setPaperQuery(e.target.value); setPage(1) }}
+            onChange={e => setPaperQuery(e.target.value)}
             className="pl-9"
           />
         </div>
-        <Button>搜索</Button>
+        <Button onClick={handleSearch}>搜索</Button>
       </div>
-      {filteredPapers.length === 0 ? (
+      {loading ? (
+        <p className="text-center py-8 text-sm" style={{color: 'var(--clr-text-secondary)'}}>加载中...</p>
+      ) : papers.length === 0 ? (
         <p className="text-center py-8 text-sm" style={{color: 'var(--clr-text-secondary)'}}>未找到相关论文</p>
       ) : (
         <>
           <div className="space-y-3">
-            {pagedPapers.map(p => (
+            {papers.map(p => (
               <Card key={p.id} className="cursor-pointer" onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}>
                 <CardContent className="p-4 space-y-2">
                   <h4 className="text-sm font-medium cursor-pointer hover:underline" style={{color: 'var(--clr-brand)'}}>{p.title}</h4>
@@ -77,13 +96,13 @@ export default function PaperSearchTab() {
             ))}
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs" style={{color: 'var(--clr-text-secondary)'}}>共 {filteredPapers.length} 条结果</span>
+            <span className="text-xs" style={{color: 'var(--clr-text-secondary)'}}>共 {total} 条结果</span>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
+              <Button variant="outline" size="sm" disabled={page <= 1 || loading} onClick={() => handlePageChange(page - 1)}>
                 <ChevronLeft className="w-3 h-3" /> 上一页
               </Button>
               <span className="text-xs" style={{color: 'var(--clr-text-secondary)'}}>{page}/{totalPages}</span>
-              <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
+              <Button variant="outline" size="sm" disabled={page >= totalPages || loading} onClick={() => handlePageChange(page + 1)}>
                 下一页 <ChevronRight className="w-3 h-3" />
               </Button>
             </div>

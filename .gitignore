@@ -68,7 +68,6 @@ benchmarks/
 briefings/
 docs/
 vibecoding/
-.github/
 start_*.sh
 test_*.sh
 cloud-api.service

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:one_cloud_app/services/api_client.dart';
 
 class Recommendation {
   final String id;
@@ -67,6 +69,14 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   void initState() {
     super.initState();
     _data = mockRecommendations.map((r) => r).toList();
+    _loadFromApi();
+  }
+
+  Future<void> _loadFromApi() async {
+    try {
+      final api = context.read<MultiBackendApiClient>();
+      await api.getClient('coach').get('/coach/recommendations');
+    } catch (_) {}
   }
 
   void _markRead(String id) {
