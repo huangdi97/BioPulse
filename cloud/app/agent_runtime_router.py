@@ -80,10 +80,9 @@ def trigger_agent(
 
 @router.get("/tools")
 def list_tools(
-    business_db=Depends(get_db),
     user=Depends(require_scope("visit")),
 ):
-    registry = ToolRegistry(business_db)
+    registry = ToolRegistry()
     registry.register_default_tools()
     return registry.list_tools()
 

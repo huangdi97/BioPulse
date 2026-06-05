@@ -7,8 +7,7 @@ from cloud.app.agent_runtime.retry import retry_with_backoff
 
 
 class ToolRegistry:
-    def __init__(self, db):
-        self._db = db
+    def __init__(self):
         self._tools: dict[str, ToolDef] = {}
         self._brain = None
         self._failure_counts: dict[str, int] = {}

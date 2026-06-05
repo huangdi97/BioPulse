@@ -26,7 +26,7 @@ class AgentRuntime:
         self._db = business_db
         self._auth_header = auth_header
         self._notifier = notifier
-        self._tool_registry = ToolRegistry(business_db)
+        self._tool_registry = ToolRegistry()
         self._tool_registry.register_default_tools()
         self._brain = AgentBrain(agent_db)
         self._tool_registry.set_brain(self._brain)
