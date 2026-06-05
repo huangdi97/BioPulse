@@ -60,3 +60,4 @@ pytest-cov==7.1.0
 pytest-benchmark==5.2.3
 coverage==7.14.1
 pre-commit==4.6.0
+ruff==0.15.15
