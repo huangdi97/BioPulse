@@ -7,7 +7,6 @@ class ToolDef(BaseModel):
     name: str
     description: str
     params: dict
-    endpoint: str
     permission_level: str = "read"
 
 

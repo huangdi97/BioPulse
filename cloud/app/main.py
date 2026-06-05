@@ -11,6 +11,7 @@ from cloud.app.a2a_registry_router import router as a2a_registry_router
 from cloud.app.agent_database import init_agent_db
 from cloud.app.agent_execution_router import router as agent_execution_router
 from cloud.app.agent_framework_router import router as agent_framework_router
+from cloud.app.agent_gateway_router import router as agent_gateway_router
 from cloud.app.agent_pipeline_router import router as agent_pipeline_router
 from cloud.app.agent_role_router import router as agent_role_router
 from cloud.app.agent_runtime_router import router as agent_runtime_router
@@ -253,6 +254,7 @@ app.include_router(rl_routing_router)
 app.include_router(trust_audit_router)
 app.include_router(content_factory_router)
 app.include_router(cell_network_router)
+app.include_router(agent_gateway_router)
 
 
 @app.on_event("startup")
