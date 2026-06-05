@@ -1,26 +1,5 @@
-# Bridge: load the old single-file repositories module and re-export all classes.
-# The old file cloud/app/repositories.py is shadowed by this directory,
-# so we load it via file path to maintain backward compatibility.
-import importlib.util
-import os
-import sys
-
-_OLD_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "repositories.py")
-
-
-def _load_old_repos():
-    spec = importlib.util.spec_from_file_location("cloud.app.repositories_old", _OLD_FILE)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
-_old_mod = _load_old_repos()
-for _name in dir(_old_mod):
-    if not _name.startswith("_"):
-        globals()[_name] = getattr(_old_mod, _name)
-
-# New per-class repositories
+# Auto-generated: re-exports all per-domain repository classes.
+# Generated from: cloud/app/repositories/*.py (excluding __init__.py)
 from cloud.app.repositories.agent_repository import (
     AgentExecutionTasksRepository,
     AgentMarketplaceRepository,

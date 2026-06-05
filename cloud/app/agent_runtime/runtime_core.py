@@ -14,6 +14,7 @@ from cloud.app.agent_runtime.models import RuntimeResult
 from cloud.app.agent_runtime.notifier import AgentNotifier
 from cloud.app.agent_runtime.planner import PlanGenerator
 from cloud.app.agent_runtime.retry import retry_with_backoff
+from cloud.app.agent_runtime.runtime_state import ApprovalManager, CheckpointManager
 from cloud.app.agent_runtime.state_snapshot import SnapshotManager
 from cloud.app.agent_runtime.tool_bridge import ToolRegistry
 from cloud.app.agent_runtime.validator import AgentOutputValidator
@@ -34,6 +35,8 @@ class AgentRuntime:
         self._trace_id = str(uuid.uuid4())
         self._cost_tracker = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
         self._loop_detector = LoopDetector()
+        self._checkpoint = CheckpointManager(agent_db)
+        self._approval = ApprovalManager(agent_db)
         self._snapshot_manager = SnapshotManager(agent_db)
         self._cost_governor = CostGovernor()
         self._planner = PlanGenerator()
@@ -62,7 +65,7 @@ class AgentRuntime:
         max_iter = min(spec["max_iterations"], 15)
         started_at = datetime.now().isoformat()
 
-        checkpoint = self._load_checkpoint(agent_key, goal)
+        checkpoint = self._checkpoint.load(agent_key, goal)
         if checkpoint:
             messages = checkpoint["messages"]
             logs = checkpoint["logs"]
@@ -127,7 +130,7 @@ class AgentRuntime:
                         "trace_id": self._trace_id,
                     }
                 )
-                self._save_checkpoint(
+                self._checkpoint.save(
                     agent_key,
                     goal,
                     {
@@ -140,6 +143,7 @@ class AgentRuntime:
                         "agent_key": agent_key,
                         "context": context,
                     },
+                    self._trace_id,
                 )
                 messages.append(
                     {
@@ -250,7 +254,7 @@ class AgentRuntime:
                 if self._notifier:
                     elapsed = (datetime.now() - datetime.fromisoformat(started_at)).total_seconds()
                     self._notifier.notify(agent_key, goal, "completed", elapsed, self._cost_tracker)
-                self._delete_checkpoint(agent_key, goal)
+                self._checkpoint.delete(agent_key, goal)
                 self._stats["total_runs"] += 1
                 self._stats["success_count"] += 1
                 return RuntimeResult(
@@ -294,7 +298,7 @@ class AgentRuntime:
 
                 if tool_result.get("needs_approval"):
                     # 先保存检查点，以便恢复后能找到已批准的审批
-                    self._save_checkpoint(
+                    self._checkpoint.save(
                         agent_key,
                         goal,
                         {
@@ -307,8 +311,9 @@ class AgentRuntime:
                             "agent_key": agent_key,
                             "context": None,
                         },
+                        self._trace_id,
                     )
-                    approval_id = self._create_approval(agent_key, goal, step, tool_name, tool_params, decision.get("reasoning", ""))
+                    approval_id = self._approval.create(self._trace_id, agent_key, goal, step, tool_name, tool_params, decision.get("reasoning", ""))
                     self._save_log(agent_key, goal, "awaiting_approval", step, tool_calls, logs, started_at)
                     if self._notifier:
                         elapsed = (datetime.now() - datetime.fromisoformat(started_at)).total_seconds()
@@ -377,7 +382,7 @@ class AgentRuntime:
                     )
 
                 if action == "call_tool" and step != start_step:
-                    self._save_checkpoint(
+                    self._checkpoint.save(
                         agent_key,
                         goal,
                         {
@@ -390,6 +395,7 @@ class AgentRuntime:
                             "agent_key": agent_key,
                             "context": context,
                         },
+                        self._trace_id,
                     )
                 self._save_snapshot(agent_key, step, messages, logs, context)
             else:
@@ -501,49 +507,8 @@ class AgentRuntime:
         )
         self._agent_db.commit()
 
-    def _save_checkpoint(self, agent_key, goal, data):
-        json_data = json.dumps(data, ensure_ascii=False)
-        cur = self._agent_db.execute(
-            "UPDATE agent_runtime_logs SET checkpoint_data=? WHERE agent_key=? AND goal=? AND status IN ('running', 'pending')",
-            (json_data, agent_key, goal),
-        )
-        if cur.rowcount == 0:
-            self._agent_db.execute(
-                "INSERT INTO agent_runtime_logs (agent_key, goal, status, checkpoint_data, trace_id) VALUES (?, ?, 'running', ?, ?)",
-                (agent_key, goal, json_data, self._trace_id),
-            )
-        self._agent_db.commit()
-
-    def _load_checkpoint(self, agent_key, goal):
-        cur = self._agent_db.execute(
-            "SELECT checkpoint_data FROM agent_runtime_logs "
-            "WHERE agent_key=? AND goal=? AND status='running' AND checkpoint_data IS NOT NULL "
-            "ORDER BY id DESC LIMIT 1",
-            (agent_key, goal),
-        )
-        row = cur.fetchone()
-        if row and row["checkpoint_data"]:
-            return json.loads(row["checkpoint_data"])
-        return None
-
-    def _delete_checkpoint(self, agent_key, goal):
-        self._agent_db.execute(
-            "UPDATE agent_runtime_logs SET checkpoint_data=NULL WHERE agent_key=? AND goal=?",
-            (agent_key, goal),
-        )
-        self._agent_db.commit()
-
-    def _create_approval(self, agent_key: str, goal: str, step: int, tool: str, params: dict, reasoning: str) -> int:
-        cur = self._agent_db.execute(
-            "INSERT INTO agent_runtime_approvals (trace_id, agent_key, goal, step, tool, params, reasoning, status) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')",
-            (self._trace_id, agent_key, goal, step, tool, json.dumps(params, ensure_ascii=False), reasoning),
-        )
-        self._agent_db.commit()
-        return cur.lastrowid
-
     def resume(self, agent_key: str, goal: str, auth_header: str) -> RuntimeResult:
-        checkpoint = self._load_checkpoint(agent_key, goal)
+        checkpoint = self._checkpoint.load(agent_key, goal)
         if not checkpoint:
             return RuntimeResult(status="error", result="no checkpoint found", iterations=0, tool_calls=0, logs=[])
 
