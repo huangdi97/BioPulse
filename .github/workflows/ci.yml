@@ -11,7 +11,8 @@ jobs:
           python-version: '3.12'
       - name: Install Python deps
         run: |
-          pip install -r requirements.txt
+          pip install --upgrade pip
+          pip install fastapi uvicorn pydantic python-jose passlib pytest pytest-asyncio httpx starlette
           pip install ruff
       - name: Ruff check
         run: ruff check
@@ -23,9 +24,8 @@ jobs:
           python --version
       - name: Pytest
         run: |
-          python -m pytest --version
-          python -c "from cloud.app.main import app; print('app imported OK')"
-          python -m pytest cloud/app/tests/test_auth.py -x --tb=long --no-cov -v
+          pip list 2>&1 | head -30
+          python -m pytest cloud/app/tests/test_auth.py -x --tb=long --no-cov -v 2>&1
 
   web:
     runs-on: ubuntu-latest
