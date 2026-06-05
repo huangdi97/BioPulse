@@ -22,7 +22,10 @@ jobs:
           python -c "import pytest; print('pytest', pytest.__version__)"
           python --version
       - name: Pytest
-        run: python -m pytest cloud/app/tests/test_auth.py -x --tb=long --no-cov -v
+        run: |
+          python -m pytest --version
+          python -c "from cloud.app.main import app; print('app imported OK')"
+          python -m pytest cloud/app/tests/test_auth.py -x --tb=long --no-cov -v
 
   web:
     runs-on: ubuntu-latest
