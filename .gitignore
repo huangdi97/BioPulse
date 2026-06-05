@@ -82,7 +82,11 @@ benchmarks/
 *.db
 
 # 开发任务文件（不上传GitHub）
-tasks-*.md
+tasks*.md
+**/tasks*.md
+Batch*.md
+exec_*.md
+Flutter-*.md
 archive/*.md
 S*-*.md
 生产硬化-*.md
@@ -91,3 +95,8 @@ test_s8_integration.py
 # 独立开发文档
 P0-systemd*.md
 frontend-plan-tg.md
+
+# 测试文件（仅本地）
+**/tests/
+**/test/
+**/RunnerTests/
