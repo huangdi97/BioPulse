@@ -63,6 +63,7 @@ benchmarks/
 .pytest_cache/
 
 # Misc
+.ruff_cache/
 *.orig
 *.backup
 briefings/

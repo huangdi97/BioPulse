@@ -17,10 +17,8 @@ target-version = "py312"
 select = ["E", "F", "W", "I"]
 
 [tool.ruff.lint.per-file-ignores]
-"clinical-ops/**" = ["E402", "F401", "F403", "E501"]
+"archive/services/**" = ["E402", "F401", "F403", "E501"]
 "management/**" = ["E402", "F401", "F403", "E501"]
-"market-access/**" = ["E402", "F401", "F403", "E501"]
-"patient-engage/**" = ["E402", "F401", "F403", "E501"]
 "pharma-intel/**" = ["E402", "F401", "F403", "E501"]
 "pharma_intel/**" = ["E402", "F401", "F403", "E501"]
 "seed_story_data.py" = ["E501", "F841"]

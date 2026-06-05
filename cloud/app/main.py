@@ -39,9 +39,6 @@ from cloud.app.export_router import router as export_router
 from cloud.app.federated_node_router import router as federated_node_router
 from cloud.app.hcp_sandbox_router import router as hcp_sandbox_router
 from cloud.app.interaction_router import router as interaction_router
-
-# from cloud.app.identity_router import router as identity_router  # ❄️ 冻结
-# from cloud.app.privacy_router import router as privacy_router  # ❄️ 冻结
 from cloud.app.kg_router import router as kg_router
 from cloud.app.market_intel_router import router as market_intel_router
 from cloud.app.marketplace_router import router as marketplace_router
@@ -96,8 +93,6 @@ from cloud.app.routers.research_trajectory_router import router as research_traj
 from cloud.app.routers.sage_engine_router import router as sage_engine_router
 from cloud.app.routers.switch_router import router as switch_router
 from cloud.app.routers.trust_audit_router import router as trust_audit_router
-
-# from cloud.app.edge_router import router as edge_router  # ❄️ 冻结
 from cloud.app.settings_router import router as settings_router
 from cloud.app.soap_decision_router import router as soap_decision_router
 from cloud.app.task_router import router as task_router
@@ -204,8 +199,6 @@ app.include_router(training_coach_router)
 app.include_router(soap_decision_router)
 app.include_router(memory_utility_router)
 app.include_router(brain_memory_router)
-# app.include_router(identity_router)  # ❄️ 冻结
-# app.include_router(privacy_router)  # ❄️ 冻结
 app.include_router(kg_router)
 app.include_router(recommend_router)
 app.include_router(collaboration_router)
@@ -221,7 +214,6 @@ app.include_router(compute_router)
 app.include_router(nmpa_router)
 app.include_router(training_scripts_router)
 app.include_router(marketplace_router)
-# app.include_router(edge_router)  # ❄️ 冻结
 app.include_router(model_compression_router)
 app.include_router(settings_router)
 app.include_router(visit_router)
