@@ -5,7 +5,6 @@ import DataTable from "../../components/dashboard/DataTable"
 import { Badge } from "../../components/ui/Badge"
 import { Button } from "../../components/ui/Button"
 import { getViolations, getComplianceKpis } from "../../api/client"
-import { violations as defaultViolations, complianceKpis as defaultComplianceKpis } from "../../api/mockData"
 
 const severityOptions = ["全部", "高", "中", "低"] as const
 const statusOptions = ["全部", "待处理", "已解决"] as const
@@ -29,12 +28,12 @@ export default function CompliancePage() {
   const [sevFilter, setSevFilter] = useState("全部")
   const [statFilter, setStatFilter] = useState("全部")
   const [resolved, setResolved] = useState<Set<number>>(new Set())
-  const [violations, setViolations] = useState(defaultViolations)
-  const [complianceKpis, setComplianceKpis] = useState(defaultComplianceKpis)
+  const [violations, setViolations] = useState<any[]>([])
+  const [complianceKpis, setComplianceKpis] = useState<any[]>([])
 
   useEffect(() => {
-    getViolations().then(setViolations)
-    getComplianceKpis().then(setComplianceKpis)
+    getViolations().then(setViolations).catch(err => console.error('Failed to load violations:', err))
+    getComplianceKpis().then(setComplianceKpis).catch(err => console.error('Failed to load compliance KPIs:', err))
   }, [])
 
   const filtered = useMemo(() => {

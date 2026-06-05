@@ -19,14 +19,6 @@ class _ScanScreenState extends State<ScanScreen>
   late AnimationController _animController;
   late Animation<double> _scanLineAnim;
 
-  static final _mockBarcodes = [
-    'PROD-001-骨科植入物-A',
-    'PROD-002-螺钉-5.0×30mm',
-    'PROD-003-钢板-8孔',
-    'PROD-004-骨水泥-20g',
-    'PROD-005-缝合线-2-0',
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -46,17 +38,20 @@ class _ScanScreenState extends State<ScanScreen>
   }
 
   void _simulateScan() {
-    final code = _mockBarcodes[
-        DateTime.now().millisecondsSinceEpoch % _mockBarcodes.length];
-    setState(() => _scanResults.add(code));
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('已扫码: $code'),
-          duration: const Duration(seconds: 1),
-        ),
-      );
-    }
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('手动输入条码'),
+        content: const Text('请输入或粘贴产品条码/二维码内容'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('模拟扫码'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _takePhoto() async {

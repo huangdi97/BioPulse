@@ -5,7 +5,7 @@ import { Badge } from "../ui/Badge"
 import { Button } from "../ui/Button"
 import { Input } from "../ui/Input"
 import { getIntelPapers } from "../../api/client"
-import type { Paper } from "../../api/mockIntel"
+import type { Paper } from "../../types/intel"
 
 const PAGE_SIZE = 5
 
@@ -80,7 +80,7 @@ export default function PaperSearchTab() {
                     <span>PMID: {p.pmid}</span>
                   </div>
                   <div className="flex gap-1 flex-wrap">
-                    {p.keywords.map(k => <Badge key={k}>{k}</Badge>)}
+                    {p.keywords?.map(k => <Badge key={k}>{k}</Badge>)}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs" style={{color: 'var(--clr-text-secondary)'}}>相关度: {p.relevance}%</span>

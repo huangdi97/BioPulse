@@ -9,7 +9,7 @@ import {
 } from "recharts"
 import { Card, CardContent } from "../ui/Card"
 import { Button } from "../ui/Button"
-import type { AbilityAssessment } from "../../api/mockCoach"
+import type { AbilityAssessment } from "../../types/coach"
 
 interface Props {
   data: AbilityAssessment

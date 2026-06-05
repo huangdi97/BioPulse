@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Card, CardContent } from "../ui/Card"
 import { Button } from "../ui/Button"
 import { getIntelTargets, getIntelTargetCategories } from "../../api/client"
-import type { Target } from "../../api/mockIntel"
+import type { Target } from "../../types/intel"
 
 const CHART_COLORS = ['#0f62fe', '#8b5cf6', '#f59e0b', '#10b981', '#da1e28', '#24a148', '#f1c21b', '#525252', '#002d9c', '#6f6f6f']
 

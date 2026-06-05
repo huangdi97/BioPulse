@@ -24,130 +24,39 @@ export async function fetchApi<T>(path: string, options?: RequestInit): Promise<
   return res.json()
 }
 
-import {
-  pharmaKpis,
-  visitTrends,
-  teamRanks,
-  violations,
-  researchKpis,
-  piSources,
-  productMatchStats,
-  complianceKpis,
-} from "./mockData"
 import type { KpiCard, VisitStat, TeamRank, ViolationItem, ResearchKpi, PiSource, ProductMatchStat } from "../types/dashboard"
-import type { Paper, PiProfile, Target } from "./mockIntel"
+import type { Paper, PiProfile, Target } from "../types/intel"
 
 export async function getPharmaKpis(): Promise<KpiCard[]> {
-  try {
-    const data = await fetchApi<Record<string, unknown>>('/api/demo/dashboard')
-    return pharmaKpis.map((kpi, i) => {
-      if (i === 1 && data.compliance_rate !== undefined) {
-        return { ...kpi, value: data.compliance_rate as string | number }
-      }
-      if (i === 2 && data.user_count !== undefined) {
-        return { ...kpi, value: data.user_count as string | number }
-      }
-      return kpi
-    })
-  } catch {
-    return pharmaKpis
-  }
+  return fetchApi<KpiCard[]>('/dashboard/overview')
 }
 
 export async function getVisitTrends(): Promise<VisitStat[]> {
-  try {
-    const data = await fetchApi<{ dates: string[]; counts: number[]; pass_rates: number[] }>('/api/demo/visit-trends')
-    return data.dates.map((date, i) => ({
-      date,
-      count: data.counts[i],
-      passRate: data.pass_rates[i],
-    }))
-  } catch {
-    return visitTrends
-  }
+  return fetchApi<VisitStat[]>('/dashboard/visit-trends')
 }
 
 export async function getTeamRanks(): Promise<TeamRank[]> {
-  try {
-    const data = await fetchApi<{ ranks: { name: string; visits: number; compliance_rate: number; deals: number }[] }>('/api/demo/team-ranks')
-    return data.ranks.map(r => ({
-      name: r.name,
-      visits: r.visits,
-      complianceRate: r.compliance_rate,
-      deals: r.deals,
-    }))
-  } catch {
-    return teamRanks
-  }
+  return fetchApi<TeamRank[]>('/dashboard/team-ranks')
 }
 
 export async function getViolations(): Promise<ViolationItem[]> {
-  try {
-    const data = await fetchApi<{ violations: { id: number; rep_name: string; type: string; detail: string; severity: string; date: string; status: string }[] }>('/api/demo/violations')
-    return data.violations.map(v => ({
-      id: v.id,
-      repName: v.rep_name,
-      type: v.type,
-      detail: v.detail,
-      severity: v.severity as "high" | "medium" | "low",
-      date: v.date,
-      status: v.status as "pending" | "resolved",
-    }))
-  } catch {
-    return violations
-  }
+  return fetchApi<ViolationItem[]>('/dashboard/violations')
 }
 
 export async function getResearchKpis(): Promise<ResearchKpi[]> {
-  try {
-    const data = await fetchApi<{ kpis: ResearchKpi[] }>('/api/demo/research-kpis')
-    return data.kpis
-  } catch {
-    return researchKpis
-  }
+  return fetchApi<ResearchKpi[]>('/dashboard/research-kpis')
 }
 
 export async function getPiSources(): Promise<PiSource[]> {
-  try {
-    const data = await fetchApi<{ pi_sources: { name: string; institution: string; matches: number; last_activity: string }[] }>('/api/demo/pi-sources')
-    return data.pi_sources.map(s => ({
-      name: s.name,
-      institution: s.institution,
-      matches: s.matches,
-      lastActivity: s.last_activity,
-    }))
-  } catch {
-    return piSources
-  }
+  return fetchApi<PiSource[]>('/dashboard/pi-sources')
 }
 
 export async function getProductMatchStats(): Promise<ProductMatchStat[]> {
-  try {
-    const data = await fetchApi<{ categories: ProductMatchStat[] }>('/api/demo/product-match-stats')
-    return data.categories
-  } catch {
-    return productMatchStats
-  }
+  return fetchApi<ProductMatchStat[]>('/dashboard/product-match-stats')
 }
 
 export async function getComplianceKpis(): Promise<KpiCard[]> {
-  try {
-    const data = await fetchApi<Record<string, unknown>>('/api/demo/dashboard/compliance')
-    return complianceKpis.map((kpi, i) => {
-      if (i === 0 && data.total !== undefined) {
-        return { ...kpi, value: data.total as string | number }
-      }
-      if (i === 1 && data.pass_rate !== undefined) {
-        return { ...kpi, value: data.pass_rate as string | number }
-      }
-      if (i === 2 && data.failed !== undefined) {
-        return { ...kpi, value: data.failed as string | number, trend: 'down' as const }
-      }
-      return kpi
-    })
-  } catch {
-    return complianceKpis
-  }
+  return fetchApi<KpiCard[]>('/dashboard/compliance')
 }
 
 let intelBaseURL = "http://localhost:8006"

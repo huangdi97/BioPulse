@@ -2,38 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:one_cloud_app/services/api_client.dart';
 
-const _mockReports = {
-  '1': {
-    'name': '关节镜手术话术演练',
-    'score': 85,
-    'strengths': ['表达流畅', '专业术语准确', '逻辑清晰'],
-    'weaknesses': ['时间控制不足', '客户提问响应慢'],
-    'suggestions': [
-      '建议练习时间控制在3分钟内，可使用计时器辅助训练',
-      '针对常见客户提问提前准备标准应答话术',
-      '多进行角色互换演练，提高临场应变能力',
-    ],
-  },
-  '2': {
-    'name': '骨科产品知识考核',
-    'score': 72,
-    'strengths': ['产品规格熟悉'],
-    'weaknesses': ['竞品对比不充分', '适应症记忆模糊'],
-    'suggestions': [
-      '每周复习一次竞品对比表，重点关注差异化优势',
-      '使用记忆卡片巩固适应症和禁忌症',
-      '结合实际案例加深产品知识理解',
-    ],
-  },
-  '3': {
-    'name': '客户异议处理模拟',
-    'score': 0,
-    'strengths': [],
-    'weaknesses': ['尚未评估'],
-    'suggestions': ['请完成训练后查看分析报告'],
-  },
-};
-
 class AnalysisReportScreen extends StatefulWidget {
   const AnalysisReportScreen({super.key});
 
@@ -42,6 +10,9 @@ class AnalysisReportScreen extends StatefulWidget {
 }
 
 class _AnalysisReportScreenState extends State<AnalysisReportScreen> {
+  Map<String, dynamic>? _report;
+  bool _loading = false;
+
   @override
   void initState() {
     super.initState();
@@ -49,16 +20,24 @@ class _AnalysisReportScreenState extends State<AnalysisReportScreen> {
   }
 
   Future<void> _loadFromApi() async {
+    setState(() => _loading = true);
     try {
       final api = context.read<MultiBackendApiClient>();
-      await api.getClient('coach').get('/coach/analysis-report');
+      final id = ModalRoute.of(context)!.settings.arguments as String;
+      final res = await api.getClient('sales_coach').get<Map>('/stats/report/');
+      if (res.isSuccess && res.data != null) {
+        _report = res.data;
+      }
     } catch (_) {}
+    setState(() => _loading = false);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_report == null && _loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_report == null) return const Scaffold(body: Center(child: Text('加载失败')));
     final id = ModalRoute.of(context)!.settings.arguments as String;
-    final data = _mockReports[id]!;
+    final data = _report;
     final theme = Theme.of(context);
     final score = data['score'] as int;
 

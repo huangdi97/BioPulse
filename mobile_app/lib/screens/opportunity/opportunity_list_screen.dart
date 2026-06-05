@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-
+import 'package:one_cloud_app/services/api_client.dart';
+import 'package:one_cloud_app/services/auth_service.dart';
 class Opportunity {
   final String id;
   final String name;
@@ -20,14 +21,6 @@ class Opportunity {
   });
 }
 
-final List<Opportunity> mockOpportunities = [
-  Opportunity(id: '1', name: '关节镜设备采购', customer: '市第一人民医院', amount: 120000, stage: '跟进中', date: DateTime(2026, 6, 1), notes: '已提交初步方案'),
-  Opportunity(id: '2', name: '骨科植入物供应', customer: '市中心医院', amount: 85000, stage: '跟进中', date: DateTime(2026, 5, 28), notes: '第二次拜访完成'),
-  Opportunity(id: '3', name: '手术导航系统', customer: '省立医院', amount: 300000, stage: '已转化', date: DateTime(2026, 5, 20), notes: '合同已签署'),
-  Opportunity(id: '4', name: '康复设备租赁', customer: '康复医院', amount: 45000, stage: '已关闭', date: DateTime(2026, 5, 15), notes: '客户预算不足'),
-  Opportunity(id: '5', name: 'CT影像系统升级', customer: '人民医院', amount: 200000, stage: '跟进中', date: DateTime(2026, 6, 3), notes: '技术交流已完成'),
-];
-
 class OpportunityListScreen extends StatefulWidget {
   const OpportunityListScreen({super.key});
   @override
@@ -40,15 +33,40 @@ class _OpportunityListScreenState extends State<OpportunityListScreen>
 
   static const _tabs = ['全部', '跟进中', '已转化', '已关闭'];
 
+  List<Opportunity> _opportunities = [];
+  bool _loading = false;
+
   List<Opportunity> get _filtered {
-    if (_tabController.index == 0) return mockOpportunities;
-    return mockOpportunities.where((o) => o.stage == _tabs[_tabController.index]).toList();
+    if (_tabController.index == 0) return _opportunities;
+    return _opportunities.where((o) => o.stage == _tabs[_tabController.index]).toList();
   }
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _loading = true);
+    final client = MultiBackendApiClient(
+      backends: {'cloud': 'http://43.153.166.191:8000'},
+      authService: AuthService(),
+    );
+    final res = await client.get<List>('/opportunities/');
+    if (res.isSuccess && res.data != null) {
+      _opportunities = res.data!.map((e) => Opportunity(
+        id: e['id'].toString(),
+        name: e['name'] ?? '',
+        customer: e['customer_name'] ?? '',
+        amount: (e['estimated_value'] ?? 0).toDouble(),
+        stage: e['stage'] ?? '',
+        date: DateTime.now(),
+        notes: e['notes'] ?? '',
+      )).toList();
+    }
+    setState(() => _loading = false);
   }
 
   @override
@@ -63,13 +81,14 @@ class _OpportunityListScreenState extends State<OpportunityListScreen>
   }
 
   Future<void> _refresh() async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await _loadData();
     setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    if (_loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final list = _filtered;
     return Scaffold(
       body: Column(

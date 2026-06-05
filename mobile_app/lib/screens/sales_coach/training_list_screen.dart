@@ -18,14 +18,7 @@ class TrainingRecord {
   });
 }
 
-final List<TrainingRecord> mockTrainings = [
-  TrainingRecord(id: '1', name: '关节镜手术话术演练', date: DateTime(2026, 6, 3), score: 85, status: '已完成'),
-  TrainingRecord(id: '2', name: '骨科产品知识考核', date: DateTime(2026, 6, 2), score: 72, status: '已完成'),
-  TrainingRecord(id: '3', name: '客户异议处理模拟', date: DateTime(2026, 6, 1), score: 0, status: '待分析'),
-  TrainingRecord(id: '4', name: '手术跟台标准化流程', date: DateTime(2026, 5, 30), score: 91, status: '已完成'),
-  TrainingRecord(id: '5', name: '新产品上市话术训练', date: DateTime(2026, 5, 28), score: 0, status: '待分析'),
-  TrainingRecord(id: '6', name: '合规销售沟通技巧', date: DateTime(2026, 5, 25), score: 68, status: '全部'),
-];
+
 
 class TrainingListScreen extends StatefulWidget {
   const TrainingListScreen({super.key});
@@ -36,11 +29,13 @@ class TrainingListScreen extends StatefulWidget {
 class _TrainingListScreenState extends State<TrainingListScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  List<TrainingRecord> _trainings = [];
+  bool _loading = false;
 
   static const _tabs = ['全部', '待分析', '已完成'];
 
   List<TrainingRecord> get _filtered {
-    final all = mockTrainings;
+    final all = _trainings;
     if (_tabController.index == 0) return all;
     if (_tabController.index == 1) {
       return all.where((t) => t.status == '待分析').toList();
@@ -63,15 +58,26 @@ class _TrainingListScreenState extends State<TrainingListScreen>
   }
 
   Future<void> _refresh() async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    await _loadFromApi();
     setState(() {});
   }
 
   Future<void> _loadFromApi() async {
+    setState(() => _loading = true);
     try {
       final api = context.read<MultiBackendApiClient>();
-      await api.getClient('coach').get('/coach/training-sessions');
+      final res = await api.getClient('sales_coach').get<List>('/scenarios');
+      if (res.isSuccess && res.data != null) {
+        _trainings = res.data!.map((e) => TrainingRecord(
+          id: (e['id'] ?? '').toString(),
+          name: e['name'] ?? '',
+          date: DateTime.now(),
+          score: (e['score'] ?? 0).toDouble(),
+          status: e['status'] ?? '待分析',
+        )).toList();
+      }
     } catch (_) {}
+    setState(() => _loading = false);
   }
 
   Color _statusColor(String status) {

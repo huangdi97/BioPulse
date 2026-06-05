@@ -6,8 +6,6 @@ import TrendChart from "../../components/dashboard/TrendChart"
 import DataTable from "../../components/dashboard/DataTable"
 import { Badge } from "../../components/ui/Badge"
 import { getPharmaKpis, getVisitTrends, getTeamRanks, getViolations } from "../../api/client"
-import { pharmaKpis as defaultPharmaKpis, visitTrends as defaultVisitTrends, teamRanks as defaultTeamRanks, violations as defaultViolations } from "../../api/mockData"
-
 const dateTabs = ["今日", "本周", "本月"]
 
 const compliancePieData = [
@@ -24,17 +22,17 @@ const severityVariant: Record<string, "error" | "warning" | "neutral"> = {
 
 export default function PharmaPage() {
   const [tab, setTab] = useState(2)
-  const [pharmaKpis, setPharmaKpis] = useState(defaultPharmaKpis)
-  const [visitTrends, setVisitTrends] = useState(defaultVisitTrends)
-  const [teamRanks, setTeamRanks] = useState(defaultTeamRanks)
-  const [violations, setViolations] = useState(defaultViolations)
+  const [pharmaKpis, setPharmaKpis] = useState<any[]>([])
+  const [visitTrends, setVisitTrends] = useState<any[]>([])
+  const [teamRanks, setTeamRanks] = useState<any[]>([])
+  const [violations, setViolations] = useState<any[]>([])
   const navigate = useNavigate()
 
   useEffect(() => {
-    getPharmaKpis().then(setPharmaKpis)
-    getVisitTrends().then(setVisitTrends)
-    getTeamRanks().then(setTeamRanks)
-    getViolations().then(setViolations)
+    getPharmaKpis().then(setPharmaKpis).catch(err => console.error('Failed to load pharma KPIs:', err))
+    getVisitTrends().then(setVisitTrends).catch(err => console.error('Failed to load visit trends:', err))
+    getTeamRanks().then(setTeamRanks).catch(err => console.error('Failed to load team ranks:', err))
+    getViolations().then(setViolations).catch(err => console.error('Failed to load violations:', err))
   }, [])
 
   const rankColumns = [

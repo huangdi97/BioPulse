@@ -4,7 +4,7 @@ import { Badge } from "../ui/Badge"
 import { Button } from "../ui/Button"
 import { Input } from "../ui/Input"
 import { getIntelPiProfiles } from "../../api/client"
-import type { PiProfile } from "../../api/mockIntel"
+import type { PiProfile } from "../../types/intel"
 
 export default function PiProfileTab() {
   const [piQuery, setPiQuery] = useState('')
@@ -53,7 +53,7 @@ export default function PiProfileTab() {
                   <span className="text-xs mb-1" style={{color: 'var(--clr-text-secondary)'}}>H-index</span>
                 </div>
                 <div className="flex gap-1 flex-wrap">
-                  {pi.research_areas.map(a => <Badge key={a}>{a}</Badge>)}
+                  {pi.research_areas?.map(a => <Badge key={a}>{a}</Badge>)}
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs" style={{color: 'var(--clr-text-secondary)'}}>活跃度: {pi.activity_score}%</span>
@@ -64,7 +64,7 @@ export default function PiProfileTab() {
                 {selectedPi === pi.id && (
                   <div className="text-xs space-y-1 p-2 rounded mt-1" style={{color: 'var(--clr-text-secondary)', backgroundColor: 'var(--clr-gray-10)'}}>
                     <p>论文总数: {pi.papers}</p>
-                    <p>基金: {pi.grants.join('、')}</p>
+                    <p>基金: {(pi.grants ?? []).join('、')}</p>
                   </div>
                 )}
               </CardContent>

@@ -8,7 +8,7 @@ import { useAuth } from "../../auth/AuthContext"
 import { getCoachModules, getCoachSessions } from "../../api/client";
 import ScenarioCard from "../../components/coach/ScenarioCard"
 import TrainingRecordTable from "../../components/coach/TrainingRecordTable"
-import type { Scenario } from "../../api/mockCoach"
+import type { Scenario } from "../../types/coach"
 
 interface ChatMessage { role: "coach" | "user"; text: string }
 

@@ -18,43 +18,6 @@ class Recommendation {
   });
 }
 
-final List<Recommendation> mockRecommendations = [
-  Recommendation(
-    id: '1',
-    category: '话术',
-    title: '关节镜销售开场白话术优化',
-    description: '根据最新客户反馈，建议在开场白中加入成功案例数据，提升客户信任度。',
-    unread: true,
-  ),
-  Recommendation(
-    id: '2',
-    category: '产品知识',
-    title: '新一代骨科螺钉技术要点',
-    description: '掌握新型可吸收螺钉的材料特性、适应症及与竞品的核心差异。',
-    unread: true,
-  ),
-  Recommendation(
-    id: '3',
-    category: '销售技巧',
-    title: '价格异议处理三步法',
-    description: '面对客户价格质疑时，使用「认同-价值重塑-对比」的话术框架有效应对。',
-    unread: false,
-  ),
-  Recommendation(
-    id: '4',
-    category: '话术',
-    title: '术后回访标准话术',
-    description: '规范化术后回访流程，提升客户满意度和复购率。',
-    unread: true,
-  ),
-  Recommendation(
-    id: '5',
-    category: '产品知识',
-    title: '竞品对比速查表更新',
-    description: 'Q2季度竞品价格及参数更新，请及时同步最新数据。',
-    unread: false,
-  ),
-];
 
 class RecommendationScreen extends StatefulWidget {
   const RecommendationScreen({super.key});
@@ -68,14 +31,24 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   @override
   void initState() {
     super.initState();
-    _data = mockRecommendations.map((r) => r).toList();
+    _data = [];
     _loadFromApi();
   }
 
   Future<void> _loadFromApi() async {
     try {
       final api = context.read<MultiBackendApiClient>();
-      await api.getClient('coach').get('/coach/recommendations');
+      final res = await api.getClient('sales_coach').get<List>('/scenarios/recommendations');
+      if (res.isSuccess && res.data != null) {
+        _data = res.data!.map((e) => Recommendation(
+          id: (e['id'] ?? '').toString(),
+          category: e['category'] ?? '',
+          title: e['title'] ?? '',
+          description: e['description'] ?? '',
+          unread: e['unread'] ?? true,
+        )).toList();
+        if (mounted) setState(() {});
+      }
     } catch (_) {}
   }
 

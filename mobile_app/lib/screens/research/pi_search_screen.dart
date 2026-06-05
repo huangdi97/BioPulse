@@ -31,9 +31,9 @@ class _PISearchScreenState extends State<PISearchScreen> {
       final api = context.read<MultiBackendApiClient>();
       final response = await api
           .getClient('cloud')
-          .get<Map<String, dynamic>>('/api/demo/pi-sources');
+          .get<List>('/api/pi/search?q=$query');
       if (response.isSuccess && response.data != null) {
-        final sources = response.data!['pi_sources'] as List<dynamic>? ?? [];
+        final sources = response.data as List<dynamic>? ?? [];
         final matched = sources.where((s) {
           final name = s['name'] as String? ?? '';
           final inst = s['institution'] as String? ?? '';
@@ -41,9 +41,9 @@ class _PISearchScreenState extends State<PISearchScreen> {
         }).map((s) => PIProfile(
               name: s['name'] as String? ?? '',
               institution: s['institution'] as String? ?? '',
-              papersCount: s['matches'] as int? ?? 0,
-              hIndex: 0,
-              researchAreas: '',
+              papersCount: s['total_papers'] as int? ?? 0,
+              hIndex: s['h_index'] as int? ?? 0,
+              researchAreas: (s['research_areas'] as List?)?.join(', ') ?? '',
             )).toList();
         if (mounted) {
           setState(() {
@@ -58,7 +58,11 @@ class _PISearchScreenState extends State<PISearchScreen> {
     final db = context.read<DatabaseService>();
     final results = await db.searchPIProfiles(query);
     if (results.isEmpty) {
-      await _loadMockData(query);
+      setState(() {
+        _results = [];
+        _loading = false;
+        _searched = true;
+      });
     } else {
       setState(() {
         _results = results;
@@ -66,72 +70,6 @@ class _PISearchScreenState extends State<PISearchScreen> {
         _searched = true;
       });
     }
-  }
-
-  Future<void> _loadMockData(String query) async {
-    final db = context.read<DatabaseService>();
-    final mockData = [
-      PIProfile(
-        name: '张伟',
-        institution: '北京大学第一医院',
-        papersCount: 86,
-        hIndex: 32,
-        researchAreas: '肿瘤免疫,靶向治疗,肿瘤微环境',
-        activeYears: '2008-2026',
-        bio: '肿瘤学领域专家，主持多项国家级课题',
-      ),
-      PIProfile(
-        name: '李强',
-        institution: '上海交通大学医学院附属瑞金医院',
-        papersCount: 124,
-        hIndex: 45,
-        researchAreas: '心血管疾病,高血压,动脉粥样硬化',
-        activeYears: '2005-2026',
-        bio: '心血管领域权威专家，发表多篇顶级期刊论文',
-      ),
-      PIProfile(
-        name: '王芳',
-        institution: '复旦大学附属中山医院',
-        papersCount: 67,
-        hIndex: 28,
-        researchAreas: '糖尿病,代谢综合征,内分泌',
-        activeYears: '2010-2026',
-        bio: '内分泌与代谢病专家',
-      ),
-      PIProfile(
-        name: '刘洋',
-        institution: '华中科技大学同济医学院',
-        papersCount: 93,
-        hIndex: 38,
-        researchAreas: '神经退行性疾病,阿尔茨海默病,神经保护',
-        activeYears: '2009-2026',
-        bio: '神经科学领域知名研究者',
-      ),
-    ];
-    final matched = mockData
-        .where((p) =>
-            p.name.contains(query) || p.institution.contains(query))
-        .toList();
-    for (final p in matched) {
-      await db.insertPIProfile(p);
-    }
-    if (matched.isEmpty) {
-      final fallback = PIProfile(
-        name: query,
-        institution: '未知机构',
-        papersCount: 0,
-        hIndex: 0,
-        researchAreas: '',
-        activeYears: '',
-      );
-      await db.insertPIProfile(fallback);
-      matched.add(fallback);
-    }
-    setState(() {
-      _results = matched;
-      _loading = false;
-      _searched = true;
-    });
   }
 
   @override

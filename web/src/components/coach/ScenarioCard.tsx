@@ -1,7 +1,7 @@
 import { Card, CardContent } from "../ui/Card"
 import { Badge } from "../ui/Badge"
 import { Button } from "../ui/Button"
-import type { Scenario } from "../../api/mockCoach"
+import type { Scenario } from "../../types/coach"
 
 interface Props {
   scenario: Scenario

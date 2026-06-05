@@ -1,20 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:one_cloud_app/services/api_client.dart';
+import 'package:one_cloud_app/services/auth_service.dart';
 
-const _mockDetailData = {
-  '1': {'name': '关节镜设备采购', 'customer': '市第一人民医院', 'amount': '¥12.0万', 'stage': '跟进中', 'date': '2026-06-01', 'notes': '已提交初步方案'},
-  '2': {'name': '骨科植入物供应', 'customer': '市中心医院', 'amount': '¥8.5万', 'stage': '跟进中', 'date': '2026-05-28', 'notes': '第二次拜访完成'},
-  '3': {'name': '手术导航系统', 'customer': '省立医院', 'amount': '¥30.0万', 'stage': '已转化', 'date': '2026-05-20', 'notes': '合同已签署'},
-  '4': {'name': '康复设备租赁', 'customer': '康复医院', 'amount': '¥4.5万', 'stage': '已关闭', 'date': '2026-05-15', 'notes': '客户预算不足'},
-  '5': {'name': 'CT影像系统升级', 'customer': '人民医院', 'amount': '¥20.0万', 'stage': '跟进中', 'date': '2026-06-03', 'notes': '技术交流已完成'},
-};
 
-class OpportunityDetailScreen extends StatelessWidget {
+
+class OpportunityDetailScreen extends StatefulWidget {
   const OpportunityDetailScreen({super.key});
+
+  @override
+  State<OpportunityDetailScreen> createState() => _OpportunityDetailScreenState();
+}
+
+class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
+  Map<String, dynamic>? _detail;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadData());
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _loading = true);
+    final client = MultiBackendApiClient(
+      backends: {'cloud': 'http://43.153.166.191:8000'},
+      authService: AuthService(),
+    );
+    final id = ModalRoute.of(context)!.settings.arguments as String;
+    final res = await client.get<Map>('/opportunities/$id');
+    if (res.isSuccess && res.data != null) {
+      setState(() => _detail = res.data);
+    }
+    setState(() => _loading = false);
+  }
 
   @override
   Widget build(BuildContext context) {
     final id = ModalRoute.of(context)!.settings.arguments as String;
-    final data = _mockDetailData[id]!;
+    final data = _detail;
+    if (data == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     final theme = Theme.of(context);
 
     void snack(String msg) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));

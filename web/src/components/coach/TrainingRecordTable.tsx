@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react"
 import { Badge } from "../ui/Badge"
 import { cn } from "../../lib/utils"
-import type { TrainingRecord } from "../../api/mockCoach"
+import type { TrainingRecord } from "../../types/coach"
 
 interface Props {
   records: TrainingRecord[]
