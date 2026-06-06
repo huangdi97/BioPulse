@@ -36,7 +36,7 @@ class TrustFedProve(BaseModel):
     contribution_id: int
 
 
-@router.post("/job/create")
+@router.post("/job/create", summary="创建隐私计算任务", description="创建一个新的隐私计算任务")
 def job_create(
     body: ComputeJobCreate,
     current_user: dict = Depends(require_scope("visit")),
@@ -53,7 +53,7 @@ def job_create(
     return success(data=row)
 
 
-@router.get("/job/list")
+@router.get("/job/list", summary="列出计算任务", description="按状态和计算类型等条件列出计算任务")
 def job_list(
     status: Optional[str] = Query(None),
     compute_type: Optional[str] = Query(None),
@@ -65,7 +65,7 @@ def job_list(
     return success(data=rows)
 
 
-@router.get("/job/{job_id}")
+@router.get("/job/{job_id}", summary="获取计算任务详情", description="根据任务ID获取计算任务详细信息")
 def job_detail(
     job_id: str,
     current_user: dict = Depends(require_scope("visit")),
@@ -76,7 +76,7 @@ def job_detail(
     return success(data=row)
 
 
-@router.post("/federated/init")
+@router.post("/federated/init", summary="初始化联邦学习", description="初始化一个新的联邦学习过程")
 def federated_init(
     body: FederatedInit,
     current_user: dict = Depends(require_scope("visit")),
@@ -91,7 +91,7 @@ def federated_init(
     return success(data=rows)
 
 
-@router.post("/federated/submit")
+@router.post("/federated/submit", summary="提交联邦学习结果", description="提交联邦学习参与方的计算结果")
 def federated_submit(
     body: FederatedSubmit,
     current_user: dict = Depends(require_scope("visit")),
@@ -107,7 +107,7 @@ def federated_submit(
     return success(data=row)
 
 
-@router.get("/federated/rounds/list")
+@router.get("/federated/rounds/list", summary="列出联邦学习轮次", description="按模型名称和状态列出联邦学习轮次")
 def rounds_list(
     model_name: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
@@ -119,7 +119,7 @@ def rounds_list(
     return success(data=rows)
 
 
-@router.post("/trustfed/prove")
+@router.post("/trustfed/prove", summary="生成可信联邦贡献证明", description="生成可信联邦学习的贡献证明")
 def trustfed_prove(
     body: TrustFedProve,
     current_user: dict = Depends(require_scope("visit")),
@@ -133,7 +133,7 @@ def trustfed_prove(
     return success(data=proof)
 
 
-@router.get("/trustfed/verify/{contribution_id}")
+@router.get("/trustfed/verify/{contribution_id}", summary="验证贡献证明", description="验证指定的联邦学习贡献证明")
 def trustfed_verify(
     contribution_id: int,
     current_user: dict = Depends(require_scope("visit")),

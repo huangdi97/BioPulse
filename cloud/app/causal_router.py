@@ -35,7 +35,7 @@ class HcpPrescription(BaseModel):
     date_range: dict = {}
 
 
-@router.post("/graph/build", status_code=status.HTTP_201_CREATED)
+@router.post("/graph/build", status_code=status.HTTP_201_CREATED, summary="构建因果图", description="根据决策ID构建因果图，可选包含指标")
 def build_graph(
     body: GraphBuild,
     current_user: dict = Depends(require_scope("visit")),
@@ -51,7 +51,7 @@ def build_graph(
     return success(data=result)
 
 
-@router.get("/graph/{graph_id}")
+@router.get("/graph/{graph_id}", summary="获取因果图详情", description="根据图ID获取因果图的详细信息")
 def get_graph(
     graph_id: str,
     current_user: dict = Depends(require_scope("visit")),
@@ -62,7 +62,7 @@ def get_graph(
     return success(data=result)
 
 
-@router.post("/counterfactual/simulate", status_code=status.HTTP_201_CREATED)
+@router.post("/counterfactual/simulate", status_code=status.HTTP_201_CREATED, summary="模拟反事实场景", description="对指定策略进行反事实场景模拟")
 def simulate_counterfactual(
     body: CounterfactualSimulate,
     current_user: dict = Depends(require_scope("visit")),
@@ -78,7 +78,7 @@ def simulate_counterfactual(
     return success(data=result)
 
 
-@router.get("/counterfactual/list")
+@router.get("/counterfactual/list", summary="分页列出反事实模拟记录", description="按策略ID等条件分页查询反事实模拟记录")
 def list_counterfactuals(
     strategy_id: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
@@ -95,7 +95,7 @@ def list_counterfactuals(
     return success(data=result)
 
 
-@router.post("/infer")
+@router.post("/infer", summary="执行因果推断", description="对给定特征和目标执行因果推断分析")
 def causal_infer(
     body: CausalInfer,
     current_user: dict = Depends(require_scope("visit")),
@@ -110,7 +110,7 @@ def causal_infer(
     return success(data=result)
 
 
-@router.post("/hcp/prescription")
+@router.post("/hcp/prescription", summary="归因HCP处方影响因素", description="分析并归因HCP处方的影响因素")
 def hcp_prescription_attribution(
     body: HcpPrescription,
     current_user: dict = Depends(require_scope("visit")),

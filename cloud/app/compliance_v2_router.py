@@ -40,7 +40,7 @@ class EvaluateRequest(BaseModel):
     visit_data: dict
 
 
-@router.post("/scan", status_code=201)
+@router.post("/scan", status_code=201, summary="扫描内容合规性", description="对内容进行合规扫描检查")
 def scan(
     body: ScanRequest,
     request: Request,
@@ -52,7 +52,7 @@ def scan(
     return service.scan(body, request, uid)
 
 
-@router.get("/records")
+@router.get("/records", summary="分页查询合规审核记录", description="按消息类型、风险等级等条件分页查询合规审核记录")
 def list_records(
     message_type: Optional[str] = Query(None),
     risk_level: Optional[str] = Query(None),
@@ -68,7 +68,7 @@ def list_records(
     return service.list_records(message_type, risk_level, passed, date_from, date_to, page, page_size)
 
 
-@router.get("/records/{record_id}")
+@router.get("/records/{record_id}", summary="获取单条审核记录", description="根据记录ID获取合规审核单条记录详情")
 def get_record(
     record_id: int,
     current_user=Depends(require_scope("visit")),
@@ -78,7 +78,7 @@ def get_record(
     return service.get_record(record_id)
 
 
-@router.post("/records/{record_id}/review")
+@router.post("/records/{record_id}/review", summary="人工审核合规记录", description="对合规记录进行人工审核操作")
 def review_record(
     record_id: int,
     body: ReviewRequest,
@@ -90,7 +90,7 @@ def review_record(
     return service.review_record(record_id, body, uid)
 
 
-@router.post("/audit-chain", status_code=201)
+@router.post("/audit-chain", status_code=201, summary="创建审计链条目", description="创建一条新的审计链条目记录")
 def create_audit_chain(
     body: AuditChainCreate,
     current_user=Depends(require_scope("visit")),
@@ -101,7 +101,7 @@ def create_audit_chain(
     return service.create_audit_chain(body, uid)
 
 
-@router.get("/audit-chain/{entity_type}/{entity_id}")
+@router.get("/audit-chain/{entity_type}/{entity_id}", summary="获取实体审计链", description="根据实体类型和ID获取完整的审计链")
 def get_audit_chain(
     entity_type: str,
     entity_id: str,
@@ -112,7 +112,7 @@ def get_audit_chain(
     return service.get_audit_chain(entity_type, entity_id)
 
 
-@router.get("/audit-chain/verify/{entity_type}/{entity_id}")
+@router.get("/audit-chain/verify/{entity_type}/{entity_id}", summary="验证审计链完整性", description="验证指定实体的审计链数据完整性")
 def verify_audit_chain(
     entity_type: str,
     entity_id: str,
@@ -123,7 +123,7 @@ def verify_audit_chain(
     return service.verify_audit_chain(entity_type, entity_id)
 
 
-@router.post("/audit-records/{record_id}/train")
+@router.post("/audit-records/{record_id}/train", summary="生成培训纠正", description="基于审核记录生成培训纠正建议")
 def train_correction(
     record_id: int,
     request: Request,
@@ -135,7 +135,7 @@ def train_correction(
     return service.train_correction(record_id, request, uid)
 
 
-@router.get("/corrections")
+@router.get("/corrections", summary="分页查询培训纠正记录", description="按类别、严重程度等条件分页查询培训纠正记录")
 def list_corrections(
     category: Optional[str] = Query(None),
     severity: Optional[str] = Query(None),
@@ -149,7 +149,7 @@ def list_corrections(
     return service.list_corrections(category, severity, status, page, page_size)
 
 
-@router.patch("/corrections/{correction_id}")
+@router.patch("/corrections/{correction_id}", summary="更新培训纠正状态", description="更新指定培训纠正记录的状态或分配人")
 def update_correction(
     correction_id: int,
     body: CorrectionUpdate,
@@ -160,7 +160,7 @@ def update_correction(
     return service.update_correction(correction_id, body)
 
 
-@router.get("/rules/l2")
+@router.get("/rules/l2", summary="列出L2合规规则", description="获取所有二级合规规则列表")
 def list_l2_rules(
     current_user=Depends(require_scope("visit")),
     service: ComplianceV2Service = Depends(),
@@ -169,7 +169,7 @@ def list_l2_rules(
     return service.list_l2_rules()
 
 
-@router.post("/evaluate")
+@router.post("/evaluate", summary="评估拜访数据合规性", description="评估医访数据的合规性")
 def evaluate_visit(
     body: EvaluateRequest,
     current_user=Depends(require_scope("visit")),
@@ -179,7 +179,7 @@ def evaluate_visit(
     return service.evaluate_visit(body)
 
 
-@router.get("/dashboard")
+@router.get("/dashboard", summary="获取合规仪表盘数据", description="获取合规系统的仪表盘统计数据")
 def dashboard(
     current_user=Depends(require_scope("visit")),
     service: ComplianceV2Service = Depends(),

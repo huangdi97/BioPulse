@@ -58,7 +58,7 @@ class SimulateRequest(BaseModel):
     what_if: dict[str, float]
 
 
-@router.get("/{opp_id}", summary="Get Attribution by ID")
+@router.get("/{opp_id}", summary="Get Attribution by ID", description="根据商机ID获取归因分析结果")
 def get_attribution(
     opp_id: int,
     current_user: dict = Depends(require_scope(["pharma", "research"])),
@@ -78,7 +78,7 @@ def get_attribution(
     return success(data=data)
 
 
-@router.post("/{opp_id}/refresh", status_code=status.HTTP_200_OK, summary="Refresh Attribution")
+@router.post("/{opp_id}/refresh", status_code=status.HTTP_200_OK, summary="Refresh Attribution", description="刷新指定商机的归因分析")
 def refresh_attribution(
     opp_id: int,
     current_user: dict = Depends(require_scope(["pharma", "research"])),
@@ -95,7 +95,7 @@ def refresh_attribution(
     return success(data=data)
 
 
-@router.get("/factors", summary="List all Factors")
+@router.get("/factors", summary="List all Factors", description="获取所有可用的归因因子列表")
 def list_factors(
     current_user: dict = Depends(require_scope(["pharma", "research"])),
     service: CausalAttributionService = Depends(),
@@ -110,7 +110,7 @@ def list_factors(
     return success(data={"factors": data})
 
 
-@router.post("/{opp_id}/simulate", summary="Simulate Attribution")
+@router.post("/{opp_id}/simulate", summary="Simulate Attribution", description="对指定商机模拟假设场景的归因结果")
 def simulate_attribution(
     opp_id: int,
     body: SimulateRequest,

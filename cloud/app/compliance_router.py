@@ -39,14 +39,14 @@ class RuleResponse(BaseModel):
     max_value: Optional[float]
 
 
-@router.post("/check")
+@router.post("/check", summary="检查内容合规性", description="对内容进行合规规则检查，无需认证")
 def check(request: CheckRequest) -> Any:
     """Check content against a set of compliance rules without authentication."""
     result = check_content(request.content, request.rules)
     return success(data=result.model_dump())
 
 
-@router.post("/rules")
+@router.post("/rules", summary="创建合规规则", description="创建一条新的合规检查规则")
 def create_rule(
     body: RuleCreate,
     current_user: dict = Depends(require_scope("visit")),
@@ -64,7 +64,7 @@ def create_rule(
     return success(data=result)
 
 
-@router.get("/rules")
+@router.get("/rules", summary="列出所有合规规则", description="获取所有合规规则的列表")
 def list_rules(
     current_user: dict = Depends(require_scope("visit")),
     service: ComplianceService = Depends(),
@@ -73,7 +73,7 @@ def list_rules(
     return success(data=service.list_rules())
 
 
-@router.delete("/rules/{rule_id:int}")
+@router.delete("/rules/{rule_id:int}", summary="删除合规规则", description="根据规则ID删除指定的合规规则")
 def delete_rule(
     rule_id: int,
     current_user: dict = Depends(require_scope("visit")),

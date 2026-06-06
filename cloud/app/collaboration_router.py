@@ -50,7 +50,7 @@ class RouteRequest(BaseModel):
     routing_strategy: str = "semantic"
 
 
-@router.post("/skills/register")
+@router.post("/skills/register", summary="注册Agent技能", description="注册一个新的Agent技能到协作系统")
 def register_skill(
     body: SkillRegister,
     current_user: dict = Depends(require_scope("visit")),
@@ -69,7 +69,7 @@ def register_skill(
     return success(data=row)
 
 
-@router.get("/skills/list")
+@router.get("/skills/list", summary="列出已注册技能", description="根据Agent角色等条件列出已注册的技能列表")
 def list_skills(
     agent_role: Optional[str] = Query(None),
     enabled: Optional[int] = Query(None),
@@ -81,7 +81,7 @@ def list_skills(
     return success(data=rows)
 
 
-@router.delete("/skills/{skill_id}")
+@router.delete("/skills/{skill_id}", summary="删除指定技能", description="根据技能ID删除已注册的技能")
 def delete_skill(
     skill_id: int,
     current_user: dict = Depends(require_scope("visit")),
@@ -92,7 +92,7 @@ def delete_skill(
     return success(data={"deleted": skill_id})
 
 
-@router.post("/sessions/create")
+@router.post("/sessions/create", summary="创建协作会话", description="创建一个新的Agent协作会话")
 def create_session(
     body: SessionCreate,
     current_user: dict = Depends(require_scope("visit")),
@@ -109,7 +109,7 @@ def create_session(
     return success(data=row)
 
 
-@router.post("/sessions/{session_id}/step")
+@router.post("/sessions/{session_id}/step", summary="添加会话步骤", description="向指定协作会话添加一个处理步骤")
 def add_session_step(
     session_id: str,
     body: StepAdd,
@@ -127,7 +127,7 @@ def add_session_step(
     return success(data=row)
 
 
-@router.post("/sessions/{session_id}/step/{step_id}/complete")
+@router.post("/sessions/{session_id}/step/{step_id}/complete", summary="完成指定步骤", description="标记协作会话中的指定步骤为已完成")
 def complete_step(
     session_id: str,
     step_id: int,
@@ -146,7 +146,7 @@ def complete_step(
     return success(data=result)
 
 
-@router.get("/sessions/list")
+@router.get("/sessions/list", summary="分页列出协作会话", description="根据状态等条件分页列出协作会话列表")
 def list_sessions(
     status: Optional[str] = Query(None),
     source_agent_role: Optional[str] = Query(None),
@@ -163,7 +163,7 @@ def list_sessions(
     return success(data=rows)
 
 
-@router.get("/sessions/{session_id}")
+@router.get("/sessions/{session_id}", summary="获取会话详情", description="根据会话ID获取协作会话的详细信息")
 def get_session(
     session_id: str,
     current_user: dict = Depends(require_scope("visit")),
@@ -174,7 +174,7 @@ def get_session(
     return success(data=result)
 
 
-@router.post("/route")
+@router.post("/route", summary="语义路由任务", description="将任务描述通过语义路由分配合适的Agent处理")
 def semantic_route(
     body: RouteRequest,
     current_user: dict = Depends(require_scope("visit")),
@@ -190,7 +190,7 @@ def semantic_route(
     return success(data=result)
 
 
-@router.get("/dashboard")
+@router.get("/dashboard", summary="获取协作仪表盘数据", description="获取Agent协作系统的仪表盘统计数据")
 def dashboard(
     current_user: dict = Depends(require_scope("visit")),
     service: CollaborationService = Depends(),
