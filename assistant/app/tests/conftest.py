@@ -14,7 +14,7 @@ os.makedirs(os.path.dirname(TEST_DB), exist_ok=True)
 def app():
     import assistant.app.database as mod_db
 
-    setup_test_db(mod_db, mod_db.SCHEMA, TEST_DB)
+    setup_test_db(mod_db, mod_db.SCHEMA_SQL, TEST_DB)
 
     import assistant.app.reminder_scheduler as sched_mod
 

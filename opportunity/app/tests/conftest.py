@@ -15,7 +15,7 @@ os.makedirs(os.path.dirname(TEST_DB), exist_ok=True)
 def app():
     import opportunity.app.database as mod_db
 
-    setup_test_db(mod_db, mod_db.SCHEMA, TEST_DB)
+    setup_test_db(mod_db, mod_db.SCHEMA_SQL, TEST_DB)
 
     if not is_pg():
         conn = sqlite3.connect(TEST_DB)

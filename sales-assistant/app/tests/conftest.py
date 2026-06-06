@@ -14,7 +14,7 @@ os.makedirs(os.path.dirname(TEST_DB), exist_ok=True)
 def app():
     import sales_assistant.app.database as mod_db
 
-    setup_test_db(mod_db, mod_db.SCHEMA, TEST_DB)
+    setup_test_db(mod_db, mod_db.SCHEMA_SQL, TEST_DB)
 
     from sales_assistant.app.main import app as _app
 
