@@ -50,10 +50,12 @@ from cloud.app.mdt_engine_router import router as mdt_engine_router
 from cloud.app.memory_consolidation_router import router as memory_consolidation_router
 from cloud.app.memory_gate_router import router as memory_gate_router
 from cloud.app.memory_utility_router import router as memory_utility_router
+from cloud.app.metrics_router import router as metrics_router
 from cloud.app.middleware.logging_middleware import (
     JSONFormatter,
     logging_middleware,
 )
+from cloud.app.middleware.rate_limit_middleware import RateLimitMiddleware
 from cloud.app.nmpa_router import router as nmpa_router
 from cloud.app.notification_router import router as notification_router
 from cloud.app.opportunity_router import router as opportunity_router
@@ -162,6 +164,7 @@ register_exception_handlers(app)
 _cors_origins = settings.cors_origins
 app.add_middleware(
     CORSMiddleware,
+    # develop 阶段允许所有来源，生产环境需替换为具体域名列表，例如 ["https://example.com"]
     allow_origins=_cors_origins.split(",") if _cors_origins != "*" else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
@@ -169,6 +172,7 @@ app.add_middleware(
 )
 
 app.add_middleware(RateLimiterMiddleware, default_rate=100, window=60)
+app.add_middleware(RateLimitMiddleware, max_requests=100, window_seconds=60)
 
 app.include_router(auth_router)
 app.include_router(tokens_router)
@@ -249,6 +253,7 @@ app.include_router(trust_audit_router)
 app.include_router(content_factory_router)
 app.include_router(cell_network_router)
 app.include_router(agent_gateway_router)
+app.include_router(metrics_router)
 
 
 @app.on_event("startup")
