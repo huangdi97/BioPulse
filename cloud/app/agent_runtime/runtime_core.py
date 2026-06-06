@@ -14,6 +14,7 @@ from cloud.app.agent_runtime.models import RuntimeResult
 from cloud.app.agent_runtime.notifier import AgentNotifier
 from cloud.app.agent_runtime.planner import PlanGenerator
 from cloud.app.agent_runtime.runtime_helpers import RuntimeHelper
+from cloud.app.agent_runtime.runtime_llm import RuntimeLLM
 from cloud.app.agent_runtime.runtime_state import ApprovalManager, CheckpointManager
 from cloud.app.agent_runtime.state_snapshot import SnapshotManager
 from cloud.app.agent_runtime.tool_bridge import ToolRegistry
@@ -21,7 +22,7 @@ from cloud.app.agent_runtime.validator import AgentOutputValidator
 from cloud.app.agent_runtime.verifier import Verifier
 
 
-class AgentRuntime(RuntimeHelper):
+class AgentRuntime(RuntimeHelper, RuntimeLLM):
     """Agent 运行时主控制器，管理 LLM 对话循环、工具调用、检查点与审批流程。"""
 
     def __init__(self, agent_db, business_db, auth_header: str, notifier: AgentNotifier | None = None):

@@ -5,114 +5,15 @@ import os
 import sqlite3
 import time
 
-from fastapi import FastAPI, HTTPException, Request
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 
-from cloud.app.a2a_registry_router import router as a2a_registry_router
-from cloud.app.agent_database import init_agent_db
-from cloud.app.agent_execution_router import router as agent_execution_router
-from cloud.app.agent_framework_router import router as agent_framework_router
-from cloud.app.agent_gateway_router import router as agent_gateway_router
-from cloud.app.agent_pipeline_router import router as agent_pipeline_router
-from cloud.app.agent_role_router import router as agent_role_router
-from cloud.app.agent_runtime_router import router as agent_runtime_router
-from cloud.app.ai_gateway import router as ai_router
-from cloud.app.api_tokens import router as tokens_router
-from cloud.app.audit_router import router as audit_router
-from cloud.app.auth_router import router as auth_router
-from cloud.app.board_router import router as board_router
-from cloud.app.brain_memory_router import router as brain_memory_router
-from cloud.app.brain_orchestrator_router import router as brain_orchestrator_router
-from cloud.app.causal_attribution_router import router as causal_attribution_router
-from cloud.app.causal_router import router as causal_router
-from cloud.app.collaboration_router import router as collaboration_router
-from cloud.app.compliance_router import router as compliance_router
-from cloud.app.compliance_v2_router import router as compliance_v2_router
-from cloud.app.compute_router import router as compute_router
-from cloud.app.config_router import router as config_router
-from cloud.app.contents_router import router as contents_router
-from cloud.app.customer_router import router as customer_router
-from cloud.app.dashboard_router import router as dashboard_router
-from cloud.app.database import DB_PATH, init_db
-from cloud.app.decision_intel_router import router as decision_intel_router
-from cloud.app.eval_router import router as eval_router
-from cloud.app.event_bus_router import router as event_bus_router
-from cloud.app.export_router import router as export_router
-from cloud.app.federated_node_router import router as federated_node_router
-from cloud.app.hcp_sandbox_router import router as hcp_sandbox_router
-from cloud.app.interaction_router import router as interaction_router
-from cloud.app.kg_router import router as kg_router
-from cloud.app.market_intel_router import router as market_intel_router
-from cloud.app.marketplace_router import router as marketplace_router
-from cloud.app.mcp_router import router as mcp_router
-from cloud.app.mdt_agent_router import router as mdt_agent_router
-from cloud.app.mdt_engine_router import router as mdt_engine_router
-from cloud.app.memory_consolidation_router import router as memory_consolidation_router
-from cloud.app.memory_gate_router import router as memory_gate_router
-from cloud.app.memory_utility_router import router as memory_utility_router
-from cloud.app.metrics_router import router as metrics_router
-from cloud.app.middleware.logging_middleware import (
-    JSONFormatter,
-    logging_middleware,
-)
-from cloud.app.nmpa_router import router as nmpa_router
-from cloud.app.notification_router import router as notification_router
-from cloud.app.opportunity_router import opportunity_v2_router
-from cloud.app.opportunity_router import router as opportunity_router
-from cloud.app.orchestrate_router import router as orchestrate_router
-from cloud.app.recommend_router import router as recommend_router
-from cloud.app.research_database import init_research_db as init_research
-from cloud.app.rl_routing_router import router as rl_routing_router
-from cloud.app.route_router import router as route_router
-from cloud.app.routers.cell_network_router import router as cell_network_router
-from cloud.app.routers.compliance_dashboard_router import (
-    router as compliance_dashboard_router,
-)
-from cloud.app.routers.content_factory_router import router as content_factory_router
-from cloud.app.routers.demo_router import router as demo_router
-from cloud.app.routers.enforcer_router import router as enforcer_router
-from cloud.app.routers.langgraph_test_router import router as langgraph_test_router
-from cloud.app.routers.model_compression_router import router as model_compression_router
-from cloud.app.routers.pi_router import router as pi_router
-from cloud.app.routers.product_router import router as product_router
-from cloud.app.routers.pubmed_router import router as pubmed_router
-from cloud.app.routers.research_audit_router import router as research_audit_router
-from cloud.app.routers.research_enforcer_router import (
-    router as research_enforcer_router,
-)
-from cloud.app.routers.research_export_router import router as research_export_router
-from cloud.app.routers.research_matching_router import (
-    router as research_matching_router,
-)
-from cloud.app.routers.research_pi_router import router as research_pi_router
-from cloud.app.routers.research_product_router import router as research_product_router
-from cloud.app.routers.research_quotation_router import (
-    router as research_quotation_router,
-)
-from cloud.app.routers.research_quotation_workflow_router import (
-    router as research_quotation_workflow_router,
-)
-from cloud.app.routers.research_route_router import router as research_route_router
-from cloud.app.routers.research_trajectory_router import router as research_trajectory_router
-from cloud.app.routers.sage_engine_router import router as sage_engine_router
-from cloud.app.routers.switch_router import router as switch_router
-from cloud.app.routers.trust_audit_router import router as trust_audit_router
-from cloud.app.settings_router import router as settings_router
-from cloud.app.soap_decision_router import router as soap_decision_router
-from cloud.app.task_router import router as task_router
-from cloud.app.teams_router import router as teams_router
-from cloud.app.token_budget_router import router as token_budget_router
-from cloud.app.training_coach_router import router as training_coach_router
-from cloud.app.training_scripts_router import router as training_scripts_router
-from cloud.app.users_router import router as users_router
-from cloud.app.visit_router import router as visit_router
-from cloud.app.world_tree_router import router as world_tree_router
+from cloud.app.app_setup import register_routers, register_startup_events
+from cloud.app.database import DB_PATH
+from cloud.app.middleware.logging_middleware import JSONFormatter
+from cloud.app.middleware_setup import register_middleware
 from shared.app_settings import settings
-from shared.exception_handlers import register_exception_handlers
-from shared.rate_limiter import RateLimiterMiddleware
 
-# Serve frontend SPA
 START_TIME = time.time()
 
 _logger = logging.getLogger("cloud")
@@ -146,123 +47,9 @@ app = FastAPI(
     ],
 )
 
-
-@app.middleware("http")
-async def api_path_rewrite(request: Request, call_next):
-    path = request.scope["path"]
-    if path.startswith("/api/cloud/"):
-        new_path = "/" + path[len("/api/cloud/") :]
-        request.scope["path"] = new_path
-        if "raw_path" in request.scope:
-            request.scope["raw_path"] = new_path.encode()
-    return await call_next(request)
-
-
-app.middleware("http")(logging_middleware)
-register_exception_handlers(app)
-
-
-_cors_origins = settings.cors_origins
-app.add_middleware(
-    CORSMiddleware,
-    # develop 阶段允许所有来源，生产环境需替换为具体域名列表，例如 ["https://example.com"]
-    allow_origins=_cors_origins.split(",") if _cors_origins != "*" else ["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.add_middleware(RateLimiterMiddleware, default_rate=100, window=60)
-
-app.include_router(auth_router)
-app.include_router(tokens_router)
-app.include_router(compliance_router)
-app.include_router(users_router)
-app.include_router(contents_router)
-app.include_router(ai_router)
-app.include_router(teams_router)
-app.include_router(audit_router)
-app.include_router(notification_router)
-app.include_router(board_router)
-app.include_router(dashboard_router)
-app.include_router(customer_router)
-app.include_router(interaction_router)
-app.include_router(config_router)
-app.include_router(export_router)
-app.include_router(opportunity_router)
-app.include_router(opportunity_v2_router)
-app.include_router(task_router)
-app.include_router(market_intel_router)
-app.include_router(agent_role_router)
-app.include_router(agent_pipeline_router)
-app.include_router(decision_intel_router)
-app.include_router(compliance_v2_router)
-app.include_router(mdt_engine_router)
-app.include_router(memory_gate_router)
-app.include_router(world_tree_router)
-app.include_router(route_router)
-app.include_router(hcp_sandbox_router)
-app.include_router(training_coach_router)
-app.include_router(soap_decision_router)
-app.include_router(memory_utility_router)
-app.include_router(brain_memory_router)
-app.include_router(kg_router)
-app.include_router(recommend_router)
-app.include_router(collaboration_router)
-app.include_router(event_bus_router)
-app.include_router(memory_consolidation_router)
-app.include_router(sage_engine_router)
-app.include_router(agent_execution_router)
-app.include_router(agent_runtime_router)
-app.include_router(mcp_router)
-app.include_router(orchestrate_router)
-app.include_router(causal_router)
-app.include_router(compute_router)
-app.include_router(nmpa_router)
-app.include_router(training_scripts_router)
-app.include_router(marketplace_router)
-app.include_router(model_compression_router)
-app.include_router(settings_router)
-app.include_router(visit_router)
-app.include_router(pubmed_router)
-app.include_router(pi_router)
-app.include_router(product_router)
-app.include_router(langgraph_test_router)
-app.include_router(enforcer_router)
-app.include_router(compliance_dashboard_router)
-app.include_router(demo_router)
-app.include_router(research_audit_router)
-app.include_router(research_pi_router)
-app.include_router(research_product_router)
-app.include_router(research_quotation_router)
-app.include_router(research_enforcer_router)
-app.include_router(research_export_router)
-app.include_router(research_matching_router)
-app.include_router(research_route_router)
-app.include_router(research_trajectory_router)
-app.include_router(research_quotation_workflow_router)
-app.include_router(switch_router)
-app.include_router(token_budget_router)
-app.include_router(a2a_registry_router)
-app.include_router(agent_framework_router)
-app.include_router(brain_orchestrator_router)
-app.include_router(causal_attribution_router)
-app.include_router(federated_node_router)
-app.include_router(mdt_agent_router)
-app.include_router(rl_routing_router)
-app.include_router(trust_audit_router)
-app.include_router(content_factory_router)
-app.include_router(cell_network_router)
-app.include_router(agent_gateway_router)
-app.include_router(metrics_router)
-app.include_router(eval_router)
-
-
-@app.on_event("startup")
-def startup():
-    init_agent_db()
-    init_db()
-    init_research()
+register_middleware(app)
+register_routers(app)
+register_startup_events(app)
 
 
 @app.get("/health")
@@ -282,7 +69,6 @@ def health():
     }
 
 
-# Serve frontend SPA
 app.mount("/assets", StaticFiles(directory="static/assets"), name="assets")
 os.makedirs("uploads", exist_ok=True)
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
