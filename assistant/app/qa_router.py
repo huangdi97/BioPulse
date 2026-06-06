@@ -27,7 +27,7 @@ class QaData(BaseModel):
     sources: list[str]
 
 
-@router.post("/qa", response_model=ApiResponse[QaData])
+@router.post("/qa", response_model=ApiResponse[QaData], summary="AI问答", description="使用AI临床药师回答医学相关问题。")
 def qa(
     request: Request,
     body: QaRequest,

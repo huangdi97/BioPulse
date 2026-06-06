@@ -62,7 +62,7 @@ class HcpOut(BaseModel):
     updated_at: Optional[str] = None
 
 
-@router.post("")
+@router.post("", summary="创建HCP", description="创建新的医疗保健提供者记录。")
 def create_hcp(
     body: HcpCreate,
     current_user: dict = Depends(get_current_user),
@@ -77,7 +77,7 @@ def create_hcp(
     )
 
 
-@router.get("")
+@router.get("", summary="查询HCP列表", description="分页查询HCP记录，支持按名称、医院等筛选。")
 def list_hcps(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -109,7 +109,7 @@ def list_hcps(
     )
 
 
-@router.get("/{hcp_id}")
+@router.get("/{hcp_id}", summary="获取HCP详情", description="根据ID获取单个HCP记录的详细信息。")
 def get_hcp(
     hcp_id: int,
     current_user: dict = Depends(get_current_user),
@@ -120,7 +120,7 @@ def get_hcp(
     return success(data=HcpOut(**dict(row)))
 
 
-@router.patch("/{hcp_id}")
+@router.patch("/{hcp_id}", summary="更新HCP", description="更新指定HCP记录的部分字段信息。")
 def update_hcp(
     hcp_id: int,
     body: HcpUpdate,
@@ -132,7 +132,7 @@ def update_hcp(
     return success(data=HcpOut(**row))
 
 
-@router.delete("/{hcp_id}")
+@router.delete("/{hcp_id}", summary="删除HCP", description="软删除指定HCP记录，将其标记为非活跃。")
 def delete_hcp(
     hcp_id: int,
     current_user: dict = Depends(get_current_user),
@@ -146,7 +146,7 @@ def delete_hcp(
 hcp_alias_router = APIRouter(tags=["hcp-alias"])
 
 
-@hcp_alias_router.get("/hcps")
+@hcp_alias_router.get("/hcps", summary="查询HCP列表(别名)", description="通过别名路径分页查询HCP记录。")
 def list_hcps_alias(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -177,7 +177,7 @@ def list_hcps_alias(
     )
 
 
-@hcp_alias_router.get("/hcps/{hcp_id}")
+@hcp_alias_router.get("/hcps/{hcp_id}", summary="获取HCP详情(别名)", description="通过别名路径获取单个HCP记录。")
 def get_hcp_alias(
     hcp_id: int,
     current_user: dict = Depends(get_current_user),
@@ -187,7 +187,7 @@ def get_hcp_alias(
     return success(data=HcpOut(**row))
 
 
-@hcp_alias_router.get("/hcp/list")
+@hcp_alias_router.get("/hcp/list", summary="查询HCP列表(别名2)", description="通过另一别名路径分页查询HCP记录。")
 def hcp_list_alias(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),

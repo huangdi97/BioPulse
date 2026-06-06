@@ -37,7 +37,7 @@ class SyncPushResponse(BaseModel):
     server_operations: List[SyncPushResult]
 
 
-@router.post("/push")
+@router.post("/push", summary="推送同步数据", description="将客户端离线操作推送到服务端同步。")
 def sync_push(
     body: SyncPushRequest,
     service: SyncService = Depends(),
@@ -64,7 +64,7 @@ def sync_push(
     )
 
 
-@router.get("/pull")
+@router.get("/pull", summary="拉取同步数据", description="从服务端拉取自指定时间后的变更数据。")
 def sync_pull(
     since: str = Query(...),
     service: SyncService = Depends(),
@@ -84,7 +84,7 @@ def sync_pull(
     return success(data=data)
 
 
-@router.get("/status")
+@router.get("/status", summary="获取同步状态", description="获取当前数据同步的状态信息。")
 def sync_status(
     service: SyncService = Depends(),
     current_user: dict = Depends(get_current_user),

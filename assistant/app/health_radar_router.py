@@ -72,7 +72,7 @@ class HealthRadarOut(BaseModel):
     updated_at: Optional[str] = None
 
 
-@router.post("")
+@router.post("", summary="创建健康雷达", description="创建新的健康评估记录。")
 def create_health_radar(
     body: HealthRadarCreate,
     service: HealthRadarService = Depends(),
@@ -96,7 +96,7 @@ def create_health_radar(
     )
 
 
-@router.get("")
+@router.get("", summary="查询健康雷达列表", description="分页查询健康评估记录，支持多条件筛选。")
 def list_health_radar(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -137,7 +137,7 @@ def list_health_radar(
     )
 
 
-@router.get("/stats")
+@router.get("/stats", summary="获取健康雷达统计", description="获取健康评估的统计数据信息。")
 def get_health_radar_stats(
     service: HealthRadarService = Depends(),
     current_user: dict = Depends(get_current_user),
@@ -155,7 +155,7 @@ def get_health_radar_stats(
     return success(data=data)
 
 
-@router.get("/{health_radar_id}")
+@router.get("/{health_radar_id}", summary="获取健康雷达详情", description="根据ID获取健康评估记录的详细信息。")
 def get_health_radar(
     health_radar_id: int,
     service: HealthRadarService = Depends(),
@@ -175,7 +175,7 @@ def get_health_radar(
     return success(data=HealthRadarOut(**row))
 
 
-@router.patch("/{health_radar_id}")
+@router.patch("/{health_radar_id}", summary="更新健康雷达", description="更新指定健康评估记录的部分字段。")
 def update_health_radar(
     health_radar_id: int,
     body: HealthRadarUpdate,
@@ -197,7 +197,7 @@ def update_health_radar(
     return success(data=HealthRadarOut(**updated))
 
 
-@router.delete("/{health_radar_id}")
+@router.delete("/{health_radar_id}", summary="删除健康雷达", description="删除指定的健康评估记录。")
 def delete_health_radar(
     health_radar_id: int,
     service: HealthRadarService = Depends(),

@@ -65,7 +65,7 @@ class RouteResponse(BaseModel):
     total_hcps: int
 
 
-@router.post("/hcp/{hcp_id}/locations")
+@router.post("/hcp/{hcp_id}/locations", summary="创建位置", description="为指定HCP创建新的地址位置。")
 def create_location(
     hcp_id: int,
     body: LocationCreate,
@@ -91,7 +91,7 @@ def create_location(
     )
 
 
-@router.get("/hcp/{hcp_id}/locations")
+@router.get("/hcp/{hcp_id}/locations", summary="查询位置列表", description="获取指定HCP的所有地址位置列表。")
 def list_locations(
     hcp_id: int,
     service: LocationService = Depends(),
@@ -111,7 +111,7 @@ def list_locations(
     return success(data=[LocationOut(**r) for r in rows])
 
 
-@router.patch("/locations/{location_id}")
+@router.patch("/locations/{location_id}", summary="更新位置", description="更新指定位置的字段信息。")
 def update_location(
     location_id: int,
     body: LocationUpdate,
@@ -133,7 +133,7 @@ def update_location(
     return success(data=LocationOut(**updated))
 
 
-@router.delete("/locations/{location_id}")
+@router.delete("/locations/{location_id}", summary="删除位置", description="删除指定的位置记录。")
 def delete_location(
     location_id: int,
     service: LocationService = Depends(),
@@ -153,7 +153,7 @@ def delete_location(
     return success(message="deleted")
 
 
-@router.post("/routes/optimize")
+@router.post("/routes/optimize", summary="优化路线", description="根据起点和HCP列表优化行程路线。")
 def optimize_route(
     body: RouteRequest,
     service: LocationService = Depends(),

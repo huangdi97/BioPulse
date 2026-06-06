@@ -9,7 +9,7 @@ from shared.base import success
 router = APIRouter(tags=["media"])
 
 
-@router.post("/media/upload")
+@router.post("/media/upload", summary="上传媒体", description="上传媒体文件到服务器存储。")
 async def upload_media(
     file: UploadFile = File(...),
     service: MediaService = Depends(),
@@ -30,7 +30,7 @@ async def upload_media(
     return success(data=data)
 
 
-@router.get("/media/{file_id}")
+@router.get("/media/{file_id}", summary="获取媒体信息", description="获取指定媒体文件的元数据信息。")
 def get_media(
     file_id: int,
     service: MediaService = Depends(),
@@ -50,7 +50,7 @@ def get_media(
     return success(data=row)
 
 
-@router.post("/media/analyze/{file_id}")
+@router.post("/media/analyze/{file_id}", summary="分析媒体", description="对指定媒体文件进行AI内容分析识别。")
 def analyze_media(
     file_id: int,
     request: Request,

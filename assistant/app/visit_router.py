@@ -60,7 +60,7 @@ class VisitOut(BaseModel):
     created_at: Optional[str] = None
 
 
-@router.post("")
+@router.post("", summary="创建拜访", description="创建新的拜访记录。")
 def create_visit(
     body: VisitCreate,
     current_user: dict = Depends(get_current_user),
@@ -75,7 +75,7 @@ def create_visit(
     )
 
 
-@router.get("")
+@router.get("", summary="查询拜访列表", description="分页查询拜访记录，支持按HCP和类型筛选。")
 def list_visits(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -103,7 +103,7 @@ def list_visits(
     )
 
 
-@router.get("/{visit_id}")
+@router.get("/{visit_id}", summary="获取拜访详情", description="根据ID获取单个拜访记录的详细信息。")
 def get_visit(
     visit_id: int,
     current_user: dict = Depends(get_current_user),
@@ -114,7 +114,7 @@ def get_visit(
     return success(data=VisitOut(**dict(row)))
 
 
-@router.patch("/{visit_id}")
+@router.patch("/{visit_id}", summary="更新拜访", description="更新指定拜访记录的部分字段信息。")
 def update_visit(
     visit_id: int,
     body: VisitUpdate,
@@ -126,7 +126,7 @@ def update_visit(
     return success(data=VisitOut(**row))
 
 
-@router.delete("/{visit_id}")
+@router.delete("/{visit_id}", summary="删除拜访", description="删除指定的拜访记录。")
 def delete_visit(
     visit_id: int,
     current_user: dict = Depends(get_current_user),
@@ -140,7 +140,7 @@ def delete_visit(
 visit_alias_router = APIRouter(prefix="/visit", tags=["visit-alias"])
 
 
-@visit_alias_router.post("")
+@visit_alias_router.post("", summary="创建拜访(别名)", description="通过别名路径创建拜访记录。")
 def create_visit_alias(
     body: VisitCreate,
     current_user: dict = Depends(get_current_user),
@@ -154,7 +154,7 @@ def create_visit_alias(
     )
 
 
-@visit_alias_router.get("")
+@visit_alias_router.get("", summary="查询拜访列表(别名)", description="通过别名路径分页查询拜访记录。")
 def list_visits_alias(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -181,7 +181,7 @@ def list_visits_alias(
     )
 
 
-@visit_alias_router.get("/{visit_id}")
+@visit_alias_router.get("/{visit_id}", summary="获取拜访详情(别名)", description="通过别名路径获取拜访记录。")
 def get_visit_alias(
     visit_id: int,
     current_user: dict = Depends(get_current_user),

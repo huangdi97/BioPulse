@@ -21,7 +21,7 @@ class QueueChangeRequest(BaseModel):
     payload: Dict[str, Any] = {}
 
 
-@router.get("/status", summary="Get Status by ID")
+@router.get("/status", summary="获取离线状态", description="获取当前离线模式的状态信息。")
 def get_status(
     service: OfflineService = Depends(),
     current_user: dict = Depends(get_current_user),
@@ -39,7 +39,7 @@ def get_status(
     return success(data=data)
 
 
-@router.post("/sync", summary="Trigger Sync")
+@router.post("/sync", summary="触发同步", description="触发离线数据同步到服务器。")
 def trigger_sync(
     limit: int = Query(50, ge=1, le=500),
     service: OfflineService = Depends(),
@@ -59,7 +59,7 @@ def trigger_sync(
     return success(data=data)
 
 
-@router.post("/enable", summary="Enable Offline")
+@router.post("/enable", summary="开启离线模式", description="开启客户端的离线模式功能。")
 def enable_offline(
     service: OfflineService = Depends(),
     current_user: dict = Depends(get_current_user),
@@ -77,7 +77,7 @@ def enable_offline(
     return success(data=data)
 
 
-@router.post("/disable", summary="Disable Offline")
+@router.post("/disable", summary="关闭离线模式", description="关闭离线模式并恢复在线模式。")
 def disable_offline(
     service: OfflineService = Depends(),
     current_user: dict = Depends(get_current_user),
@@ -95,7 +95,7 @@ def disable_offline(
     return success(data=data)
 
 
-@router.post("/queue", summary="Queue Change")
+@router.post("/queue", summary="入队变更", description="将数据变更操作加入离线同步队列。")
 def queue_change(
     body: QueueChangeRequest,
     service: OfflineService = Depends(),

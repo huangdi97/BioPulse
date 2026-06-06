@@ -50,7 +50,7 @@ class TaskOut(BaseModel):
     created_at: Optional[str] = None
 
 
-@router.post("")
+@router.post("", summary="创建任务", description="创建新的任务记录。")
 def create_task(
     body: TaskCreate,
     service: TaskService = Depends(),
@@ -65,7 +65,7 @@ def create_task(
     )
 
 
-@router.get("")
+@router.get("", summary="查询任务列表", description="分页查询任务，支持按状态和优先级筛选。")
 def list_tasks(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -95,7 +95,7 @@ def list_tasks(
     )
 
 
-@router.get("/{task_id}")
+@router.get("/{task_id}", summary="获取任务详情", description="根据ID获取单个任务的详细信息。")
 def get_task(
     task_id: int,
     service: TaskService = Depends(),
@@ -106,7 +106,7 @@ def get_task(
     return success(data=TaskOut(**row))
 
 
-@router.patch("/{task_id}")
+@router.patch("/{task_id}", summary="更新任务", description="更新指定任务的部分字段信息。")
 def update_task(
     task_id: int,
     body: TaskUpdate,
@@ -118,7 +118,7 @@ def update_task(
     return success(data=TaskOut(**updated))
 
 
-@router.delete("/{task_id}")
+@router.delete("/{task_id}", summary="删除任务", description="删除指定的任务记录。")
 def delete_task(
     task_id: int,
     service: TaskService = Depends(),
