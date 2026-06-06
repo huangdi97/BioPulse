@@ -7,6 +7,14 @@ from sales_coach.app.services.reflection_score import generate_reflection_report
 
 
 def get_scenario(scenario_id: int) -> Optional[dict]:
+    """根据场景ID查询场景详情。
+
+    Args:
+        scenario_id: 场景ID。
+
+    Returns:
+        场景详情字典，不存在则返回None。
+    """
     import sqlite3
 
     conn = sqlite3.connect(DB_PATH)

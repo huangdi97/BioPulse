@@ -13,6 +13,11 @@ class FunnelService(BaseService):
         return round(numerator / denominator * 100, 1)
 
     def funnel_analysis(self) -> dict:
+        """计算销售漏斗分析数据，包含完成率、笔记覆盖率和按事件类型的分布。
+
+        Returns:
+            包含总日程数、完成率、笔记覆盖率及按类型分布的字典。
+        """
         schedule_repo = ScheduleRepository(self.db)
         note_repo = NoteRepository(self.db)
 

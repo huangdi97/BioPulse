@@ -126,6 +126,15 @@ class PrecallService(BaseService):
             return self._build_fallback_brief(body)
 
     def precall(self, body, auth_header: str = "") -> dict:
+        """生成拜访前简报，整合客户数据并调用AI生成个性化简报。
+
+        Args:
+            body: 简报请求体，含客户名称、医院、额外信息等。
+            auth_header: 认证头信息。
+
+        Returns:
+            包含客户信息和拜访简报的字典。
+        """
         db_context = self._gather_db_context(body.customer_name, body.hospital)
         try:
             ai_data = self._call_ai_gateway(auth_header, body, db_context)

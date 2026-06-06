@@ -11,6 +11,15 @@ class ScenarioService(BaseService):
     """教练场景服务，提供场景的创建、分页查询、更新与软删除。"""
 
     def create(self, body, user_id: int) -> dict:
+        """创建教练场景。
+
+        Args:
+            body: 场景请求体。
+            user_id: 创建者用户ID。
+
+        Returns:
+            包含新创建场景ID的字典。
+        """
         repo = ScenarioRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()
         scenario_id = repo.create(
@@ -38,6 +47,17 @@ class ScenarioService(BaseService):
         category: Optional[str] = None,
         difficulty: Optional[str] = None,
     ) -> tuple:
+        """分页查询场景列表。
+
+        Args:
+            page: 页码。
+            page_size: 每页条数。
+            category: 按分类筛选。
+            difficulty: 按难度筛选。
+
+        Returns:
+            (记录列表, 总条数) 元组。
+        """
         repo = ScenarioRepository(self.db)
         conditions = []
         params: list = []
@@ -58,10 +78,27 @@ class ScenarioService(BaseService):
         )
 
     def get(self, scenario_id: int) -> dict:
+        """获取单个场景详情。
+
+        Args:
+            scenario_id: 场景ID。
+
+        Returns:
+            场景详情字典，不存在或已删除则抛404。
+        """
         repo = ScenarioRepository(self.db)
         return dict(repo.get_active_or_404(scenario_id))
 
     def update(self, scenario_id: int, body) -> dict:
+        """更新场景。
+
+        Args:
+            scenario_id: 场景ID。
+            body: 更新数据。
+
+        Returns:
+            更新后的场景详情。
+        """
         repo = ScenarioRepository(self.db)
         repo.get_active_or_404(scenario_id)
         updates = body.model_dump(exclude_unset=True)
@@ -72,6 +109,11 @@ class ScenarioService(BaseService):
         return dict(repo.get_by_id(scenario_id))
 
     def delete(self, scenario_id: int) -> None:
+        """软删除场景。
+
+        Args:
+            scenario_id: 场景ID。
+        """
         repo = ScenarioRepository(self.db)
         repo.get_active_or_404(scenario_id)
         repo.soft_delete(scenario_id)

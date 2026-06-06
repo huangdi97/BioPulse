@@ -19,6 +19,15 @@ class AssessmentService(BaseService):
     """学员评估服务，管理评估记录并支持自动评分与趋势分析。"""
 
     def create(self, body, user_id: int) -> dict:
+        """创建学员评估记录。
+
+        Args:
+            body: 评估请求体。
+            user_id: 创建者用户ID。
+
+        Returns:
+            包含新创建评估ID的字典。
+        """
         conn = self._connection()
         try:
             repo = AssessmentRepository(conn)
@@ -38,6 +47,18 @@ class AssessmentService(BaseService):
         current_level: Optional[str] = None,
         target_level: Optional[str] = None,
     ) -> tuple:
+        """分页查询学员评估列表。
+
+        Args:
+            page: 页码。
+            page_size: 每页条数。
+            trainee_name: 按学员姓名筛选。
+            current_level: 按当前等级筛选。
+            target_level: 按目标等级筛选。
+
+        Returns:
+            (记录列表, 总条数) 元组。
+        """
         conn = self._connection()
         try:
             repo = AssessmentRepository(conn)
@@ -59,6 +80,11 @@ class AssessmentService(BaseService):
             conn.close()
 
     def get_stats(self) -> dict:
+        """获取评估统计数据。
+
+        Returns:
+            评估统计字典。
+        """
         conn = self._connection()
         try:
             repo = AssessmentRepository(conn)
@@ -67,6 +93,14 @@ class AssessmentService(BaseService):
             conn.close()
 
     def get(self, assessment_id: int) -> dict:
+        """获取单个评估详情。
+
+        Args:
+            assessment_id: 评估ID。
+
+        Returns:
+            评估详情字典，不存在或已删除则抛404。
+        """
         conn = self._connection()
         try:
             repo = AssessmentRepository(conn)
@@ -75,6 +109,15 @@ class AssessmentService(BaseService):
             conn.close()
 
     def update(self, assessment_id: int, body) -> dict:
+        """更新评估记录。
+
+        Args:
+            assessment_id: 评估ID。
+            body: 更新数据。
+
+        Returns:
+            更新后的评估详情。
+        """
         conn = self._connection()
         try:
             repo = AssessmentRepository(conn)
@@ -89,6 +132,11 @@ class AssessmentService(BaseService):
             conn.close()
 
     def delete(self, assessment_id: int) -> None:
+        """软删除评估记录。
+
+        Args:
+            assessment_id: 评估ID。
+        """
         conn = self._connection()
         try:
             repo = AssessmentRepository(conn)
@@ -99,6 +147,15 @@ class AssessmentService(BaseService):
 
     @staticmethod
     def calculate_auto_score(dialogue_log: list, weights: Optional[dict] = None) -> dict:
+        """根据对话日志自动计算评分。
+
+        Args:
+            dialogue_log: 对话日志列表。
+            weights: 各维度权重字典，默认使用 DEFAULT_WEIGHTS。
+
+        Returns:
+            包含各维度评分和总分的字典。
+        """
         if not weights:
             weights = DEFAULT_WEIGHTS
         rounds = len(dialogue_log) if dialogue_log else 0
@@ -123,6 +180,15 @@ class AssessmentService(BaseService):
         }
 
     def get_trend(self, user_id: int, limit: int = 10) -> list:
+        """获取用户评分趋势。
+
+        Args:
+            user_id: 用户ID。
+            limit: 返回记录条数上限。
+
+        Returns:
+            评分记录列表。
+        """
         conn = self._connection()
         try:
             repo = SessionRepository(conn)
@@ -135,6 +201,14 @@ class AssessmentService(BaseService):
             conn.close()
 
     def get_sessions(self, trainee_name: str) -> Optional[dict]:
+        """根据学员姓名查询最近一次会话。
+
+        Args:
+            trainee_name: 学员姓名。
+
+        Returns:
+            会话详情字典，不存在则返回None。
+        """
         conn = self._connection()
         try:
             row = conn.execute(
@@ -148,6 +222,15 @@ class AssessmentService(BaseService):
             conn.close()
 
     def update_assessment_with_reflection(self, assessment_id: int, reflection: dict) -> dict:
+        """将反思报告数据回写至评估记录。
+
+        Args:
+            assessment_id: 评估ID。
+            reflection: 反思报告字典，含摘要、评分等。
+
+        Returns:
+            更新后的评估详情。
+        """
         conn = self._connection()
         try:
             repo = AssessmentRepository(conn)

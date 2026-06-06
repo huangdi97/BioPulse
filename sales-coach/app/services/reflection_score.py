@@ -103,6 +103,19 @@ def generate_reflection_report(
     scoring_weights: Optional[dict] = None,
     ai_gateway_url: str = AI_GATEWAY_URL,
 ) -> dict:
+    """生成反思报告，根据对话日志计算各维度评分并生成改进建议。
+
+    Args:
+        session_id: 会话ID。
+        dialogue_log: 对话日志列表。
+        compliance_violations: 合规违规次数。
+        scenario: 场景信息字典。
+        scoring_weights: 评分权重字典。
+        ai_gateway_url: AI网关地址。
+
+    Returns:
+        包含摘要、各维度评分、优势弱项、改进建议和历史对比的反思报告字典。
+    """
     from sales_coach.app.services.reflection_feedback import _generate_improvements, _recommend_scenarios
 
     rounds = len(dialogue_log) if dialogue_log else 0

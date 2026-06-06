@@ -22,6 +22,15 @@ class ContentService(BaseService):
     """内容服务：管理内容库的增删改查与分类。"""
 
     def create_content(self, body, user_id: int) -> int:
+        """创建内容条目。
+
+        Args:
+            body: 内容请求体。
+            user_id: 创建者用户ID。
+
+        Returns:
+            新创建的内容ID。
+        """
         now = datetime.now(timezone.utc).isoformat()
         repo = ContentRepository(self.db)
         return repo.create(
@@ -38,6 +47,19 @@ class ContentService(BaseService):
         tag: Optional[str] = None,
         q: Optional[str] = None,
     ) -> tuple:
+        """分页查询内容列表，支持多条件筛选和关键词搜索。
+
+        Args:
+            page: 页码。
+            page_size: 每页条数。
+            content_type: 按内容类型筛选。
+            category: 按分类筛选。
+            tag: 按标签筛选。
+            q: 关键词搜索（匹配标题、摘要、标签）。
+
+        Returns:
+            (记录列表, 总条数) 元组。
+        """
         conditions: List[str] = ["is_active = 1"]
         params: list = []
         if content_type:
@@ -63,9 +85,22 @@ class ContentService(BaseService):
         )
 
     def list_content_types(self) -> list:
+        """获取所有支持的内容类型列表。
+
+        Returns:
+            内容类型列表，每个元素含 value 和 label。
+        """
         return TYPES
 
     def get_content(self, content_id: int) -> dict:
+        """获取单个内容详情。
+
+        Args:
+            content_id: 内容ID。
+
+        Returns:
+            内容详情字典，不存在或已删除则抛404。
+        """
         repo = ContentRepository(self.db)
         row = repo.get_by_id(content_id)
         if not row or row["is_active"] != 1:
@@ -73,6 +108,15 @@ class ContentService(BaseService):
         return dict(row)
 
     def update_content(self, content_id: int, body) -> dict:
+        """更新内容。
+
+        Args:
+            content_id: 内容ID。
+            body: 更新数据。
+
+        Returns:
+            更新后的内容详情。
+        """
         repo = ContentRepository(self.db)
         row = repo.get_by_id(content_id)
         if not row or row["is_active"] != 1:
@@ -85,6 +129,11 @@ class ContentService(BaseService):
         return dict(repo.get_by_id(content_id))
 
     def delete_content(self, content_id: int) -> None:
+        """软删除内容。
+
+        Args:
+            content_id: 内容ID。
+        """
         repo = ContentRepository(self.db)
         row = repo.get_by_id(content_id)
         if not row or not row["is_active"]:

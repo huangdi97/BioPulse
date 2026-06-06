@@ -21,6 +21,15 @@ class HcpService(BaseService):
         return datetime.now(timezone.utc).isoformat()
 
     def create_hcp(self, body, user_id: int) -> int:
+        """创建HCP（医疗专业人员）记录。
+
+        Args:
+            body: HCP请求体。
+            user_id: 创建者用户ID。
+
+        Returns:
+            新创建的HCP ID。
+        """
         repo = HcpRepository(self.db)
         now = self._now()
         return repo.create(
@@ -36,6 +45,18 @@ class HcpService(BaseService):
         hospital: Optional[str] = None,
         department: Optional[str] = None,
     ) -> tuple:
+        """分页查询HCP列表。
+
+        Args:
+            page: 页码。
+            page_size: 每页条数。
+            name: 按姓名筛选。
+            hospital: 按医院筛选。
+            department: 按科室筛选。
+
+        Returns:
+            (记录列表, 总条数) 元组。
+        """
         repo = HcpRepository(self.db)
         conditions, params = ["is_active = 1"], []
         if name:
@@ -50,6 +71,14 @@ class HcpService(BaseService):
         return repo.paginate(page, page_size, conditions, params)
 
     def get_hcp(self, hcp_id: int) -> dict:
+        """获取单个HCP详情。
+
+        Args:
+            hcp_id: HCP ID。
+
+        Returns:
+            HCP详情字典，不存在或已删除则抛404。
+        """
         repo = HcpRepository(self.db)
         row = repo.get_by_id(hcp_id)
         if not row or not row["is_active"]:
@@ -57,6 +86,15 @@ class HcpService(BaseService):
         return dict(row)
 
     def update_hcp(self, hcp_id: int, body) -> dict:
+        """更新HCP信息。
+
+        Args:
+            hcp_id: HCP ID。
+            body: 更新数据。
+
+        Returns:
+            更新后的HCP详情。
+        """
         repo = HcpRepository(self.db)
         row = repo.get_by_id(hcp_id)
         if not row or not row["is_active"]:
@@ -69,6 +107,11 @@ class HcpService(BaseService):
         return dict(repo.get_by_id(hcp_id))
 
     def delete_hcp(self, hcp_id: int) -> None:
+        """软删除HCP。
+
+        Args:
+            hcp_id: HCP ID。
+        """
         repo = HcpRepository(self.db)
         row = repo.get_by_id(hcp_id)
         if not row or not row["is_active"]:
@@ -76,6 +119,15 @@ class HcpService(BaseService):
         repo.soft_delete(hcp_id)
 
     def get_graph(self, hcp_id: Optional[int], product_id: Optional[int]) -> dict:
+        """获取HCP-产品关系图谱数据。
+
+        Args:
+            hcp_id: HCP ID（可选，指定则获取该HCP关联的产品）。
+            product_id: 产品ID（可选，指定则获取该产品关联的HCP）。
+
+        Returns:
+            包含节点和边的图谱字典。
+        """
         hcp_cond, hcp_params = ("AND h.id = ?", [hcp_id]) if hcp_id else ("", [])
         hcps = self.db.execute(
             f"SELECT id, name, COALESCE(tier,'C') AS tier, hospital FROM hcp WHERE is_active = 1 {hcp_cond}",
@@ -135,6 +187,15 @@ class HcpService(BaseService):
         return {"nodes": nodes, "edges": edge_list}
 
     def create_product(self, body, user_id: int) -> int:
+        """创建产品记录。
+
+        Args:
+            body: 产品请求体。
+            user_id: 创建者用户ID。
+
+        Returns:
+            新创建的产品ID。
+        """
         repo = ProductRepository(self.db)
         now = self._now()
         return repo.create(
@@ -149,6 +210,17 @@ class HcpService(BaseService):
         category: Optional[str] = None,
         company: Optional[str] = None,
     ) -> tuple:
+        """分页查询产品列表。
+
+        Args:
+            page: 页码。
+            page_size: 每页条数。
+            category: 按分类筛选。
+            company: 按公司筛选。
+
+        Returns:
+            (记录列表, 总条数) 元组。
+        """
         repo = ProductRepository(self.db)
         conditions, params = ["is_active = 1"], []
         if category:
@@ -160,6 +232,14 @@ class HcpService(BaseService):
         return repo.paginate(page, page_size, conditions, params)
 
     def get_product(self, product_id: int) -> dict:
+        """获取单个产品详情。
+
+        Args:
+            product_id: 产品ID。
+
+        Returns:
+            产品详情字典，不存在或已删除则抛404。
+        """
         repo = ProductRepository(self.db)
         row = repo.get_by_id(product_id)
         if not row or not row["is_active"]:
@@ -167,6 +247,15 @@ class HcpService(BaseService):
         return dict(row)
 
     def update_product(self, product_id: int, body) -> dict:
+        """更新产品信息。
+
+        Args:
+            product_id: 产品ID。
+            body: 更新数据。
+
+        Returns:
+            更新后的产品详情。
+        """
         repo = ProductRepository(self.db)
         row = repo.get_by_id(product_id)
         if not row or not row["is_active"]:
@@ -179,6 +268,11 @@ class HcpService(BaseService):
         return dict(repo.get_by_id(product_id))
 
     def delete_product(self, product_id: int) -> None:
+        """软删除产品。
+
+        Args:
+            product_id: 产品ID。
+        """
         repo = ProductRepository(self.db)
         row = repo.get_by_id(product_id)
         if not row or not row["is_active"]:
@@ -186,6 +280,16 @@ class HcpService(BaseService):
         repo.soft_delete(product_id)
 
     def create_relation(self, hcp_id: int, body, user_id: int) -> int:
+        """创建HCP与产品的关联关系。
+
+        Args:
+            hcp_id: HCP ID。
+            body: 关联关系请求体，含产品ID、关系类型、强度等。
+            user_id: 创建者用户ID。
+
+        Returns:
+            新创建的关系ID。
+        """
         hcp_repo = HcpRepository(self.db)
         product_repo = ProductRepository(self.db)
         relation_repo = RelationRepository(self.db)
@@ -208,6 +312,14 @@ class HcpService(BaseService):
         )
 
     def list_relations(self, hcp_id: int) -> list:
+        """查询指定HCP的所有产品关联关系。
+
+        Args:
+            hcp_id: HCP ID。
+
+        Returns:
+            关联关系列表。
+        """
         hcp_repo = HcpRepository(self.db)
         hcp_row = hcp_repo.get_by_id(hcp_id)
         if not hcp_row or not hcp_row["is_active"]:
@@ -222,6 +334,11 @@ class HcpService(BaseService):
         return [dict(r) for r in rows]
 
     def delete_relation(self, relation_id: int) -> None:
+        """软删除HCP-产品关联关系。
+
+        Args:
+            relation_id: 关系ID。
+        """
         repo = RelationRepository(self.db)
         row = repo.get_by_id(relation_id)
         if not row or not row["is_active"]:

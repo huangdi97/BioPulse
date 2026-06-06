@@ -12,6 +12,11 @@ class StatsService(BaseService):
     """统计服务，提供全局统计、个人趋势、团队对比、雷达图及分类表现。"""
 
     def get_stats(self) -> dict:
+        """获取全局教练统计数据。
+
+        Returns:
+            教练全局统计字典。
+        """
         repo = StatsRepository(self.db)
         return repo.get_coach_stats()
 

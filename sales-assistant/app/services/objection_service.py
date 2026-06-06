@@ -92,6 +92,15 @@ class ObjectionService(BaseService):
             return self._build_fallback_response(body)
 
     def handle_objection(self, body, auth_header: str = "") -> dict:
+        """处理客户异议，调用AI生成专业应答建议。
+
+        Args:
+            body: 异议请求体，含客户异议、客户类型、场景等。
+            auth_header: 认证头信息。
+
+        Returns:
+            包含分析、应答建议、关键点和禁忌事项的字典。
+        """
         try:
             ai_data = self._call_ai_gateway(auth_header, body)
             reply = ai_data.get("reply", "")

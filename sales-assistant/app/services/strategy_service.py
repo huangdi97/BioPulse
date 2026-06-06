@@ -23,6 +23,15 @@ class StrategyService(BaseService):
     """策略服务：生成销售策略、模拟策略有效性、策略对比分析。"""
 
     def create_strategy(self, body, user_id: int) -> int:
+        """创建销售策略。
+
+        Args:
+            body: 策略请求体，包含策略信息。
+            user_id: 创建者用户ID。
+
+        Returns:
+            新创建的策略ID。
+        """
         now = datetime.now(timezone.utc).isoformat()
         repo = StrategyRepository(self.db)
         return repo.create(
@@ -38,6 +47,18 @@ class StrategyService(BaseService):
         status_val: Optional[str] = None,
         goal: Optional[str] = None,
     ) -> tuple:
+        """分页查询策略列表。
+
+        Args:
+            page: 页码。
+            page_size: 每页条数。
+            hcp_name: 按客户名称模糊筛选。
+            status_val: 按状态筛选。
+            goal: 按目标筛选。
+
+        Returns:
+            (记录列表, 总条数) 元组。
+        """
         conditions: List[str] = ["is_active = 1"]
         params: list = []
         if hcp_name:
@@ -53,6 +74,14 @@ class StrategyService(BaseService):
         return repo.paginate(page, page_size, conditions, params, "created_at DESC")
 
     def get_strategy(self, strategy_id: int) -> dict:
+        """获取单个策略详情。
+
+        Args:
+            strategy_id: 策略ID。
+
+        Returns:
+            策略详情字典，不存在或已删除则抛404。
+        """
         repo = StrategyRepository(self.db)
         row = repo.get_by_id(strategy_id)
         if not row or row["is_active"] != 1:
@@ -63,6 +92,15 @@ class StrategyService(BaseService):
         return dict(row)
 
     def update_strategy(self, strategy_id: int, body) -> dict:
+        """更新策略。
+
+        Args:
+            strategy_id: 策略ID。
+            body: 更新数据。
+
+        Returns:
+            更新后的策略详情字典。
+        """
         repo = StrategyRepository(self.db)
         row = repo.get_by_id(strategy_id)
         if not row or row["is_active"] != 1:
@@ -78,6 +116,11 @@ class StrategyService(BaseService):
         return dict(repo.get_by_id(strategy_id))
 
     def delete_strategy(self, strategy_id: int) -> None:
+        """软删除策略。
+
+        Args:
+            strategy_id: 策略ID。
+        """
         repo = StrategyRepository(self.db)
         row = repo.get_by_id(strategy_id)
         if not row or not row["is_active"]:
@@ -88,6 +131,15 @@ class StrategyService(BaseService):
         repo.soft_delete(strategy_id)
 
     def generate_strategy(self, body, user_id: int) -> dict:
+        """调用AI生成销售策略并保存。
+
+        Args:
+            body: 策略生成请求体，含客户名称、目标等。
+            user_id: 创建者用户ID。
+
+        Returns:
+            生成的策略详情字典。
+        """
         now = datetime.now(timezone.utc).isoformat()
         user_text = f"客户：{body.hcp_name}，目标：{body.goal}"
         if body.hcp_tier:
@@ -130,6 +182,14 @@ class StrategyService(BaseService):
         return dict(repo.get_by_id(strategy_id))
 
     def compare_strategies(self, ids: str) -> list:
+        """批量对比多个策略。
+
+        Args:
+            ids: 逗号分隔的策略ID字符串。
+
+        Returns:
+            策略详情列表。
+        """
         id_list = [int(x.strip()) for x in ids.split(",") if x.strip()]
         if not id_list:
             raise HTTPException(status_code=400, detail="Provide at least one strategy id")
@@ -141,6 +201,14 @@ class StrategyService(BaseService):
         return [dict(r) for r in rows]
 
     def simulate_strategy(self, body) -> dict:
+        """模拟预测策略有效性。
+
+        Args:
+            body: 模拟请求，含客户名称、策略方法、产品名称等。
+
+        Returns:
+            包含预测有效性、置信度和相似案例数的字典。
+        """
         similar = self.db.execute(
             "SELECT COUNT(*) AS cnt, COALESCE(AVG(CAST(effectiveness AS REAL)), 0) AS avg_eff "
             "FROM strategy_simulation WHERE approach LIKE ? AND effectiveness IS NOT NULL",

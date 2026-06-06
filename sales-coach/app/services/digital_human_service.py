@@ -28,6 +28,17 @@ class DigitalHumanService(BaseService):
         role: str,
         user_id: int,
     ) -> dict:
+        """创建数字人导练会话并初始化首条消息。
+
+        Args:
+            scenario_id: 场景ID。
+            module_id: 模块ID。
+            role: 角色。
+            user_id: 创建者用户ID。
+
+        Returns:
+            包含会话ID、首条消息和场景信息的字典。
+        """
         scenario = self.db.execute(
             "SELECT * FROM coach_scenario WHERE id = ? AND is_active = 1",
             (scenario_id,),
@@ -74,6 +85,17 @@ class DigitalHumanService(BaseService):
         ai_gateway_url: str,
         user_id: int,
     ) -> dict:
+        """向数字人会话发送消息并获取AI回复。
+
+        Args:
+            session_id: 会话ID。
+            content: 用户消息内容。
+            ai_gateway_url: AI网关地址。
+            user_id: 用户ID。
+
+        Returns:
+            包含AI回复、合规检测结果和当前轮次的字典。
+        """
         row = self.db.execute(
             "SELECT * FROM digital_human_sessions WHERE id = ?",
             (session_id,),
@@ -128,6 +150,14 @@ class DigitalHumanService(BaseService):
         }
 
     def get_session(self, session_id: int) -> dict:
+        """获取数字人会话详情及消息历史。
+
+        Args:
+            session_id: 会话ID。
+
+        Returns:
+            包含会话信息和消息列表的字典。
+        """
         row = self.db.execute(
             "SELECT * FROM digital_human_sessions WHERE id = ?",
             (session_id,),
@@ -146,6 +176,15 @@ class DigitalHumanService(BaseService):
         }
 
     def end_session(self, session_id: int, user_id: int) -> dict:
+        """结束数字人会话，计算评分并生成反馈。
+
+        Args:
+            session_id: 会话ID。
+            user_id: 操作用户ID。
+
+        Returns:
+            包含总评分、反馈、优势弱项等的字典。
+        """
         row = self.db.execute(
             "SELECT * FROM digital_human_sessions WHERE id = ?",
             (session_id,),
@@ -225,6 +264,11 @@ class DigitalHumanService(BaseService):
         }
 
     def get_provider_info(self) -> dict:
+        """获取当前数字人供应商信息。
+
+        Returns:
+            供应商名称、版本、能力及连接状态的字典。
+        """
         return self._provider.get_provider_info()
 
     def list_sessions(
@@ -233,6 +277,16 @@ class DigitalHumanService(BaseService):
         status: Optional[str] = None,
         limit: int = 20,
     ) -> list:
+        """查询数字人会话列表。
+
+        Args:
+            user_id: 按用户ID筛选。
+            status: 按状态筛选。
+            limit: 返回条数上限。
+
+        Returns:
+            会话记录列表。
+        """
         conditions = []
         params = []
 

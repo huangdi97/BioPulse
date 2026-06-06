@@ -20,6 +20,15 @@ class CoachService(BaseService):
     """教练服务：管理销售话术模板、生成AI教练建议、跟踪辅导会话。"""
 
     def create_prompt(self, body, user_id: int) -> int:
+        """创建话术模板。
+
+        Args:
+            body: 话术模板请求体。
+            user_id: 创建者用户ID。
+
+        Returns:
+            新创建的话术模板ID。
+        """
         repo = PromptRepository(self.db)
         data = body.model_dump()
         now = datetime.now(timezone.utc).isoformat()
@@ -35,6 +44,17 @@ class CoachService(BaseService):
         scenario: Optional[str] = None,
         category: Optional[str] = None,
     ) -> tuple:
+        """分页查询话术模板列表。
+
+        Args:
+            page: 页码。
+            page_size: 每页条数。
+            scenario: 按场景筛选。
+            category: 按分类筛选。
+
+        Returns:
+            (记录列表, 总条数) 元组。
+        """
         repo = PromptRepository(self.db)
         conditions = ["is_active = 1"]
         params: list = []
@@ -53,6 +73,15 @@ class CoachService(BaseService):
         )
 
     def update_prompt(self, prompt_id: int, body) -> dict:
+        """更新话术模板。
+
+        Args:
+            prompt_id: 话术模板ID。
+            body: 更新数据。
+
+        Returns:
+            更新后的话术模板详情。
+        """
         repo = PromptRepository(self.db)
         repo.get_or_404(prompt_id)
         updates = body.model_dump(exclude_unset=True)
@@ -63,11 +92,24 @@ class CoachService(BaseService):
         return dict(repo.get_by_id(prompt_id))
 
     def delete_prompt(self, prompt_id: int) -> None:
+        """软删除话术模板。
+
+        Args:
+            prompt_id: 话术模板ID。
+        """
         repo = PromptRepository(self.db)
         repo.get_or_404(prompt_id)
         repo.soft_delete(prompt_id)
 
     def coach_suggest(self, body) -> dict:
+        """获取教练话术建议，优先匹配已有模板，否则调用AI生成。
+
+        Args:
+            body: 建议请求体，含场景、客户名称、产品等。
+
+        Returns:
+            包含建议列表的字典。
+        """
         repo = PromptRepository(self.db)
         rows = repo.list_all(
             conditions=["is_active = 1", "scenario LIKE ?"],
@@ -127,6 +169,15 @@ class CoachService(BaseService):
         return {"suggestions": []}
 
     def create_session(self, body, user_id: int) -> int:
+        """创建教练辅导会话。
+
+        Args:
+            body: 会话请求体。
+            user_id: 创建者用户ID。
+
+        Returns:
+            新创建的会话ID。
+        """
         repo = SessionRepository(self.db)
         data = body.model_dump()
         now = datetime.now(timezone.utc).isoformat()
@@ -136,6 +187,15 @@ class CoachService(BaseService):
         return repo.create(data)
 
     def list_sessions(self, page: int, page_size: int) -> tuple:
+        """分页查询辅导会话列表。
+
+        Args:
+            page: 页码。
+            page_size: 每页条数。
+
+        Returns:
+            (记录列表, 总条数) 元组。
+        """
         repo = SessionRepository(self.db)
         return repo.paginate(
             page=page,
@@ -144,6 +204,15 @@ class CoachService(BaseService):
         )
 
     def update_session(self, session_id: int, body) -> dict:
+        """更新辅导会话。
+
+        Args:
+            session_id: 会话ID。
+            body: 更新数据。
+
+        Returns:
+            更新后的会话详情。
+        """
         repo = SessionRepository(self.db)
         repo.get_or_404(session_id)
         updates = body.model_dump(exclude_unset=True)
