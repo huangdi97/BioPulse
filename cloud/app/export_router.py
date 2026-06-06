@@ -11,7 +11,7 @@ from shared.base import success
 router = APIRouter(prefix="/export", tags=["数据导出"])
 
 
-@router.get("/audit-logs")
+@router.get("/audit-logs", summary="导出审计日志", description="导出审计日志数据，用于离线分析和存档。")
 def export_audit_logs(
     current_user: dict = Depends(require_scope("visit")),
     service: ExportService = Depends(),
@@ -28,7 +28,7 @@ def export_audit_logs(
     return success(data=service.export_audit_logs())
 
 
-@router.get("/customers")
+@router.get("/customers", summary="导出客户数据", description="导出客户数据，用于外部系统分析或备份。")
 def export_customers(
     current_user: dict = Depends(require_scope("visit")),
     service: ExportService = Depends(),

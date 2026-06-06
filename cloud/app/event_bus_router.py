@@ -38,7 +38,7 @@ class EventSubscribe(BaseModel):
     callback_url: str = ""
 
 
-@router.post("/definitions/create")
+@router.post("/definitions/create", summary="创建事件定义", description="创建一个新的事件定义，指定事件类型、来源端、目标端和优先级等。")
 def definitions_create(
     body: EventDefCreate,
     current_user: dict = Depends(require_scope("visit")),
@@ -66,7 +66,7 @@ def definitions_create(
     return success(data=result)
 
 
-@router.get("/definitions/list")
+@router.get("/definitions/list", summary="查询事件定义列表", description="查询事件定义列表，可按来源端和启用状态进行筛选。")
 def definitions_list(
     source_end: Optional[str] = Query(None),
     enabled: Optional[int] = Query(None),
@@ -88,7 +88,7 @@ def definitions_list(
     return success(data=rows)
 
 
-@router.patch("/definitions/{event_type}/toggle")
+@router.patch("/definitions/{event_type}/toggle", summary="切换事件定义状态", description="切换指定事件定义的启用/禁用状态。")
 def definitions_toggle(
     event_type: str,
     current_user: dict = Depends(require_scope("visit")),
@@ -108,7 +108,7 @@ def definitions_toggle(
     return success(data=result)
 
 
-@router.post("/messages/publish")
+@router.post("/messages/publish", summary="发布事件消息", description="发布一条事件消息到事件总线，指定事件类型、负载和关联 ID。")
 def messages_publish(
     body: EventPublish,
     current_user: dict = Depends(require_scope("visit")),
@@ -134,7 +134,7 @@ def messages_publish(
     return success(data=result)
 
 
-@router.get("/messages/list")
+@router.get("/messages/list", summary="查询事件消息列表", description="查询事件消息列表，支持按事件类型、状态、来源端和日期范围筛选。")
 def messages_list(
     event_type: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
@@ -168,7 +168,7 @@ def messages_list(
     return success(data=rows)
 
 
-@router.get("/messages/{message_id}")
+@router.get("/messages/{message_id}", summary="获取消息详情", description="根据消息 ID 获取指定事件消息的详细内容。")
 def messages_get(
     message_id: str,
     current_user: dict = Depends(require_scope("visit")),
@@ -188,7 +188,7 @@ def messages_get(
     return success(data=result)
 
 
-@router.post("/messages/{message_id}/redeliver")
+@router.post("/messages/{message_id}/redeliver", summary="重新投递消息", description="重新投递指定的事件消息到目标端。")
 def messages_redeliver(
     message_id: str,
     current_user: dict = Depends(require_scope("visit")),
@@ -208,7 +208,7 @@ def messages_redeliver(
     return success(data=result)
 
 
-@router.post("/subscribe")
+@router.post("/subscribe", summary="订阅事件", description="订阅指定类型的事件，配置目标端和回调地址。")
 def subscribe(
     body: EventSubscribe,
     current_user: dict = Depends(require_scope("visit")),
@@ -232,7 +232,7 @@ def subscribe(
     return success(data=result)
 
 
-@router.get("/delivery/log")
+@router.get("/delivery/log", summary="查询投递日志", description="查询事件投递日志，可按消息 ID、目标端和投递状态筛选。")
 def delivery_log_list(
     message_id: Optional[str] = Query(None),
     target_end: Optional[str] = Query(None),
@@ -256,7 +256,7 @@ def delivery_log_list(
     return success(data=rows)
 
 
-@router.get("/dashboard")
+@router.get("/dashboard", summary="事件总线仪表盘", description="获取事件总线仪表盘数据，包括消息量、投递成功率等统计。")
 def dashboard(
     current_user: dict = Depends(require_scope("visit")),
     service: EventBusService = Depends(),

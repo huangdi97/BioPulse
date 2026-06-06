@@ -11,7 +11,7 @@ from shared.base import success
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
-@router.get("/overview")
+@router.get("/overview", summary="仪表盘概览", description="获取仪表盘概览数据，包含关键指标汇总。")
 def overview(
     current_user: dict = Depends(require_scope("visit")),
     service: DashboardService = Depends(),
@@ -28,7 +28,7 @@ def overview(
     return success(data=service.get_overview())
 
 
-@router.get("/users")
+@router.get("/users", summary="用户统计数据", description="获取平台用户统计数据，包括活跃用户、注册数等。")
 def user_stats(
     current_user: dict = Depends(require_scope("visit")),
     service: DashboardService = Depends(),
@@ -45,7 +45,7 @@ def user_stats(
     return success(data=service.get_user_stats())
 
 
-@router.get("/compliance")
+@router.get("/compliance", summary="合规统计数据", description="获取内容合规性统计数据，包括审核通过率等。")
 def compliance_stats(
     current_user: dict = Depends(require_scope("visit")),
     service: DashboardService = Depends(),
@@ -62,7 +62,7 @@ def compliance_stats(
     return success(data=service.get_compliance_stats())
 
 
-@router.get("/contents")
+@router.get("/contents", summary="内容统计数据", description="获取内容管理统计数据，包括内容总量、分类分布等。")
 def content_stats(
     current_user: dict = Depends(require_scope("visit")),
     service: DashboardService = Depends(),
@@ -79,14 +79,14 @@ def content_stats(
     return success(data=service.get_content_stats())
 
 
-@router.get("/team/summary")
+@router.get("/team/summary", summary="团队概览", description="获取团队工作概览汇总数据。")
 def team_summary(
     current_user: dict = Depends(require_scope("visit")),
 ) -> Any:
     return success(data={})
 
 
-@router.get("/team/ranking")
+@router.get("/team/ranking", summary="团队排名", description="获取团队成员工作绩效排名数据。")
 def team_ranking(
     current_user: dict = Depends(require_scope("visit")),
 ) -> Any:

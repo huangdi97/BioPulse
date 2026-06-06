@@ -38,7 +38,7 @@ class UpdateStatusBody(BaseModel):
     reliability_score: Optional[float] = None
 
 
-@router.post("/nodes/register", summary="Register Node")
+@router.post("/nodes/register", summary="Register Node", description="向联邦学习网络注册一个新的节点，包含节点标识、类型、组织和公钥等信息。")
 def register_node(
     body: RegisterNodeBody,
     _=Depends(require_scope(["pharma", "research"])),
@@ -62,7 +62,7 @@ def register_node(
     return success(data=row)
 
 
-@router.get("/nodes", summary="List all Nodes")
+@router.get("/nodes", summary="List all Nodes", description="查询联邦学习节点列表，可按状态和节点类型进行筛选。")
 def list_nodes(
     status: Optional[str] = Query(None),
     node_type: Optional[str] = Query(None),
@@ -81,7 +81,7 @@ def list_nodes(
     return success(data=rows)
 
 
-@router.get("/nodes/{node_id}", summary="Get Node by ID")
+@router.get("/nodes/{node_id}", summary="Get Node by ID", description="根据节点 ID 获取联邦学习节点的详细信息。")
 def get_node(
     node_id: str,
     _=Depends(require_scope(["pharma", "research"])),
@@ -98,7 +98,7 @@ def get_node(
     return success(data=row)
 
 
-@router.post("/nodes/{node_id}/heartbeat", summary="Node Heartbeat")
+@router.post("/nodes/{node_id}/heartbeat", summary="Node Heartbeat", description="发送节点心跳，更新节点在线状态和数据摘要信息。")
 def node_heartbeat(
     node_id: str,
     body: HeartbeatBody,
@@ -116,7 +116,7 @@ def node_heartbeat(
     return success(data=row)
 
 
-@router.get("/dashboard", summary="Get dashboard data")
+@router.get("/dashboard", summary="Get dashboard data", description="获取联邦学习仪表盘数据，支持按天筛选和 CSV 导出。")
 def dashboard(
     days: Optional[int] = Query(None, description="Filter data within recent N days"),
     export: Optional[bool] = Query(False, description="Export as CSV"),
@@ -142,7 +142,7 @@ def dashboard(
     return success(data=data)
 
 
-@router.get("/audit-log", summary="Audit Log")
+@router.get("/audit-log", summary="Audit Log", description="获取联邦学习审计日志，支持按天筛选和 CSV 导出。")
 def audit_log(
     days: Optional[int] = Query(None, description="Filter within recent N days"),
     export: Optional[bool] = Query(False, description="Export as CSV"),
@@ -168,7 +168,7 @@ def audit_log(
     return success(data=data)
 
 
-@router.get("/compliance-summary", summary="Compliance Summary")
+@router.get("/compliance-summary", summary="Compliance Summary", description="获取联邦学习节点合规性汇总数据，包括合规评分和审计结果。")
 def compliance_summary(
     _=Depends(require_scope(["pharma", "research"])),
     service: FederatedNodeService = Depends(),

@@ -47,7 +47,7 @@ class PaginatedContents(BaseModel):
     page_size: int
 
 
-@router.post("/")
+@router.post("/", summary="创建内容", description="创建一个新的内容条目，包含标题、正文、分类和标签。")
 def create_content(
     body: ContentCreate,
     current_user: dict = Depends(require_scope("visit")),
@@ -59,7 +59,7 @@ def create_content(
     return success(data=row)
 
 
-@router.get("/")
+@router.get("/", summary="列出内容", description="分页查询内容列表，支持按状态和分类筛选。")
 def list_contents(
     status_param: str = Query(None, alias="status"),
     category: str = Query(None),
@@ -78,7 +78,7 @@ def list_contents(
     return success(data=result)
 
 
-@router.get("/{content_id:int}")
+@router.get("/{content_id:int}", summary="获取内容详情", description="根据内容 ID 获取单个内容的详细信息。")
 def get_content(
     content_id: int,
     current_user: dict = Depends(require_scope("visit")),
@@ -89,7 +89,7 @@ def get_content(
     return success(data=row)
 
 
-@router.patch("/{content_id:int}")
+@router.patch("/{content_id:int}", summary="更新内容", description="部分更新指定内容的信息，如标题、正文、分类、标签或状态。")
 def update_content(
     content_id: int,
     body: ContentUpdate,
@@ -108,7 +108,7 @@ def update_content(
     return success(data=row)
 
 
-@router.delete("/{content_id:int}")
+@router.delete("/{content_id:int}", summary="删除内容", description="根据内容 ID 删除指定的内容条目。")
 def delete_content(
     content_id: int,
     current_user: dict = Depends(require_scope("visit")),

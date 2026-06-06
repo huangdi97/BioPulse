@@ -36,7 +36,7 @@ class CustomerUpdate(BaseModel):
     status: Optional[str] = None
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED, summary="创建客户", description="创建一个新的客户记录，包含姓名、医院、科室等信息。")
 def create_customer(
     body: CustomerCreate,
     current_user: dict = Depends(require_scope("visit")),
@@ -58,7 +58,7 @@ def create_customer(
     return success(data=row)
 
 
-@router.get("/")
+@router.get("/", summary="查询客户列表", description="分页查询客户列表，支持按姓名、医院、科室和状态筛选。")
 def list_customers(
     name: str = Query(None),
     hospital: str = Query(None),
@@ -81,7 +81,7 @@ def list_customers(
     return success(data=result)
 
 
-@router.get("/{customer_id}")
+@router.get("/{customer_id}", summary="获取客户详情", description="根据客户 ID 获取单个客户的详细信息。")
 def get_customer(
     customer_id: int,
     current_user: dict = Depends(require_scope("visit")),
@@ -92,7 +92,7 @@ def get_customer(
     return success(data=row)
 
 
-@router.patch("/{customer_id}")
+@router.patch("/{customer_id}", summary="更新客户信息", description="部分更新指定客户的信息，如姓名、联系方式、标签或状态。")
 def update_customer(
     customer_id: int,
     body: CustomerUpdate,
@@ -115,7 +115,7 @@ def update_customer(
     return success(data=row)
 
 
-@router.delete("/{customer_id}")
+@router.delete("/{customer_id}", summary="删除客户", description="根据客户 ID 删除指定的客户记录。")
 def delete_customer(
     customer_id: int,
     current_user: dict = Depends(require_scope("visit")),
