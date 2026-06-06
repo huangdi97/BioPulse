@@ -4,10 +4,10 @@
 
 ## 技术栈
 
-**后端** — Python 3.12 / FastAPI / SQLite / LangGraph  
-**前端** — React 18 / Vite 6 / TypeScript / Tailwind CSS  
-**移动端** — Flutter / Dart / Provider / SQLite (offline-first)  
-**AI** — DeepSeek / 多 Agent 运行时 / MCP 工具总线
+| **后端** — Python 3.12 / FastAPI / SQLite / LangGraph / 自研 Agent Harness  |
+| **前端** — React 18 / Vite 6 / TypeScript / Tailwind CSS / IBM Carbon  |
+| **移动端** — Flutter / Dart / Provider / SQLite (offline-first)  |
+| **AI** — DeepSeek / 多 Agent 运行时 / MCP 工具总线 / MDT 多专家会诊
 
 ## 架构
 
@@ -17,10 +17,12 @@
                         └── 移动端（Flutter App）
 ```
 
-- **一云厚、四端专**：Cloud 承载全量业务引擎，各端专注场景交互
+- **一云厚、四端专**：Cloud 承载全量业务引擎，各端专注场景交互（[完整架构](ARCHITECTURE.md)）
 - **独立部署**：各端独立仓库、独立数据库、独立发布
 - **故障隔离**：一个端不影响其他，Cloud 停机时四端照常运行（JWT 本地解码）
 - **离线优先**：移动端本地 SQLite + 定时同步
+
+> 🆕 开发指南见 [CONTRIBUTING.md](CONTRIBUTING.md) | 架构详情见 [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ## 快速启动
 
@@ -45,19 +47,20 @@ cd mobile_app && flutter run
 
 ```
 one-cloud-four-ends/
-├── cloud/                 # Cloud 核心服务（250 文件 / 41K 行）
+├── cloud/                 # Cloud 核心服务（290+ 文件 / 280 路由）
 │   └── app/
-│       ├── routers/       # 74 个路由模块
-│       ├── services/      # 83 个业务服务
+│       ├── agent_runtime/ # Agent 运行时引擎（17 文件）
+│       ├── services/      # 95 个业务服务
 │       ├── repositories/  # 21 个数据仓库
-│       ├── schemas/       # 91 张数据库表模型
-│       ├── agent_runtime/ # Agent 运行时引擎
-│       └── langgraph/     # LangGraph 集成管线
-├── assistant/             # 跟台助手（38 文件）
-├── opportunity/           # 商机挖掘（34 文件）
-├── sales-assistant/       # 销售助理（30 文件）
-├── sales-coach/           # 销售教练（29 文件）
+│       └── seeds/         # 30 个种子数据脚本
+├── assistant/             # 跟台助手（36 文件）
+├── opportunity/           # 商机挖掘（33 文件）
+├── sales-assistant/       # 销售助理（28 文件）
+├── sales-coach/           # 销售教练（33 文件）
+├── pharma_intel/          # 制药情报（17 文件）
+├── management/            # 管理端（12 文件）
 ├── mobile_app/            # Flutter 移动端
+├── web/                   # React Web 端
 ├── frontend/              # React SPA（临时方案）
 └── shared/                # 共享模块（auth/compliance/base）
 ```
