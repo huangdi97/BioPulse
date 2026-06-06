@@ -1,6 +1,9 @@
 """招投标Agent API 端点。"""
 
+import logging
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
@@ -190,7 +193,7 @@ def schedule_bidding_scan():
         service = BiddingAgentService()
         service.run_scheduled_scan()
     except Exception:
-        pass
+        logger.exception("定时扫描任务异常")
 
 
 from apscheduler.schedulers.background import BackgroundScheduler

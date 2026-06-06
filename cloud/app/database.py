@@ -1,5 +1,6 @@
 """数据库初始化与种子数据。"""
 
+import logging
 import os
 import sqlite3
 from typing import Generator
@@ -34,6 +35,8 @@ from cloud.app.seeds.seed_model_compression import seed_model_compression
 from cloud.seed_data import seed_products
 from shared.config import settings
 from shared.db import PGCompatConnection
+
+logger = logging.getLogger(__name__)
 
 DB_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
@@ -181,11 +184,11 @@ def init_db() -> None:
             try:
                 conn.execute(f"ALTER TABLE effect_metrics ADD COLUMN {col}")
             except Exception:
-                pass
+                logger.warning("ALTER TABLE effect_metrics ADD COLUMN %s 失败", col)
         try:
             conn.execute("CREATE INDEX IF NOT EXISTS idx_em_source_sub ON effect_metrics(source_sub)")
         except Exception:
-            pass
+            logger.warning("CREATE INDEX idx_em_source_sub 失败")
         conn.execute(
             "INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)",
             ("photo_watermark", "off"),

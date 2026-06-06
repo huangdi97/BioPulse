@@ -1,6 +1,7 @@
 """投标代理服务，用于自动处理投标流程和智能投标建议。"""
 
 import json
+import logging
 import urllib.request
 from datetime import datetime, timezone
 from typing import Optional
@@ -13,6 +14,8 @@ from opportunity.app.repositories import (
     BiddingAgentLogRepository,
 )
 from opportunity.app.services.base import BaseService
+
+logger = logging.getLogger(__name__)
 
 AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
 
@@ -90,7 +93,7 @@ class BiddingAgentService(BaseService):
                         {"config_id": config["id"]},
                     )
                 except Exception:
-                    pass
+                    logger.exception("发送通知失败")
         return {"items_found": found, "items_parsed": parsed}
 
     def _log_scan_result(

@@ -1,12 +1,15 @@
 """Agent 运行时辅助方法，包含 LLM 调用、快照管理、Token 估算等。"""
 
 import json
+import logging
 import time
 import urllib.request
 from datetime import datetime
 from functools import partial
 
 from cloud.app.agent_runtime.retry import retry_with_backoff
+
+logger = logging.getLogger(__name__)
 
 
 class RuntimeHelper:
