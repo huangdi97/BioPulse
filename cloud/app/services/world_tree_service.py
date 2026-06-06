@@ -1,3 +1,5 @@
+"""世界树服务管理层级化知识树结构。"""
+
 import json
 from datetime import datetime
 from typing import Dict, List, Optional

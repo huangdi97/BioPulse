@@ -1,3 +1,5 @@
+"""效用评分服务计算系统各项效用指标得分。"""
+
 import json
 from datetime import datetime
 

@@ -1,3 +1,5 @@
+"""信任审计服务负责系统信任度评估与审计。"""
+
 import hashlib
 import json
 from datetime import datetime, timedelta

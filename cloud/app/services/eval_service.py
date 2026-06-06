@@ -1,3 +1,6 @@
+"""评估服务提供预设案例与评估功能。"""
+
+
 class EvalService:
     PRESET_CASES = {
         "opportunity_scanner": [

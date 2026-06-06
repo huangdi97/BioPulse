@@ -1,3 +1,5 @@
+"""培训教练服务协调培训评估与推荐功能。"""
+
 from typing import Optional
 
 from cloud.app.services.base import BaseService

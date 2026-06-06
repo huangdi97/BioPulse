@@ -1,3 +1,5 @@
+"""培训教练推荐服务提供个性化培训内容推荐。"""
+
 import json
 
 from cloud.app.repositories import (

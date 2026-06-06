@@ -1,3 +1,5 @@
+"""用户服务管理用户信息与认证授权。"""
+
 from fastapi import HTTPException
 from starlette import status
 

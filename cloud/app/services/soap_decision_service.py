@@ -1,3 +1,5 @@
+"""SOAP决策服务处理结构化评估与决策逻辑。"""
+
 import json
 from typing import Optional
 

@@ -1,3 +1,5 @@
+"""智慧链接服务用于知识图谱中的实体链接与关联。"""
+
 import json
 import logging
 

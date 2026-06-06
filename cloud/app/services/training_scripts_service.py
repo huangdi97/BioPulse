@@ -1,3 +1,5 @@
+"""培训脚本服务管理培训脚本的创建与执行。"""
+
 import json
 import uuid
 from datetime import datetime, timezone

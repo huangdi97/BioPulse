@@ -1,3 +1,5 @@
+"""效用优化服务提供资源配置的优化计算。"""
+
 from typing import Optional
 
 from fastapi import HTTPException

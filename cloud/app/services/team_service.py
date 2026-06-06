@@ -1,3 +1,5 @@
+"""团队服务管理团队信息与成员协作。"""
+
 from typing import Optional
 
 from fastapi import HTTPException

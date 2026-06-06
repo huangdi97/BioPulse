@@ -1,3 +1,5 @@
+"""语义缓存服务提供基于语义相似度的缓存存取功能。"""
+
 import math
 import threading
 from collections import OrderedDict
