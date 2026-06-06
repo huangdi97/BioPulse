@@ -20,7 +20,7 @@ class CreateBlockRequest(BaseModel):
     created_by: str = ""
 
 
-@router.get("/score/{node_id}", summary="Get Trust Score by ID")
+@router.get("/score/{node_id}", summary="Get Trust Score by ID", description="根据节点ID计算信任评分")
 def get_trust_score(
     node_id: str,
     current_user: dict = Depends(get_current_user),
@@ -37,7 +37,7 @@ def get_trust_score(
     return {"code": 0, "data": result, "message": "success"}
 
 
-@router.post("/blocks", status_code=201, summary="Create Block")
+@router.post("/blocks", status_code=201, summary="Create Block", description="创建新的审计区块")
 def create_block(
     body: CreateBlockRequest,
     current_user: dict = Depends(get_current_user),
@@ -58,7 +58,7 @@ def create_block(
     return {"code": 0, "data": result, "message": "success"}
 
 
-@router.get("/verify", summary="Verify Chain")
+@router.get("/verify", summary="Verify Chain", description="验证信任审计链的完整性")
 def verify_chain(
     current_user: dict = Depends(get_current_user),
     service: TrustAuditService = Depends(),
@@ -73,7 +73,7 @@ def verify_chain(
     return {"code": 0, "data": result, "message": "success"}
 
 
-@router.get("/blocks", summary="List all Blocks")
+@router.get("/blocks", summary="List all Blocks", description="分页查询审计区块列表，可按节点ID过滤")
 def list_blocks(
     node_id: Optional[str] = Query(None),
     limit: int = Query(50, ge=1, le=200),

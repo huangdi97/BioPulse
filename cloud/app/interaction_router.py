@@ -29,7 +29,9 @@ class InteractionUpdate(BaseModel):
     conducted_at: Optional[str] = None
 
 
-@router.post("/customers/{customer_id}/interactions", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/customers/{customer_id}/interactions", status_code=status.HTTP_201_CREATED, summary="创建互动", description="为客户创建一条新的互动记录"
+)
 def create_interaction(
     customer_id: int,
     body: InteractionCreate,
@@ -60,7 +62,7 @@ def create_interaction(
     return success(data=result)
 
 
-@router.get("/customers/{customer_id}/interactions")
+@router.get("/customers/{customer_id}/interactions", summary="客户互动列表", description="获取指定客户的所有互动记录")
 def list_customer_interactions(
     customer_id: int,
     current_user: dict = Depends(require_scope("visit")),
@@ -80,7 +82,7 @@ def list_customer_interactions(
     return success(data=rows)
 
 
-@router.get("/interactions")
+@router.get("/interactions", summary="互动列表", description="分页查询所有互动记录，支持按类型和执行人筛选")
 def list_interactions(
     type: str = Query(None),
     conducted_by: int = Query(None),
@@ -111,7 +113,7 @@ def list_interactions(
     return success(data=result)
 
 
-@router.patch("/interactions/{interaction_id}")
+@router.patch("/interactions/{interaction_id}", summary="更新互动", description="更新指定互动的部分信息")
 def update_interaction(
     interaction_id: int,
     body: InteractionUpdate,
@@ -144,7 +146,7 @@ def update_interaction(
     return success(data=result)
 
 
-@router.delete("/interactions/{interaction_id}")
+@router.delete("/interactions/{interaction_id}", summary="删除互动", description="删除指定的互动记录")
 def delete_interaction(
     interaction_id: int,
     current_user: dict = Depends(require_scope("visit")),

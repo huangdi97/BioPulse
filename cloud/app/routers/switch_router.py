@@ -23,7 +23,7 @@ class ModeSwitchResponse(BaseModel):
     scope: str
 
 
-@router.post("/switch-mode", summary="切换用户模式")
+@router.post("/switch-mode", summary="切换用户模式", description="在visit和research模式之间切换并签发新Token")
 def switch_mode(
     body: ModeSwitchRequest,
     current_user: dict = Depends(require_scope("visit")),
