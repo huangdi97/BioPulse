@@ -1,4 +1,3 @@
-from sales_coach.app.scenario_fetcher import FIXED_SCENARIOS  # noqa: F401
 from sales_coach.app.scenario_loader import ScenarioLoader
 from sales_coach.app.scenario_simulator import ScenarioSimulator
 
