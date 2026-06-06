@@ -1,14 +1,19 @@
 import json
+import sqlite3
 
 from fastapi import HTTPException
 from starlette import status
 
+from cloud.app.database import DB_PATH
 from cloud.app.repositories.visit_repository import VisitRepository
 
 
 class VisitService:
-    def __init__(self, repo: VisitRepository):
-        self.repo = repo
+    def __init__(self, db: sqlite3.Connection = None):
+        if db is None:
+            db = sqlite3.connect(DB_PATH)
+            db.row_factory = sqlite3.Row
+        self.repo = VisitRepository(db)
 
     def create_visit(self, body) -> dict:
         self.repo.init_table()

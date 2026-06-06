@@ -1,10 +1,13 @@
 import json
+import logging
 
 from cloud.app.repositories.sage_repository import SageRepository
 from cloud.app.repositories.world_tree_repository import WorldTreeNodesRepository
 from cloud.app.research_database import get_research_db
 from cloud.app.services.brain_memory_service import BrainMemoryService
 from cloud.app.services.world_tree_service import WorldTreeService
+
+logger = logging.getLogger(__name__)
 
 
 def _extract_common_area(a: dict, b: dict) -> list:
@@ -21,8 +24,8 @@ def _extract_common_area(a: dict, b: dict) -> list:
                         ks.update(parsed.keys())
                     elif isinstance(parsed, list):
                         ks.update(str(v) for v in parsed)
-                except (json.JSONDecodeError, TypeError):
-                    pass
+                except (json.JSONDecodeError, TypeError) as e:
+                    logger.warning("sage_linking: failed to parse area field %s", e)
             elif isinstance(val, (list, tuple)):
                 ks.update(str(v) for v in val)
     return sorted(keys_a & keys_b)
@@ -64,8 +67,8 @@ class SageLinkingService:
                         result["details"]["episodic_to_semantic"].append(
                             {"session_id": sid, "count": len(mids)},
                         )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("sage_linking: episodic_to_semantic failed %s", e)
 
         try:
             sem_items = bms.semantic_search("", limit=1000).get("items", [])
@@ -84,8 +87,8 @@ class SageLinkingService:
                                 {"memory_ids": [a["id"], b_item["id"]], "common_areas": common},
                             )
                             paired.update([a["id"], b_item["id"]])
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("sage_linking: semantic_to_procedural failed %s", e)
 
         try:
             wt_repo = WorldTreeNodesRepository(self.db)
@@ -101,10 +104,11 @@ class SageLinkingService:
                         result["details"]["world_tree_links"].append(
                             {"node_id": nodes[title], "memory_id": sem["id"]},
                         )
-                    except Exception:
+                    except Exception as e:
+                        logger.warning("sage_linking: world_tree link_memory failed %s", e)
                         result["pending_manual"] += 1
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("sage_linking: world_tree linking block failed %s", e)
 
         return result
 

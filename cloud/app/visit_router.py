@@ -1,12 +1,8 @@
 """拜访记录路由。"""
 
-import sqlite3
-
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from cloud.app.database import DB_PATH
-from cloud.app.repositories.visit_repository import VisitRepository
 from cloud.app.services.visit_service import VisitService
 from shared.auth_scope import require_scope
 from shared.base import success
@@ -26,25 +22,13 @@ class VisitCreate(BaseModel):
 
 @router.post("/visit")
 def create_visit(body: VisitCreate, user: dict = Depends(require_scope("visit"))):
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    try:
-        repo = VisitRepository(conn)
-        service = VisitService(repo)
-        record = service.create_visit(body)
-        return success(data=record)
-    finally:
-        conn.close()
+    service = VisitService()
+    record = service.create_visit(body)
+    return success(data=record)
 
 
 @router.get("/visit/{visit_id}")
 def get_visit(visit_id: int, user: dict = Depends(require_scope("visit"))):
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    try:
-        repo = VisitRepository(conn)
-        service = VisitService(repo)
-        record = service.get_visit(visit_id)
-        return success(data=record)
-    finally:
-        conn.close()
+    service = VisitService()
+    record = service.get_visit(visit_id)
+    return success(data=record)
