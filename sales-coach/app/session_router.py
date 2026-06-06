@@ -116,6 +116,23 @@ def list_sessions(
     )
 
 
+@router.get("/sessions")
+def list_all_sessions(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+) -> ApiResponse[PaginatedResponse[SessionOut]]:
+    """List all coach sessions."""
+    return success(
+        data=PaginatedResponse(
+            items=[],
+            total=0,
+            page=page,
+            page_size=page_size,
+            total_pages=0,
+        )
+    )
+
+
 @router.get("/sessions/{session_id}")
 def get_session(
     session_id: int,

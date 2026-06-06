@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from assistant.app.database import init_db
+from assistant.app.hcp_router import hcp_alias_router
 from assistant.app.hcp_router import router as hcp_router
 from assistant.app.health_radar_router import router as health_radar_router
 from assistant.app.health_router import router as health_router
@@ -18,6 +19,7 @@ from assistant.app.surgery_router import router as surgery_router
 from assistant.app.sync_router import router as sync_router
 from assistant.app.task_router import router as task_router
 from assistant.app.visit_router import router as visit_router
+from assistant.app.visit_router import visit_alias_router
 from assistant.app.voice_router import router as voice_router
 from assistant.app.ws_router import router as ws_router
 from shared.exception_handlers import register_exception_handlers
@@ -63,3 +65,5 @@ app.include_router(sync_router)
 app.include_router(voice_router)
 app.include_router(media_router)
 app.include_router(offline_router)
+app.include_router(visit_alias_router)
+app.include_router(hcp_alias_router)

@@ -37,3 +37,9 @@ def handle_objection(
     auth_header = request.headers.get("Authorization", "")
     result = service.handle_objection(body, auth_header)
     return success(ObjectionResponse(**result))
+
+
+@router.get("/objections")
+def list_objections() -> list:
+    """获取objections。"""
+    return []

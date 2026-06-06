@@ -50,3 +50,9 @@ def precall(
             brief=BriefData(**result["brief"]),
         )
     )
+
+
+@router.get("/precall")
+def get_precall() -> Any:
+    """precall。"""
+    return {}

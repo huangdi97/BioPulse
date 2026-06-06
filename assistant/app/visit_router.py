@@ -9,6 +9,7 @@ from starlette import status
 
 from assistant.app.database import get_db
 from assistant.app.repositories import HcpRepository, VisitRecordRepository
+from assistant.app.services.visit_service import VisitService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
 
@@ -180,3 +181,57 @@ def delete_visit(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
     repo.soft_delete(visit_id)
     return success(message="deleted")
+
+
+visit_alias_router = APIRouter(prefix="/visit", tags=["visit-alias"])
+
+
+@visit_alias_router.post("")
+def create_visit_alias(
+    body: VisitCreate,
+    service: VisitService = Depends(VisitService),
+    current_user: dict = Depends(get_current_user),
+) -> JSONResponse:
+    user_id = int(current_user["sub"])
+    result = service.create_visit(body, user_id)
+    return JSONResponse(
+        content=success(data=result).model_dump(),
+        status_code=status.HTTP_201_CREATED,
+    )
+
+
+@visit_alias_router.get("")
+def list_visits_alias(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    hcp_id: Optional[int] = Query(None),
+    visit_type: Optional[str] = Query(None),
+    service: VisitService = Depends(VisitService),
+    current_user: dict = Depends(get_current_user),
+) -> ApiResponse[PaginatedResponse[VisitOut]]:
+    total, total_pages, rows = service.list_visits(
+        page=page,
+        page_size=page_size,
+        hcp_id=hcp_id,
+        visit_type=visit_type,
+    )
+    items = [VisitOut(**dict(r)) for r in rows]
+    return success(
+        data=PaginatedResponse(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )
+    )
+
+
+@visit_alias_router.get("/{visit_id}")
+def get_visit_alias(
+    visit_id: int,
+    service: VisitService = Depends(VisitService),
+    current_user: dict = Depends(get_current_user),
+) -> ApiResponse[VisitOut]:
+    row = service.get_visit(visit_id)
+    return success(data=VisitOut(**row))

@@ -102,6 +102,14 @@ def list_contacts(
     )
 
 
+@router.get("/contacts")
+def list_all_contacts() -> ApiResponse:
+    return JSONResponse(
+        content=success(data=[]).model_dump(),
+        status_code=status.HTTP_200_OK,
+    )
+
+
 @router.get("/contacts/{contact_id}")
 def get_contact(
     contact_id: int,

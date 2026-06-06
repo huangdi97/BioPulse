@@ -58,6 +58,7 @@ from cloud.app.middleware.logging_middleware import (
 )
 from cloud.app.nmpa_router import router as nmpa_router
 from cloud.app.notification_router import router as notification_router
+from cloud.app.opportunity_router import opportunity_v2_router
 from cloud.app.opportunity_router import router as opportunity_router
 from cloud.app.orchestrate_router import router as orchestrate_router
 from cloud.app.recommend_router import router as recommend_router
@@ -189,6 +190,7 @@ app.include_router(interaction_router)
 app.include_router(config_router)
 app.include_router(export_router)
 app.include_router(opportunity_router)
+app.include_router(opportunity_v2_router)
 app.include_router(task_router)
 app.include_router(market_intel_router)
 app.include_router(agent_role_router)

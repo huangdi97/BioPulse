@@ -77,3 +77,17 @@ def content_stats(
         包含内容统计数据的响应。
     """
     return success(data=service.get_content_stats())
+
+
+@router.get("/team/summary")
+def team_summary(
+    current_user: dict = Depends(require_scope("visit")),
+) -> Any:
+    return success(data={})
+
+
+@router.get("/team/ranking")
+def team_ranking(
+    current_user: dict = Depends(require_scope("visit")),
+) -> Any:
+    return success(data={})

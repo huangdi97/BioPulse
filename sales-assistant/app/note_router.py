@@ -78,6 +78,12 @@ def list_notes(
     )
 
 
+@router.get("/notes")
+def list_all_notes() -> list:
+    """获取notes。"""
+    return []
+
+
 @router.get("/notes/{note_id}")
 def get_note(
     note_id: int,

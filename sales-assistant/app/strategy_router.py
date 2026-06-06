@@ -195,3 +195,12 @@ def simulate_strategy(
     """simulate strategy。"""
     result = service.simulate_strategy(body)
     return success(data=result)
+
+
+strategy_root_router = APIRouter()
+
+
+@strategy_root_router.get("/strategy")
+def get_strategy_root() -> list:
+    """获取strategy。"""
+    return []

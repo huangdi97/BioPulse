@@ -12,6 +12,7 @@ from sales_coach.app.reflection_router import router as reflection_router
 from sales_coach.app.scenario_router import router as scenario_router
 from sales_coach.app.session_router import router as session_router
 from sales_coach.app.stats_router import router as stats_router
+from sales_coach.app.stats_router import stats_root_router
 from shared.exception_handlers import register_exception_handlers
 from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
@@ -44,6 +45,7 @@ app.include_router(module_router)
 app.include_router(session_router)
 app.include_router(scenario_router)
 app.include_router(stats_router)
+app.include_router(stats_root_router)
 app.include_router(assessment_router)
 app.include_router(reflection_router)
 app.include_router(digital_human_router)

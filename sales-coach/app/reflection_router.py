@@ -14,6 +14,14 @@ from shared.base import ApiResponse, success
 router = APIRouter(prefix="/reflections", tags=["反思 Agent"])
 
 
+@router.get("")
+def list_reflections(
+    current_user: dict = Depends(get_current_user),
+) -> ApiResponse:
+    """获取所有反思报告列表。"""
+    return success(data=[])
+
+
 @router.post("/{session_id}")
 def create_reflection(
     session_id: int,

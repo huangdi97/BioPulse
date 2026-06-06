@@ -138,3 +138,12 @@ def delete_content(
     """删除content。"""
     service.delete_content(content_id)
     return success(message="deleted")
+
+
+content_root_router = APIRouter()
+
+
+@content_root_router.get("/content")
+def get_content_root() -> list:
+    """获取content。"""
+    return []

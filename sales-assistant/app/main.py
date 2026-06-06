@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from sales_assistant.app.anomaly_router import router as anomaly_router
 from sales_assistant.app.coach_router import router as coach_router
+from sales_assistant.app.content_router import content_root_router
 from sales_assistant.app.content_router import router as content_router
 from sales_assistant.app.database import init_db
 from sales_assistant.app.funnel_router import router as funnel_router
@@ -15,6 +16,7 @@ from sales_assistant.app.objection_router import router as objection_router
 from sales_assistant.app.precall_router import router as precall_router
 from sales_assistant.app.schedule_router import router as schedule_router
 from sales_assistant.app.strategy_router import router as strategy_router
+from sales_assistant.app.strategy_router import strategy_root_router
 from shared.exception_handlers import register_exception_handlers
 from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
@@ -53,3 +55,5 @@ app.include_router(content_router)
 app.include_router(coach_router)
 app.include_router(anomaly_router)
 app.include_router(strategy_router)
+app.include_router(strategy_root_router)
+app.include_router(content_root_router)

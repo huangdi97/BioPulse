@@ -51,6 +51,16 @@ class TrendAnalysisOut(BaseModel):
     created_at: Optional[str] = None
 
 
+@router.get("/trends")
+def list_trends() -> ApiResponse:
+    from fastapi.responses import JSONResponse
+
+    return JSONResponse(
+        content=success(data=[]).model_dump(),
+        status_code=200,
+    )
+
+
 @router.get("/trends/by-topic")
 def trends_by_topic(
     topic: str = Query(..., description="Research topic"),

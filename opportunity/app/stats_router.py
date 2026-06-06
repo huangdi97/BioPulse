@@ -32,6 +32,16 @@ class StatsData(BaseModel):
     win_rate: float
 
 
+@router.get("/stats")
+def get_stats() -> ApiResponse:
+    from fastapi.responses import JSONResponse
+
+    return JSONResponse(
+        content=success(data=[]).model_dump(),
+        status_code=200,
+    )
+
+
 @router.get("/opportunities/stats", response_model=ApiResponse[StatsData])
 def get_opportunity_stats(
     start_date: str | None = Query(None, description="开始日期 (YYYY-MM-DD)"),

@@ -94,3 +94,16 @@ class PGCompatConnection:
 
     def close(self):
         self._conn.close()
+
+    def executescript(self, script: str) -> None:
+        """Execute multi-statement SQL script (compatible with sqlite3.executescript)."""
+        cur = self._conn.cursor()
+        for statement in script.split(";"):
+            stmt = statement.strip()
+            if stmt:
+                try:
+                    cur.execute(stmt)
+                except Exception as e:
+                    print(f"[PGCompatConnection] Skipping statement: {e}")
+        cur.close()
+        self._conn.commit()

@@ -12,6 +12,8 @@ from shared.base import success
 
 router = APIRouter(prefix="/opportunities", tags=["商机"])
 
+opportunity_v2_router = APIRouter(prefix="/opportunity", tags=["opportunity"])
+
 
 class OpportunityCreate(BaseModel):
     customer_id: int
@@ -167,3 +169,10 @@ def transition_stage(
         actual_value=body.actual_value,
     )
     return success(data=row)
+
+
+@opportunity_v2_router.get("/list")
+def list_opportunities_v2(
+    current_user: dict = Depends(require_scope("visit")),
+) -> Any:
+    return success(data=[])

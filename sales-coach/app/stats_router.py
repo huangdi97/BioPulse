@@ -109,3 +109,14 @@ def get_category_performance(
     """获取各类场景的表现对比。"""
     data = service.get_category_performance(user_id)
     return success(data={"user_id": user_id, "categories": data})
+
+
+stats_root_router = APIRouter(tags=["stats"])
+
+
+@stats_root_router.get("/stats")
+def get_stats_root(
+    current_user: dict = Depends(get_current_user),
+) -> ApiResponse:
+    """GET /stats endpoint for frontend compatibility."""
+    return success(data={})

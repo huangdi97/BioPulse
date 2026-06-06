@@ -9,6 +9,7 @@ from starlette import status
 
 from assistant.app.database import get_db
 from assistant.app.repositories import HcpRepository
+from assistant.app.services.hcp_service import HcpService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
 
@@ -178,3 +179,78 @@ def delete_hcp(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
     repo.soft_delete(hcp_id)
     return success(message="deleted")
+
+
+hcp_alias_router = APIRouter(tags=["hcp-alias"])
+
+
+@hcp_alias_router.get("/hcps")
+def list_hcps_alias(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    name: Optional[str] = Query(None),
+    hospital: Optional[str] = Query(None),
+    department: Optional[str] = Query(None),
+    level: Optional[str] = Query(None),
+    service: HcpService = Depends(HcpService),
+    current_user: dict = Depends(get_current_user),
+) -> ApiResponse[PaginatedResponse[HcpOut]]:
+    total, total_pages, rows = service.list_hcps(
+        page=page,
+        page_size=page_size,
+        name=name,
+        hospital=hospital,
+        department=department,
+        level=level,
+    )
+    items = [HcpOut(**dict(r)) for r in rows]
+    return success(
+        data=PaginatedResponse(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )
+    )
+
+
+@hcp_alias_router.get("/hcps/{hcp_id}")
+def get_hcp_alias(
+    hcp_id: int,
+    service: HcpService = Depends(HcpService),
+    current_user: dict = Depends(get_current_user),
+) -> ApiResponse[HcpOut]:
+    row = service.get_hcp(hcp_id)
+    return success(data=HcpOut(**row))
+
+
+@hcp_alias_router.get("/hcp/list")
+def hcp_list_alias(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    name: Optional[str] = Query(None),
+    hospital: Optional[str] = Query(None),
+    department: Optional[str] = Query(None),
+    level: Optional[str] = Query(None),
+    service: HcpService = Depends(HcpService),
+    current_user: dict = Depends(get_current_user),
+) -> ApiResponse[PaginatedResponse[HcpOut]]:
+    total, total_pages, rows = service.list_hcps(
+        page=page,
+        page_size=page_size,
+        name=name,
+        hospital=hospital,
+        department=department,
+        level=level,
+    )
+    items = [HcpOut(**dict(r)) for r in rows]
+    return success(
+        data=PaginatedResponse(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )
+    )

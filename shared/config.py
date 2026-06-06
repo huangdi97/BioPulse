@@ -10,6 +10,10 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = "sqlite:///./data/cloud.db"
+    ASSISTANT_DATABASE_URL: str = "sqlite:///./data/assistant.db"
+    OPPORTUNITY_DATABASE_URL: str = "sqlite:///./data/opportunity.db"
+    SALES_ASSISTANT_DATABASE_URL: str = "sqlite:///./data/sales_assistant.db"
+    SALES_COACH_DATABASE_URL: str = "sqlite:///./data/sales_coach.db"
     DB_POOL_SIZE: int = 5
     DB_MAX_OVERFLOW: int = 20
 
