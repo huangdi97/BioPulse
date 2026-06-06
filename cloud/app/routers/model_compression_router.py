@@ -26,14 +26,14 @@ class CompressRequest(BaseModel):
     compression_type: str
 
 
-@router.get("/types")
+@router.get("/types", summary="压缩类型列表", description="获取所有可用的模型压缩类型")
 def get_available_types(
     service: ModelCompressionService = Depends(),
 ) -> Any:
     return success(data=service.get_available_types())
 
 
-@router.post("/compress")
+@router.post("/compress", summary="压缩模型", description="对指定模型执行压缩操作")
 def compress_model(
     body: CompressRequest,
     service: ModelCompressionService = Depends(),
@@ -41,7 +41,7 @@ def compress_model(
     return success(data=service.compress(body.model_name, body.compression_type))
 
 
-@router.get("/jobs")
+@router.get("/jobs", summary="任务列表", description="获取所有压缩任务列表，可按状态筛选")
 def list_jobs(
     status: Optional[str] = None,
     service: ModelCompressionService = Depends(),
@@ -49,7 +49,7 @@ def list_jobs(
     return success(data=service.list_jobs(status))
 
 
-@router.get("/jobs/{job_id}")
+@router.get("/jobs/{job_id}", summary="任务详情", description="获取指定压缩任务的详细信息")
 def get_job(
     job_id: str,
     service: ModelCompressionService = Depends(),
@@ -60,7 +60,7 @@ def get_job(
     return success(data=job)
 
 
-@router.delete("/jobs/{job_id}")
+@router.delete("/jobs/{job_id}", summary="删除任务", description="删除指定的压缩任务")
 def delete_job(
     job_id: str,
     service: ModelCompressionService = Depends(),
@@ -70,7 +70,7 @@ def delete_job(
     return success(data={"deleted": True})
 
 
-@router.get("/compare/{model_name}")
+@router.get("/compare/{model_name}", summary="策略对比", description="对比指定模型的不同压缩策略效果")
 def compare_strategies(
     model_name: str,
 ) -> Any:

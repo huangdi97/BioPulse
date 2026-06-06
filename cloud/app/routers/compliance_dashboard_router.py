@@ -8,7 +8,7 @@ from shared.auth import get_current_user
 router = APIRouter(prefix="/api/compliance/dashboard", tags=["合规"])
 
 
-@router.get("/summary")
+@router.get("/summary", summary="合规摘要", description="获取合规仪表盘的概要数据")
 def dashboard_summary(
     current_user: dict = Depends(get_current_user),
     service: ComplianceService = Depends(),
@@ -16,7 +16,7 @@ def dashboard_summary(
     return service.dashboard_summary()
 
 
-@router.get("/reps/{rep_id}")
+@router.get("/reps/{rep_id}", summary="代表违规查询", description="查询指定代表的违规记录")
 def rep_violations(
     rep_id: int,
     current_user: dict = Depends(get_current_user),

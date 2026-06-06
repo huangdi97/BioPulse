@@ -27,7 +27,7 @@ class RouteTaskRequest(BaseModel):
 router = APIRouter(prefix="/cell-network", tags=["细胞网络"])
 
 
-@router.post("/register", summary="Register Cell")
+@router.post("/register", summary="注册细胞", description="注册一个新的Agent细胞到网络中")
 def register_cell(
     body: RegisterCellRequest,
     service: CellNetworkService = Depends(),
@@ -44,7 +44,7 @@ def register_cell(
     return success(data=service.register_cell(body.agent_instance_key))
 
 
-@router.get("/discover", summary="Discover Cells")
+@router.get("/discover", summary="发现细胞", description="根据能力查询可用的Agent细胞")
 def discover_cells(
     capability: str | None = Query(None),
     service: CellNetworkService = Depends(),
@@ -62,7 +62,7 @@ def discover_cells(
     return success(data=service.discover_cells(capability=capability))
 
 
-@router.post("/route", summary="Route To Cell")
+@router.post("/route", summary="路由任务", description="将任务路由到目标Agent细胞")
 def route_to_cell(
     body: RouteTaskRequest,
     service: CellNetworkService = Depends(),
@@ -79,7 +79,7 @@ def route_to_cell(
     return success(data=service.route_to_cell(body.source_key, body.target_key, body.task_data))
 
 
-@router.post("/sync/{cell_key}", summary="Sync Routing Table")
+@router.post("/sync/{cell_key}", summary="同步路由表", description="同步指定细胞的路由表信息")
 def sync_routing_table(
     cell_key: str,
     service: CellNetworkService = Depends(),
@@ -97,7 +97,7 @@ def sync_routing_table(
     return success(data=service.sync_routing_table(cell_key))
 
 
-@router.get("/topology", summary="Get Network Topology by ID")
+@router.get("/topology", summary="获取网络拓扑", description="获取当前细胞网络的拓扑结构")
 def get_network_topology(
     service: CellNetworkService = Depends(),
     current_user: dict = Depends(get_current_user),
@@ -113,7 +113,7 @@ def get_network_topology(
     return success(data=service.get_network_topology())
 
 
-@router.get("/topology/analyze", summary="Analyze Topology")
+@router.get("/topology/analyze", summary="分析拓扑", description="分析细胞网络拓扑结构并返回分析结果")
 def analyze_topology(
     service: CellTopologyService = Depends(),
     current_user: dict = Depends(get_current_user),
@@ -129,7 +129,7 @@ def analyze_topology(
     return success(data=service.analyze_topology())
 
 
-@router.get("/topology/suggest", summary="Suggest Optimization")
+@router.get("/topology/suggest", summary="建议优化", description="基于拓扑分析给出网络优化建议")
 def suggest_optimization(
     service: CellTopologyService = Depends(),
     current_user: dict = Depends(get_current_user),

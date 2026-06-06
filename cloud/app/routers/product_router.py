@@ -23,7 +23,7 @@ class ProductCreate(BaseModel):
     cert_status: str = ""
 
 
-@router.get("/search")
+@router.get("/search", summary="搜索产品", description="根据关键词和分类搜索科研产品")
 def search_products(
     q: str = Query("", description="Search keyword"),
     category: str = Query("", description="Category filter"),
@@ -34,7 +34,7 @@ def search_products(
     return {"code": 0, "data": results, "message": "success"}
 
 
-@router.get("/{product_id}")
+@router.get("/{product_id}", summary="产品详情", description="获取指定产品的详细信息")
 def get_product(
     product_id: int,
     current_user: dict = Depends(get_current_user),
@@ -44,7 +44,7 @@ def get_product(
     return {"code": 0, "data": product, "message": "success"}
 
 
-@router.post("", status_code=201)
+@router.post("", status_code=201, summary="创建产品", description="创建新的科研产品信息")
 def create_product(
     body: ProductCreate,
     current_user: dict = Depends(get_current_user),
