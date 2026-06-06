@@ -13,6 +13,7 @@ from cloud.app.repositories import (
     EventDeliveryLogRepository,
 )
 from cloud.app.services.base import BaseService
+from shared.app_settings import settings
 
 try:
     import redis
@@ -211,7 +212,7 @@ class EventBusService(BaseService):
 class RedisEventBus:
     """Redis Streams 事件总线，自动降级到 SQLite EventBusService。"""
 
-    def __init__(self, redis_url: str = "redis://localhost:6379/0"):
+    def __init__(self, redis_url: str = settings.redis_url):
         self._available = False
         self._pool = None
         self._client = None

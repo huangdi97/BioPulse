@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     # Logging
     log_level: str = "INFO"
 
+    # Redis
+    redis_url: str = "redis://localhost:6379/0"
+
     model_config = {"env_prefix": "OCFE_", "env_file": ".env", "extra": "ignore"}
 
 
