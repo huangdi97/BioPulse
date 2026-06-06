@@ -79,10 +79,12 @@ from cloud.app.repositories.mdt_rep import (
     MdtParticipantsRepository,
     MdtSessionsRepository,
 )
+from cloud.app.repositories.memory_entry_repo import (
+    MemoryEntriesRepository,
+)
 from cloud.app.repositories.memory_repository import (
     EpisodicMemoryRepository,
     MemoryConsolidationLogRepository,
-    MemoryEntriesRepository,
     MemoryGatesRepository,
     MemoryRecallLogRepository,
     MemoryUtilityScoresRepository,
