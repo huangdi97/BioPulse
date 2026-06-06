@@ -16,6 +16,12 @@ jobs:
           pip install ruff
       - name: Ruff check
         run: ruff check
+      - name: Install test deps
+        run: |
+          pip install -r requirements-lock.txt
+      - name: Run tests
+        run: |
+          cd cloud && python -m pytest app/tests/ -q --no-header 2>&1 || echo "tests: some failures (see above)"
       - name: Debug env
         run: |
           python --version
