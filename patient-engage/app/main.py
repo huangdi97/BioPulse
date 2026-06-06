@@ -16,7 +16,7 @@ START_TIME = time.time()
 setup_logging("patient-engage")
 
 app = FastAPI(
-    title=settings.app_name,
+    title="PatientEngage · 患者服务",
     version=settings.version,
     description="患者教育、用药提醒、随访管理",
 )

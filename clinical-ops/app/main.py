@@ -13,7 +13,7 @@ from shared.middleware import RequestIDMiddleware
 START_TIME = time.time()
 
 app = FastAPI(
-    title=settings.app_name,
+    title="ClinicalOps · 临床试验运营",
     version=settings.version,
     description="中心筛选、患者招募、监察报告管理",
 )

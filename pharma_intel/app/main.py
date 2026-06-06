@@ -23,7 +23,7 @@ START_TIME = time.time()
 setup_logging("pharma_intel")
 
 app = FastAPI(
-    title=settings.app_name,
+    title="制药情报服务 · Pharma Intel",
     version=settings.version,
     description="KOL学术影响力追踪、靶点研究监控、管线竞争分析、竞品情报聚合、学术会议追踪",
 )

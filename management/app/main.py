@@ -14,7 +14,7 @@ from shared.structured_logging import setup_logging
 
 setup_logging("management")
 
-app = FastAPI(title=settings.app_name, version=settings.version)
+app = FastAPI(title="管理端 · Management Portal", version=settings.version)
 
 app.add_middleware(RequestIDMiddleware)
 register_exception_handlers(app)

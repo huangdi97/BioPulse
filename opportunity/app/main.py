@@ -28,7 +28,7 @@ from shared.structured_logging import setup_logging
 
 setup_logging("opportunity")
 
-app = FastAPI(title=settings.app_name, version=settings.version)
+app = FastAPI(title="Opportunity Service", version=settings.version)
 
 app.add_middleware(
     CORSMiddleware,

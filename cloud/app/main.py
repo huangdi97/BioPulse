@@ -109,7 +109,6 @@ from cloud.app.users_router import router as users_router
 from cloud.app.visit_router import router as visit_router
 from cloud.app.world_tree_router import router as world_tree_router
 from shared.app_settings import settings
-from shared.config import settings as config_settings
 from shared.exception_handlers import register_exception_handlers
 from shared.rate_limiter import RateLimiterMiddleware
 
@@ -124,7 +123,7 @@ if not _logger.handlers:
     _logger.addHandler(_handler)
 
 app = FastAPI(
-    title=settings.app_name,
+    title="一云四端 · Cloud API",
     description="面向医药+生物双主线的智能CRM SaaS。包含认证、合规、商机、Agent、记忆系统、知识图谱、MDT会诊、因果推理、合规规则引擎等核心模块。",
     version=settings.version,
     openapi_tags=[
@@ -163,7 +162,7 @@ app.middleware("http")(logging_middleware)
 register_exception_handlers(app)
 
 
-_cors_origins = config_settings.cors_origins
+_cors_origins = settings.cors_origins
 app.add_middleware(
     CORSMiddleware,
     # develop 阶段允许所有来源，生产环境需替换为具体域名列表，例如 ["https://example.com"]

@@ -28,7 +28,7 @@ from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
 from shared.structured_logging import setup_logging
 
-app = FastAPI(title=settings.app_name, version=settings.version)
+app = FastAPI(title="Assistant Service", version=settings.version)
 
 setup_logging("assistant")
 
