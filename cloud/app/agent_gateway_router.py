@@ -56,7 +56,7 @@ def _http_forward(method: str, path: str, params: dict, auth_header: str) -> dic
         return {"success": False, "data": None, "error": str(e)}
 
 
-@router.post("/execute")
+@router.post("/execute", summary="执行工具", description="通过网关转发执行指定的Agent工具")
 def execute(body: ExecuteRequest, request: Request):
     route = GATEWAY_ROUTES.get(body.tool_name)
     if not route:
@@ -69,7 +69,7 @@ def execute(body: ExecuteRequest, request: Request):
     return _http_forward(method, path, body.params, auth_header)
 
 
-@router.post("/tools/register")
+@router.post("/tools/register", summary="注册工具", description="向网关注册一个新的Agent工具路由")
 def register_tool(body: RegisterRequest):
     GATEWAY_ROUTES[body.tool_name] = f"{body.method.upper()} {body.url}"
     return {
@@ -85,6 +85,6 @@ def register_tool(body: RegisterRequest):
     }
 
 
-@router.get("/tools")
+@router.get("/tools", summary="工具列表", description="获取所有已注册的Agent工具名称列表")
 def list_tools():
     return {"success": True, "data": list(GATEWAY_ROUTES.keys()), "error": ""}

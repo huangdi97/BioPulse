@@ -23,7 +23,7 @@ class BoardUpdate(BaseModel):
     description: Optional[str] = None
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED, summary="创建看板", description="创建一个新的团队看板")
 def create_board(
     body: BoardCreate,
     current_user: dict = Depends(require_scope("visit")),
@@ -35,7 +35,7 @@ def create_board(
     return success(data=result)
 
 
-@router.get("/")
+@router.get("/", summary="看板列表", description="获取所有团队看板列表")
 def list_boards(
     current_user: dict = Depends(require_scope("visit")),
     service: BoardService = Depends(),
@@ -44,7 +44,7 @@ def list_boards(
     return success(data=service.list_boards())
 
 
-@router.get("/{board_id}")
+@router.get("/{board_id}", summary="查询看板", description="获取指定看板详情")
 def get_board(
     board_id: int,
     current_user: dict = Depends(require_scope("visit")),
@@ -54,7 +54,7 @@ def get_board(
     return success(data=service.get_board(board_id))
 
 
-@router.patch("/{board_id}")
+@router.patch("/{board_id}", summary="更新看板", description="更新看板名称或描述")
 def update_board(
     board_id: int,
     body: BoardUpdate,
@@ -68,7 +68,7 @@ def update_board(
     return success(data=result)
 
 
-@router.delete("/{board_id}")
+@router.delete("/{board_id}", summary="删除看板", description="删除指定看板")
 def delete_board(
     board_id: int,
     current_user: dict = Depends(require_scope("visit")),
@@ -79,7 +79,7 @@ def delete_board(
     return success()
 
 
-@router.get("/{board_id}/kanban")
+@router.get("/{board_id}/kanban", summary="看板视图", description="获取看板的Kanban视图数据")
 def kanban_view(
     board_id: int,
     current_user: dict = Depends(require_scope("visit")),

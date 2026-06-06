@@ -60,7 +60,7 @@ class FoldMemories(BaseModel):
     memory_ids: list[int]
 
 
-@router.post("/sensory/ingest", summary="Sensory Ingest")
+@router.post("/sensory/ingest", summary="感官输入", description="接收并处理感官输入数据")
 def sensory_ingest(
     body: SensoryIngest,
     service: BrainOrchestratorService = Depends(),
@@ -80,7 +80,7 @@ def sensory_ingest(
     return success(data=result)
 
 
-@router.get("/sensory/buffer", summary="Sensory Buffer")
+@router.get("/sensory/buffer", summary="感官缓存", description="获取感官输入缓冲区数据")
 def sensory_buffer(
     limit: int = Query(50, ge=1, le=200),
     service: BrainOrchestratorService = Depends(),
@@ -97,7 +97,7 @@ def sensory_buffer(
     return success(data=result)
 
 
-@router.get("/procedural", summary="Procedural List")
+@router.get("/procedural", summary="程序记忆列表", description="按触发事件筛选程序性记忆列表")
 def procedural_list(
     trigger_event: Optional[str] = Query(None),
     service: BrainOrchestratorService = Depends(),
@@ -114,7 +114,7 @@ def procedural_list(
     return success(data=result)
 
 
-@router.post("/procedural", status_code=201, summary="Procedural Create")
+@router.post("/procedural", status_code=201, summary="创建程序记忆", description="创建一条程序性记忆")
 def procedural_create(
     body: CreateProcedural,
     service: BrainOrchestratorService = Depends(),
@@ -136,7 +136,7 @@ def procedural_create(
     return success(data=result)
 
 
-@router.post("/procedural/{procedure_key}/invoke", summary="Procedural Invoke")
+@router.post("/procedural/{procedure_key}/invoke", summary="调用程序记忆", description="根据上下文调用指定的程序性记忆")
 def procedural_invoke(
     procedure_key: str,
     body: InvokeProcedural,
@@ -154,7 +154,7 @@ def procedural_invoke(
     return success(data=result)
 
 
-@router.post("/orchestrate", summary="Orchestrate")
+@router.post("/orchestrate", summary="编排处理", description="编排多脑区协同处理输入数据")
 def orchestrate(
     body: Orchestrate,
     service: BrainOrchestratorService = Depends(),
@@ -174,7 +174,7 @@ def orchestrate(
     return success(data=result)
 
 
-@router.post("/evolve", summary="Evolve Memory")
+@router.post("/evolve", summary="进化记忆", description="基于新证据进化已有的记忆")
 def evolve_memory(
     body: EvolveMemory,
     service: BrainEvolutionService = Depends(),
@@ -194,7 +194,7 @@ def evolve_memory(
     return success(data=result)
 
 
-@router.get("/evolve/history/{memory_id}", summary="Evolution History")
+@router.get("/evolve/history/{memory_id}", summary="进化历史", description="获取指定记忆的进化历史记录")
 def evolution_history(
     memory_id: int,
     service: BrainEvolutionService = Depends(),
@@ -211,7 +211,7 @@ def evolution_history(
     return success(data=result)
 
 
-@router.post("/fold", summary="Fold Memories")
+@router.post("/fold", summary="折叠记忆", description="将多条记忆折叠合并为一条")
 def fold_memories(
     body: FoldMemories,
     service: BrainEvolutionService = Depends(),
@@ -227,7 +227,7 @@ def fold_memories(
     return success(data=result)
 
 
-@router.get("/search", summary="Unified Search")
+@router.get("/search", summary="统一搜索", description="跨脑区统一搜索所有类型的记忆")
 def unified_search(
     q: str = Query(..., min_length=1),
     types: Optional[str] = Query(None, description="Comma-separated memory types"),
@@ -249,7 +249,7 @@ def unified_search(
     return success(data=result)
 
 
-@router.get("/fold/{memory_id}", summary="Get Folded by ID")
+@router.get("/fold/{memory_id}", summary="查询折叠记忆", description="根据memory_id获取折叠后的记忆")
 def get_folded(
     memory_id: int,
     service: BrainEvolutionService = Depends(),

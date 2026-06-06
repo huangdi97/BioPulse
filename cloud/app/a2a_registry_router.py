@@ -45,7 +45,7 @@ class TaskSubmitRequest(BaseModel):
 router = APIRouter(prefix="/a2a", tags=["A2A Agent Registry"])
 
 
-@router.post("/agents/register", summary="Register Agent")
+@router.post("/agents/register", summary="注册Agent", description="向注册中心注册新的Agent实例")
 def register_agent(
     body: RegisterRequest,
     service: A2ARegistryService = Depends(),
@@ -68,7 +68,7 @@ def register_agent(
     return success(data=data)
 
 
-@router.get("/agents/{agent_key}", summary="Get Agent by ID")
+@router.get("/agents/{agent_key}", summary="查询Agent", description="根据agent_key获取Agent详情")
 def get_agent(
     agent_key: str,
     service: A2ARegistryService = Depends(),
@@ -84,7 +84,7 @@ def get_agent(
     return success(data=service.get_agent(agent_key))
 
 
-@router.get("/agents", summary="List all Agents")
+@router.get("/agents", summary="Agent列表", description="按类型/状态/能力筛选Agent列表")
 def list_agents(
     type: str = Query(None, alias="type"),
     status: str = Query(None),
@@ -104,7 +104,7 @@ def list_agents(
     return success(data=service.list_agents(agent_type=type, status=status, capability=capability))
 
 
-@router.post("/agents/{agent_key}/heartbeat", summary="Agent Heartbeat")
+@router.post("/agents/{agent_key}/heartbeat", summary="Agent心跳", description="发送Agent心跳更新最后活跃时间")
 def agent_heartbeat(
     agent_key: str,
     service: A2ARegistryService = Depends(),
@@ -120,7 +120,7 @@ def agent_heartbeat(
     return success(data=service.heartbeat(agent_key))
 
 
-@router.patch("/agents/{agent_key}/status", summary="Update Agent Status")
+@router.patch("/agents/{agent_key}/status", summary="更新状态", description="更新Agent的运行状态")
 def update_agent_status(
     agent_key: str,
     body: StatusUpdateRequest,
@@ -137,7 +137,7 @@ def update_agent_status(
     return success(data=service.update_status(agent_key, body.status))
 
 
-@router.post("/tasks/submit", summary="Submit Task")
+@router.post("/tasks/submit", summary="提交任务", description="向目标Agent提交一个任务")
 def submit_task(
     body: TaskSubmitRequest,
     service: A2ARegistryService = Depends(),
@@ -159,7 +159,7 @@ def submit_task(
     return success(data=data)
 
 
-@router.get("/tasks/{task_id}", summary="Get Task by ID")
+@router.get("/tasks/{task_id}", summary="查询任务", description="根据task_id获取任务详情")
 def get_task(
     task_id: str,
     service: A2ARegistryService = Depends(),
@@ -175,7 +175,7 @@ def get_task(
     return success(data=service.get_task(task_id))
 
 
-@router.get("/tasks", summary="List all Tasks")
+@router.get("/tasks", summary="任务列表", description="按状态和Agent筛选任务列表")
 def list_tasks(
     status: str = Query(None),
     agent_key: str = Query(None),
@@ -195,7 +195,7 @@ def list_tasks(
     return success(data=service.list_tasks(status=status, agent_key=agent_key, limit=limit))
 
 
-@router.get("/events", summary="List all Events")
+@router.get("/events", summary="事件列表", description="按类型和Agent筛选事件列表")
 def list_events(
     event_type: str = Query(None),
     agent_key: str = Query(None),

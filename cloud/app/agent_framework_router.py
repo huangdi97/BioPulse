@@ -34,7 +34,7 @@ class InstanceCreate(BaseModel):
 router = APIRouter(prefix="/agent/framework", tags=["Agent Framework"])
 
 
-@router.get("/templates", summary="List all Templates")
+@router.get("/templates", summary="模板列表", description="按领域筛选Agent模板列表")
 def list_templates(
     domain: str = Query(None),
     service: AgentFrameworkService = Depends(),
@@ -50,7 +50,7 @@ def list_templates(
     return success(data=service.list_templates(domain=domain))
 
 
-@router.get("/templates/{template_key}", summary="Get Template by ID")
+@router.get("/templates/{template_key}", summary="查询模板", description="根据template_key获取模板详情")
 def get_template(
     template_key: str,
     service: AgentFrameworkService = Depends(),
@@ -66,7 +66,7 @@ def get_template(
     return success(data=service.get_template(template_key))
 
 
-@router.post("/templates", summary="Create Template")
+@router.post("/templates", summary="创建模板", description="创建一个新的Agent模板")
 def create_template(
     body: TemplateCreate,
     service: AgentFrameworkService = Depends(),
@@ -92,7 +92,7 @@ def create_template(
     )
 
 
-@router.get("/instances", summary="List all Instances")
+@router.get("/instances", summary="实例列表", description="按状态和模板筛选实例列表")
 def list_instances(
     status: str = Query(None),
     template_key: str = Query(None),
@@ -110,7 +110,7 @@ def list_instances(
     return success(data=service.list_instances(status=status, template_key=template_key))
 
 
-@router.get("/instances/{instance_key}", summary="Get Instance by ID")
+@router.get("/instances/{instance_key}", summary="查询实例", description="根据instance_key获取实例详情")
 def get_instance(
     instance_key: str,
     service: AgentFrameworkService = Depends(),
@@ -126,7 +126,7 @@ def get_instance(
     return success(data=service.get_instance(instance_key))
 
 
-@router.post("/instances", summary="Create Instance")
+@router.post("/instances", summary="创建实例", description="基于模板创建一个新的Agent实例")
 def create_instance(
     body: InstanceCreate,
     service: AgentFrameworkService = Depends(),
@@ -149,7 +149,7 @@ def create_instance(
     )
 
 
-@router.post("/instances/{instance_key}/start", summary="Start Instance")
+@router.post("/instances/{instance_key}/start", summary="启动实例", description="启动指定的Agent实例")
 def start_instance(
     instance_key: str,
     service: AgentFrameworkService = Depends(),
@@ -165,7 +165,7 @@ def start_instance(
     return success(data=service.start_instance(instance_key))
 
 
-@router.post("/instances/{instance_key}/stop", summary="Stop Instance")
+@router.post("/instances/{instance_key}/stop", summary="停止实例", description="停止指定的Agent实例")
 def stop_instance(
     instance_key: str,
     service: AgentFrameworkService = Depends(),
@@ -181,7 +181,7 @@ def stop_instance(
     return success(data=service.stop_instance(instance_key))
 
 
-@router.post("/instances/{instance_key}/heartbeat", summary="Heartbeat Instance")
+@router.post("/instances/{instance_key}/heartbeat", summary="实例心跳", description="发送Agent实例心跳")
 def heartbeat_instance(
     instance_key: str,
     service: AgentFrameworkService = Depends(),

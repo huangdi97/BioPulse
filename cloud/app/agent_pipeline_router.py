@@ -27,7 +27,7 @@ class PipelineRunRequest(BaseModel):
     user_input: str = ""
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED, summary="创建管线", description="创建包含步骤定义的Agent管线")
 def create_pipeline(
     body: PipelineCreate,
     current_user=Depends(require_scope("visit")),
@@ -38,7 +38,7 @@ def create_pipeline(
     return service.create_pipeline(body, uid)
 
 
-@router.get("")
+@router.get("", summary="管线列表", description="获取所有Agent管线列表（含步骤数）")
 def list_pipelines(
     current_user=Depends(require_scope("visit")),
     service: AgentPipelineService = Depends(),
@@ -48,7 +48,7 @@ def list_pipelines(
 
 
 # IMPORTANT: /runs/{run_id} MUST come before /{pipeline_id} to avoid route conflicts
-@router.get("/runs/{run_id}")
+@router.get("/runs/{run_id}", summary="查询运行", description="获取指定运行ID的运行详情及步骤运行记录")
 def get_run(
     run_id: int,
     current_user=Depends(require_scope("visit")),
@@ -58,7 +58,7 @@ def get_run(
     return service.get_run(run_id)
 
 
-@router.get("/{pipeline_id}")
+@router.get("/{pipeline_id}", summary="查询管线", description="获取管线详情及其所有步骤")
 def get_pipeline(
     pipeline_id: int,
     current_user=Depends(require_scope("visit")),
@@ -68,7 +68,7 @@ def get_pipeline(
     return service.get_pipeline(pipeline_id)
 
 
-@router.delete("/{pipeline_id}")
+@router.delete("/{pipeline_id}", summary="删除管线", description="删除管线及其关联的步骤和运行记录")
 def delete_pipeline(
     pipeline_id: int,
     current_user=Depends(require_scope("visit")),
@@ -78,7 +78,7 @@ def delete_pipeline(
     return service.delete_pipeline(pipeline_id)
 
 
-@router.post("/{pipeline_id}/run")
+@router.post("/{pipeline_id}/run", summary="执行管线", description="执行指定Agent管线，遍历各步骤并记录运行结果")
 def run_pipeline(
     pipeline_id: int,
     body: PipelineRunRequest,
@@ -91,7 +91,7 @@ def run_pipeline(
     return service.run_pipeline(pipeline_id, body, request, uid)
 
 
-@router.get("/{pipeline_id}/runs")
+@router.get("/{pipeline_id}/runs", summary="运行历史", description="分页查询指定管线的运行历史")
 def list_runs(
     pipeline_id: int,
     page: int = Query(1, ge=1),

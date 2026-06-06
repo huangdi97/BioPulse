@@ -38,7 +38,7 @@ class RoleUpdate(BaseModel):
     is_active: Optional[int] = None
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED, summary="创建角色", description="创建Agent角色并返回角色数据")
 def create_role(
     body: RoleCreate,
     current_user=Depends(require_scope("visit")),
@@ -49,7 +49,7 @@ def create_role(
     return success(data=service.create_role(body, uid))
 
 
-@router.get("")
+@router.get("", summary="角色列表", description="按类型和状态筛选Agent角色列表")
 def list_roles(
     role_type: Optional[str] = Query(None),
     is_active: Optional[int] = Query(None),
@@ -60,7 +60,7 @@ def list_roles(
     return success(data=service.list_roles(role_type=role_type, is_active=is_active))
 
 
-@router.get("/{role_id}")
+@router.get("/{role_id}", summary="查询角色", description="获取指定角色的详细信息")
 def get_role(
     role_id: int,
     current_user=Depends(require_scope("visit")),
@@ -70,7 +70,7 @@ def get_role(
     return success(data=service.get_role(role_id))
 
 
-@router.patch("/{role_id}")
+@router.patch("/{role_id}", summary="更新角色", description="部分更新Agent角色字段")
 def update_role(
     role_id: int,
     body: RoleUpdate,
@@ -81,7 +81,7 @@ def update_role(
     return success(data=service.update_role(role_id, body))
 
 
-@router.delete("/{role_id}")
+@router.delete("/{role_id}", summary="删除角色", description="软删除指定Agent角色")
 def delete_role(
     role_id: int,
     current_user=Depends(require_scope("visit")),

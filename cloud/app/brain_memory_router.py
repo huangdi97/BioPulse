@@ -54,7 +54,7 @@ class MemoryDecay(BaseModel):
     hours_threshold: int = 72
 
 
-@router.post("/working/set")
+@router.post("/working/set", summary="设置工作记忆", description="设置工作记忆槽位值")
 def working_set(body: WorkingMemorySet, service: BrainMemoryService = Depends()):
     """设置工作记忆槽位。Args: body (WorkingMemorySet) 工作记忆设置体; service (BrainMemoryService) 记忆服务。Returns: dict 成功响应"""
     result = service.working_set(
@@ -67,7 +67,7 @@ def working_set(body: WorkingMemorySet, service: BrainMemoryService = Depends())
     return success(data=result)
 
 
-@router.get("/working/get")
+@router.get("/working/get", summary="获取工作记忆", description="获取指定会话的工作记忆数据")
 def working_get(
     session_id: str = Query(...),
     slot_key: Optional[str] = Query(None),
@@ -78,21 +78,21 @@ def working_get(
     return success(data=result["data"])
 
 
-@router.delete("/working/clear/{session_id}")
+@router.delete("/working/clear/{session_id}", summary="清除工作记忆", description="清除指定会话的所有工作记忆")
 def working_clear(session_id: str, service: BrainMemoryService = Depends()):
     """清除指定会话的工作记忆。Args: session_id (str) 会话ID; service (BrainMemoryService) 记忆服务。Returns: dict 成功响应"""
     message = service.working_clear(session_id)
     return success(message=message)
 
 
-@router.post("/working/refresh/{session_id}")
+@router.post("/working/refresh/{session_id}", summary="刷新工作记忆", description="刷新会话工作记忆的TTL过期时间")
 def working_refresh(session_id: str, service: BrainMemoryService = Depends()):
     """刷新会话工作记忆的TTL。Args: session_id (str) 会话ID; service (BrainMemoryService) 记忆服务。Returns: dict 成功响应"""
     result = service.working_refresh(session_id)
     return success(data=result)
 
 
-@router.post("/episodic/store", status_code=201)
+@router.post("/episodic/store", status_code=201, summary="存储情景记忆", description="存储一条情景记忆记录")
 def episodic_store(
     body: EpisodicStore,
     request: Request,
@@ -119,7 +119,7 @@ def episodic_store(
     return success(data=result)
 
 
-@router.get("/episodic/list")
+@router.get("/episodic/list", summary="情景记忆列表", description="分页查询情景记忆记录")
 def episodic_list(
     event_type: Optional[str] = Query(None),
     outcome: Optional[str] = Query(None),
@@ -149,14 +149,14 @@ def episodic_list(
     )
 
 
-@router.get("/episodic/{memory_id}")
+@router.get("/episodic/{memory_id}", summary="情景记忆详情", description="获取指定情景记忆的详细信息")
 def episodic_detail(memory_id: int, service: BrainMemoryService = Depends()):
     """获取情景记忆详情。Args: memory_id (int) 记忆ID; service (BrainMemoryService) 记忆服务。Returns: dict 成功响应"""
     row = service.episodic_detail(memory_id)
     return success(data=row)
 
 
-@router.post("/episodic/{memory_id}/consolidate")
+@router.post("/episodic/{memory_id}/consolidate", summary="固话情景记忆", description="将情景记忆固化为语义记忆")
 def episodic_consolidate(
     memory_id: int,
     request: Request,
@@ -170,14 +170,14 @@ def episodic_consolidate(
     return success(data=result)
 
 
-@router.get("/dashboard")
+@router.get("/dashboard", summary="记忆仪表盘", description="获取记忆系统仪表盘统计数据")
 def dashboard(service: BrainMemoryService = Depends()):
     """获取记忆系统仪表盘统计。Args: service (BrainMemoryService) 记忆服务。Returns: dict 成功响应"""
     result = service.dashboard()
     return success(data=result)
 
 
-@router.post("/semantic/abstract")
+@router.post("/semantic/abstract", summary="语义抽象", description="从源数据提取语义抽象知识")
 def semantic_abstract(body: SemanticAbstract, request: Request, service: BrainMemoryService = Depends()):
     """从源数据提取语义抽象。
     Args: body (SemanticAbstract) 语义抽象体; request (Request) HTTP请求; service BrainMemoryService。
@@ -191,7 +191,7 @@ def semantic_abstract(body: SemanticAbstract, request: Request, service: BrainMe
     return success(data=result)
 
 
-@router.get("/semantic/search")
+@router.get("/semantic/search", summary="语义搜索", description="搜索语义记忆内容")
 def semantic_search(
     query: str = Query(...),
     limit: int = Query(10, ge=1, le=100),
@@ -202,7 +202,7 @@ def semantic_search(
     return success(data=result)
 
 
-@router.post("/procedural/learn")
+@router.post("/procedural/learn", summary="学习程序记忆", description="学习并存储程序性记忆模式")
 def procedural_learn(body: ProceduralLearn, service: BrainMemoryService = Depends()):
     """学习程序性记忆模式。Args: body (ProceduralLearn) 程序学习体; service (BrainMemoryService) 记忆服务。Returns: dict 成功响应"""
     result = service.procedural_learn(
@@ -214,14 +214,14 @@ def procedural_learn(body: ProceduralLearn, service: BrainMemoryService = Depend
     return success(data=result)
 
 
-@router.post("/procedural/recall")
+@router.post("/procedural/recall", summary="召回程序记忆", description="根据上下文召回程序性记忆")
 def procedural_recall(body: ProceduralRecall, service: BrainMemoryService = Depends()):
     """根据上下文召回程序性记忆。Args: body (ProceduralRecall) 程序召回体; service (BrainMemoryService) 记忆服务。Returns: dict 成功响应"""
     result = service.procedural_recall(trigger_context=body.trigger_context)
     return success(data=result)
 
 
-@router.post("/decay")
+@router.post("/decay", summary="记忆衰减", description="对超过时间阈值的记忆执行衰减")
 def memory_decay(body: MemoryDecay, service: BrainMemoryService = Depends()):
     """对超过阈值的记忆执行衰减。Args: body (MemoryDecay) 衰减设置体; service (BrainMemoryService) 记忆服务。Returns: dict 成功响应"""
     result = service.memory_decay(hours_threshold=body.hours_threshold)
