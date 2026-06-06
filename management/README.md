@@ -2,7 +2,7 @@
 
 > 企业管理后台。总裁/经理/员工三级权限视图，仪表盘、员工管理、角色配置。
 
-**端口：** 8011
+**端口：** 8012
 
 ## 核心文件
 
@@ -18,5 +18,5 @@
 ## 启动
 
 ```bash
-uvicorn management.app.main:app --port 8011
+uvicorn management.app.main:app --port 8012
 ```
