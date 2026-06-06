@@ -12,6 +12,7 @@ exclude = '''
 [tool.ruff]
 line-length = 150
 target-version = "py312"
+exclude = ["_archive"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
