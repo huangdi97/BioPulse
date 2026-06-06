@@ -62,8 +62,7 @@ from cloud.app.repositories.market_intel_repository import (
     MarketIntelSourcesRepository,
     McpToolsRepository,
 )
-from cloud.app.repositories.mdt_decision_repository import (
-    AsyncMdtOpinionsRepository,
+from cloud.app.repositories.mdt_opinion_repo import (
     CausalAnalysesRepository,
     CausalGraphsRepository,
     CollaborationSessionsRepository,
@@ -71,11 +70,14 @@ from cloud.app.repositories.mdt_decision_repository import (
     CounterfactualScenariosRepository,
     CrossCaseInsightsRepository,
     DecisionCasesRepository,
+    SoapDecisionsRepository,
+    SoapTemplatesRepository,
+)
+from cloud.app.repositories.mdt_rep import (
+    AsyncMdtOpinionsRepository,
     MdtOpinionsRepository,
     MdtParticipantsRepository,
     MdtSessionsRepository,
-    SoapDecisionsRepository,
-    SoapTemplatesRepository,
 )
 from cloud.app.repositories.memory_repository import (
     EpisodicMemoryRepository,
