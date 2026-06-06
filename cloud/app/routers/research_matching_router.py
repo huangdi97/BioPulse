@@ -7,11 +7,11 @@ or free-text method descriptions using keyword overlap scoring.
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from cloud.app.research_database import log_research_audit
 from cloud.app.services.product_matching_service import (
     match_products_by_method,
     match_products_for_pi,
 )
+from cloud.app.services.research_service import ResearchService
 from shared.auth import get_current_user
 from shared.auth_scope import require_scope
 
@@ -41,7 +41,7 @@ def match_for_pi(
 ):
     """Return top 3 product recommendations for a given PI profile."""
     results = match_products_for_pi(body.pi_id, top_k=3)
-    log_research_audit(
+    ResearchService().log_audit(
         event_type="create",
         entity_type="matching",
         entity_id=body.pi_id,
@@ -58,7 +58,7 @@ def match_by_method(
 ):
     """Return top 3 product recommendations matching a method description."""
     results = match_products_by_method(body.method_description, top_k=3)
-    log_research_audit(
+    ResearchService().log_audit(
         event_type="create",
         entity_type="matching",
         entity_id=0,

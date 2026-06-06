@@ -3,8 +3,8 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from cloud.app.research_database import get_research_db
 from cloud.app.services.compliance_enforcer import ResearchComplianceEnforcer
+from cloud.app.services.research_service import ResearchService
 from shared.auth import get_current_user
 from shared.auth_scope import require_scope
 
@@ -26,7 +26,7 @@ def enforce_research_visit(
     body: ResearchVisitCheckRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    db = get_research_db()
+    db = ResearchService().get_research_db()
     try:
         enforcer = ResearchComplianceEnforcer(db)
         violations = enforcer.check_research_visit(body.visit_data)
@@ -51,7 +51,7 @@ def enforce_research_visit(
 def list_research_rules(
     current_user: dict = Depends(get_current_user),
 ):
-    db = get_research_db()
+    db = ResearchService().get_research_db()
     try:
         enforcer = ResearchComplianceEnforcer(db)
         return {"rules": enforcer.get_l1_rules()}
