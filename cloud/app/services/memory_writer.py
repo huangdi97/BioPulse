@@ -1,7 +1,6 @@
 """记忆写入服务，负责工作记忆、情景记忆与语义记忆的写入。"""
 
 import json
-import urllib.request
 from datetime import datetime, timedelta
 
 from cloud.app.repositories import (
@@ -11,23 +10,14 @@ from cloud.app.repositories import (
     WorkingMemoryRepository,
 )
 from cloud.app.services.base import BaseService
-from shared.app_settings import settings
-
-
-def _now() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-
-def _call_ai(messages: list[dict], auth_header: str) -> dict:
-    payload = {"messages": messages, "temperature": 0.3, "max_tokens": 2048}
-    req = urllib.request.Request(
-        f"{settings.cloud_api_base}/ai/chat",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json", "Authorization": auth_header},
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=120) as rp:
-        return json.loads(rp.read().decode("utf-8")).get("data", {})
+from cloud.app.services.memory_format import (
+    _call_ai,
+    _now,
+    build_abstract_prompt,
+    build_consolidation_prompt,
+    parse_abstract_reply,
+    parse_consolidation_reply,
+)
 
 
 class MemoryWriter(BaseService):
@@ -163,32 +153,10 @@ class MemoryWriter(BaseService):
             from starlette import status
 
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Already consolidated")
-        messages = [
-            {
-                "role": "system",
-                "content": "你是一名记忆巩固专家。请根据输入的情景记忆内容，提炼核心洞察，生成结构化的记忆条目。"
-                '输出纯JSON（不要markdown代码块）：{"title":"洞察标题","content":"详细内容","memory_type":"insight",'
-                '"importance":0.8,"context_tags":["标签1","标签2"]}',
-            },
-            {
-                "role": "user",
-                "content": f"事件类型: {row['event_type']}\n标题: {row['title']}\n"
-                f"描述: {row['description']}\n情景: {row['context']}\n结果: {row['outcome']}\n"
-                f"情感值: {row['valence']}\n强度: {row['intensity']}",
-            },
-        ]
+        messages = build_consolidation_prompt(row)
         ai_result = _call_ai(messages, auth_header)
         reply = ai_result.get("reply", "")
-        try:
-            insight = json.loads(reply)
-        except (json.JSONDecodeError, TypeError):
-            insight = {
-                "title": row["title"],
-                "content": reply or row["description"],
-                "memory_type": "insight",
-                "importance": 0.5,
-                "context_tags": [],
-            }
+        insight = parse_consolidation_reply(reply, row)
         title = insight.get("title", row["title"])
         content = insight.get("content", row["description"])
         memory_type = insight.get("memory_type", "insight")
@@ -242,22 +210,9 @@ class MemoryWriter(BaseService):
 
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Episodic memories for abstraction not found")
         txt = "\n".join(f"{r['title']}: {r['description']}" for r in rows)
-        msg = [
-            {
-                "role": "system",
-                "content": f'语义抽象层次={abstraction_level}。输出JSON:{{"title":"","content":"","context_tags":[]}}',
-            },
-            {"role": "user", "content": txt},
-        ]
+        msg = build_abstract_prompt(rows, abstraction_level, txt)
         reply = _call_ai(msg, auth_header).get("reply", "")
-        try:
-            d = json.loads(reply)
-        except Exception:
-            d = {
-                "title": f"Semantic-{source_type}",
-                "content": reply,
-                "context_tags": [],
-            }
+        d = parse_abstract_reply(reply, source_type, txt[:200])
         n = _now()
         eid = MemoryEntriesRepository(self.db).create(
             {
