@@ -15,7 +15,7 @@ from fastapi import (
 from fastapi.responses import FileResponse
 
 from assistant.app.services.voice_service import VoiceService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(tags=["voice"])
@@ -25,7 +25,7 @@ router = APIRouter(tags=["voice"])
 async def upload_audio(
     file: UploadFile = File(...),
     service: VoiceService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ):
     """上传音频文件到语音服务。
 
@@ -48,7 +48,7 @@ async def voice_chat(
     context: Optional[str] = Form(None),
     request: Request = None,
     service: VoiceService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ):
     """语音对话：上传音频并获取 AI 语音回复。
 
@@ -94,7 +94,7 @@ async def synthesize(
 async def download_audio(
     file_id: int,
     service: VoiceService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ):
     """下载指定的音频文件。
 

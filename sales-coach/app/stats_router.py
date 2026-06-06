@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from sales_coach.app.services.stats_service import StatsService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
 router = APIRouter(prefix="/coach", tags=["stats"])
@@ -36,7 +36,7 @@ class StatsOut(BaseModel):
 @router.get("/stats", summary="教练统计", description="教练模块的聚合统计数据")
 def get_stats(
     service: StatsService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[StatsOut]:
     """Aggregate coaching stats from coach_session."""
     data = service.get_stats()
@@ -71,7 +71,7 @@ def get_user_trend(
     user_id: int,
     months: int = Query(6, ge=1, le=24),
     service: StatsService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """获取个人评分趋势（月度聚合）。"""
     trend = service.get_user_trend(user_id, months=months)
@@ -82,7 +82,7 @@ def get_user_trend(
 def get_team_comparison(
     team_id: int,
     service: StatsService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """获取团队对比数据。"""
     data = service.get_team_comparison(team_id)
@@ -93,7 +93,7 @@ def get_team_comparison(
 def get_radar(
     user_id: int,
     service: StatsService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """获取雷达图数据（各维度平均分）。"""
     data = service.get_radar_data(user_id)
@@ -104,7 +104,7 @@ def get_radar(
 def get_category_performance(
     user_id: int,
     service: StatsService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """获取各类场景的表现对比。"""
     data = service.get_category_performance(user_id)
@@ -116,7 +116,7 @@ stats_root_router = APIRouter(tags=["stats"])
 
 @stats_root_router.get("/stats", summary="根统计", description="前端兼容的根路径统计接口")
 def get_stats_root(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """GET /stats endpoint for frontend compatibility."""
     return success(data={})

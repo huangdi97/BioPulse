@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from starlette import status
 
 from assistant.app.services.task_service import TaskService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -54,7 +54,7 @@ class TaskOut(BaseModel):
 def create_task(
     body: TaskCreate,
     service: TaskService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """Create a new task."""
     user_id = int(current_user["sub"])
@@ -73,7 +73,7 @@ def list_tasks(
     status_filter: Optional[str] = Query(None, alias="status"),
     priority: Optional[str] = Query(None),
     service: TaskService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[TaskOut]]:
     """List tasks with pagination and filtering."""
     total, total_pages, rows = service.list_tasks(
@@ -99,7 +99,7 @@ def list_tasks(
 def get_task(
     task_id: int,
     service: TaskService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[TaskOut]:
     """Get a single task by ID."""
     row = service.get_task(task_id)
@@ -111,7 +111,7 @@ def update_task(
     task_id: int,
     body: TaskUpdate,
     service: TaskService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[TaskOut]:
     """Update a task."""
     updated = service.update_task(task_id, body)
@@ -122,7 +122,7 @@ def update_task(
 def delete_task(
     task_id: int,
     service: TaskService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """Delete a task."""
     service.delete_task(task_id)

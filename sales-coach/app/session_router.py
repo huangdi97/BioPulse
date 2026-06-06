@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from sales_coach.app.services.session_service import SessionService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(tags=["sessions"])
@@ -73,7 +73,7 @@ def create_session(
     module_id: int,
     body: SessionCreate,
     service: SessionService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """Create a coach session for a training module."""
     user_id = int(current_user["sub"])
@@ -100,7 +100,7 @@ def list_sessions(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     service: SessionService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[SessionOut]]:
     """List coach sessions for a training module."""
     total, total_pages, rows = service.list(module_id, page, page_size)
@@ -137,7 +137,7 @@ def list_all_sessions(
 def get_session(
     session_id: int,
     service: SessionService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[SessionOut]:
     """Get a single coach session by ID."""
     row = service.get(session_id)
@@ -148,7 +148,7 @@ def get_session(
 def get_session_dialogue(
     session_id: int,
     service: SessionService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """Get the full dialogue history for a coach session."""
     history = service.get_dialogue_history(session_id)
@@ -160,7 +160,7 @@ def append_dialogue(
     session_id: int,
     entry: dict,
     service: SessionService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[SessionOut]:
     """Append a dialogue entry to a coach session log."""
     updated = service.update_dialogue_log(session_id, entry)
@@ -172,7 +172,7 @@ def update_session(
     session_id: int,
     body: SessionUpdate,
     service: SessionService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[SessionOut]:
     """Update a coach session."""
     updated = service.update(session_id, body)
@@ -183,7 +183,7 @@ def update_session(
 def delete_session(
     session_id: int,
     service: SessionService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """Delete a coach session."""
     service.delete(session_id)

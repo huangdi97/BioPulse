@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from opportunity.app.services.bookmark_service import BookmarkService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/bookmarks", tags=["bookmarks"])
@@ -40,7 +40,7 @@ class CheckBookmarkOut(BaseModel):
 def create_bookmark(
     body: BookmarkCreate,
     service: BookmarkService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建书签。
 
@@ -66,7 +66,7 @@ def list_bookmarks(
     page_size: int = Query(20, ge=1, le=100),
     entity_type: Optional[str] = Query(None),
     service: BookmarkService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[BookmarkOut]]:
     """获取书签列表（分页，支持按实体类型筛选）。
 
@@ -104,7 +104,7 @@ def check_bookmark(
     entity_type: str = Query(...),
     entity_id: int = Query(...),
     service: BookmarkService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[CheckBookmarkOut]:
     """检查书签是否存在。
 
@@ -128,7 +128,7 @@ def check_bookmark(
 def delete_bookmark(
     bookmark_id: int,
     service: BookmarkService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除书签。
 

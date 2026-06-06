@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from starlette import status
 
 from opportunity.app.services.research_service import ResearchService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/research-trails", tags=["research"])
@@ -63,7 +63,7 @@ class ResearchTrailOut(BaseModel):
 def create_research_trail(
     body: ResearchTrailCreate,
     service: ResearchService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建research trail。"""
     user_id = int(current_user["sub"])
@@ -83,7 +83,7 @@ def list_research_trails(
     journal: Optional[str] = Query(None),
     relevance_min: Optional[int] = Query(None),
     service: ResearchService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[ResearchTrailOut]]:
     """获取research trails。"""
     total, total_pages, rows = service.list_research_trails(
@@ -110,7 +110,7 @@ def list_research_trails(
 def get_research_trail(
     trail_id: int,
     service: ResearchService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[ResearchTrailOut]:
     """获取research trail。"""
     row = service.get_research_trail(trail_id)
@@ -122,7 +122,7 @@ def update_research_trail(
     trail_id: int,
     body: ResearchTrailUpdate,
     service: ResearchService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[ResearchTrailOut]:
     """更新research trail。"""
     updated = service.update_research_trail(trail_id, body)
@@ -133,7 +133,7 @@ def update_research_trail(
 def delete_research_trail(
     trail_id: int,
     service: ResearchService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除research trail。"""
     service.delete_research_trail(trail_id)

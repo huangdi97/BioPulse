@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from sales_assistant.app.services.anomaly_service import AnomalyService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(tags=["anomaly"])
@@ -41,7 +41,7 @@ class AlertUpdate(BaseModel):
 def create_rule(
     body: RuleCreate,
     service: AnomalyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建rule。"""
     user_id = int(current_user["sub"])
@@ -59,7 +59,7 @@ def list_rules(
     metric: Optional[str] = Query(None),
     severity: Optional[str] = Query(None),
     service: AnomalyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse]:
     """获取rules。"""
     total, total_pages, rows = service.list_rules(page, page_size, metric, severity)
@@ -80,7 +80,7 @@ def update_rule(
     rule_id: int,
     body: RuleUpdate,
     service: AnomalyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """更新rule。"""
     row = service.update_rule(rule_id, body)
@@ -91,7 +91,7 @@ def update_rule(
 def delete_rule(
     rule_id: int,
     service: AnomalyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除rule。"""
     service.delete_rule(rule_id)
@@ -101,7 +101,7 @@ def delete_rule(
 @router.post("/anomaly/check", summary="异常检查", description="执行异常检测并生成告警")
 def check_anomalies(
     service: AnomalyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """检查anomalies。"""
     created = service.check_anomalies()
@@ -115,7 +115,7 @@ def list_alerts(
     severity: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     service: AnomalyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse]:
     """获取alerts。"""
     total, total_pages, rows = service.list_alerts(page, page_size, severity, status)
@@ -136,7 +136,7 @@ def update_alert(
     alert_id: int,
     body: AlertUpdate,
     service: AnomalyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """更新alert。"""
     user_id = int(current_user["sub"])
@@ -147,7 +147,7 @@ def update_alert(
 @router.get("/anomaly/stats", summary="异常统计", description="获取异常检测统计数据")
 def anomaly_stats(
     service: AnomalyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """anomaly stats。"""
     data = service.anomaly_stats()

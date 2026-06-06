@@ -8,7 +8,7 @@ from pydantic import BaseModel, field_validator
 from starlette import status
 
 from assistant.app.services.health_radar_service import HealthRadarService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/health-radar", tags=["health-radar"])
@@ -76,7 +76,7 @@ class HealthRadarOut(BaseModel):
 def create_health_radar(
     body: HealthRadarCreate,
     service: HealthRadarService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建健康雷达记录。
 
@@ -106,7 +106,7 @@ def list_health_radar(
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
     service: HealthRadarService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[HealthRadarOut]]:
     """分页查询健康雷达记录列表，支持按患者姓名、评分范围、日期范围筛选。
 
@@ -140,7 +140,7 @@ def list_health_radar(
 @router.get("/stats", summary="获取健康雷达统计", description="获取健康评估的统计数据信息。")
 def get_health_radar_stats(
     service: HealthRadarService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[dict]:
     """获取健康雷达统计信息（如总记录数、评分分布等）。
 
@@ -159,7 +159,7 @@ def get_health_radar_stats(
 def get_health_radar(
     health_radar_id: int,
     service: HealthRadarService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[HealthRadarOut]:
     """获取指定健康雷达记录的详细信息。
 
@@ -180,7 +180,7 @@ def update_health_radar(
     health_radar_id: int,
     body: HealthRadarUpdate,
     service: HealthRadarService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[HealthRadarOut]:
     """更新指定健康雷达记录的部分字段。
 
@@ -201,7 +201,7 @@ def update_health_radar(
 def delete_health_radar(
     health_radar_id: int,
     service: HealthRadarService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除指定健康雷达记录。
 

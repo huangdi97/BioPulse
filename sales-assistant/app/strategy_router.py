@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from sales_assistant.app.services.strategy_service import StrategyService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/strategies", tags=["strategies"])
@@ -72,7 +72,7 @@ class StrategySimulateRequest(BaseModel):
 def create_strategy(
     body: StrategyCreate,
     service: StrategyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建strategy。"""
     user_id = int(current_user["sub"])
@@ -91,7 +91,7 @@ def list_strategies(
     status: Optional[str] = Query(None),
     goal: Optional[str] = Query(None),
     service: StrategyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[StrategyOut]]:
     """获取strategies。"""
     total, total_pages, rows = service.list_strategies(
@@ -117,7 +117,7 @@ def list_strategies(
 def get_strategy(
     strategy_id: int,
     service: StrategyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[StrategyOut]:
     """获取strategy。"""
     row = service.get_strategy(strategy_id)
@@ -129,7 +129,7 @@ def update_strategy(
     strategy_id: int,
     body: StrategyUpdate,
     service: StrategyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[StrategyOut]:
     """更新strategy。"""
     row = service.update_strategy(strategy_id, body)
@@ -140,7 +140,7 @@ def update_strategy(
 def delete_strategy(
     strategy_id: int,
     service: StrategyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除strategy。"""
     service.delete_strategy(strategy_id)
@@ -151,7 +151,7 @@ def delete_strategy(
 def generate_strategy(
     body: StrategyGenerateRequest,
     service: StrategyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """generate strategy。"""
     user_id = int(current_user["sub"])
@@ -166,7 +166,7 @@ def generate_strategy(
 def compare_strategies(
     ids: str = Query(...),
     service: StrategyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """compare strategies。"""
     rows = service.compare_strategies(ids)
@@ -190,7 +190,7 @@ def compare_strategies(
 def simulate_strategy(
     body: StrategySimulateRequest,
     service: StrategyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """simulate strategy。"""
     result = service.simulate_strategy(body)

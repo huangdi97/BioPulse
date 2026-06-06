@@ -7,7 +7,7 @@ from starlette import status
 
 from sales_coach.app.services.reflection_service import generate_reflection_report, get_scenario
 from sales_coach.app.services.session_service import SessionService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
 router = APIRouter(prefix="/reflections", tags=["反思 Agent"])
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/reflections", tags=["反思 Agent"])
 
 @router.get("", summary="反思列表", description="获取所有反思报告列表")
 def list_reflections(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """获取所有反思报告列表。"""
     return success(data=[])
@@ -25,7 +25,7 @@ def list_reflections(
 def create_reflection(
     session_id: int,
     session_service: SessionService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """创建反思报告。读取会话对话日志 → 计算分数 → 调用 AI Gateway → 返回报告。"""
     session = session_service.get(session_id)
@@ -50,7 +50,7 @@ def create_reflection(
 def get_reflection(
     session_id: int,
     session_service: SessionService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """获取已生成的反思报告。"""
     session = session_service.get(session_id)
@@ -67,7 +67,7 @@ def get_reflection(
 def get_reflection_summary(
     session_id: int,
     session_service: SessionService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """获取反思报告摘要（短版，用于列表展示）。"""
     session = session_service.get(session_id)

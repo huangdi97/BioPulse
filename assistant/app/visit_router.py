@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from starlette import status
 
 from assistant.app.services.visit_service import VisitService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/visits", tags=["visits"])
@@ -63,7 +63,7 @@ class VisitOut(BaseModel):
 @router.post("", summary="创建拜访", description="创建新的拜访记录。")
 def create_visit(
     body: VisitCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """Create a new visit record."""
     service = VisitService()
@@ -81,7 +81,7 @@ def list_visits(
     page_size: int = Query(20, ge=1, le=100),
     hcp_id: Optional[int] = Query(None),
     visit_type: Optional[str] = Query(None),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[VisitOut]]:
     """List visit records with pagination and filtering."""
     service = VisitService()
@@ -106,7 +106,7 @@ def list_visits(
 @router.get("/{visit_id}", summary="获取拜访详情", description="根据ID获取单个拜访记录的详细信息。")
 def get_visit(
     visit_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[VisitOut]:
     """Get a single visit record by ID."""
     service = VisitService()
@@ -118,7 +118,7 @@ def get_visit(
 def update_visit(
     visit_id: int,
     body: VisitUpdate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[VisitOut]:
     """Update a visit record."""
     service = VisitService()
@@ -129,7 +129,7 @@ def update_visit(
 @router.delete("/{visit_id}", summary="删除拜访", description="删除指定的拜访记录。")
 def delete_visit(
     visit_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """Delete a visit record."""
     service = VisitService()
@@ -143,7 +143,7 @@ visit_alias_router = APIRouter(prefix="/visit", tags=["visit-alias"])
 @visit_alias_router.post("", summary="创建拜访(别名)", description="通过别名路径创建拜访记录。")
 def create_visit_alias(
     body: VisitCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     service = VisitService()
     user_id = int(current_user["sub"])
@@ -160,7 +160,7 @@ def list_visits_alias(
     page_size: int = Query(20, ge=1, le=100),
     hcp_id: Optional[int] = Query(None),
     visit_type: Optional[str] = Query(None),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[VisitOut]]:
     service = VisitService()
     total, total_pages, rows = service.list_visits(
@@ -184,7 +184,7 @@ def list_visits_alias(
 @visit_alias_router.get("/{visit_id}", summary="获取拜访详情(别名)", description="通过别名路径获取拜访记录。")
 def get_visit_alias(
     visit_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[VisitOut]:
     service = VisitService()
     row = service.get_visit(visit_id)

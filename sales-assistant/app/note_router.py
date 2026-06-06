@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from starlette import status
 
 from sales_assistant.app.services.note_service import NoteService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(tags=["notes"])
@@ -45,7 +45,7 @@ def create_note(
     schedule_id: int,
     body: NoteCreate,
     service: NoteService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建note。"""
     user_id = int(current_user["sub"])
@@ -62,7 +62,7 @@ def list_notes(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     service: NoteService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[NoteOut]]:
     """获取notes。"""
     total, total_pages, rows = service.list_notes(schedule_id, page, page_size)
@@ -88,7 +88,7 @@ def list_all_notes() -> list:
 def get_note(
     note_id: int,
     service: NoteService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[NoteOut]:
     """获取note。"""
     row = service.get_note(note_id)
@@ -100,7 +100,7 @@ def update_note(
     note_id: int,
     body: NoteUpdate,
     service: NoteService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[NoteOut]:
     """更新note。"""
     row = service.update_note(note_id, body)
@@ -111,7 +111,7 @@ def update_note(
 def delete_note(
     note_id: int,
     service: NoteService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除note。"""
     service.delete_note(note_id)

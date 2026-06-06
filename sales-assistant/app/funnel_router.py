@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from sales_assistant.app.services.funnel_service import FunnelService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
 router = APIRouter(tags=["Funnel Analysis"])
@@ -29,7 +29,7 @@ class FunnelData(BaseModel):
 @router.get("/funnel", response_model=ApiResponse[FunnelData], summary="漏斗分析", description="获取销售漏斗分析数据")
 def funnel_analysis(
     service: FunnelService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> Any:
     """funnel analysis。"""
     data = service.funnel_analysis()

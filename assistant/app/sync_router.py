@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from assistant.app.services.sync_service import SyncService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
 router = APIRouter(prefix="/sync", tags=["sync"])
@@ -41,7 +41,7 @@ class SyncPushResponse(BaseModel):
 def sync_push(
     body: SyncPushRequest,
     service: SyncService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[SyncPushResponse]:
     """将客户端离线操作推送到服务端进行同步。
 
@@ -68,7 +68,7 @@ def sync_push(
 def sync_pull(
     since: str = Query(...),
     service: SyncService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """从服务端拉取自指定时间以来发生变更的数据。
 
@@ -87,7 +87,7 @@ def sync_pull(
 @router.get("/status", summary="获取同步状态", description="获取当前数据同步的状态信息。")
 def sync_status(
     service: SyncService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """获取当前同步状态信息（如待同步操作数量等）。
 

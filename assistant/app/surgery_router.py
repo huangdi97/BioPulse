@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from assistant.app.services.surgery_service import SurgeryService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/surgery-reminders", tags=["surgery"])
@@ -64,7 +64,7 @@ class SurgeryOut(BaseModel):
 def create_surgery(
     body: SurgeryCreate,
     service: SurgeryService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建手术提醒记录。
 
@@ -87,7 +87,7 @@ def create_surgery(
 @router.get("/today", summary="今日手术", description="获取今日的所有手术安排列表。")
 def today_surgeries(
     service: SurgeryService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[List[SurgeryOut]]:
     """获取今日的所有手术安排。
 
@@ -111,7 +111,7 @@ def list_surgeries(
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
     service: SurgeryService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[SurgeryOut]]:
     """分页查询手术提醒列表，支持按患者姓名、状态和日期范围筛选。
 
@@ -150,7 +150,7 @@ def list_surgeries(
 @router.post("/check-now", summary="立即检查提醒", description="立即触发检查并发送手术提醒通知。")
 def check_reminders_now(
     service: SurgeryService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ):
     """立即触发检查手术提醒，发送到期待通知的患者。
 
@@ -170,7 +170,7 @@ def upcoming_surgeries(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     service: SurgeryService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[SurgeryOut]]:
     """分页查询即将到来的手术安排。
 
@@ -199,7 +199,7 @@ def upcoming_surgeries(
 def get_surgery(
     surgery_id: int,
     service: SurgeryService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[SurgeryOut]:
     """获取指定手术提醒的详细信息。
 
@@ -220,7 +220,7 @@ def update_surgery(
     surgery_id: int,
     body: SurgeryUpdate,
     service: SurgeryService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[SurgeryOut]:
     """更新指定手术提醒的部分字段。
 
@@ -241,7 +241,7 @@ def update_surgery(
 def delete_surgery(
     surgery_id: int,
     service: SurgeryService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除指定手术提醒记录。
 

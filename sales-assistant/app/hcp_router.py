@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from starlette import status
 
 from sales_assistant.app.services.hcp_service import HcpService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(tags=["hcp", "products"])
@@ -103,7 +103,7 @@ class RelationOut(BaseModel):
 def create_hcp(
     body: HcpCreate,
     service: HcpService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建hcp。"""
     user_id = int(current_user["sub"])
@@ -122,7 +122,7 @@ def list_hcp(
     hospital: Optional[str] = Query(None),
     department: Optional[str] = Query(None),
     service: HcpService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[HcpOut]]:
     """获取hcp。"""
     total, total_pages, rows = service.list_hcps(page, page_size, name, hospital, department)
@@ -142,7 +142,7 @@ def get_graph(
     hcp_id: Optional[int] = Query(None),
     product_id: Optional[int] = Query(None),
     service: HcpService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """获取graph。"""
     data = service.get_graph(hcp_id, product_id)
@@ -153,7 +153,7 @@ def get_graph(
 def get_hcp(
     hcp_id: int,
     service: HcpService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[HcpOut]:
     """获取hcp。"""
     row = service.get_hcp(hcp_id)
@@ -165,7 +165,7 @@ def update_hcp(
     hcp_id: int,
     body: HcpUpdate,
     service: HcpService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[HcpOut]:
     """更新hcp。"""
     row = service.update_hcp(hcp_id, body)
@@ -176,7 +176,7 @@ def update_hcp(
 def delete_hcp(
     hcp_id: int,
     service: HcpService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除hcp。"""
     service.delete_hcp(hcp_id)
@@ -187,7 +187,7 @@ def delete_hcp(
 def create_product(
     body: ProductCreate,
     service: HcpService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建product。"""
     user_id = int(current_user["sub"])
@@ -205,7 +205,7 @@ def list_products(
     category: Optional[str] = Query(None),
     company: Optional[str] = Query(None),
     service: HcpService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[ProductOut]]:
     """获取products。"""
     total, total_pages, rows = service.list_products(page, page_size, category, company)
@@ -224,7 +224,7 @@ def list_products(
 def get_product(
     product_id: int,
     service: HcpService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[ProductOut]:
     """获取product。"""
     row = service.get_product(product_id)
@@ -236,7 +236,7 @@ def update_product(
     product_id: int,
     body: ProductUpdate,
     service: HcpService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[ProductOut]:
     """更新product。"""
     row = service.update_product(product_id, body)
@@ -247,7 +247,7 @@ def update_product(
 def delete_product(
     product_id: int,
     service: HcpService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除product。"""
     service.delete_product(product_id)
@@ -259,7 +259,7 @@ def create_relation(
     hcp_id: int,
     body: RelationCreate,
     service: HcpService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建relation。"""
     user_id = int(current_user["sub"])
@@ -274,7 +274,7 @@ def create_relation(
 def list_relations(
     hcp_id: int,
     service: HcpService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[List[RelationOut]]:
     """获取relations。"""
     rows = service.list_relations(hcp_id)
@@ -285,7 +285,7 @@ def list_relations(
 def delete_relation(
     relation_id: int,
     service: HcpService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除relation。"""
     service.delete_relation(relation_id)

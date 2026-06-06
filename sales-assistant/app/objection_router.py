@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
 from sales_assistant.app.services.objection_service import ObjectionService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
 router = APIRouter(tags=["Objection Handling"])
@@ -31,7 +31,7 @@ def handle_objection(
     request: Request,
     body: ObjectionRequest,
     service: ObjectionService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> Any:
     """handle objection。"""
     auth_header = request.headers.get("Authorization", "")

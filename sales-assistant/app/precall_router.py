@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
 from sales_assistant.app.services.precall_service import PrecallService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
 router = APIRouter(tags=["Pre-call Brief"])
@@ -38,7 +38,7 @@ def precall(
     request: Request,
     body: PrecallRequest,
     service: PrecallService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> Any:
     """precall。"""
     auth_header = request.headers.get("Authorization", "")

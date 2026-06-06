@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from starlette import status
 
 from assistant.app.services.hcp_service import HcpService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/hcp", tags=["hcp"])
@@ -65,7 +65,7 @@ class HcpOut(BaseModel):
 @router.post("", summary="创建HCP", description="创建新的医疗保健提供者记录。")
 def create_hcp(
     body: HcpCreate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """Create a new HCP record."""
     service = HcpService()
@@ -85,7 +85,7 @@ def list_hcps(
     hospital: Optional[str] = Query(None),
     department: Optional[str] = Query(None),
     level: Optional[str] = Query(None),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[HcpOut]]:
     """List HCP records with pagination and filtering."""
     service = HcpService()
@@ -112,7 +112,7 @@ def list_hcps(
 @router.get("/{hcp_id}", summary="获取HCP详情", description="根据ID获取单个HCP记录的详细信息。")
 def get_hcp(
     hcp_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[HcpOut]:
     """Get a single HCP record by ID."""
     service = HcpService()
@@ -124,7 +124,7 @@ def get_hcp(
 def update_hcp(
     hcp_id: int,
     body: HcpUpdate,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[HcpOut]:
     """Update an HCP record."""
     service = HcpService()
@@ -135,7 +135,7 @@ def update_hcp(
 @router.delete("/{hcp_id}", summary="删除HCP", description="软删除指定HCP记录，将其标记为非活跃。")
 def delete_hcp(
     hcp_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """Soft-delete an HCP record by setting is_active to 0."""
     service = HcpService()
@@ -154,7 +154,7 @@ def list_hcps_alias(
     hospital: Optional[str] = Query(None),
     department: Optional[str] = Query(None),
     level: Optional[str] = Query(None),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[HcpOut]]:
     service = HcpService()
     total, total_pages, rows = service.list_hcps(
@@ -180,7 +180,7 @@ def list_hcps_alias(
 @hcp_alias_router.get("/hcps/{hcp_id}", summary="获取HCP详情(别名)", description="通过别名路径获取单个HCP记录。")
 def get_hcp_alias(
     hcp_id: int,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[HcpOut]:
     service = HcpService()
     row = service.get_hcp(hcp_id)
@@ -195,7 +195,7 @@ def hcp_list_alias(
     hospital: Optional[str] = Query(None),
     department: Optional[str] = Query(None),
     level: Optional[str] = Query(None),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[HcpOut]]:
     service = HcpService()
     total, total_pages, rows = service.list_hcps(

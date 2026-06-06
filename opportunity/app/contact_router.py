@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from opportunity.app.services.contact_service import ContactService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(tags=["contacts"])
@@ -44,7 +44,7 @@ def create_contact(
     opportunity_id: int,
     body: ContactCreate,
     service: ContactService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建联系记录。
 
@@ -71,7 +71,7 @@ def list_contacts(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     service: ContactService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[ContactOut]]:
     """获取指定商机的联系记录列表（分页）。
 
@@ -114,7 +114,7 @@ def list_all_contacts() -> ApiResponse:
 def get_contact(
     contact_id: int,
     service: ContactService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[ContactOut]:
     """获取联系记录详情。
 
@@ -135,7 +135,7 @@ def update_contact(
     contact_id: int,
     body: ContactUpdate,
     service: ContactService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[ContactOut]:
     """更新联系记录。
 
@@ -156,7 +156,7 @@ def update_contact(
 def delete_contact(
     contact_id: int,
     service: ContactService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除联系记录。
 

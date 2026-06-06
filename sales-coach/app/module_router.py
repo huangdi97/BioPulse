@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from starlette import status
 
 from sales_coach.app.services.module_service import ModuleService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/modules", tags=["modules"])
@@ -54,7 +54,7 @@ class ModuleOut(BaseModel):
 def create_module(
     body: ModuleCreate,
     service: ModuleService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """Create a new training module."""
     user_id = int(current_user["sub"])
@@ -72,7 +72,7 @@ def list_modules(
     category: Optional[str] = Query(None),
     difficulty: Optional[str] = Query(None),
     service: ModuleService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[ModuleOut]]:
     """List training modules with pagination and filtering."""
     total, total_pages, rows = service.list(page, page_size, category, difficulty)
@@ -92,7 +92,7 @@ def list_modules(
 def get_module(
     module_id: int,
     service: ModuleService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[ModuleOut]:
     """Get a single training module by ID."""
     row = service.get(module_id)
@@ -104,7 +104,7 @@ def update_module(
     module_id: int,
     body: ModuleUpdate,
     service: ModuleService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[ModuleOut]:
     """Update a training module."""
     updated = service.update(module_id, body)
@@ -115,7 +115,7 @@ def update_module(
 def delete_module(
     module_id: int,
     service: ModuleService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """Soft-delete a training module by setting is_active to 0."""
     service.delete(module_id)

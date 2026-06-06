@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from opportunity.app.services.stats_service import StatsService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
 router = APIRouter(prefix="", tags=["Opportunity Stats"])
@@ -47,7 +47,7 @@ def get_opportunity_stats(
     start_date: str | None = Query(None, description="开始日期 (YYYY-MM-DD)"),
     end_date: str | None = Query(None, description="结束日期 (YYYY-MM-DD)"),
     service: StatsService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> Any:
     """获取opportunity stats。"""
     data = service.get_stats(start_date, end_date)

@@ -13,7 +13,7 @@ from sales_coach.app.scenario_library import (
     get_scenarios_by_category,
 )
 from sales_coach.app.services.scenario_service import ScenarioService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/scenarios", tags=["scenarios"])
@@ -59,7 +59,7 @@ class ScenarioOut(BaseModel):
 def create_scenario(
     body: ScenarioCreate,
     service: ScenarioService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """Create a new coach scenario."""
     user_id = int(current_user["sub"])
@@ -77,7 +77,7 @@ def list_scenarios(
     category: Optional[str] = Query(None),
     difficulty: Optional[str] = Query(None),
     service: ScenarioService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[ScenarioOut]]:
     """List coach scenarios with pagination and filtering."""
     total, total_pages, rows = service.list(page, page_size, category, difficulty)
@@ -95,7 +95,7 @@ def list_scenarios(
 
 @router.get("/types", summary="场景类型", description="获取可用的场景分类和难度级别")
 def get_scenario_types(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """Return available scenario categories and difficulty levels."""
     categories = sorted(set(s["category"] for s in FIXED_SCENARIOS))
@@ -112,7 +112,7 @@ def get_scenario_types(
 @router.get("/by-category/{category}", summary="分类筛选", description="按分类获取固定场景列表")
 def list_scenarios_by_category(
     category: str,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """Return all fixed scenarios matching the given category."""
     scenarios = get_scenarios_by_category(category)
@@ -122,7 +122,7 @@ def list_scenarios_by_category(
 @router.get("/by-difficulty/{difficulty}", summary="难度筛选", description="按难度级别获取固定场景列表")
 def list_scenarios_by_difficulty(
     difficulty: str,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """Return all fixed scenarios matching the given difficulty level."""
     scenarios = get_scenario_by_difficulty(difficulty)
@@ -133,7 +133,7 @@ def list_scenarios_by_difficulty(
 def get_scenario(
     scenario_id: int,
     service: ScenarioService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[ScenarioOut]:
     """Get a single coach scenario by ID."""
     row = service.get(scenario_id)
@@ -145,7 +145,7 @@ def update_scenario(
     scenario_id: int,
     body: ScenarioUpdate,
     service: ScenarioService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[ScenarioOut]:
     """Update a coach scenario."""
     updated = service.update(scenario_id, body)
@@ -156,7 +156,7 @@ def update_scenario(
 def delete_scenario(
     scenario_id: int,
     service: ScenarioService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """Soft-delete a coach scenario by setting is_active to 0."""
     service.delete(scenario_id)

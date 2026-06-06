@@ -8,7 +8,7 @@ from pydantic import BaseModel, field_validator
 from starlette import status
 
 from opportunity.app.services.scoring_service import ScoringService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/scoring", tags=["scoring"])
@@ -54,7 +54,7 @@ def leaderboard(
     min_score: Optional[int] = Query(None),
     max_score: Optional[int] = Query(None),
     service: ScoringService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[ScoreLeaderboardItem]]:
     """leaderboard。"""
     total, total_pages, rows = service.leaderboard(
@@ -81,7 +81,7 @@ def set_heat_score(
     opportunity_id: int,
     body: ScoreUpdate,
     service: ScoringService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """set heat score。"""
     updated = service.set_heat_score(opportunity_id, body.heat_score)
@@ -94,7 +94,7 @@ def set_heat_score(
 @router.post("/recalculate", summary="重新计算", description="重新计算所有商机的评分")
 def recalculate(
     service: ScoringService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[RecalculateOut]:
     """recalculate。"""
     result = service.recalculate()

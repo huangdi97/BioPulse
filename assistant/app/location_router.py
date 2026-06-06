@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from assistant.app.services.location_service import LocationService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
 router = APIRouter(tags=["locations", "routes"])
@@ -70,7 +70,7 @@ def create_location(
     hcp_id: int,
     body: LocationCreate,
     service: LocationService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """为指定 HCP 创建地址位置。
 
@@ -95,7 +95,7 @@ def create_location(
 def list_locations(
     hcp_id: int,
     service: LocationService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[List[LocationOut]]:
     """获取指定 HCP 的所有地址位置列表。
 
@@ -116,7 +116,7 @@ def update_location(
     location_id: int,
     body: LocationUpdate,
     service: LocationService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[LocationOut]:
     """更新指定位置的字段信息。
 
@@ -137,7 +137,7 @@ def update_location(
 def delete_location(
     location_id: int,
     service: LocationService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除指定位置。
 
@@ -157,7 +157,7 @@ def delete_location(
 def optimize_route(
     body: RouteRequest,
     service: LocationService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[RouteResponse]:
     """根据起点和 HCP 列表优化行程路线。
 

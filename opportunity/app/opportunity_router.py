@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from starlette import status
 
 from opportunity.app.services.opportunity_service import OpportunityService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/opportunities", tags=["opportunities"])
@@ -63,7 +63,7 @@ class OpportunityOut(BaseModel):
 def create_opportunity(
     body: OpportunityCreate,
     service: OpportunityService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建商机。
 
@@ -91,7 +91,7 @@ def list_opportunities(
     product: Optional[str] = Query(None),
     hcp_name: Optional[str] = Query(None),
     service: OpportunityService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[OpportunityOut]]:
     """获取商机列表（分页，支持筛选）。
 
@@ -130,7 +130,7 @@ def list_opportunities(
 def get_opportunity(
     opportunity_id: int,
     service: OpportunityService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[OpportunityOut]:
     """获取商机详情。
 
@@ -151,7 +151,7 @@ def update_opportunity(
     opportunity_id: int,
     body: OpportunityUpdate,
     service: OpportunityService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[OpportunityOut]:
     """更新商机信息。
 
@@ -172,7 +172,7 @@ def update_opportunity(
 def delete_opportunity(
     opportunity_id: int,
     service: OpportunityService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除商机。
 

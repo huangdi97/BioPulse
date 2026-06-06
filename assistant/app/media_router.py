@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, File, Request, UploadFile
 
 from assistant.app.services.media_service import MediaService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(tags=["media"])
@@ -13,7 +13,7 @@ router = APIRouter(tags=["media"])
 async def upload_media(
     file: UploadFile = File(...),
     service: MediaService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ):
     """上传媒体文件。
 
@@ -34,7 +34,7 @@ async def upload_media(
 def get_media(
     file_id: int,
     service: MediaService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ):
     """获取指定媒体文件的元数据信息。
 
@@ -55,7 +55,7 @@ def analyze_media(
     file_id: int,
     request: Request,
     service: MediaService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ):
     """分析指定媒体文件的内容（如 AI 识别）。
 

@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from sales_assistant.app.services.schedule_service import ScheduleService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/schedule", tags=["schedule"])
@@ -51,7 +51,7 @@ class ScheduleOut(BaseModel):
 def create_schedule(
     body: ScheduleCreate,
     service: ScheduleService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建schedule。"""
     user_id = int(current_user["sub"])
@@ -67,7 +67,7 @@ def list_schedules(
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
     service: ScheduleService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[ScheduleOut]]:
     """获取schedules。"""
     total, total_pages, rows = service.list_schedules(
@@ -93,7 +93,7 @@ def list_schedules(
 def get_schedule(
     schedule_id: int,
     service: ScheduleService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[ScheduleOut]:
     """获取schedule。"""
     row = service.get_schedule(schedule_id)
@@ -105,7 +105,7 @@ def update_schedule(
     schedule_id: int,
     body: ScheduleUpdate,
     service: ScheduleService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[ScheduleOut]:
     """更新schedule。"""
     row = service.update_schedule(schedule_id, body)
@@ -116,7 +116,7 @@ def update_schedule(
 def delete_schedule(
     schedule_id: int,
     service: ScheduleService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除schedule。"""
     service.delete_schedule(schedule_id)

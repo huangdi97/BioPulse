@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from opportunity.app.services.bidding_service import BiddingService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/bidding", tags=["bidding"])
@@ -67,7 +67,7 @@ class BiddingOut(BaseModel):
 def create_bidding(
     body: BiddingCreate,
     service: BiddingService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建招标记录。
 
@@ -96,7 +96,7 @@ def list_bidding(
     department: Optional[str] = Query(None),
     product_category: Optional[str] = Query(None),
     service: BiddingService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[BiddingOut]]:
     """获取招标列表（分页，支持筛选）。
 
@@ -137,7 +137,7 @@ def list_bidding(
 def get_bidding(
     bidding_id: int,
     service: BiddingService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[BiddingOut]:
     """获取招标详情。
 
@@ -158,7 +158,7 @@ def update_bidding(
     bidding_id: int,
     body: BiddingUpdate,
     service: BiddingService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[BiddingOut]:
     """更新招标信息。
 
@@ -179,7 +179,7 @@ def update_bidding(
 def delete_bidding(
     bidding_id: int,
     service: BiddingService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除招标记录。
 

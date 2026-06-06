@@ -14,7 +14,7 @@ from sales_coach.app.services.assessment_service import (
 )
 from sales_coach.app.services.reflection_service import generate_reflection_report
 from sales_coach.app.services.session_service import SessionService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/assessments", tags=["assessments"])
@@ -71,7 +71,7 @@ class AssessmentOut(BaseModel):
 def create_assessment(
     body: AssessmentCreate,
     service: AssessmentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """Create a new education assessment."""
     user_id = int(current_user["sub"])
@@ -90,7 +90,7 @@ def list_assessments(
     current_level: Optional[str] = Query(None),
     target_level: Optional[str] = Query(None),
     service: AssessmentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[AssessmentOut]]:
     """List assessments with pagination and filtering."""
     total, total_pages, rows = service.list(
@@ -115,7 +115,7 @@ def list_assessments(
 @router.get("/stats", summary="评估统计", description="获取评估数据的聚合统计信息")
 def get_assessment_stats(
     service: AssessmentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[dict]:
     """Get aggregate statistics for assessments."""
     data = service.get_stats()
@@ -126,7 +126,7 @@ def get_assessment_stats(
 def get_assessment(
     assessment_id: int,
     service: AssessmentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[AssessmentOut]:
     """Get a single assessment by ID."""
     row = service.get(assessment_id)
@@ -138,7 +138,7 @@ def update_assessment(
     assessment_id: int,
     body: AssessmentUpdate,
     service: AssessmentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[AssessmentOut]:
     """Update an assessment."""
     updated = service.update(assessment_id, body)
@@ -149,7 +149,7 @@ def update_assessment(
 def delete_assessment(
     assessment_id: int,
     service: AssessmentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """Soft-delete an assessment by setting is_active to 0."""
     service.delete(assessment_id)
@@ -161,7 +161,7 @@ def reflect_on_assessment(
     assessment_id: int,
     service: AssessmentService = Depends(),
     session_service: SessionService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """生成反思报告并关联到评分记录。"""
     assessment = service.get(assessment_id)
@@ -186,7 +186,7 @@ def get_assessment_trend(
     user_id: int,
     limit: int = Query(10, ge=1, le=100),
     service: AssessmentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """获取指定用户的评分趋势。"""
     trend = service.get_trend(user_id, limit=limit)
@@ -195,7 +195,7 @@ def get_assessment_trend(
 
 @router.get("/weights", summary="权重配置", description="获取当前评分权重配置")
 def get_weights(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """获取当前评分权重配置。"""
     return success(data=DEFAULT_WEIGHTS)
@@ -204,7 +204,7 @@ def get_weights(
 @router.put("/weights", summary="更新权重", description="更新评分权重配置，各维度之和须为1")
 def update_weights(
     body: WeightConfig,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """更新评分权重配置。"""
     total = body.product_knowledge + body.communication + body.compliance + body.objection_handling

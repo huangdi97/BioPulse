@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from sales_assistant.app.services.coach_service import CoachService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(tags=["coach"])
@@ -57,7 +57,7 @@ class SessionUpdate(BaseModel):
 def create_prompt(
     body: PromptCreate,
     service: CoachService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建prompt。"""
     user_id = int(current_user["sub"])
@@ -75,7 +75,7 @@ def list_prompts(
     scenario: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     service: CoachService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse]:
     """获取prompts。"""
     total, total_pages, rows = service.list_prompts(page, page_size, scenario, category)
@@ -96,7 +96,7 @@ def update_prompt(
     prompt_id: int,
     body: PromptUpdate,
     service: CoachService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """更新prompt。"""
     row = service.update_prompt(prompt_id, body)
@@ -107,7 +107,7 @@ def update_prompt(
 def delete_prompt(
     prompt_id: int,
     service: CoachService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除prompt。"""
     service.delete_prompt(prompt_id)
@@ -118,7 +118,7 @@ def delete_prompt(
 def coach_suggest(
     body: SuggestRequest,
     service: CoachService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """coach suggest。"""
     result = service.coach_suggest(body)
@@ -129,7 +129,7 @@ def coach_suggest(
 def create_session(
     body: SessionCreate,
     service: CoachService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建session。"""
     user_id = int(current_user["sub"])
@@ -145,7 +145,7 @@ def list_sessions(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     service: CoachService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse]:
     """获取sessions。"""
     total, total_pages, rows = service.list_sessions(page, page_size)
@@ -166,7 +166,7 @@ def update_session(
     session_id: int,
     body: SessionUpdate,
     service: CoachService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """更新session。"""
     row = service.update_session(session_id, body)

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from assistant.app.services.offline_service import OfflineService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
 router = APIRouter(prefix="/offline", tags=["离线模式"])
@@ -24,7 +24,7 @@ class QueueChangeRequest(BaseModel):
 @router.get("/status", summary="获取离线状态", description="获取当前离线模式的状态信息。")
 def get_status(
     service: OfflineService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """获取状态。
 
@@ -43,7 +43,7 @@ def get_status(
 def trigger_sync(
     limit: int = Query(50, ge=1, le=500),
     service: OfflineService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """trigger_sync 操作。
 
@@ -62,7 +62,7 @@ def trigger_sync(
 @router.post("/enable", summary="开启离线模式", description="开启客户端的离线模式功能。")
 def enable_offline(
     service: OfflineService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """enable_offline 操作。
 
@@ -80,7 +80,7 @@ def enable_offline(
 @router.post("/disable", summary="关闭离线模式", description="关闭离线模式并恢复在线模式。")
 def disable_offline(
     service: OfflineService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """disable_offline 操作。
 
@@ -99,7 +99,7 @@ def disable_offline(
 def queue_change(
     body: QueueChangeRequest,
     service: OfflineService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """入队变更。
 

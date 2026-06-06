@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
 from opportunity.app.services.pubpeer_service import PubpeerService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, ErrorCode, PaginatedResponse, success
 
 router = APIRouter(tags=["pubpeer", "integrity"])
@@ -48,7 +48,7 @@ def check_trail_integrity(
     trail_id: int,
     request: Request,
     service: PubpeerService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """检查trail integrity。"""
     user_id = int(current_user["sub"])
@@ -61,7 +61,7 @@ def check_trail_integrity(
 def get_trail_integrity(
     trail_id: int,
     service: PubpeerService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """获取trail integrity。"""
     row = service.get_trail_integrity(trail_id)
@@ -75,7 +75,7 @@ def pubpeer_check(
     body: PubpeerCheckRequest,
     request: Request,
     service: PubpeerService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """pubpeer check。"""
     user_id = int(current_user["sub"])
@@ -91,7 +91,7 @@ def pubpeer_alerts(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     service: PubpeerService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse]:
     """pubpeer alerts。"""
     total, total_pages, rows = service.list_alerts(page, page_size)

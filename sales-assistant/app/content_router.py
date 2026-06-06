@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from sales_assistant.app.services.content_service import ContentService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/contents", tags=["contents"])
@@ -54,7 +54,7 @@ class ContentOut(BaseModel):
 def create_content(
     body: ContentCreate,
     service: ContentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建content。"""
     user_id = int(current_user["sub"])
@@ -74,7 +74,7 @@ def list_contents(
     tag: Optional[str] = Query(None),
     q: Optional[str] = Query(None),
     service: ContentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[ContentOut]]:
     """获取contents。"""
     total, total_pages, rows = service.list_contents(
@@ -100,7 +100,7 @@ def list_contents(
 @router.get("/types", summary="类型列表", description="获取内容类型列表")
 def list_content_types(
     service: ContentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[list]:
     """获取content types。"""
     return success(data=service.list_content_types())
@@ -110,7 +110,7 @@ def list_content_types(
 def get_content(
     content_id: int,
     service: ContentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[ContentOut]:
     """获取content。"""
     row = service.get_content(content_id)
@@ -122,7 +122,7 @@ def update_content(
     content_id: int,
     body: ContentUpdate,
     service: ContentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[ContentOut]:
     """更新content。"""
     row = service.update_content(content_id, body)
@@ -133,7 +133,7 @@ def update_content(
 def delete_content(
     content_id: int,
     service: ContentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除content。"""
     service.delete_content(content_id)

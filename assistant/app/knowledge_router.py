@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from starlette import status
 
 from assistant.app.services.knowledge_service import KnowledgeService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
@@ -50,7 +50,7 @@ class KnowledgeOut(BaseModel):
 def create_knowledge(
     body: KnowledgeCreate,
     service: KnowledgeService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建知识条目。
 
@@ -77,7 +77,7 @@ def list_knowledge(
     category: Optional[str] = Query(None),
     difficulty: Optional[str] = Query(None),
     service: KnowledgeService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[KnowledgeOut]]:
     """分页查询知识条目列表，支持按分类和难度筛选。
 
@@ -108,7 +108,7 @@ def list_knowledge(
 @router.get("/categories", summary="获取知识分类", description="获取知识库中所有可用的分类列表。")
 def list_categories(
     service: KnowledgeService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[List[str]]:
     """获取知识库中所有可用的分类列表。
 
@@ -129,7 +129,7 @@ def search_knowledge(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     service: KnowledgeService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse[KnowledgeOut]]:
     """全文搜索知识条目。
 
@@ -160,7 +160,7 @@ def search_knowledge(
 def get_knowledge(
     knowledge_id: int,
     service: KnowledgeService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[KnowledgeOut]:
     """获取指定知识条目的详细信息。
 
@@ -181,7 +181,7 @@ def update_knowledge(
     knowledge_id: int,
     body: KnowledgeUpdate,
     service: KnowledgeService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[KnowledgeOut]:
     """更新指定知识条目的部分字段。
 
@@ -202,7 +202,7 @@ def update_knowledge(
 def delete_knowledge(
     knowledge_id: int,
     service: KnowledgeService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除指定知识条目。
 

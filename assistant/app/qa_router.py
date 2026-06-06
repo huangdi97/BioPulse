@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
 from assistant.app.services.qa_service import QaService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
 router = APIRouter(prefix="", tags=["Medical Q&A"])
@@ -32,7 +32,7 @@ def qa(
     request: Request,
     body: QaRequest,
     service: QaService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> Any:
     """Answer a medical question using AI as a senior clinical pharmacist."""
     auth_header = request.headers.get("Authorization", "")

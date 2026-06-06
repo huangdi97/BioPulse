@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
 from opportunity.app.services.trend_service import TrendService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(tags=["trends"])
@@ -66,7 +66,7 @@ def trends_by_topic(
     topic: str = Query(..., description="Research topic"),
     period: str = Query("monthly", description="Aggregation period: monthly/quarterly/yearly"),
     service: TrendService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """trends by topic。"""
     data = service.get_trends_by_topic(topic, period)
@@ -86,7 +86,7 @@ def trend_predict(
     body: TrendPredictRequest,
     request: Request,
     service: TrendService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """trend predict。"""
     auth_header = request.headers.get("Authorization", "")
@@ -100,7 +100,7 @@ def trend_history(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     service: TrendService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse]:
     """trend history。"""
     total, total_pages, rows = service.list_history(page, page_size)

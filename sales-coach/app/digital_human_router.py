@@ -11,7 +11,7 @@ from sales_coach.app.services.digital_human_difficulty_service import DigitalHum
 from sales_coach.app.services.digital_human_memory_service import DigitalHumanMemoryService
 from sales_coach.app.services.digital_human_service import DigitalHumanService
 from shared.app_settings import settings as app_settings
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 from shared.config import settings
 
@@ -37,7 +37,7 @@ class MessageSend(BaseModel):
 def create_session(
     body: SessionCreate,
     service: DigitalHumanService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建会话。
 
@@ -66,7 +66,7 @@ def send_message(
     session_id: int,
     body: MessageSend,
     service: DigitalHumanService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """发送消息。
 
@@ -95,7 +95,7 @@ def send_message(
 def get_session(
     session_id: int,
     service: DigitalHumanService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """获取会话。
 
@@ -115,7 +115,7 @@ def get_session(
 def adjust_difficulty(
     session_id: int,
     service: DigitalHumanDifficultyService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """调整难度。
 
@@ -135,7 +135,7 @@ def adjust_difficulty(
 def end_session(
     session_id: int,
     service: DigitalHumanService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """结束会话。
 
@@ -157,7 +157,7 @@ def list_sessions(
     status: Optional[str] = Query(None),
     limit: int = Query(20, ge=1, le=100),
     service: DigitalHumanService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """获取会话列表。
 
@@ -179,7 +179,7 @@ def list_sessions(
 def save_training_memory(
     session_id: int = Path(..., description="Session ID"),
     service: DigitalHumanMemoryService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """保存训练记忆。
 
@@ -201,7 +201,7 @@ def save_training_memory(
 @router.get("/benchmarks", summary="基准数据", description="获取基准评分数据")
 def get_benchmarks(
     service: DigitalHumanMemoryService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """获取基准数据。
 
@@ -220,7 +220,7 @@ def get_benchmarks(
 def get_session_benchmark(
     session_id: int = Path(..., description="Session ID"),
     service: DigitalHumanMemoryService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """get_session_benchmark 操作。
 
@@ -241,7 +241,7 @@ def transfer_skills(
     from_id: int = Path(..., description="Source session ID"),
     to_id: int = Path(..., description="Target session ID"),
     service: DigitalHumanMemoryService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """迁移技能。
 
@@ -262,7 +262,7 @@ def transfer_skills(
 
 
 @router.post("/sessions/{session_id}/voice-input", summary="语音输入", description="多模态语音输入接口（预留功能）")
-def voice_input(session_id: int, current_user: dict = Depends(get_current_user)):
+def voice_input(session_id: int, current_user: dict = Depends(require_scope("visit"))):
     return success(
         data={
             "provider": settings.DIGITAL_HUMAN_PROVIDER,
@@ -273,7 +273,7 @@ def voice_input(session_id: int, current_user: dict = Depends(get_current_user))
 
 
 @router.post("/sessions/{session_id}/video-input", summary="视频输入", description="多模态视频输入接口（预留功能）")
-def video_input(session_id: int, current_user: dict = Depends(get_current_user)):
+def video_input(session_id: int, current_user: dict = Depends(require_scope("visit"))):
     return success(
         data={
             "provider": settings.DIGITAL_HUMAN_PROVIDER,

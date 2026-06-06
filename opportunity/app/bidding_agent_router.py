@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from starlette import status
 
 from opportunity.app.services.bidding_agent_service import BiddingAgentService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
 router = APIRouter(tags=["bidding-agent"])
@@ -88,7 +88,7 @@ class AutoAnalyzeOut(BaseModel):
 def create_agent_config(
     body: AgentConfigCreate,
     service: BiddingAgentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> JSONResponse:
     """创建代理配置。"""
     user_id = int(current_user["sub"])
@@ -102,7 +102,7 @@ def create_agent_config(
 @router.get("/bidding/configs", summary="配置列表", description="获取招投标代理配置列表")
 def list_agent_configs(
     service: BiddingAgentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """获取代理配置列表。"""
     rows = service.list_agent_configs()
@@ -114,7 +114,7 @@ def update_agent_config(
     config_id: int,
     body: AgentConfigUpdate,
     service: BiddingAgentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """更新代理配置。"""
     updated = service.update_agent_config(config_id, body)
@@ -125,7 +125,7 @@ def update_agent_config(
 def delete_agent_config(
     config_id: int,
     service: BiddingAgentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """删除代理配置。"""
     service.delete_agent_config(config_id)
@@ -136,7 +136,7 @@ def delete_agent_config(
 def trigger_scan(
     request: Request,
     service: BiddingAgentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """触发扫描任务。"""
     auth_header = request.headers.get("Authorization", "")
@@ -147,7 +147,7 @@ def trigger_scan(
 @router.get("/bidding/agent-status", summary="代理状态", description="获取招投标代理的运行状态")
 def agent_status(
     service: BiddingAgentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """获取代理运行状态。"""
     result = service.get_agent_status()
@@ -159,7 +159,7 @@ def agent_logs(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     service: BiddingAgentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[PaginatedResponse]:
     """获取代理运行日志列表（分页）。"""
     items, total, page, page_size, total_pages = service.list_agent_logs(page, page_size)
@@ -179,7 +179,7 @@ def auto_analyze_bidding(
     bidding_id: int,
     request: Request,
     service: BiddingAgentService = Depends(),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     """自动分析招标信息。"""
     auth_header = request.headers.get("Authorization", "")
