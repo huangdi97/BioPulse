@@ -6,11 +6,12 @@ from typing import Generator
 
 import psycopg2
 
+from shared.config import settings
 from shared.db import PGCompatConnection
 
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DB_PATH = os.path.join(_BASE_DIR, "data", "assistant.db")
-DATABASE_URL = os.getenv("DATABASE_URL", "")
+DATABASE_URL = settings.DATABASE_URL
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS hcp (

@@ -1,7 +1,6 @@
 """数字人服务模块，管理数字人导练会话的创建、对话与评估。"""
 
 import json
-import os
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -12,6 +11,7 @@ from sales_coach.app.database import get_db
 from sales_coach.app.digital_human import check_compliance, initiate_scenario
 from sales_coach.app.services.base import BaseService
 from sales_coach.app.services.digital_human_provider import get_provider
+from shared.config import settings
 
 
 class DigitalHumanService(BaseService):
@@ -19,7 +19,7 @@ class DigitalHumanService(BaseService):
 
     def __init__(self, db=Depends(get_db)):
         super().__init__(db)
-        self._provider = get_provider(os.getenv("DIGITAL_HUMAN_PROVIDER", "internal"))
+        self._provider = get_provider(settings.DIGITAL_HUMAN_PROVIDER)
 
     def create_session(
         self,

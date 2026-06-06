@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
 
+    # Digital Human
+    DIGITAL_HUMAN_PROVIDER: str = "internal"
+
+    # Cloud API
+    CLOUD_API_URL: str = "http://localhost:8000"
+
     # AI Gateway
     AI_GATEWAY_URL: str = "http://localhost:8000/ai/chat"
     AI_GATEWAY_TIMEOUT: int = 120

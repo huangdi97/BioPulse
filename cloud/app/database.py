@@ -32,6 +32,7 @@ from cloud.app.seeds import (
 )
 from cloud.app.seeds.seed_model_compression import seed_model_compression
 from cloud.seed_data import seed_products
+from shared.config import settings
 from shared.db import PGCompatConnection
 
 DB_PATH = os.path.join(
@@ -40,7 +41,7 @@ DB_PATH = os.path.join(
     "cloud.db",
 )
 
-DATABASE_URL = os.getenv("DATABASE_URL", "")
+DATABASE_URL = settings.DATABASE_URL
 
 
 def get_db() -> Generator:

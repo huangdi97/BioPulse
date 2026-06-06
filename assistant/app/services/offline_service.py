@@ -7,8 +7,9 @@ from datetime import datetime, timedelta, timezone
 import httpx
 
 from assistant.app.services.base import BaseService
+from shared.config import settings
 
-CLOUD_API_URL = os.getenv("CLOUD_API_URL", "http://localhost:8000")
+CLOUD_API_URL = settings.CLOUD_API_URL
 OFFLINE_MODE_VAR = "OFFLINE_MODE"
 AI_CACHE_TTL_HOURS = 24
 

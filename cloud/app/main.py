@@ -56,7 +56,6 @@ from cloud.app.middleware.logging_middleware import (
     JSONFormatter,
     logging_middleware,
 )
-from cloud.app.middleware.rate_limit_middleware import RateLimitMiddleware
 from cloud.app.nmpa_router import router as nmpa_router
 from cloud.app.notification_router import router as notification_router
 from cloud.app.opportunity_router import router as opportunity_router
@@ -173,7 +172,6 @@ app.add_middleware(
 )
 
 app.add_middleware(RateLimiterMiddleware, default_rate=100, window=60)
-app.add_middleware(RateLimitMiddleware, max_requests=100, window_seconds=60)
 
 app.include_router(auth_router)
 app.include_router(tokens_router)

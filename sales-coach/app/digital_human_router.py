@@ -1,6 +1,5 @@
 """数字人路由模块，提供数字人会话创建、消息交互、难度调整及技能迁移接口。"""
 
-import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Path, Query
@@ -13,6 +12,7 @@ from sales_coach.app.services.digital_human_memory_service import DigitalHumanMe
 from sales_coach.app.services.digital_human_service import DigitalHumanService
 from shared.auth import get_current_user
 from shared.base import success
+from shared.config import settings
 
 router = APIRouter(prefix="/coach/digital-human", tags=["Digital Human Coach"])
 
@@ -264,7 +264,7 @@ def transfer_skills(
 def voice_input(session_id: int, current_user: dict = Depends(get_current_user)):
     return success(
         data={
-            "provider": os.getenv("DIGITAL_HUMAN_PROVIDER", "internal"),
+            "provider": settings.DIGITAL_HUMAN_PROVIDER,
             "status": "not_implemented",
             "message": "多模态语音输入，等待数字人供应商接入",
         }
@@ -275,7 +275,7 @@ def voice_input(session_id: int, current_user: dict = Depends(get_current_user))
 def video_input(session_id: int, current_user: dict = Depends(get_current_user)):
     return success(
         data={
-            "provider": os.getenv("DIGITAL_HUMAN_PROVIDER", "internal"),
+            "provider": settings.DIGITAL_HUMAN_PROVIDER,
             "status": "not_implemented",
             "message": "多模态视频输入，等待数字人供应商接入",
         }

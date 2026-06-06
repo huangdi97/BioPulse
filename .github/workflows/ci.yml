@@ -23,6 +23,14 @@ jobs:
           python -c "import sqlite3; print('sqlite3 OK')"
       - name: Python deps list
         run: pip list 2>&1 | head -20
+      - name: mypy check
+        run: |
+          pip install mypy
+          mypy cloud/ shared/ assistant/ opportunity/ sales-coach/ sales-assistant/ management/ --ignore-missing-imports || echo "mypy: type issues found (non-blocking)"
+      - name: Security audit
+        run: |
+          pip install pip-audit
+          pip-audit --desc on -r requirements-lock.txt 2>&1 || echo "pip-audit: vulnerabilities found (non-blocking)"
 
   web:
     runs-on: ubuntu-latest

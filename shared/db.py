@@ -1,6 +1,6 @@
-import os
+from shared.config import settings
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///data/cloud.db")
+DATABASE_URL = settings.DATABASE_URL
 
 
 def is_sqlite() -> bool:

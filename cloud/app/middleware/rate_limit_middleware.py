@@ -1,3 +1,4 @@
+import os
 import threading
 import time
 from collections import OrderedDict
@@ -54,6 +55,10 @@ class RateLimitMiddleware:
         }
 
     async def __call__(self, scope, receive, send):
+        if os.environ.get("RATE_LIMIT_DISABLE") == "1":
+            await self.app(scope, receive, send)
+            return
+
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return

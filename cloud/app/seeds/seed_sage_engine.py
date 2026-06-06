@@ -1,7 +1,11 @@
 """种子数据：Sage记忆评分引擎初始评分与演化日志。"""
 
+import logging
+
 from cloud.app.repositories.sage_repository import SageRepository
 from cloud.app.research_database import get_research_db
+
+logger = logging.getLogger(__name__)
 
 
 def seed_sage_engine():
@@ -18,7 +22,7 @@ def seed_sage_engine():
         repo.log_evolution("manual", "score", None, None, '{"total_scored": 4, "tier_distribution": {"hot": 2, "warm": 1, "cold": 1}}')
 
         db.commit()
-        print("seed_sage_engine: 4 scores + 1 log created")
+        logger.info("seed_sage_engine: 4 scores + 1 log created")
     finally:
         db.close()
 
