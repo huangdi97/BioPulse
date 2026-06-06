@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import time
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -57,6 +58,9 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
             logger.info(f"Rate limiter cleanup: removed {len(stale_ips)} stale entries")
 
     async def dispatch(self, request: Request, call_next):
+        if os.environ.get("RATE_LIMIT_DISABLE") == "1":
+            return await call_next(request)
+
         path = request.url.path
 
         if path in WHITELIST_PATHS or path.startswith("/docs") or path.startswith("/openapi.json"):

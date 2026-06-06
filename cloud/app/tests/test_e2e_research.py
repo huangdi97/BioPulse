@@ -84,7 +84,7 @@ class TestResearchE2E:
         token = _get_research_token(client)
         resp = client.post(
             "/api/research/matching/by-method",
-            json={"method_description": "PCR amplification"},
+            json={"method_description": "zzz_no_match_zzz"},
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp.status_code == 200
