@@ -32,7 +32,7 @@ class StatsData(BaseModel):
     win_rate: float
 
 
-@router.get("/stats")
+@router.get("/stats", summary="通用统计", description="获取通用统计数据的占位接口")
 def get_stats() -> ApiResponse:
     from fastapi.responses import JSONResponse
 
@@ -42,7 +42,7 @@ def get_stats() -> ApiResponse:
     )
 
 
-@router.get("/opportunities/stats", response_model=ApiResponse[StatsData])
+@router.get("/opportunities/stats", summary="商机统计", description="获取商机模块的聚合统计数据", response_model=ApiResponse[StatsData])
 def get_opportunity_stats(
     start_date: str | None = Query(None, description="开始日期 (YYYY-MM-DD)"),
     end_date: str | None = Query(None, description="结束日期 (YYYY-MM-DD)"),

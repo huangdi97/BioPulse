@@ -68,7 +68,7 @@ class SessionOut(BaseModel):
     created_at: Optional[str] = None
 
 
-@router.post("/modules/{module_id}/sessions")
+@router.post("/modules/{module_id}/sessions", summary="创建会话", description="为培训模块创建新的教练会话")
 def create_session(
     module_id: int,
     body: SessionCreate,
@@ -94,7 +94,7 @@ def create_session(
     )
 
 
-@router.get("/modules/{module_id}/sessions")
+@router.get("/modules/{module_id}/sessions", summary="会话列表", description="分页查询培训模块的教练会话列表")
 def list_sessions(
     module_id: int,
     page: int = Query(1, ge=1),
@@ -116,7 +116,7 @@ def list_sessions(
     )
 
 
-@router.get("/sessions")
+@router.get("/sessions", summary="全部会话", description="获取所有教练会话列表")
 def list_all_sessions(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -133,7 +133,7 @@ def list_all_sessions(
     )
 
 
-@router.get("/sessions/{session_id}")
+@router.get("/sessions/{session_id}", summary="会话详情", description="根据ID获取教练会话详情")
 def get_session(
     session_id: int,
     service: SessionService = Depends(),
@@ -144,7 +144,7 @@ def get_session(
     return success(data=SessionOut(**row))
 
 
-@router.get("/sessions/{session_id}/dialogue")
+@router.get("/sessions/{session_id}/dialogue", summary="对话历史", description="获取教练会话的完整对话历史记录")
 def get_session_dialogue(
     session_id: int,
     service: SessionService = Depends(),
@@ -155,7 +155,7 @@ def get_session_dialogue(
     return success(data={"session_id": session_id, "dialogue": history})
 
 
-@router.post("/sessions/{session_id}/dialogue")
+@router.post("/sessions/{session_id}/dialogue", summary="追加对话", description="向教练会话日志中追加对话条目")
 def append_dialogue(
     session_id: int,
     entry: dict,
@@ -167,7 +167,7 @@ def append_dialogue(
     return success(data=SessionOut(**updated))
 
 
-@router.patch("/sessions/{session_id}")
+@router.patch("/sessions/{session_id}", summary="更新会话", description="更新教练会话信息")
 def update_session(
     session_id: int,
     body: SessionUpdate,
@@ -179,7 +179,7 @@ def update_session(
     return success(data=SessionOut(**updated))
 
 
-@router.delete("/sessions/{session_id}")
+@router.delete("/sessions/{session_id}", summary="删除会话", description="删除指定的教练会话记录")
 def delete_session(
     session_id: int,
     service: SessionService = Depends(),

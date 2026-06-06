@@ -32,7 +32,7 @@ class MessageSend(BaseModel):
     ai_gateway_url: str = "http://localhost:8000/ai/gateway"
 
 
-@router.post("/sessions", summary="Create Session")
+@router.post("/sessions", summary="创建会话", description="创建新的数字人会话")
 def create_session(
     body: SessionCreate,
     service: DigitalHumanService = Depends(),
@@ -60,7 +60,7 @@ def create_session(
     )
 
 
-@router.post("/sessions/{session_id}/message", summary="Send Message")
+@router.post("/sessions/{session_id}/message", summary="发送消息", description="向数字人发送消息并获取回复")
 def send_message(
     session_id: int,
     body: MessageSend,
@@ -90,7 +90,7 @@ def send_message(
     )
 
 
-@router.get("/sessions/{session_id}", summary="Get Session by ID")
+@router.get("/sessions/{session_id}", summary="会话详情", description="获取数字人会话详情")
 def get_session(
     session_id: int,
     service: DigitalHumanService = Depends(),
@@ -110,7 +110,7 @@ def get_session(
     return success(data=result)
 
 
-@router.post("/sessions/{session_id}/adjust-difficulty", summary="Adjust Difficulty")
+@router.post("/sessions/{session_id}/adjust-difficulty", summary="调整难度", description="动态调整数字人会话的难度")
 def adjust_difficulty(
     session_id: int,
     service: DigitalHumanDifficultyService = Depends(),
@@ -130,7 +130,7 @@ def adjust_difficulty(
     return success(data=result)
 
 
-@router.post("/sessions/{session_id}/end", summary="End Session")
+@router.post("/sessions/{session_id}/end", summary="结束会话", description="结束当前数字人会话")
 def end_session(
     session_id: int,
     service: DigitalHumanService = Depends(),
@@ -151,7 +151,7 @@ def end_session(
     return success(data=result)
 
 
-@router.get("/sessions", summary="List all Sessions")
+@router.get("/sessions", summary="会话列表", description="获取当前用户的数字人会话列表")
 def list_sessions(
     status: Optional[str] = Query(None),
     limit: int = Query(20, ge=1, le=100),
@@ -174,7 +174,7 @@ def list_sessions(
     return success(data={"sessions": result, "total": len(result)})
 
 
-@router.post("/sessions/{session_id}/save-memory", summary="Save Training Memory")
+@router.post("/sessions/{session_id}/save-memory", summary="保存记忆", description="保存数字人训练记忆数据")
 def save_training_memory(
     session_id: int = Path(..., description="Session ID"),
     service: DigitalHumanMemoryService = Depends(),
@@ -197,7 +197,7 @@ def save_training_memory(
     )
 
 
-@router.get("/benchmarks", summary="Get Benchmarks by ID")
+@router.get("/benchmarks", summary="基准数据", description="获取基准评分数据")
 def get_benchmarks(
     service: DigitalHumanMemoryService = Depends(),
     current_user: dict = Depends(get_current_user),
@@ -215,7 +215,7 @@ def get_benchmarks(
     return success(data=result)
 
 
-@router.get("/sessions/{session_id}/benchmark", summary="Get Session Benchmark by ID")
+@router.get("/sessions/{session_id}/benchmark", summary="基准对比", description="将会话数据与基准数据进行对比分析")
 def get_session_benchmark(
     session_id: int = Path(..., description="Session ID"),
     service: DigitalHumanMemoryService = Depends(),
@@ -235,7 +235,7 @@ def get_session_benchmark(
     return success(data=result)
 
 
-@router.post("/sessions/{from_id}/transfer-to/{to_id}", summary="Transfer Skills")
+@router.post("/sessions/{from_id}/transfer-to/{to_id}", summary="迁移技能", description="将会话中学到的技能迁移至目标会话")
 def transfer_skills(
     from_id: int = Path(..., description="Source session ID"),
     to_id: int = Path(..., description="Target session ID"),
@@ -260,7 +260,7 @@ def transfer_skills(
     )
 
 
-@router.post("/sessions/{session_id}/voice-input", summary="Voice Input (预留)")
+@router.post("/sessions/{session_id}/voice-input", summary="语音输入", description="多模态语音输入接口（预留功能）")
 def voice_input(session_id: int, current_user: dict = Depends(get_current_user)):
     return success(
         data={
@@ -271,7 +271,7 @@ def voice_input(session_id: int, current_user: dict = Depends(get_current_user))
     )
 
 
-@router.post("/sessions/{session_id}/video-input", summary="Video Input (预留)")
+@router.post("/sessions/{session_id}/video-input", summary="视频输入", description="多模态视频输入接口（预留功能）")
 def video_input(session_id: int, current_user: dict = Depends(get_current_user)):
     return success(
         data={

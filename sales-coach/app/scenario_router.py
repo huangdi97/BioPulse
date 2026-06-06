@@ -55,7 +55,7 @@ class ScenarioOut(BaseModel):
     updated_at: Optional[str] = None
 
 
-@router.post("")
+@router.post("", summary="创建场景", description="创建新的教练场景")
 def create_scenario(
     body: ScenarioCreate,
     service: ScenarioService = Depends(),
@@ -70,7 +70,7 @@ def create_scenario(
     )
 
 
-@router.get("")
+@router.get("", summary="场景列表", description="分页查询教练场景，支持分类和难度筛选")
 def list_scenarios(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -93,7 +93,7 @@ def list_scenarios(
     )
 
 
-@router.get("/types")
+@router.get("/types", summary="场景类型", description="获取可用的场景分类和难度级别")
 def get_scenario_types(
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
@@ -109,7 +109,7 @@ def get_scenario_types(
     )
 
 
-@router.get("/by-category/{category}")
+@router.get("/by-category/{category}", summary="分类筛选", description="按分类获取固定场景列表")
 def list_scenarios_by_category(
     category: str,
     current_user: dict = Depends(get_current_user),
@@ -119,7 +119,7 @@ def list_scenarios_by_category(
     return success(data={"category": category, "scenarios": scenarios, "count": len(scenarios)})
 
 
-@router.get("/by-difficulty/{difficulty}")
+@router.get("/by-difficulty/{difficulty}", summary="难度筛选", description="按难度级别获取固定场景列表")
 def list_scenarios_by_difficulty(
     difficulty: str,
     current_user: dict = Depends(get_current_user),
@@ -129,7 +129,7 @@ def list_scenarios_by_difficulty(
     return success(data={"difficulty": difficulty, "scenarios": scenarios, "count": len(scenarios)})
 
 
-@router.get("/{scenario_id}")
+@router.get("/{scenario_id}", summary="场景详情", description="根据ID获取教练场景详情")
 def get_scenario(
     scenario_id: int,
     service: ScenarioService = Depends(),
@@ -140,7 +140,7 @@ def get_scenario(
     return success(data=ScenarioOut(**row))
 
 
-@router.patch("/{scenario_id}")
+@router.patch("/{scenario_id}", summary="更新场景", description="更新指定的教练场景信息")
 def update_scenario(
     scenario_id: int,
     body: ScenarioUpdate,
@@ -152,7 +152,7 @@ def update_scenario(
     return success(data=ScenarioOut(**updated))
 
 
-@router.delete("/{scenario_id}")
+@router.delete("/{scenario_id}", summary="删除场景", description="软删除指定的教练场景")
 def delete_scenario(
     scenario_id: int,
     service: ScenarioService = Depends(),

@@ -51,7 +51,7 @@ class TrendAnalysisOut(BaseModel):
     created_at: Optional[str] = None
 
 
-@router.get("/trends")
+@router.get("/trends", summary="趋势列表", description="获取趋势数据的占位接口")
 def list_trends() -> ApiResponse:
     from fastapi.responses import JSONResponse
 
@@ -61,7 +61,7 @@ def list_trends() -> ApiResponse:
     )
 
 
-@router.get("/trends/by-topic")
+@router.get("/trends/by-topic", summary="主题趋势", description="按主题查询科研趋势数据")
 def trends_by_topic(
     topic: str = Query(..., description="Research topic"),
     period: str = Query("monthly", description="Aggregation period: monthly/quarterly/yearly"),
@@ -81,7 +81,7 @@ def trends_by_topic(
     )
 
 
-@router.post("/trends/predict")
+@router.post("/trends/predict", summary="趋势预测", description="基于历史数据预测科研趋势")
 def trend_predict(
     body: TrendPredictRequest,
     request: Request,
@@ -95,7 +95,7 @@ def trend_predict(
     return success(data=TrendPredictOut(**result))
 
 
-@router.get("/trends/history")
+@router.get("/trends/history", summary="历史记录", description="分页查询趋势分析历史记录")
 def trend_history(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),

@@ -50,7 +50,7 @@ class ModuleOut(BaseModel):
     updated_at: Optional[str] = None
 
 
-@router.post("")
+@router.post("", summary="创建模块", description="创建新的培训模块")
 def create_module(
     body: ModuleCreate,
     service: ModuleService = Depends(),
@@ -65,7 +65,7 @@ def create_module(
     )
 
 
-@router.get("")
+@router.get("", summary="模块列表", description="分页查询培训模块，支持分类和难度筛选")
 def list_modules(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -88,7 +88,7 @@ def list_modules(
     )
 
 
-@router.get("/{module_id}")
+@router.get("/{module_id}", summary="模块详情", description="根据ID获取培训模块详情")
 def get_module(
     module_id: int,
     service: ModuleService = Depends(),
@@ -99,7 +99,7 @@ def get_module(
     return success(data=ModuleOut(**row))
 
 
-@router.patch("/{module_id}")
+@router.patch("/{module_id}", summary="更新模块", description="更新指定的培训模块信息")
 def update_module(
     module_id: int,
     body: ModuleUpdate,
@@ -111,7 +111,7 @@ def update_module(
     return success(data=ModuleOut(**updated))
 
 
-@router.delete("/{module_id}")
+@router.delete("/{module_id}", summary="删除模块", description="软删除指定的培训模块")
 def delete_module(
     module_id: int,
     service: ModuleService = Depends(),

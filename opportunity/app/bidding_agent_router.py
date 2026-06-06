@@ -81,7 +81,7 @@ class AutoAnalyzeOut(BaseModel):
     next_steps: list
 
 
-@router.post("/bidding/configs", status_code=status.HTTP_201_CREATED)
+@router.post("/bidding/configs", summary="创建配置", description="创建招投标代理配置", status_code=status.HTTP_201_CREATED)
 def create_agent_config(
     body: AgentConfigCreate,
     service: BiddingAgentService = Depends(),
@@ -96,7 +96,7 @@ def create_agent_config(
     )
 
 
-@router.get("/bidding/configs")
+@router.get("/bidding/configs", summary="配置列表", description="获取招投标代理配置列表")
 def list_agent_configs(
     service: BiddingAgentService = Depends(),
     current_user: dict = Depends(get_current_user),
@@ -106,7 +106,7 @@ def list_agent_configs(
     return success(data=[AgentConfigOut(**r) for r in rows])
 
 
-@router.patch("/bidding/configs/{config_id}")
+@router.patch("/bidding/configs/{config_id}", summary="更新配置", description="更新招投标代理配置信息")
 def update_agent_config(
     config_id: int,
     body: AgentConfigUpdate,
@@ -118,7 +118,7 @@ def update_agent_config(
     return success(data=AgentConfigOut(**updated))
 
 
-@router.delete("/bidding/configs/{config_id}")
+@router.delete("/bidding/configs/{config_id}", summary="删除配置", description="删除招投标代理配置")
 def delete_agent_config(
     config_id: int,
     service: BiddingAgentService = Depends(),
@@ -129,7 +129,7 @@ def delete_agent_config(
     return success(message="deleted")
 
 
-@router.post("/bidding/trigger-scan")
+@router.post("/bidding/trigger-scan", summary="触发扫描", description="触发招标信息扫描任务")
 def trigger_scan(
     request: Request,
     service: BiddingAgentService = Depends(),
@@ -141,7 +141,7 @@ def trigger_scan(
     return success(data=TriggerScanOut(**result))
 
 
-@router.get("/bidding/agent-status")
+@router.get("/bidding/agent-status", summary="代理状态", description="获取招投标代理的运行状态")
 def agent_status(
     service: BiddingAgentService = Depends(),
     current_user: dict = Depends(get_current_user),
@@ -151,7 +151,7 @@ def agent_status(
     return success(data=AgentStatusOut(**result))
 
 
-@router.get("/bidding/agent-logs")
+@router.get("/bidding/agent-logs", summary="运行日志", description="获取代理运行日志列表（分页）")
 def agent_logs(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -171,7 +171,7 @@ def agent_logs(
     )
 
 
-@router.post("/bidding/{bidding_id}/auto-analyze")
+@router.post("/bidding/{bidding_id}/auto-analyze", summary="自动分析", description="自动分析指定的招标信息")
 def auto_analyze_bidding(
     bidding_id: int,
     request: Request,

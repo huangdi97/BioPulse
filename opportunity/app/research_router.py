@@ -59,7 +59,7 @@ class ResearchTrailOut(BaseModel):
     updated_at: Optional[str] = None
 
 
-@router.post("")
+@router.post("", summary="创建轨迹", description="创建新的科研轨迹记录")
 def create_research_trail(
     body: ResearchTrailCreate,
     service: ResearchService = Depends(),
@@ -74,7 +74,7 @@ def create_research_trail(
     )
 
 
-@router.get("")
+@router.get("", summary="轨迹列表", description="分页查询科研轨迹，支持按医生、主题等筛选")
 def list_research_trails(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -106,7 +106,7 @@ def list_research_trails(
     )
 
 
-@router.get("/{trail_id}")
+@router.get("/{trail_id}", summary="轨迹详情", description="获取指定科研轨迹的详细信息")
 def get_research_trail(
     trail_id: int,
     service: ResearchService = Depends(),
@@ -117,7 +117,7 @@ def get_research_trail(
     return success(data=ResearchTrailOut(**row))
 
 
-@router.patch("/{trail_id}")
+@router.patch("/{trail_id}", summary="更新轨迹", description="更新指定科研轨迹的信息")
 def update_research_trail(
     trail_id: int,
     body: ResearchTrailUpdate,
@@ -129,7 +129,7 @@ def update_research_trail(
     return success(data=ResearchTrailOut(**updated))
 
 
-@router.delete("/{trail_id}")
+@router.delete("/{trail_id}", summary="删除轨迹", description="删除指定的科研轨迹记录")
 def delete_research_trail(
     trail_id: int,
     service: ResearchService = Depends(),

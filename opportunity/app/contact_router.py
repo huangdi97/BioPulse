@@ -39,7 +39,7 @@ class ContactOut(BaseModel):
     created_at: Optional[str] = None
 
 
-@router.post("/opportunities/{opportunity_id}/contacts")
+@router.post("/opportunities/{opportunity_id}/contacts", summary="创建联系", description="为指定商机创建联系记录")
 def create_contact(
     opportunity_id: int,
     body: ContactCreate,
@@ -65,7 +65,7 @@ def create_contact(
     )
 
 
-@router.get("/opportunities/{opportunity_id}/contacts")
+@router.get("/opportunities/{opportunity_id}/contacts", summary="联系列表", description="分页获取指定商机的联系记录")
 def list_contacts(
     opportunity_id: int,
     page: int = Query(1, ge=1),
@@ -102,7 +102,7 @@ def list_contacts(
     )
 
 
-@router.get("/contacts")
+@router.get("/contacts", summary="全部联系", description="获取所有联系记录列表")
 def list_all_contacts() -> ApiResponse:
     return JSONResponse(
         content=success(data=[]).model_dump(),
@@ -110,7 +110,7 @@ def list_all_contacts() -> ApiResponse:
     )
 
 
-@router.get("/contacts/{contact_id}")
+@router.get("/contacts/{contact_id}", summary="联系详情", description="获取指定联系记录的详细信息")
 def get_contact(
     contact_id: int,
     service: ContactService = Depends(),
@@ -130,7 +130,7 @@ def get_contact(
     return success(data=ContactOut(**row))
 
 
-@router.patch("/contacts/{contact_id}")
+@router.patch("/contacts/{contact_id}", summary="更新联系", description="更新指定联系记录的信息")
 def update_contact(
     contact_id: int,
     body: ContactUpdate,
@@ -152,7 +152,7 @@ def update_contact(
     return success(data=ContactOut(**updated))
 
 
-@router.delete("/contacts/{contact_id}")
+@router.delete("/contacts/{contact_id}", summary="删除联系", description="删除指定的联系记录")
 def delete_contact(
     contact_id: int,
     service: ContactService = Depends(),

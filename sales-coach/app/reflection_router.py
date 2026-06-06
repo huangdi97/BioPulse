@@ -13,7 +13,7 @@ from shared.base import ApiResponse, success
 router = APIRouter(prefix="/reflections", tags=["反思 Agent"])
 
 
-@router.get("")
+@router.get("", summary="反思列表", description="获取所有反思报告列表")
 def list_reflections(
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
@@ -21,7 +21,7 @@ def list_reflections(
     return success(data=[])
 
 
-@router.post("/{session_id}")
+@router.post("/{session_id}", summary="创建反思", description="读取会话日志并生成反思报告")
 def create_reflection(
     session_id: int,
     session_service: SessionService = Depends(),
@@ -46,7 +46,7 @@ def create_reflection(
     return success(data=report)
 
 
-@router.get("/{session_id}")
+@router.get("/{session_id}", summary="反思详情", description="获取已生成的反思报告详情")
 def get_reflection(
     session_id: int,
     session_service: SessionService = Depends(),
@@ -63,7 +63,7 @@ def get_reflection(
     return success(data=report)
 
 
-@router.get("/{session_id}/summary")
+@router.get("/{session_id}/summary", summary="反思摘要", description="获取反思报告简短摘要用于列表展示")
 def get_reflection_summary(
     session_id: int,
     session_service: SessionService = Depends(),

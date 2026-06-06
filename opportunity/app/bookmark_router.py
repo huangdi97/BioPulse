@@ -36,7 +36,7 @@ class CheckBookmarkOut(BaseModel):
     bookmark_id: Optional[int] = None
 
 
-@router.post("")
+@router.post("", summary="创建书签", description="创建新的用户书签")
 def create_bookmark(
     body: BookmarkCreate,
     service: BookmarkService = Depends(),
@@ -60,7 +60,7 @@ def create_bookmark(
     )
 
 
-@router.get("")
+@router.get("", summary="书签列表", description="分页获取书签列表，支持按实体类型筛选")
 def list_bookmarks(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -99,7 +99,7 @@ def list_bookmarks(
     )
 
 
-@router.get("/check")
+@router.get("/check", summary="检查书签", description="检查指定实体是否已被收藏")
 def check_bookmark(
     entity_type: str = Query(...),
     entity_id: int = Query(...),
@@ -124,7 +124,7 @@ def check_bookmark(
     return success(data=CheckBookmarkOut(bookmarked=False))
 
 
-@router.delete("/{bookmark_id}")
+@router.delete("/{bookmark_id}", summary="删除书签", description="删除指定的用户书签")
 def delete_bookmark(
     bookmark_id: int,
     service: BookmarkService = Depends(),

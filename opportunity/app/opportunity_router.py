@@ -59,7 +59,7 @@ class OpportunityOut(BaseModel):
     updated_at: Optional[str] = None
 
 
-@router.post("")
+@router.post("", summary="创建商机", description="创建新的商机线索")
 def create_opportunity(
     body: OpportunityCreate,
     service: OpportunityService = Depends(),
@@ -83,7 +83,7 @@ def create_opportunity(
     )
 
 
-@router.get("")
+@router.get("", summary="商机列表", description="分页查询商机列表，支持按阶段、产品等筛选")
 def list_opportunities(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -126,7 +126,7 @@ def list_opportunities(
     )
 
 
-@router.get("/{opportunity_id}")
+@router.get("/{opportunity_id}", summary="商机详情", description="获取指定商机的详细信息")
 def get_opportunity(
     opportunity_id: int,
     service: OpportunityService = Depends(),
@@ -146,7 +146,7 @@ def get_opportunity(
     return success(data=OpportunityOut(**row))
 
 
-@router.patch("/{opportunity_id}")
+@router.patch("/{opportunity_id}", summary="更新商机", description="更新指定商机的信息")
 def update_opportunity(
     opportunity_id: int,
     body: OpportunityUpdate,
@@ -168,7 +168,7 @@ def update_opportunity(
     return success(data=OpportunityOut(**updated))
 
 
-@router.delete("/{opportunity_id}")
+@router.delete("/{opportunity_id}", summary="删除商机", description="删除指定的商机记录")
 def delete_opportunity(
     opportunity_id: int,
     service: OpportunityService = Depends(),

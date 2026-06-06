@@ -46,7 +46,7 @@ class RecalculateOut(BaseModel):
     bottom_score: int
 
 
-@router.get("/leaderboard")
+@router.get("/leaderboard", summary="排行榜", description="获取线索评分排行榜，支持按阶段和分数筛选")
 def leaderboard(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -76,7 +76,7 @@ def leaderboard(
     )
 
 
-@router.patch("/{opportunity_id}")
+@router.patch("/{opportunity_id}", summary="设置热度", description="设置指定商机的热度评分")
 def set_heat_score(
     opportunity_id: int,
     body: ScoreUpdate,
@@ -91,7 +91,7 @@ def set_heat_score(
     )
 
 
-@router.post("/recalculate")
+@router.post("/recalculate", summary="重新计算", description="重新计算所有商机的评分")
 def recalculate(
     service: ScoringService = Depends(),
     current_user: dict = Depends(get_current_user),

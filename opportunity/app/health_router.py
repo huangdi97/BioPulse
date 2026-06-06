@@ -8,7 +8,7 @@ router = APIRouter(tags=["health"])
 _start_time = time.time()
 
 
-@router.get("/health")
+@router.get("/health", summary="健康检查", description="检查机会模块服务运行状态和数据库连接")
 def health():
     db_status = "disconnected"
     try:

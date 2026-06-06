@@ -63,7 +63,7 @@ class BiddingOut(BaseModel):
     updated_at: Optional[str] = None
 
 
-@router.post("")
+@router.post("", summary="创建招标", description="创建新的招标记录")
 def create_bidding(
     body: BiddingCreate,
     service: BiddingService = Depends(),
@@ -87,7 +87,7 @@ def create_bidding(
     )
 
 
-@router.get("")
+@router.get("", summary="招标列表", description="分页查询招标记录，支持按状态、医院等筛选")
 def list_bidding(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -133,7 +133,7 @@ def list_bidding(
     )
 
 
-@router.get("/{bidding_id}")
+@router.get("/{bidding_id}", summary="招标详情", description="获取指定招标记录的详细信息")
 def get_bidding(
     bidding_id: int,
     service: BiddingService = Depends(),
@@ -153,7 +153,7 @@ def get_bidding(
     return success(data=BiddingOut(**row))
 
 
-@router.patch("/{bidding_id}")
+@router.patch("/{bidding_id}", summary="更新招标", description="更新指定招标记录的信息")
 def update_bidding(
     bidding_id: int,
     body: BiddingUpdate,
@@ -175,7 +175,7 @@ def update_bidding(
     return success(data=BiddingOut(**updated))
 
 
-@router.delete("/{bidding_id}")
+@router.delete("/{bidding_id}", summary="删除招标", description="删除指定的招标记录")
 def delete_bidding(
     bidding_id: int,
     service: BiddingService = Depends(),

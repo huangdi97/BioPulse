@@ -43,7 +43,7 @@ class IntegrityCheckOut(BaseModel):
     checked_at: str
 
 
-@router.post("/research-trails/{trail_id}/check-integrity")
+@router.post("/research-trails/{trail_id}/check-integrity", summary="诚信检查", description="检查科研轨迹的论文诚信")
 def check_trail_integrity(
     trail_id: int,
     request: Request,
@@ -57,7 +57,7 @@ def check_trail_integrity(
     return success(data=IntegrityCheckOut(**result))
 
 
-@router.get("/research-trails/{trail_id}/integrity")
+@router.get("/research-trails/{trail_id}/integrity", summary="诚信详情", description="获取科研轨迹的诚信检查结果")
 def get_trail_integrity(
     trail_id: int,
     service: PubpeerService = Depends(),
@@ -70,7 +70,7 @@ def get_trail_integrity(
     return success(data=IntegrityOut(**row))
 
 
-@router.post("/pubpeer/check")
+@router.post("/pubpeer/check", summary="PubPeer查询", description="通过PubPeer查询论文诚信信息")
 def pubpeer_check(
     body: PubpeerCheckRequest,
     request: Request,
@@ -86,7 +86,7 @@ def pubpeer_check(
     return success(data=IntegrityCheckOut(**result))
 
 
-@router.get("/pubpeer/alerts")
+@router.get("/pubpeer/alerts", summary="诚信警报", description="获取论文诚信警报列表")
 def pubpeer_alerts(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
