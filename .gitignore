@@ -116,3 +116,4 @@ cloud-api.service
 # **/tests/  — 已移除，测试文件需纳入版本控制以便 CI 执行
 **/test/
 **/RunnerTests/
+mobile_app/build/

@@ -56,7 +56,7 @@ class _VisitListScreenState extends State<VisitListScreen>
                 visitDate: now.toIso8601String(),
                 visitType: 'routine',
                 notes: '拜访${r['visits'] ?? 0}次 · 合规率${r['compliance_rate'] ?? 0}% · 成交${r['deals'] ?? 0}单',
-                complianceStatus: (r['compliance_rate'] as num?)?.toDouble() ?? 0 >= 80
+                complianceStatus: ((r['compliance_rate'] as num?)?.toDouble() ?? 0) >= 80
                     ? 'compliant'
                     : 'non_compliant',
               )));

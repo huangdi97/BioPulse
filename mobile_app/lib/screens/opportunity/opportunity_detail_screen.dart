@@ -30,7 +30,7 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
     final id = ModalRoute.of(context)!.settings.arguments as String;
     final res = await client.get<Map>('/opportunities/$id');
     if (res.isSuccess && res.data != null) {
-      setState(() => _detail = res.data);
+      setState(() => _detail = res.data as Map<String, dynamic>?);
     }
     setState(() => _loading = false);
   }

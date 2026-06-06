@@ -26,7 +26,7 @@ class _AnalysisReportScreenState extends State<AnalysisReportScreen> {
       final id = ModalRoute.of(context)!.settings.arguments as String;
       final res = await api.getClient('sales_coach').get<Map>('/stats/report/');
       if (res.isSuccess && res.data != null) {
-        _report = res.data;
+        _report = res.data as Map<String, dynamic>?;
       }
     } catch (_) {}
     setState(() => _loading = false);
@@ -37,7 +37,7 @@ class _AnalysisReportScreenState extends State<AnalysisReportScreen> {
     if (_report == null && _loading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     if (_report == null) return const Scaffold(body: Center(child: Text('加载失败')));
     final id = ModalRoute.of(context)!.settings.arguments as String;
-    final data = _report;
+    final data = _report!;
     final theme = Theme.of(context);
     final score = data['score'] as int;
 
