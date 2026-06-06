@@ -15,10 +15,11 @@ from pypdf import PdfReader
 
 from assistant.app.repositories import MediaFileRepository
 from assistant.app.services.base import BaseService
+from shared.app_settings import settings
 
 logger = logging.getLogger(__name__)
 
-AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
+AI_GATEWAY_URL = f"{settings.cloud_api_base}/ai/chat"
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 IMAGE_DIR = os.path.join(BASE_DIR, "uploads", "images")
 DOC_DIR = os.path.join(BASE_DIR, "uploads", "documents")

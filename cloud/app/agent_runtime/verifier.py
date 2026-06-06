@@ -6,6 +6,7 @@ import logging
 from pydantic import BaseModel
 
 from cloud.app.agent_runtime.planner import Plan, PlanStep
+from shared.app_settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ class SafetyGuard:
 class Verifier:
     """Three-layer verification: assertions, rule matching, LLM."""
 
-    def __init__(self, llm_url: str = "http://localhost:8000/ai/chat"):
+    def __init__(self, llm_url: str = f"{settings.cloud_api_base}/ai/chat"):
         self._llm_url = llm_url
         self._guard = SafetyGuard()
 

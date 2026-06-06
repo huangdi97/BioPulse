@@ -2,7 +2,9 @@
 
 import httpx
 
-CLOUD_API = "http://localhost:8000"
+from shared.app_settings import settings
+
+CLOUD_API = settings.cloud_api_base
 
 
 async def _fetch_dashboard() -> dict:

@@ -5,6 +5,7 @@ import json
 from pydantic import BaseModel
 
 from cloud.app.agent_runtime.tool_bridge import ToolRegistry
+from shared.app_settings import settings
 
 
 class PipelineStep(BaseModel):
@@ -31,7 +32,7 @@ class AgentPipeline:
 
         body = json.dumps({"messages": messages, "temperature": 0.3, "max_tokens": 1024}).encode("utf-8")
         req = urllib.request.Request(
-            "http://localhost:8000/ai/chat",
+            f"{settings.cloud_api_base}/ai/chat",
             data=body,
             headers={"Content-Type": "application/json"},
             method="POST",

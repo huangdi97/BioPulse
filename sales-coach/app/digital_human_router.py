@@ -10,6 +10,7 @@ from starlette import status
 from sales_coach.app.services.digital_human_difficulty_service import DigitalHumanDifficultyService
 from sales_coach.app.services.digital_human_memory_service import DigitalHumanMemoryService
 from sales_coach.app.services.digital_human_service import DigitalHumanService
+from shared.app_settings import settings as app_settings
 from shared.auth import get_current_user
 from shared.base import success
 from shared.config import settings
@@ -29,7 +30,7 @@ class MessageSend(BaseModel):
     """MessageSend 服务类。"""
 
     content: str
-    ai_gateway_url: str = "http://localhost:8000/ai/gateway"
+    ai_gateway_url: str = f"{app_settings.cloud_api_base}/ai/gateway"
 
 
 @router.post("/sessions", summary="创建会话", description="创建新的数字人会话")

@@ -6,6 +6,8 @@ import urllib.request
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
+from shared.app_settings import settings
+
 GATEWAY_ROUTES: dict[str, str] = {
     "query_bidding": "GET /opportunity/bidding/list",
     "query_opportunity": "GET /opportunity/opportunity/list",
@@ -19,7 +21,7 @@ GATEWAY_ROUTES: dict[str, str] = {
 
 router = APIRouter(prefix="/agent-gateway", tags=["Agent Gateway"])
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = settings.cloud_api_base
 
 
 class ExecuteRequest(BaseModel):

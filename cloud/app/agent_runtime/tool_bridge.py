@@ -6,6 +6,7 @@ import urllib.request
 
 from cloud.app.agent_runtime.models import ToolDef
 from cloud.app.agent_runtime.retry import retry_with_backoff
+from shared.app_settings import settings
 
 
 class ToolRegistry:
@@ -124,7 +125,7 @@ class ToolRegistry:
             self._brain.set(params.get("key"), params.get("value"), params.get("user_id", 0))
             return {"success": True, "data": "ok", "error": None}
 
-        url = "http://localhost:8000/agent-gateway/execute"
+        url = f"{settings.cloud_api_base}/agent-gateway/execute"
         payload = {"tool_name": tool_name, "params": params}
         data = json.dumps(payload).encode("utf-8")
 

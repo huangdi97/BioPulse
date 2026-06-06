@@ -10,8 +10,9 @@ from opportunity.app.repositories import (
     ResearchTrailRepository,
 )
 from opportunity.app.services.base import BaseService
+from shared.app_settings import settings
 
-AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
+AI_GATEWAY_URL = f"{settings.cloud_api_base}/ai/chat"
 SYSTEM_PROMPT = "你是论文诚信分析师，请判断这篇论文是否有撤稿、数据造假等诚信问题"
 
 

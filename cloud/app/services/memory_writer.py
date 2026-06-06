@@ -11,6 +11,7 @@ from cloud.app.repositories import (
     WorkingMemoryRepository,
 )
 from cloud.app.services.base import BaseService
+from shared.app_settings import settings
 
 
 def _now() -> str:
@@ -20,7 +21,7 @@ def _now() -> str:
 def _call_ai(messages: list[dict], auth_header: str) -> dict:
     payload = {"messages": messages, "temperature": 0.3, "max_tokens": 2048}
     req = urllib.request.Request(
-        "http://localhost:8000/ai/chat",
+        f"{settings.cloud_api_base}/ai/chat",
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json", "Authorization": auth_header},
         method="POST",

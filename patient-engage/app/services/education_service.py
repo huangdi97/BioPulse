@@ -5,8 +5,9 @@ from datetime import datetime, timezone
 import httpx
 
 from patient_engage.app.database import get_cache, set_cache
+from shared.app_settings import settings
 
-CLOUD_API = "http://localhost:8000"
+CLOUD_API = settings.cloud_api_base
 
 
 async def get_education_content(disease: str) -> dict:

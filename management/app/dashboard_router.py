@@ -3,8 +3,10 @@
 import httpx
 from fastapi import APIRouter
 
+from shared.app_settings import settings
+
 router = APIRouter(tags=["dashboard"])
-CLOUD_API = "http://localhost:8000"
+CLOUD_API = settings.cloud_api_base
 
 
 async def _fetch(path: str) -> dict:

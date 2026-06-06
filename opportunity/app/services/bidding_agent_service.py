@@ -14,10 +14,11 @@ from opportunity.app.repositories import (
     BiddingAgentLogRepository,
 )
 from opportunity.app.services.base import BaseService
+from shared.app_settings import settings
 
 logger = logging.getLogger(__name__)
 
-AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
+AI_GATEWAY_URL = f"{settings.cloud_api_base}/ai/chat"
 
 
 class BiddingAgentService(BaseService):

@@ -17,6 +17,7 @@ from cloud.app.repositories import (
 )
 from cloud.app.services.base import BaseService
 from cloud.app.services.compliance_strategy_service import ComplianceStrategyService
+from shared.app_settings import settings
 from shared.base import PaginatedResponse, success
 from shared.compliance import check_content
 
@@ -32,7 +33,7 @@ def _n404(name="Resource"):
 def _call_ai(messages: list[dict], auth_header: str) -> dict:
     payload = {"messages": messages, "temperature": 0.7, "max_tokens": 2048}
     req = urllib.request.Request(
-        "http://localhost:8000/ai/chat",
+        f"{settings.cloud_api_base}/ai/chat",
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json", "Authorization": auth_header},
         method="POST",

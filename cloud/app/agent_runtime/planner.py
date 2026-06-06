@@ -5,6 +5,8 @@ import logging
 
 from pydantic import BaseModel
 
+from shared.app_settings import settings
+
 logger = logging.getLogger(__name__)
 
 
@@ -39,7 +41,7 @@ class PlanGenerator:
         "Use tools from: {tools}. Context: {context}"
     )
 
-    def __init__(self, llm_url: str = "http://localhost:8000/ai/chat"):
+    def __init__(self, llm_url: str = f"{settings.cloud_api_base}/ai/chat"):
         self._llm_url = llm_url
 
     def generate_plan(self, goal: str, tools: list[str], context: dict | None = None) -> Plan:

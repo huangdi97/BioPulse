@@ -14,10 +14,11 @@ from edge_tts import Communicate
 
 from assistant.app.repositories import MediaFileRepository
 from assistant.app.services.base import BaseService
+from shared.app_settings import settings
 
 logger = logging.getLogger(__name__)
 
-AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
+AI_GATEWAY_URL = f"{settings.cloud_api_base}/ai/chat"
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 AUDIO_DIR = os.path.join(BASE_DIR, "uploads", "audio")
 TTS_DIR = os.path.join(BASE_DIR, "media", "tts")

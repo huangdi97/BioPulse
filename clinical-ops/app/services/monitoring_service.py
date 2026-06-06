@@ -5,8 +5,9 @@ from datetime import datetime, timezone
 import httpx
 
 from clinical_ops.app.database import get_cache, set_cache
+from shared.app_settings import settings
 
-CLOUD_API = "http://localhost:8000"
+CLOUD_API = settings.cloud_api_base
 
 
 async def get_monitoring_plan(trial_id: str) -> dict:

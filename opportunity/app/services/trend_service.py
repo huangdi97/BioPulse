@@ -9,8 +9,9 @@ from opportunity.app.repositories import (
     TrendAnalysisRepository,
 )
 from opportunity.app.services.base import BaseService
+from shared.app_settings import settings
 
-AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
+AI_GATEWAY_URL = f"{settings.cloud_api_base}/ai/chat"
 
 
 """趋势分析服务，按研究主题聚合数据并通过LLM预测科研趋势。"""

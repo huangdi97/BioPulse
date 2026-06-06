@@ -7,8 +7,9 @@ import urllib.request
 from typing import Any
 
 from sales_assistant.app.services.base import BaseService
+from shared.app_settings import settings
 
-AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
+AI_GATEWAY_URL = f"{settings.cloud_api_base}/ai/chat"
 TIMEOUT_SECONDS = 30
 logger = logging.getLogger(__name__)
 

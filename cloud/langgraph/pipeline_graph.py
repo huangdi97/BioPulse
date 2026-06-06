@@ -6,6 +6,8 @@ from typing import Optional, TypedDict
 
 from langgraph.graph import END, StateGraph
 
+from shared.app_settings import settings
+
 
 class PipelineState(TypedDict):
     """流水线执行状态：步骤列表、当前索引、累积输出等。"""
@@ -57,7 +59,7 @@ def step_executor(state: PipelineState) -> dict:
 
     try:
         req = urllib.request.Request(
-            "http://localhost:8000/ai/chat",
+            f"{settings.cloud_api_base}/ai/chat",
             data=json.dumps(payload).encode("utf-8"),
             headers={"Content-Type": "application/json", "Authorization": auth_header},
             method="POST",

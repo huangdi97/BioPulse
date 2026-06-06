@@ -8,6 +8,7 @@ from datetime import datetime
 from functools import partial
 
 from cloud.app.agent_runtime.retry import retry_with_backoff
+from shared.app_settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ class RuntimeHelper:
 
     def _raw_llm_call(self, request_body: dict) -> dict:
         req = urllib.request.Request(
-            "http://localhost:8000/ai/chat",
+            f"{settings.cloud_api_base}/ai/chat",
             data=json.dumps(request_body).encode("utf-8"),
             headers={
                 "Content-Type": "application/json",

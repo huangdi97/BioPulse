@@ -6,7 +6,9 @@ from typing import Optional
 
 import httpx
 
-AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
+from shared.app_settings import settings
+
+AI_GATEWAY_URL = f"{settings.cloud_api_base}/ai/chat"
 
 
 def _calculate_dimension_scores(dialogue_log: list, compliance_violations: int, weights: Optional[dict] = None) -> dict:

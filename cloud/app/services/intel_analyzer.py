@@ -14,6 +14,7 @@ from cloud.app.repositories import (
     MarketIntelItemsRepository,
     MarketIntelSourcesRepository,
 )
+from shared.app_settings import settings
 from shared.base import PaginatedResponse
 
 
@@ -139,7 +140,7 @@ class IntelAnalyzerMixin:
             "max_tokens": 1024,
         }
         req = urllib.request.Request(
-            "http://localhost:8000/ai/chat",
+            f"{settings.cloud_api_base}/ai/chat",
             data=json.dumps(payload).encode("utf-8"),
             headers={
                 "Content-Type": "application/json",
