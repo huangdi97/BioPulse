@@ -26,6 +26,7 @@ requests==2.34.2
 aiosqlite==0.22.1
 psycopg2-binary==2.9.12
 sqlite-vec==0.1.9
+redis>=5.0
 
 # ---------- HTTP 客户端 ----------
 # ---------- 任务调度 ----------

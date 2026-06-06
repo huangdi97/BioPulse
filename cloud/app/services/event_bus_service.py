@@ -14,6 +14,14 @@ from cloud.app.repositories import (
 )
 from cloud.app.services.base import BaseService
 
+try:
+    import redis
+    from redis.exceptions import RedisError, ResponseError
+except ImportError:
+    redis = None
+    RedisError = Exception
+    ResponseError = Exception
+
 ALL_ENDS = ["cloud", "sales-coach", "sales-assistant", "assistant", "opportunity"]
 
 
@@ -198,3 +206,81 @@ class EventBusService(BaseService):
             "top_event_types": top_types,
             "recent_messages": recent,
         }
+
+
+class RedisEventBus:
+    """Redis Streams 事件总线，自动降级到 SQLite EventBusService。"""
+
+    def __init__(self, redis_url: str = "redis://localhost:6379/0"):
+        self._available = False
+        self._pool = None
+        self._client = None
+        if redis is None:
+            return
+        try:
+            self._pool = redis.ConnectionPool.from_url(redis_url, max_connections=10)
+            self._client = redis.Redis(connection_pool=self._pool)
+            self._client.ping()
+            self._available = True
+        except (RedisError, OSError, ValueError):
+            self._available = False
+
+    def is_available(self) -> bool:
+        return self._available
+
+    def publish(self, stream: str, event: dict) -> Optional[str]:
+        if not self._available or not self._client:
+            return None
+        try:
+            fields = {}
+            for k, v in event.items():
+                fields[k] = json.dumps(v, ensure_ascii=False) if not isinstance(v, str) else v
+            return self._client.xadd(stream, fields, id="*")
+        except RedisError:
+            return None
+
+    def subscribe(self, stream: str, group: str, consumer: str, timeout_ms: int = 5000) -> list:
+        if not self._available or not self._client:
+            return []
+        try:
+            try:
+                self._client.xgroup_create(stream, group, id="0", mkstream=True)
+            except ResponseError as exc:
+                if "BUSYGROUP" not in str(exc):
+                    raise
+            resp = self._client.xreadgroup(group, consumer, {stream: ">"}, count=10, block=timeout_ms)
+            if not resp:
+                return []
+            result = []
+            for _stream_name, messages in resp:
+                for msg_id, fields in messages:
+                    entry = {"id": msg_id}
+                    for k, v in fields.items():
+                        try:
+                            entry[k] = json.loads(v)
+                        except (json.JSONDecodeError, TypeError):
+                            entry[k] = v
+                    result.append(entry)
+            return result
+        except RedisError:
+            return []
+
+    def ack(self, stream: str, group: str, message_id: str) -> Optional[int]:
+        if not self._available or not self._client:
+            return None
+        try:
+            return self._client.xack(stream, group, message_id)
+        except RedisError:
+            return None
+
+    def pending(self, stream: str, group: str) -> list:
+        if not self._available or not self._client:
+            return []
+        try:
+            resp = self._client.xpending(stream, group)
+            if not resp:
+                return []
+            total = resp.get("pending", 0) if isinstance(resp, dict) else resp
+            return [{"stream": stream, "group": group, "pending": total}]
+        except RedisError:
+            return []
