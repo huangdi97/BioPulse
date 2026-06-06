@@ -45,6 +45,7 @@ class AgentRuntime:
         self._cost_governor = CostGovernor()
         self._planner = PlanGenerator()
         self._verifier = Verifier()
+        self._trace_data: list[dict] = []
 
     def execute(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
         try:
@@ -146,6 +147,7 @@ class AgentRuntime:
                         "goal": goal,
                         "agent_key": agent_key,
                         "context": context,
+                        "trace": self._trace_data,
                     },
                     self._trace_id,
                 )
@@ -176,7 +178,7 @@ class AgentRuntime:
                     )
                     continue
                 try:
-                    ai_resp = self._call_ai(messages, spec["default_temperature"])
+                    ai_resp = self._call_ai(messages, spec["default_temperature"], step)
                     usage = ai_resp.get("usage", {})
                     self._cost_tracker["prompt_tokens"] += usage.get("prompt_tokens", 0)
                     self._cost_tracker["completion_tokens"] += usage.get("completion_tokens", 0)
@@ -314,6 +316,7 @@ class AgentRuntime:
                             "goal": goal,
                             "agent_key": agent_key,
                             "context": None,
+                            "trace": self._trace_data,
                         },
                         self._trace_id,
                     )
@@ -398,6 +401,7 @@ class AgentRuntime:
                             "goal": goal,
                             "agent_key": agent_key,
                             "context": context,
+                            "trace": self._trace_data,
                         },
                         self._trace_id,
                     )
@@ -466,8 +470,11 @@ class AgentRuntime:
         with urllib.request.urlopen(req, timeout=120) as rp:
             return json.loads(rp.read().decode("utf-8"))
 
-    def _call_ai(self, messages: list[dict], temperature: float) -> dict:
+    def _call_ai(self, messages: list[dict], temperature: float, step: int = 0) -> dict:
         prompt_text = json.dumps(messages, ensure_ascii=False)
+        input_len = len(prompt_text)
+        call_start = time.time()
+
         request_body = {
             "messages": messages,
             "temperature": temperature,
@@ -475,14 +482,30 @@ class AgentRuntime:
         }
         fn = partial(self._raw_llm_call, request_body)
         result = retry_with_backoff(fn, max_attempts=4, base_delay=1.0)
+
+        duration_s = round(time.time() - call_start, 3)
+
         if result["success"]:
             ai_response = result["data"]
             data = ai_response.get("data", {})
+            raw_response = json.dumps(ai_response, ensure_ascii=False)
+            output_len = len(raw_response)
+
+            self._trace_data.append(
+                {
+                    "step": step,
+                    "input_len": input_len,
+                    "output_len": output_len,
+                    "duration_s": duration_s,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
+
             return {
                 "reply": data.get("reply", ""),
                 "usage": data.get("usage", {}),
                 "prompt": prompt_text,
-                "raw_response": json.dumps(ai_response, ensure_ascii=False),
+                "raw_response": raw_response,
                 "retry_count": result["attempts"] - 1,
             }
         raise RuntimeError(f"LLM call failed after {result['attempts']} attempts: {result['error']}")
