@@ -5,8 +5,7 @@ import json
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 
-from sales_coach.app.database import get_db
-from sales_coach.app.services.reflection_service import generate_reflection_report
+from sales_coach.app.services.reflection_service import generate_reflection_report, get_scenario
 from sales_coach.app.services.session_service import SessionService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, success
@@ -26,7 +25,6 @@ def list_reflections(
 def create_reflection(
     session_id: int,
     session_service: SessionService = Depends(),
-    db=Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
     """创建反思报告。读取会话对话日志 → 计算分数 → 调用 AI Gateway → 返回报告。"""
@@ -37,12 +35,7 @@ def create_reflection(
     compliance_violations = session.get("compliance_violations") or 0
     scenario = None
     if session.get("scenario_id"):
-        row = db.execute(
-            "SELECT * FROM coach_scenario WHERE id = ?",
-            (session["scenario_id"],),
-        ).fetchone()
-        if row:
-            scenario = dict(row)
+        scenario = get_scenario(session["scenario_id"])
     report = generate_reflection_report(
         session_id=session_id,
         dialogue_log=dialogue_log,

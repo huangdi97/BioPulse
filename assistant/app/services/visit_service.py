@@ -13,20 +13,24 @@ from assistant.app.services.base import BaseService
 class VisitService(BaseService):
     """拜访管理服务，提供拜访记录的增删改查与智能评分。"""
 
-    def _check_hcp_exists(self, hcp_id: int) -> None:
-        repo = HcpRepository(self.db)
+    def _check_hcp_exists(self, conn, hcp_id: int) -> None:
+        repo = HcpRepository(conn)
         row = repo.get_by_id(hcp_id)
         if not row or row["is_active"] != 1:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
 
     def create_visit(self, body, user_id: int) -> dict:
-        self._check_hcp_exists(body.hcp_id)
-        repo = VisitRecordRepository(self.db)
-        row_id = repo.create(
-            body.model_dump(),
-            extra={"created_by": user_id},
-        )
-        return {"id": row_id}
+        conn = self._connection()
+        try:
+            self._check_hcp_exists(conn, body.hcp_id)
+            repo = VisitRecordRepository(conn)
+            row_id = repo.create(
+                body.model_dump(),
+                extra={"created_by": user_id},
+            )
+            return {"id": row_id}
+        finally:
+            conn.close()
 
     def list_visits(
         self,
@@ -35,53 +39,69 @@ class VisitService(BaseService):
         hcp_id: Optional[int] = None,
         visit_type: Optional[str] = None,
     ) -> tuple:
-        repo = VisitRecordRepository(self.db)
-        conditions: List[str] = []
-        params: list = []
+        conn = self._connection()
+        try:
+            repo = VisitRecordRepository(conn)
+            conditions: List[str] = []
+            params: list = []
 
-        if hcp_id is not None:
-            conditions.append("hcp_id = ?")
-            params.append(hcp_id)
-        if visit_type:
-            conditions.append("visit_type = ?")
-            params.append(visit_type)
+            if hcp_id is not None:
+                conditions.append("hcp_id = ?")
+                params.append(hcp_id)
+            if visit_type:
+                conditions.append("visit_type = ?")
+                params.append(visit_type)
 
-        return repo.paginate(
-            page=page,
-            page_size=page_size,
-            conditions=conditions,
-            params=params,
-        )
+            return repo.paginate(
+                page=page,
+                page_size=page_size,
+                conditions=conditions,
+                params=params,
+            )
+        finally:
+            conn.close()
 
     def get_visit(self, visit_id: int) -> dict:
-        repo = VisitRecordRepository(self.db)
-        row = repo.get_by_id(visit_id)
-        if not row:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
-        return dict(row)
+        conn = self._connection()
+        try:
+            repo = VisitRecordRepository(conn)
+            row = repo.get_by_id(visit_id)
+            if not row:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
+            return dict(row)
+        finally:
+            conn.close()
 
     def update_visit(self, visit_id: int, body) -> dict:
-        repo = VisitRecordRepository(self.db)
-        row = repo.get_by_id(visit_id)
-        if not row:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
+        conn = self._connection()
+        try:
+            repo = VisitRecordRepository(conn)
+            row = repo.get_by_id(visit_id)
+            if not row:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
 
-        if body.hcp_id is not None:
-            self._check_hcp_exists(body.hcp_id)
+            if body.hcp_id is not None:
+                self._check_hcp_exists(conn, body.hcp_id)
 
-        updates = body.model_dump(exclude_unset=True)
-        if not updates:
-            return dict(row)
+            updates = body.model_dump(exclude_unset=True)
+            if not updates:
+                return dict(row)
 
-        repo.update(visit_id, updates)
-        return dict(repo.get_by_id(visit_id))
+            repo.update(visit_id, updates)
+            return dict(repo.get_by_id(visit_id))
+        finally:
+            conn.close()
 
     def delete_visit(self, visit_id: int) -> None:
-        repo = VisitRecordRepository(self.db)
-        row = repo.get_by_id(visit_id)
-        if not row:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
-        repo.soft_delete(visit_id)
+        conn = self._connection()
+        try:
+            repo = VisitRecordRepository(conn)
+            row = repo.get_by_id(visit_id)
+            if not row:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
+            repo.soft_delete(visit_id)
+        finally:
+            conn.close()
 
     def _offline_visit_score(self, visit_data: dict) -> dict:
         base_score = 50

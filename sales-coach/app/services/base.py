@@ -1,12 +1,16 @@
 """服务层基类模块。"""
 
-from fastapi import Depends
+import sqlite3
 
-from sales_coach.app.database import get_db
+from sales_coach.app.database import DB_PATH
 
 
 class BaseService:
-    """服务层基类，提供数据库依赖注入。"""
+    """服务基类，每个方法独立管理数据库连接。"""
 
-    def __init__(self, db=Depends(get_db)):
-        self.db = db
+    def _connection(self):
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA foreign_keys=ON")
+        return conn

@@ -2,13 +2,11 @@
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from starlette import status
 
-from assistant.app.database import get_db
-from assistant.app.repositories import HcpRepository
 from assistant.app.services.hcp_service import HcpService
 from shared.auth import get_current_user
 from shared.base import ApiResponse, PaginatedResponse, success
@@ -67,18 +65,14 @@ class HcpOut(BaseModel):
 @router.post("")
 def create_hcp(
     body: HcpCreate,
-    db=Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
     """Create a new HCP record."""
-    repo = HcpRepository(db)
+    service = HcpService()
     user_id = int(current_user["sub"])
-    row_id = repo.create(
-        body.model_dump(),
-        extra={"created_by": user_id},
-    )
+    result = service.create_hcp(body, user_id)
     return JSONResponse(
-        content=success(data={"id": row_id}).model_dump(),
+        content=success(data=result).model_dump(),
         status_code=status.HTTP_201_CREATED,
     )
 
@@ -91,32 +85,17 @@ def list_hcps(
     hospital: Optional[str] = Query(None),
     department: Optional[str] = Query(None),
     level: Optional[str] = Query(None),
-    db=Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[HcpOut]]:
     """List HCP records with pagination and filtering."""
-    repo = HcpRepository(db)
-    conditions = ["is_active = 1"]
-    params: list = []
-
-    if name:
-        conditions.append("name LIKE ?")
-        params.append(f"%{name}%")
-    if hospital:
-        conditions.append("hospital LIKE ?")
-        params.append(f"%{hospital}%")
-    if department:
-        conditions.append("department LIKE ?")
-        params.append(f"%{department}%")
-    if level:
-        conditions.append("level = ?")
-        params.append(level)
-
-    total, total_pages, rows = repo.paginate(
+    service = HcpService()
+    total, total_pages, rows = service.list_hcps(
         page=page,
         page_size=page_size,
-        conditions=conditions,
-        params=params,
+        name=name,
+        hospital=hospital,
+        department=department,
+        level=level,
     )
     items = [HcpOut(**dict(r)) for r in rows]
     return success(
@@ -133,14 +112,11 @@ def list_hcps(
 @router.get("/{hcp_id}")
 def get_hcp(
     hcp_id: int,
-    db=Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[HcpOut]:
     """Get a single HCP record by ID."""
-    repo = HcpRepository(db)
-    row = repo.get_by_id(hcp_id)
-    if not row or row["is_active"] != 1:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
+    service = HcpService()
+    row = service.get_hcp(hcp_id)
     return success(data=HcpOut(**dict(row)))
 
 
@@ -148,36 +124,22 @@ def get_hcp(
 def update_hcp(
     hcp_id: int,
     body: HcpUpdate,
-    db=Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[HcpOut]:
     """Update an HCP record."""
-    repo = HcpRepository(db)
-    row = repo.get_by_id(hcp_id)
-    if not row or row["is_active"] != 1:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
-
-    updates = body.model_dump(exclude_unset=True)
-    if not updates:
-        return success(data=HcpOut(**dict(row)))
-
-    repo.update(hcp_id, updates)
-    updated = repo.get_by_id(hcp_id)
-    return success(data=HcpOut(**dict(updated)))
+    service = HcpService()
+    row = service.update_hcp(hcp_id, body)
+    return success(data=HcpOut(**row))
 
 
 @router.delete("/{hcp_id}")
 def delete_hcp(
     hcp_id: int,
-    db=Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
     """Soft-delete an HCP record by setting is_active to 0."""
-    repo = HcpRepository(db)
-    row = repo.get_by_id(hcp_id)
-    if not row or row["is_active"] != 1:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
-    repo.soft_delete(hcp_id)
+    service = HcpService()
+    service.delete_hcp(hcp_id)
     return success(message="deleted")
 
 
@@ -192,9 +154,9 @@ def list_hcps_alias(
     hospital: Optional[str] = Query(None),
     department: Optional[str] = Query(None),
     level: Optional[str] = Query(None),
-    service: HcpService = Depends(HcpService),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[HcpOut]]:
+    service = HcpService()
     total, total_pages, rows = service.list_hcps(
         page=page,
         page_size=page_size,
@@ -218,9 +180,9 @@ def list_hcps_alias(
 @hcp_alias_router.get("/hcps/{hcp_id}")
 def get_hcp_alias(
     hcp_id: int,
-    service: HcpService = Depends(HcpService),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[HcpOut]:
+    service = HcpService()
     row = service.get_hcp(hcp_id)
     return success(data=HcpOut(**row))
 
@@ -233,9 +195,9 @@ def hcp_list_alias(
     hospital: Optional[str] = Query(None),
     department: Optional[str] = Query(None),
     level: Optional[str] = Query(None),
-    service: HcpService = Depends(HcpService),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse[HcpOut]]:
+    service = HcpService()
     total, total_pages, rows = service.list_hcps(
         page=page,
         page_size=page_size,

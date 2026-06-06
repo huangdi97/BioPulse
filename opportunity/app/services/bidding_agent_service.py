@@ -15,9 +15,6 @@ from opportunity.app.services.base import BaseService
 AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
 
 
-"""招投标Agent调度服务，通过LLM自动扫描招标信息并分析评估。"""
-
-
 class BiddingAgentService(BaseService):
     """招投标Agent调度：管理Agent配置、触发扫描、分析招标信息、记录运行日志。"""
 
@@ -46,7 +43,7 @@ class BiddingAgentService(BaseService):
         except (json.JSONDecodeError, TypeError):
             return []
 
-    def _run_scan_for_config(self, auth_header: str, config: dict) -> dict:
+    def _run_scan_for_config(self, conn, auth_header: str, config: dict) -> dict:
         keywords = config.get("keywords", "")
         prompt = f"生成3条模拟的医药招标信息，关键词涉及: {keywords}。包含标题、医院、科室、预算、截止日期、产品类别。返回JSON数组"
         reply = self._call_llm(auth_header, prompt)
@@ -61,7 +58,7 @@ class BiddingAgentService(BaseService):
             if not title:
                 continue
             now = datetime.now(timezone.utc).isoformat()
-            self.db.execute(
+            conn.execute(
                 "INSERT INTO bidding_info (title, hospital, department, product_category, budget, deadline, status, created_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)",
                 (
                     title,
@@ -81,7 +78,7 @@ class BiddingAgentService(BaseService):
                     from shared.notification_client import send_notification
 
                     send_notification(
-                        self.db,
+                        conn,
                         config["notify_to"],
                         f"新招标: {title}",
                         f"关键词: {keywords}",
@@ -96,6 +93,7 @@ class BiddingAgentService(BaseService):
 
     def _log_scan_result(
         self,
+        conn,
         config_id: int,
         status_: str,
         found: int,
@@ -103,7 +101,7 @@ class BiddingAgentService(BaseService):
         err: Optional[str],
         started: str,
     ):
-        log_repo = BiddingAgentLogRepository(self.db)
+        log_repo = BiddingAgentLogRepository(conn)
         completed = datetime.now(timezone.utc).isoformat()
         log_repo.create(
             {
@@ -118,102 +116,8 @@ class BiddingAgentService(BaseService):
             }
         )
 
-    def create_agent_config(self, body, user_id: int) -> int:
-        repo = BiddingAgentConfigRepository(self.db)
-        now = datetime.now(timezone.utc).isoformat()
-        return repo.create(
-            body.model_dump(),
-            extra={
-                "created_by": user_id,
-                "created_at": now,
-                "updated_at": now,
-            },
-        )
-
-    def list_agent_configs(self) -> list:
-        repo = BiddingAgentConfigRepository(self.db)
-        rows = repo.list_all(conditions=["is_active = 1"], order_by="id DESC")
-        return [dict(r) for r in rows]
-
-    def update_agent_config(self, config_id: int, body) -> dict:
-        repo = BiddingAgentConfigRepository(self.db)
-        row = repo.get_by_id(config_id)
-        if not row or row["is_active"] != 1:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Config not found")
-        updates = body.model_dump(exclude_unset=True)
-        if not updates:
-            return dict(row)
-        updates["updated_at"] = datetime.now(timezone.utc).isoformat()
-        repo.update(config_id, updates)
-        return dict(repo.get_by_id(config_id))
-
-    def delete_agent_config(self, config_id: int) -> None:
-        repo = BiddingAgentConfigRepository(self.db)
-        row = repo.get_by_id(config_id)
-        if not row or row["is_active"] != 1:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Config not found")
-        repo.soft_delete(config_id)
-
-    def trigger_scan(self, auth_header: str) -> dict:
-        repo = BiddingAgentConfigRepository(self.db)
-        configs = repo.list_all(conditions=["is_active = 1"])
-        if not configs:
-            return {"total_found": 0, "total_parsed": 0, "errors": []}
-        total_found = 0
-        total_parsed = 0
-        errors = []
-        for cfg in configs:
-            config = dict(cfg)
-            started_at = datetime.now(timezone.utc).isoformat()
-            try:
-                scan_result = self._run_scan_for_config(auth_header, config)
-                total_found += scan_result["items_found"]
-                total_parsed += scan_result["items_parsed"]
-                self._log_scan_result(
-                    config["id"],
-                    "success",
-                    scan_result["items_found"],
-                    scan_result["items_parsed"],
-                    None,
-                    started_at,
-                )
-            except Exception as e:
-                errors.append({"config_id": config["id"], "error": str(e)})
-                self._log_scan_result(config["id"], "failed", 0, 0, str(e), started_at)
-        return {
-            "total_found": total_found,
-            "total_parsed": total_parsed,
-            "errors": errors,
-        }
-
-    def get_agent_status(self) -> dict:
-        last = self.db.execute("SELECT started_at FROM bidding_agent_log ORDER BY id DESC LIMIT 1").fetchone()
-        stats = self.db.execute(
-            "SELECT COUNT(*) as total, SUM(CASE WHEN run_status='success' THEN 1 ELSE 0 END) as success FROM bidding_agent_log"
-        ).fetchone()
-        total_runs = stats["total"] or 0
-        success_count = stats["success"] or 0
-        success_rate = round(success_count / total_runs * 100, 1) if total_runs > 0 else 0.0
-        return {
-            "last_run": last["started_at"] if last else None,
-            "total_runs": total_runs,
-            "success_rate": success_rate,
-        }
-
-    def list_agent_logs(self, page: int, page_size: int) -> tuple:
-        count_row = self.db.execute("SELECT COUNT(*) FROM bidding_agent_log").fetchone()
-        total = count_row[0]
-        total_pages = max(1, (total + page_size - 1) // page_size)
-        offset = (page - 1) * page_size
-        rows = self.db.execute(
-            "SELECT * FROM bidding_agent_log ORDER BY id DESC LIMIT ? OFFSET ?",
-            [page_size, offset],
-        ).fetchall()
-        items = [dict(r) for r in rows]
-        return items, total, page, page_size, total_pages
-
-    def auto_analyze_bidding(self, bidding_id: int, auth_header: str) -> dict:
-        row = self.db.execute("SELECT * FROM bidding_info WHERE id = ? AND is_active = 1", (bidding_id,)).fetchone()
+    def _update_bidding_analysis(self, conn, bidding_id: int, auth_header: str) -> dict:
+        row = conn.execute("SELECT * FROM bidding_info WHERE id = ? AND is_active = 1", (bidding_id,)).fetchone()
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bidding not found")
         bid = dict(row)
@@ -236,34 +140,169 @@ class BiddingAgentService(BaseService):
                 "next_steps": [],
             }
         now = datetime.now(timezone.utc).isoformat()
-        self.db.execute(
+        conn.execute(
             "UPDATE bidding_info SET analysis = ?, updated_at = ? WHERE id = ?",
             (json.dumps(analysis, ensure_ascii=False), now, bidding_id),
         )
-        self.db.commit()
+        conn.commit()
         return analysis
 
-    def get_all_active_configs(self) -> list:
-        configs = self.db.execute("SELECT * FROM bidding_agent_config WHERE is_active = 1").fetchall()
+    def create_agent_config(self, body, user_id: int) -> int:
+        conn = self._connection()
+        try:
+            repo = BiddingAgentConfigRepository(conn)
+            now = datetime.now(timezone.utc).isoformat()
+            return repo.create(
+                body.model_dump(),
+                extra={
+                    "created_by": user_id,
+                    "created_at": now,
+                    "updated_at": now,
+                },
+            )
+        finally:
+            conn.close()
+
+    def list_agent_configs(self) -> list:
+        conn = self._connection()
+        try:
+            repo = BiddingAgentConfigRepository(conn)
+            rows = repo.list_all(conditions=["is_active = 1"], order_by="id DESC")
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
+
+    def update_agent_config(self, config_id: int, body) -> dict:
+        conn = self._connection()
+        try:
+            repo = BiddingAgentConfigRepository(conn)
+            row = repo.get_by_id(config_id)
+            if not row or row["is_active"] != 1:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Config not found")
+            updates = body.model_dump(exclude_unset=True)
+            if not updates:
+                return dict(row)
+            updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+            repo.update(config_id, updates)
+            return dict(repo.get_by_id(config_id))
+        finally:
+            conn.close()
+
+    def delete_agent_config(self, config_id: int) -> None:
+        conn = self._connection()
+        try:
+            repo = BiddingAgentConfigRepository(conn)
+            row = repo.get_by_id(config_id)
+            if not row or row["is_active"] != 1:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Config not found")
+            repo.soft_delete(config_id)
+        finally:
+            conn.close()
+
+    def trigger_scan(self, auth_header: str) -> dict:
+        conn = self._connection()
+        try:
+            repo = BiddingAgentConfigRepository(conn)
+            configs = repo.list_all(conditions=["is_active = 1"])
+            if not configs:
+                return {"total_found": 0, "total_parsed": 0, "errors": []}
+            total_found = 0
+            total_parsed = 0
+            errors = []
+            for cfg in configs:
+                config = dict(cfg)
+                started_at = datetime.now(timezone.utc).isoformat()
+                try:
+                    scan_result = self._run_scan_for_config(conn, auth_header, config)
+                    total_found += scan_result["items_found"]
+                    total_parsed += scan_result["items_parsed"]
+                    self._log_scan_result(
+                        conn,
+                        config["id"],
+                        "success",
+                        scan_result["items_found"],
+                        scan_result["items_parsed"],
+                        None,
+                        started_at,
+                    )
+                except Exception as e:
+                    errors.append({"config_id": config["id"], "error": str(e)})
+                    self._log_scan_result(conn, config["id"], "failed", 0, 0, str(e), started_at)
+            return {
+                "total_found": total_found,
+                "total_parsed": total_parsed,
+                "errors": errors,
+            }
+        finally:
+            conn.close()
+
+    def get_agent_status(self) -> dict:
+        conn = self._connection()
+        try:
+            last = conn.execute("SELECT started_at FROM bidding_agent_log ORDER BY id DESC LIMIT 1").fetchone()
+            stats = conn.execute(
+                "SELECT COUNT(*) as total, SUM(CASE WHEN run_status='success' THEN 1 ELSE 0 END) as success FROM bidding_agent_log"
+            ).fetchone()
+            total_runs = stats["total"] or 0
+            success_count = stats["success"] or 0
+            success_rate = round(success_count / total_runs * 100, 1) if total_runs > 0 else 0.0
+            return {
+                "last_run": last["started_at"] if last else None,
+                "total_runs": total_runs,
+                "success_rate": success_rate,
+            }
+        finally:
+            conn.close()
+
+    def list_agent_logs(self, page: int, page_size: int) -> tuple:
+        conn = self._connection()
+        try:
+            count_row = conn.execute("SELECT COUNT(*) FROM bidding_agent_log").fetchone()
+            total = count_row[0]
+            total_pages = max(1, (total + page_size - 1) // page_size)
+            offset = (page - 1) * page_size
+            rows = conn.execute(
+                "SELECT * FROM bidding_agent_log ORDER BY id DESC LIMIT ? OFFSET ?",
+                [page_size, offset],
+            ).fetchall()
+            items = [dict(r) for r in rows]
+            return items, total, page, page_size, total_pages
+        finally:
+            conn.close()
+
+    def auto_analyze_bidding(self, bidding_id: int, auth_header: str) -> dict:
+        conn = self._connection()
+        try:
+            return self._update_bidding_analysis(conn, bidding_id, auth_header)
+        finally:
+            conn.close()
+
+    def get_all_active_configs(self, conn) -> list:
+        configs = conn.execute("SELECT * FROM bidding_agent_config WHERE is_active = 1").fetchall()
         return [dict(c) for c in configs]
 
     def run_scheduled_scan(self) -> None:
-        configs = self.get_all_active_configs()
-        if not configs:
-            return
-        for cfg in configs:
-            config = dict(cfg)
-            started_at = datetime.now(timezone.utc).isoformat()
-            try:
-                result = self._run_scan_for_config("", config)
-                self._log_scan_result(
-                    config["id"],
-                    "success",
-                    result["items_found"],
-                    result["items_parsed"],
-                    None,
-                    started_at,
-                )
-            except Exception as e:
-                self._log_scan_result(config["id"], "failed", 0, 0, str(e), started_at)
-            self.db.commit()
+        conn = self._connection()
+        try:
+            configs = self.get_all_active_configs(conn)
+            if not configs:
+                return
+            for cfg in configs:
+                config = dict(cfg)
+                started_at = datetime.now(timezone.utc).isoformat()
+                try:
+                    result = self._run_scan_for_config(conn, "", config)
+                    self._log_scan_result(
+                        conn,
+                        config["id"],
+                        "success",
+                        result["items_found"],
+                        result["items_parsed"],
+                        None,
+                        started_at,
+                    )
+                except Exception as e:
+                    self._log_scan_result(conn, config["id"], "failed", 0, 0, str(e), started_at)
+                conn.commit()
+        finally:
+            conn.close()

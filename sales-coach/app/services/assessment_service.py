@@ -19,12 +19,16 @@ class AssessmentService(BaseService):
     """学员评估服务，管理评估记录并支持自动评分与趋势分析。"""
 
     def create(self, body, user_id: int) -> dict:
-        repo = AssessmentRepository(self.db)
-        now = datetime.now(timezone.utc).isoformat()
-        data = body.model_dump(exclude={"title"})
-        extra = {"created_by": user_id, "created_at": now, "updated_at": now}
-        assessment_id = repo.create(data, extra=extra)
-        return {"id": assessment_id}
+        conn = self._connection()
+        try:
+            repo = AssessmentRepository(conn)
+            now = datetime.now(timezone.utc).isoformat()
+            data = body.model_dump(exclude={"title"})
+            extra = {"created_by": user_id, "created_at": now, "updated_at": now}
+            assessment_id = repo.create(data, extra=extra)
+            return {"id": assessment_id}
+        finally:
+            conn.close()
 
     def list(
         self,
@@ -34,56 +38,67 @@ class AssessmentService(BaseService):
         current_level: Optional[str] = None,
         target_level: Optional[str] = None,
     ) -> tuple:
-        repo = AssessmentRepository(self.db)
-        conditions = []
-        params = []
+        conn = self._connection()
+        try:
+            repo = AssessmentRepository(conn)
+            conditions = []
+            params = []
 
-        if trainee_name:
-            conditions.append("trainee_name LIKE ?")
-            params.append(f"%{trainee_name}%")
-        if current_level:
-            conditions.append("current_level = ?")
-            params.append(current_level)
-        if target_level:
-            conditions.append("target_level = ?")
-            params.append(target_level)
+            if trainee_name:
+                conditions.append("trainee_name LIKE ?")
+                params.append(f"%{trainee_name}%")
+            if current_level:
+                conditions.append("current_level = ?")
+                params.append(current_level)
+            if target_level:
+                conditions.append("target_level = ?")
+                params.append(target_level)
 
-        return repo.paginate_active(page, page_size, conditions, params)
+            return repo.paginate_active(page, page_size, conditions, params)
+        finally:
+            conn.close()
 
     def get_stats(self) -> dict:
-        repo = AssessmentRepository(self.db)
-        return repo.get_stats()
+        conn = self._connection()
+        try:
+            repo = AssessmentRepository(conn)
+            return repo.get_stats()
+        finally:
+            conn.close()
 
     def get(self, assessment_id: int) -> dict:
-        repo = AssessmentRepository(self.db)
-        return dict(repo.get_active_or_404(assessment_id))
+        conn = self._connection()
+        try:
+            repo = AssessmentRepository(conn)
+            return dict(repo.get_active_or_404(assessment_id))
+        finally:
+            conn.close()
 
     def update(self, assessment_id: int, body) -> dict:
-        repo = AssessmentRepository(self.db)
-        repo.get_active_or_404(assessment_id)
-        updates = body.model_dump(exclude_unset=True)
-        if not updates:
+        conn = self._connection()
+        try:
+            repo = AssessmentRepository(conn)
+            repo.get_active_or_404(assessment_id)
+            updates = body.model_dump(exclude_unset=True)
+            if not updates:
+                return dict(repo.get_by_id(assessment_id))
+            updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+            repo.update(assessment_id, updates)
             return dict(repo.get_by_id(assessment_id))
-        updates["updated_at"] = datetime.now(timezone.utc).isoformat()
-        repo.update(assessment_id, updates)
-        return dict(repo.get_by_id(assessment_id))
+        finally:
+            conn.close()
 
     def delete(self, assessment_id: int) -> None:
-        repo = AssessmentRepository(self.db)
-        repo.get_active_or_404(assessment_id)
-        repo.soft_delete_assessment(assessment_id)
+        conn = self._connection()
+        try:
+            repo = AssessmentRepository(conn)
+            repo.get_active_or_404(assessment_id)
+            repo.soft_delete_assessment(assessment_id)
+        finally:
+            conn.close()
 
     @staticmethod
     def calculate_auto_score(dialogue_log: list, weights: Optional[dict] = None) -> dict:
-        """根据对话日志自动计算各维度评分。
-
-        Args:
-            dialogue_log: 对话历史列表。
-            weights: 权重配置，默认使用DEFAULT_WEIGHTS。
-
-        Returns:
-            包含各维度分数和总分以及score_breakdown的字典。
-        """
         if not weights:
             weights = DEFAULT_WEIGHTS
         rounds = len(dialogue_log) if dialogue_log else 0
@@ -108,45 +123,48 @@ class AssessmentService(BaseService):
         }
 
     def get_trend(self, user_id: int, limit: int = 10) -> list:
-        """获取指定用户的评分趋势。
+        conn = self._connection()
+        try:
+            repo = SessionRepository(conn)
+            rows = repo.db.execute(
+                "SELECT id, score, created_at, module_id FROM coach_session WHERE created_by = ? AND score IS NOT NULL ORDER BY id DESC LIMIT ?",
+                (user_id, limit),
+            ).fetchall()
+            return [dict(r) for r in rows]
+        finally:
+            conn.close()
 
-        Args:
-            user_id: 用户ID。
-            limit: 返回记录数，默认10条。
-
-        Returns:
-            按时间倒序的评分趋势列表。
-        """
-        repo = SessionRepository(self.db)
-        rows = repo.db.execute(
-            "SELECT id, score, created_at, module_id FROM coach_session WHERE created_by = ? AND score IS NOT NULL ORDER BY id DESC LIMIT ?",
-            (user_id, limit),
-        ).fetchall()
-        return [dict(r) for r in rows]
+    def get_sessions(self, trainee_name: str) -> Optional[dict]:
+        conn = self._connection()
+        try:
+            row = conn.execute(
+                "SELECT id, dialogue_log, compliance_violations, scenario_id FROM coach_session WHERE trainee_name = ? ORDER BY id DESC LIMIT 1",
+                (trainee_name,),
+            ).fetchone()
+            if row:
+                return dict(row)
+            return None
+        finally:
+            conn.close()
 
     def update_assessment_with_reflection(self, assessment_id: int, reflection: dict) -> dict:
-        """将反思报告关联到评分记录。
-
-        Args:
-            assessment_id: 评分记录ID。
-            reflection: 反思报告字典。
-
-        Returns:
-            更新后的评分记录。
-        """
-        repo = AssessmentRepository(self.db)
-        repo.get_active_or_404(assessment_id)
-        repo.update(
-            assessment_id,
-            {
-                "notes": json.dumps(
-                    {
-                        "reflection_summary": reflection.get("summary", {}),
-                        "scores": reflection.get("scores", {}),
-                    },
-                    ensure_ascii=False,
-                ),
-                "updated_at": datetime.now(timezone.utc).isoformat(),
-            },
-        )
-        return dict(repo.get_by_id(assessment_id))
+        conn = self._connection()
+        try:
+            repo = AssessmentRepository(conn)
+            repo.get_active_or_404(assessment_id)
+            repo.update(
+                assessment_id,
+                {
+                    "notes": json.dumps(
+                        {
+                            "reflection_summary": reflection.get("summary", {}),
+                            "scores": reflection.get("scores", {}),
+                        },
+                        ensure_ascii=False,
+                    ),
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                },
+            )
+            return dict(repo.get_by_id(assessment_id))
+        finally:
+            conn.close()

@@ -87,16 +87,7 @@ def create_agent_config(
     service: BiddingAgentService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> JSONResponse:
-    """创建代理配置。
-
-    Args:
-        body: 代理配置创建请求体。
-        service: 代理配置服务实例。
-        current_user: 当前登录用户信息。
-
-    Returns:
-        包含新配置 ID 的 JSON 响应。
-    """
+    """创建代理配置。"""
     user_id = int(current_user["sub"])
     new_id = service.create_agent_config(body, user_id)
     return JSONResponse(
@@ -110,15 +101,7 @@ def list_agent_configs(
     service: BiddingAgentService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
-    """获取代理配置列表。
-
-    Args:
-        service: 代理配置服务实例。
-        current_user: 当前登录用户信息。
-
-    Returns:
-        代理配置列表响应。
-    """
+    """获取代理配置列表。"""
     rows = service.list_agent_configs()
     return success(data=[AgentConfigOut(**r) for r in rows])
 
@@ -130,17 +113,7 @@ def update_agent_config(
     service: BiddingAgentService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
-    """更新代理配置。
-
-    Args:
-        config_id: 配置 ID。
-        body: 代理配置更新请求体。
-        service: 代理配置服务实例。
-        current_user: 当前登录用户信息。
-
-    Returns:
-        更新后的配置信息响应。
-    """
+    """更新代理配置。"""
     updated = service.update_agent_config(config_id, body)
     return success(data=AgentConfigOut(**updated))
 
@@ -151,16 +124,7 @@ def delete_agent_config(
     service: BiddingAgentService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
-    """删除代理配置。
-
-    Args:
-        config_id: 配置 ID。
-        service: 代理配置服务实例。
-        current_user: 当前登录用户信息。
-
-    Returns:
-        删除成功响应。
-    """
+    """删除代理配置。"""
     service.delete_agent_config(config_id)
     return success(message="deleted")
 
@@ -171,16 +135,7 @@ def trigger_scan(
     service: BiddingAgentService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
-    """触发扫描任务。
-
-    Args:
-        request: HTTP 请求对象，包含 Authorization 头。
-        service: 代理配置服务实例。
-        current_user: 当前登录用户信息。
-
-    Returns:
-        扫描结果（发现数、解析数、错误列表）。
-    """
+    """触发扫描任务。"""
     auth_header = request.headers.get("Authorization", "")
     result = service.trigger_scan(auth_header)
     return success(data=TriggerScanOut(**result))
@@ -191,15 +146,7 @@ def agent_status(
     service: BiddingAgentService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
-    """获取代理运行状态。
-
-    Args:
-        service: 代理配置服务实例。
-        current_user: 当前登录用户信息。
-
-    Returns:
-        代理状态信息（上次运行时间、总运行次数、成功率）。
-    """
+    """获取代理运行状态。"""
     result = service.get_agent_status()
     return success(data=AgentStatusOut(**result))
 
@@ -211,17 +158,7 @@ def agent_logs(
     service: BiddingAgentService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse[PaginatedResponse]:
-    """获取代理运行日志列表（分页）。
-
-    Args:
-        page: 页码，从 1 开始。
-        page_size: 每页条数。
-        service: 代理配置服务实例。
-        current_user: 当前登录用户信息。
-
-    Returns:
-        分页的日志列表响应。
-    """
+    """获取代理运行日志列表（分页）。"""
     items, total, page, page_size, total_pages = service.list_agent_logs(page, page_size)
     return success(
         data=PaginatedResponse(
@@ -241,41 +178,17 @@ def auto_analyze_bidding(
     service: BiddingAgentService = Depends(),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
-    """自动分析招标信息。
-
-    Args:
-        bidding_id: 招标 ID。
-        request: HTTP 请求对象，包含 Authorization 头。
-        service: 代理配置服务实例。
-        current_user: 当前登录用户信息。
-
-    Returns:
-        分析结果（评估、产品建议、风险因素、后续步骤）。
-    """
+    """自动分析招标信息。"""
     auth_header = request.headers.get("Authorization", "")
     analysis = service.auto_analyze_bidding(bidding_id, auth_header)
     return success(data=analysis)
 
 
-import sqlite3
-
-from opportunity.app.database import DB_PATH
-from opportunity.app.services.bidding_agent_service import BiddingAgentService
-
-
-class _StandaloneBiddingAgentService(BiddingAgentService):
-    def __init__(self, db):
-        self.db = db
-
-
 def schedule_bidding_scan():
     """定时执行招标扫描任务（由调度器调用）。"""
     try:
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-        service = _StandaloneBiddingAgentService(conn)
+        service = BiddingAgentService()
         service.run_scheduled_scan()
-        conn.close()
     except Exception:
         pass
 

@@ -8,7 +8,6 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from starlette import status
 
-from sales_coach.app.database import get_db
 from sales_coach.app.services.assessment_service import (
     DEFAULT_WEIGHTS,
     AssessmentService,
@@ -162,17 +161,13 @@ def reflect_on_assessment(
     assessment_id: int,
     service: AssessmentService = Depends(),
     session_service: SessionService = Depends(),
-    db=Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ) -> ApiResponse:
     """生成反思报告并关联到评分记录。"""
     assessment = service.get(assessment_id)
     if not assessment:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Assessment not found")
-    sessions = db.execute(
-        "SELECT id, dialogue_log, compliance_violations, scenario_id FROM coach_session WHERE trainee_name = ? ORDER BY id DESC LIMIT 1",
-        (assessment.get("trainee_name", ""),),
-    ).fetchone()
+    sessions = service.get_sessions(assessment.get("trainee_name", ""))
     if not sessions:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="No session found for trainee")
     dialogue_log = json.loads(sessions["dialogue_log"] or "[]")
