@@ -34,10 +34,10 @@ pip install -r requirements.txt
 uvicorn cloud.app.main:app --port 8000
 
 # 启动各端（独立终端）
-uvicorn assistant.app.main:app --port 8001
+uvicorn assistant.app.main:app --port 8003
 uvicorn opportunity.app.main:app --port 8002
-uvicorn sales_assistant.app.main:app --port 8003
-uvicorn sales_coach.app.main:app --port 8004
+uvicorn sales_assistant.app.main:app --port 8004
+uvicorn sales_coach.app.main:app --port 8001
 
 # 启动 Flutter 移动端
 cd mobile_app && flutter run
