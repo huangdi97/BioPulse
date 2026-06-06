@@ -17,6 +17,14 @@ async def _fetch(path: str) -> dict:
 
 
 async def get_team_stats(team_id: int) -> dict:
+    """获取团队统计总览，包含仪表盘、用户列表和合规数据。
+
+    Args:
+        team_id: 团队 ID。
+
+    Returns:
+        dict: 包含 team_id、overview、users、compliance 的字典。
+    """
     dashboard = await _fetch("/api/demo/dashboard")
     users = await _fetch("/api/demo/dashboard/users")
     compliance = await _fetch("/api/demo/dashboard/compliance")
@@ -29,6 +37,14 @@ async def get_team_stats(team_id: int) -> dict:
 
 
 async def get_team_members(team_id: int) -> dict:
+    """获取团队成员列表及总人数。
+
+    Args:
+        team_id: 团队 ID。
+
+    Returns:
+        dict: 包含 team_id、members 列表和 total 计数的字典。
+    """
     data = await _fetch("/api/demo/dashboard")
     members = data.get("members", []) if data else []
     return {
@@ -39,6 +55,14 @@ async def get_team_members(team_id: int) -> dict:
 
 
 async def get_team_compliance(team_id: int) -> dict:
+    """获取团队合规数据。
+
+    Args:
+        team_id: 团队 ID。
+
+    Returns:
+        dict: 包含 team_id 和 compliance 合规信息的字典。
+    """
     data = await _fetch("/api/demo/dashboard/compliance")
     if not data:
         return {"team_id": team_id, "compliance": {}}
@@ -49,6 +73,14 @@ async def get_team_compliance(team_id: int) -> dict:
 
 
 async def get_team_performance(team_id: int) -> dict:
+    """获取团队绩效数据。
+
+    Args:
+        team_id: 团队 ID。
+
+    Returns:
+        dict: 包含 team_id 和 performance 绩效信息的字典。
+    """
     dashboard = await _fetch("/api/demo/dashboard")
     perf = dashboard.get("performance", {}) if dashboard else {}
     return {

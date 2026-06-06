@@ -17,6 +17,11 @@ async def _fetch(path: str) -> dict:
 
 
 async def get_summary() -> dict:
+    """获取全局概览，包含仪表盘、用户和合规数据。
+
+    Returns:
+        dict: 包含 dashboard、users、compliance 的全局概览字典。
+    """
     dashboard = await _fetch("/api/demo/dashboard")
     users = await _fetch("/api/demo/dashboard/users")
     compliance = await _fetch("/api/demo/dashboard/compliance")
@@ -28,6 +33,11 @@ async def get_summary() -> dict:
 
 
 async def get_compliance_overview() -> dict:
+    """获取全局合规总览。
+
+    Returns:
+        dict: 包含 compliance_overview 合规总览数据的字典。
+    """
     data = await _fetch("/api/demo/dashboard/compliance")
     if not data:
         return {"compliance_overview": {}}
@@ -35,6 +45,11 @@ async def get_compliance_overview() -> dict:
 
 
 async def get_team_rankings() -> dict:
+    """获取团队排名，按评分降序排列。
+
+    Returns:
+        dict: 包含 rankings 排名列表和 user_stats 用户统计的字典。
+    """
     dashboard = await _fetch("/api/demo/dashboard")
     users = await _fetch("/api/demo/dashboard/users")
     teams = dashboard.get("teams", []) if dashboard else []
@@ -45,6 +60,11 @@ async def get_team_rankings() -> dict:
 
 
 async def get_trend_report() -> dict:
+    """获取趋势报告，包含仪表盘趋势和合规趋势。
+
+    Returns:
+        dict: 包含 trend 和 compliance_trend 趋势数据的字典。
+    """
     dashboard = await _fetch("/api/demo/dashboard")
     compliance = await _fetch("/api/demo/dashboard/compliance")
     return {
