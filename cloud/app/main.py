@@ -36,6 +36,7 @@ from cloud.app.customer_router import router as customer_router
 from cloud.app.dashboard_router import router as dashboard_router
 from cloud.app.database import DB_PATH, init_db
 from cloud.app.decision_intel_router import router as decision_intel_router
+from cloud.app.eval_router import router as eval_router
 from cloud.app.event_bus_router import router as event_bus_router
 from cloud.app.export_router import router as export_router
 from cloud.app.federated_node_router import router as federated_node_router
@@ -254,6 +255,7 @@ app.include_router(content_factory_router)
 app.include_router(cell_network_router)
 app.include_router(agent_gateway_router)
 app.include_router(metrics_router)
+app.include_router(eval_router)
 
 
 @app.on_event("startup")
