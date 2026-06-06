@@ -1,3 +1,5 @@
+"""商机服务，负责商机数据的业务逻辑处理。"""
+
 from datetime import datetime, timezone
 from typing import Optional
 

@@ -1,3 +1,5 @@
+"""投标代理服务，用于自动处理投标流程和智能投标建议。"""
+
 import json
 import urllib.request
 from datetime import datetime, timezone

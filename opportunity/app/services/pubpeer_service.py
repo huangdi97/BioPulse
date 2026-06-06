@@ -1,3 +1,5 @@
+"""PubPeer 同行评议服务，用于获取科研论文的同行评审信息。"""
+
 import json
 import urllib.request
 from datetime import datetime, timedelta, timezone

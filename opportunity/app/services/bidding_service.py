@@ -1,3 +1,5 @@
+"""投标相关业务逻辑服务，处理投标数据的管理和查询。"""
+
 from datetime import datetime, timezone
 from typing import Optional
 

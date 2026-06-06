@@ -1,3 +1,5 @@
+"""统计服务，提供平台数据的统计分析功能。"""
+
 from typing import Optional
 
 from opportunity.app.repositories import StatsRepository

@@ -1,3 +1,5 @@
+"""书签服务，用于管理用户收藏的标书和商机信息。"""
+
 import sqlite3
 from datetime import datetime, timezone
 from typing import Optional

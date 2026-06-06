@@ -1,3 +1,5 @@
+"""评分服务，负责对商机和投标进行评分计算。"""
+
 from datetime import datetime, timezone
 from typing import List, Optional
 

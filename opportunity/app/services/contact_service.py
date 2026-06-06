@@ -1,3 +1,5 @@
+"""联系人服务，处理客户联系人信息的管理和查询。"""
+
 from datetime import datetime, timezone
 
 from fastapi import HTTPException

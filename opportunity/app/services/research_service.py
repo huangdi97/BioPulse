@@ -1,3 +1,5 @@
+"""科研信息服务，用于查询和管理科研相关数据。"""
+
 from datetime import datetime, timezone
 from typing import Optional
 

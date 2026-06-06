@@ -1,3 +1,5 @@
+"""趋势分析服务，用于分析市场数据和行业趋势。"""
+
 import json
 import urllib.request
 from datetime import datetime, timezone
