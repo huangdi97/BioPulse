@@ -1,3 +1,5 @@
+"""联邦节点管理服务，负责联邦学习节点的注册、启停与状态管理。"""
+
 from datetime import datetime
 from typing import Optional
 

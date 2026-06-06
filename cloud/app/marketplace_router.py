@@ -1,3 +1,5 @@
+"""市场与分析路由。"""
+
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query

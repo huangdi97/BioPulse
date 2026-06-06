@@ -1,3 +1,5 @@
+"""决策日志服务，负责决策案例与流水线运行的记录与查询。"""
+
 import json
 from datetime import datetime
 from typing import Optional
@@ -26,6 +28,8 @@ def _e404(name: str = "Resource"):
 
 
 class DecisionLogger(BaseService):
+    """决策日志服务，记录决策案例、流水线运行与跨案例洞察。"""
+
     def create_case(
         self,
         name: str,

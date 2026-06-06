@@ -1,3 +1,5 @@
+"""MCP守卫服务，负责工具调用的白名单校验、权限检查与频率限制。"""
+
 import json
 import os
 import time

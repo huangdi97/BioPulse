@@ -1,3 +1,5 @@
+"""教练能力服务，管理培训模块、培训记录与培训归因。"""
+
 import json
 from typing import Optional
 
@@ -57,6 +59,8 @@ ATTR_COLS = [
 
 
 class CoachAbility:
+    """教练能力类，提供培训模块与培训记录的创建、查询及难度自适应。"""
+
     @staticmethod
     def _rd(row, cols):
         if row is None:

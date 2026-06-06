@@ -1,3 +1,5 @@
+"""统计报表 API。"""
+
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query

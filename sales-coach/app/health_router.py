@@ -1,3 +1,5 @@
+"""健康检查路由模块，提供服务状态和数据库连接检查接口。"""
+
 import time
 
 from fastapi import APIRouter

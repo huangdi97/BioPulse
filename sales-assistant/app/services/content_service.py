@@ -1,3 +1,5 @@
+"""内容服务：销售材料、话术模板、异议应答等内容管理。"""
+
 from datetime import datetime, timezone
 from typing import List, Optional
 
@@ -17,6 +19,8 @@ TYPES = [
 
 
 class ContentService(BaseService):
+    """内容服务：管理内容库的增删改查与分类。"""
+
     def create_content(self, body, user_id: int) -> int:
         now = datetime.now(timezone.utc).isoformat()
         repo = ContentRepository(self.db)

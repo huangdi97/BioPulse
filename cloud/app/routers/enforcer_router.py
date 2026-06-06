@@ -1,3 +1,5 @@
+"""合规执行器路由：拜访合规检查与规则列表。"""
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
@@ -8,6 +10,8 @@ router = APIRouter(prefix="/api/compliance/enforce", tags=["合规"])
 
 
 class VisitCheckRequest(BaseModel):
+    """拜访检查请求体。"""
+
     visit_data: dict
 
 

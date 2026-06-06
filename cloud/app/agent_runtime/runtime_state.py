@@ -1,7 +1,11 @@
+"""运行时状态管理模块，包含检查点与审批管理器。"""
+
 import json
 
 
 class CheckpointManager:
+    """检查点管理器，持久化 Agent 运行状态以支持断点续跑。"""
+
     def __init__(self, agent_db):
         self._agent_db = agent_db
 
@@ -39,6 +43,8 @@ class CheckpointManager:
 
 
 class ApprovalManager:
+    """审批管理器，创建待审批记录供人工审核后再恢复执行。"""
+
     def __init__(self, agent_db):
         self._agent_db = agent_db
 

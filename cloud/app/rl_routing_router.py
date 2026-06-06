@@ -1,3 +1,5 @@
+"""强化学习路由分发。"""
+
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query

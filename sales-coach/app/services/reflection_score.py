@@ -1,3 +1,5 @@
+"""反思评分模块，基于对话日志计算维度评分并生成反思报告。"""
+
 import json
 from datetime import datetime, timezone
 from typing import Optional

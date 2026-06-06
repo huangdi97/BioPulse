@@ -1,3 +1,5 @@
+"""编排服务，负责编排模板管理与多步骤协作流程的执行。"""
+
 import json
 import uuid
 from datetime import datetime
@@ -33,6 +35,8 @@ def _rows(rows):
 
 
 class OrchestrateService(BaseService):
+    """编排服务，提供编排模板管理与多步骤协作流程执行。"""
+
     def create_template(self, template_name: str, description: str, steps: list[dict], user_id: int) -> dict:
         tmpl_repo = OrchestrationTemplatesRepository(self.db)
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

@@ -1,9 +1,13 @@
+"""产品数据访问层。"""
+
 import json
 import sqlite3
 from typing import Optional
 
 
 class ProductRepository:
+    """产品仓库，管理产品信息、规格、价格、认证等数据。"""
+
     def __init__(self, db: sqlite3.Connection):
         self.db = db
         self._ensure_table()

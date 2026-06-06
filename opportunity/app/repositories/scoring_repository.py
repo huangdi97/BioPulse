@@ -1,3 +1,5 @@
+"""评分与统计报表数据仓库。"""
+
 import sqlite3
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -10,6 +12,8 @@ from shared.repository import BaseRepository
 
 
 class StatsRepository:
+    """统计报表数据仓库。"""
+
     def __init__(self, db: sqlite3.Connection):
         self.db = db
         self.table = "opportunity"
@@ -58,6 +62,8 @@ class StatsRepository:
 
 
 class PaperIntegrityRepository(BaseRepository):
+    """论文诚信数据仓库。"""
+
     def __init__(self, db: sqlite3.Connection):
         super().__init__(db, "paper_integrity", TABLE_PAPER_INTEGRITY_COLS)
 
@@ -93,6 +99,8 @@ class PaperIntegrityRepository(BaseRepository):
 
 
 class TrendAnalysisRepository(BaseRepository):
+    """趋势分析数据仓库。"""
+
     def __init__(self, db: sqlite3.Connection):
         super().__init__(db, "trend_analysis", TABLE_TREND_ANALYSIS_COLS)
 

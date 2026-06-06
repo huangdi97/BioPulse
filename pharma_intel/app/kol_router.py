@@ -1,3 +1,5 @@
+"""KOL 学术影响力路由。提供 KOL 画像搜索和活跃 KOL 列表。"""
+
 from fastapi import APIRouter, Query
 
 from pharma_intel.app.services.kol_service import search_kol

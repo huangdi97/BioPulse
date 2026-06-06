@@ -1,3 +1,5 @@
+"""报价生成服务，基于试剂、仪器、服务等模板计算含税报价。"""
+
 from datetime import datetime, timezone
 from decimal import ROUND_HALF_UP, Decimal
 

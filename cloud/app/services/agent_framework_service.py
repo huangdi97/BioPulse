@@ -1,3 +1,5 @@
+"""Agent 框架服务，管理角色模板与实例的生命周期（创建、启停、心跳）。"""
+
 import json
 
 from fastapi import HTTPException

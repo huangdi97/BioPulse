@@ -1,3 +1,5 @@
+"""知识图谱服务，负责实体与关系的创建、查询与图搜索。"""
+
 import hashlib
 import json
 import uuid
@@ -56,6 +58,8 @@ def _bfs_expand(
 
 
 class KgService(BaseService):
+    """知识图谱服务，提供知识图谱的实体管理、关系管理与图搜索功能。"""
+
     def create_entity(self, data, user: dict) -> dict:
         entities_repo = KgEntitiesRepository(self.db)
         entity_id = data.entity_id or f"kg:{data.entity_type}:{uuid.uuid4()}"

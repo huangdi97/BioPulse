@@ -1,3 +1,5 @@
+"""Agent 规格定义，包含各 Agent 的角色描述、允许工具、迭代上限等配置。"""
+
 AGENT_SPECS = {
     "opportunity_scanner": {
         "role_desc": (

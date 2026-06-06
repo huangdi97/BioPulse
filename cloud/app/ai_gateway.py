@@ -1,3 +1,5 @@
+"""AI 网关，提供 LLM 对话接口。"""
+
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request

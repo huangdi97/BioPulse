@@ -1,3 +1,5 @@
+"""合规策略服务，提供多层合规检查（L1/L2/L3）评估与日志记录。"""
+
 import json
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -12,6 +14,8 @@ from cloud.rules.loader import (
 
 
 class ComplianceStrategyService:
+    """合规策略服务，负责 L1 阻断、L2 警告、L3 仅记录的多层合规评估。"""
+
     def __init__(self, db):
         self.db = db
         self.enforcer = ComplianceEnforcer(db) if db else None

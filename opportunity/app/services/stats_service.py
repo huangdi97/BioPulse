@@ -3,8 +3,12 @@ from typing import Optional
 from opportunity.app.repositories import StatsRepository
 from opportunity.app.services.base import BaseService
 
+"""统计报表服务，按阶段和产品维度汇总商机统计数据。"""
+
 
 class StatsService(BaseService):
+    """统计报表：总量、总金额、按阶段分布、按产品分布、均价、赢单率。"""
+
     def get_stats(
         self,
         start_date: Optional[str] = None,

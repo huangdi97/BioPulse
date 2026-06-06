@@ -1,3 +1,5 @@
+"""应用入口，注册路由和中间件。"""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

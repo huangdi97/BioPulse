@@ -1,3 +1,5 @@
+"""销售教练服务入口，创建FastAPI应用并注册路由和中间件。"""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

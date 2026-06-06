@@ -1,3 +1,5 @@
+"""MDT 会诊 Agent 分配路由。"""
+
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 

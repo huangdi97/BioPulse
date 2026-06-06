@@ -1,3 +1,5 @@
+"""合规管理服务，提供合规规则 CRUD、仪表盘统计与违规查询功能。"""
+
 import json
 from collections import Counter
 from datetime import datetime, timedelta, timezone
@@ -11,6 +13,8 @@ from cloud.app.services.base import BaseService
 
 
 class ComplianceService(BaseService):
+    """合规服务，负责规则的增删查及违规仪表盘数据聚合。"""
+
     def create_rule(
         self,
         name: str,

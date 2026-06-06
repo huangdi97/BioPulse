@@ -1,3 +1,5 @@
+"""数据同步路由模块，定义客户端数据推送、拉取与状态查询的 API 端点。"""
+
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, Query

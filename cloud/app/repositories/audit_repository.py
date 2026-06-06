@@ -1,3 +1,5 @@
+"""审计日志、审计链、联邦审计、基准报告等数据访问层。"""
+
 from cloud.shared.columns import (
     TABLE_AUDIT_CHAIN_BLOCKS_COLS,
     TABLE_AUDIT_CHAIN_ENTRIES_COLS,
@@ -12,21 +14,29 @@ from cloud.shared.repository import BaseRepository
 
 
 class AuditLogsRepository(BaseRepository):
+    """审计日志表。"""
+
     def __init__(self, db):
         super().__init__(db, "audit_logs", TABLE_AUDIT_LOGS_COLS)
 
 
 class AuditChainEntriesRepository(BaseRepository):
+    """审计链条目表。"""
+
     def __init__(self, db):
         super().__init__(db, "audit_chain_entries", TABLE_AUDIT_CHAIN_ENTRIES_COLS)
 
 
 class DpAuditLogRepository(BaseRepository):
+    """差分隐私审计日志表。"""
+
     def __init__(self, db):
         super().__init__(db, "dp_audit_log", TABLE_DP_AUDIT_LOG_COLS)
 
 
 class FedAuditContributionsRepository(BaseRepository):
+    """联邦审计贡献表。"""
+
     def __init__(self, db):
         super().__init__(db, "fed_audit_contributions", TABLE_FED_AUDIT_CONTRIBUTIONS_COLS)
 
@@ -67,11 +77,15 @@ class FedAuditContributionsRepository(BaseRepository):
 
 
 class FederatedRoundsRepository(BaseRepository):
+    """联邦学习轮次表。"""
+
     def __init__(self, db):
         super().__init__(db, "federated_rounds", TABLE_FEDERATED_ROUNDS_COLS)
 
 
 class FederatedNodesRepository(BaseRepository):
+    """联邦节点表。"""
+
     def __init__(self, db):
         super().__init__(db, "federated_nodes", TABLE_FEDERATED_NODES_COLS)
 
@@ -87,6 +101,8 @@ class FederatedNodesRepository(BaseRepository):
 
 
 class AuditChainBlocksRepository(BaseRepository):
+    """审计链区块表。"""
+
     def __init__(self, db):
         super().__init__(db, "audit_chain_blocks", TABLE_AUDIT_CHAIN_BLOCKS_COLS)
 
@@ -103,6 +119,8 @@ class AuditChainBlocksRepository(BaseRepository):
 
 
 class BenchmarkReportsRepository(BaseRepository):
+    """基准测试报告表。"""
+
     def __init__(self, db):
         super().__init__(db, "benchmark_reports", TABLE_BENCHMARK_REPORTS_COLS)
 

@@ -1,3 +1,5 @@
+"""科研轨迹服务，负责 PI 研究轨迹记录、领域转移预测与趋势分析。"""
+
 import json
 from collections import Counter
 from datetime import datetime, timedelta
@@ -15,6 +17,8 @@ from cloud.app.services.research_trajectory_features import (
 
 
 class ResearchTrajectoryService:
+    """科研轨迹服务，提供 PI 轨迹记录、领域转移预测与评分、趋势分析。"""
+
     def _init_db_table(self):
         db = get_research_db()
         try:

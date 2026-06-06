@@ -1,3 +1,5 @@
+"""种子数据：预设SOAP决策模板与记录。"""
+
 import sqlite3
 
 

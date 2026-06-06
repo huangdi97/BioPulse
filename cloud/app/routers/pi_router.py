@@ -1,3 +1,5 @@
+"""PI 路由：研究者信息搜索、详情、创建与更新。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -10,6 +12,8 @@ router = APIRouter(prefix="/api/pi", tags=["pi"])
 
 
 class PiCreate(BaseModel):
+    """PI 创建请求体。"""
+
     name: str
     institution: str
     department: str = ""
@@ -22,6 +26,8 @@ class PiCreate(BaseModel):
 
 
 class PiUpdate(BaseModel):
+    """PI 更新请求体。"""
+
     name: Optional[str] = None
     institution: Optional[str] = None
     department: Optional[str] = None

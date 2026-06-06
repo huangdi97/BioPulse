@@ -7,8 +7,12 @@ from starlette import status
 from opportunity.app.repositories import BiddingInfoRepository
 from opportunity.app.services.base import BaseService
 
+"""招投标管理服务，负责招标信息的增删改查。"""
+
 
 class BiddingService(BaseService):
+    """招投标信息管理：创建、列表查询（支持多条件筛选）、更新、软删除。"""
+
     def create_bidding(self, body, user_id: int) -> int:
         repo = BiddingInfoRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()

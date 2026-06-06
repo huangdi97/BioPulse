@@ -1,3 +1,5 @@
+"""LangGraph 多步骤流水线图：按步骤顺序调用 AI 接口并聚合输出。"""
+
 import json
 import urllib.request
 from typing import Optional, TypedDict
@@ -6,6 +8,8 @@ from langgraph.graph import END, StateGraph
 
 
 class PipelineState(TypedDict):
+    """流水线执行状态：步骤列表、当前索引、累积输出等。"""
+
     steps: list
     current_index: int
     accumulated_outputs: list

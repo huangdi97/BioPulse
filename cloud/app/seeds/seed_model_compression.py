@@ -1,3 +1,6 @@
+"""种子数据：模型压缩作业示例（量化/张量分解）。"""
+
+
 def seed_model_compression(conn):
     now = "2026-05-25 10:00:00"
     rows = conn.execute("SELECT COUNT(*) FROM model_compression_jobs").fetchone()[0]

@@ -1,3 +1,5 @@
+"""通用 BaseRepository：提供 CRUD 与软删除操作，兼容 SQLite / PostgreSQL。"""
+
 import sqlite3
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
@@ -6,6 +8,8 @@ from fastapi import HTTPException
 
 
 class BaseRepository:
+    """通用数据仓库基类，封装增删改查与软删除。"""
+
     def __init__(self, db: sqlite3.Connection, table_name: str, cols: List[str]):
         self.db = db
         self.table_name = table_name

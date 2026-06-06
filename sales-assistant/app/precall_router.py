@@ -1,3 +1,5 @@
+"""访前准备路由：拜访简报生成API。"""
+
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request

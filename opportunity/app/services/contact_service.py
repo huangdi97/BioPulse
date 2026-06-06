@@ -6,8 +6,12 @@ from starlette import status
 from opportunity.app.repositories import ContactRecordRepository
 from opportunity.app.services.base import BaseService
 
+"""联系记录服务，管理商机线索下的联系沟通记录。"""
+
 
 class ContactService(BaseService):
+    """联系记录管理：创建、分页列表（按商机关联）、详情查询、更新、软删除。"""
+
     def _check_opportunity_exists(self, opportunity_id: int) -> None:
         row = self.db.execute(
             "SELECT id FROM opportunity WHERE id = ? AND is_active = 1",

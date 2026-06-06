@@ -1,3 +1,5 @@
+"""仪表盘路由。聚合展示全局仪表盘、用户统计和合规数据。"""
+
 import httpx
 from fastapi import APIRouter
 

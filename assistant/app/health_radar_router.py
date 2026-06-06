@@ -1,3 +1,5 @@
+"""健康雷达路由模块，定义健康评估记录的 API 端点。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

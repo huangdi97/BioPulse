@@ -1,3 +1,5 @@
+"""归因查询模块，提供归因结果读取与因子列表查看功能。"""
+
 import json
 
 from fastapi import HTTPException
@@ -7,6 +9,8 @@ from cloud.app.services.attribution_calc import _FACTOR_META
 
 
 class AttributionCheckMixin:
+    """归因查询混入类，读取已计算的归因记录和因子元信息。"""
+
     def get_attribution(self, opp_id: int) -> dict:
         row = self.db.execute(
             "SELECT * FROM opportunity_attributions WHERE opportunity_id=?",

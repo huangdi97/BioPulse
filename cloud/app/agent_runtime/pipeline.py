@@ -1,3 +1,5 @@
+"""Agent 流水线模块，按拓扑序执行多步骤工具调用链。"""
+
 import json
 
 from pydantic import BaseModel
@@ -6,6 +8,8 @@ from cloud.app.agent_runtime.tool_bridge import ToolRegistry
 
 
 class PipelineStep(BaseModel):
+    """流水线步骤定义，含工具名、参数模板、依赖关系及输出键。"""
+
     step_id: str
     tool: str
     params_template: dict
@@ -14,6 +18,8 @@ class PipelineStep(BaseModel):
 
 
 class AgentPipeline:
+    """Agent 流水线执行器，按依赖拓扑排序解析参数并依次调用工具。"""
+
     def __init__(self, steps: list[PipelineStep], tool_registry: ToolRegistry, llm_func=None):
         self._steps = steps
         self._step_map = {s.step_id: s for s in steps}

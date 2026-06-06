@@ -1,3 +1,5 @@
+"""数字人供应商模块，提供多供应商抽象接口及内置/第三方实现。"""
+
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -5,6 +7,8 @@ from sales_coach.app.digital_human import simulate_dialogue
 
 
 class DigitalHumanProvider(ABC):
+    """数字人供应商抽象基类，定义会话创建、消息发送等接口。"""
+
     @abstractmethod
     def create_session(self, scenario: dict, user_id: int) -> str: ...
 
@@ -19,6 +23,8 @@ class DigitalHumanProvider(ABC):
 
 
 class InternalLLMProvider(DigitalHumanProvider):
+    """内置LLM数字人供应商，使用本地AI网关进行对话模拟。"""
+
     def create_session(self, scenario: dict, user_id: int) -> str:
         return f"internal:{scenario.get('id', '')}"
 
@@ -44,6 +50,8 @@ class InternalLLMProvider(DigitalHumanProvider):
 
 
 class WaveCloudProvider(DigitalHumanProvider):
+    """浪潮云数字人供应商，等待合作接入。"""
+
     def create_session(self, scenario: dict, user_id: int) -> str:
         return "wavecloud:stub"
 
@@ -67,6 +75,8 @@ class WaveCloudProvider(DigitalHumanProvider):
 
 
 class MoShangProvider(DigitalHumanProvider):
+    """摩熵医药数字人供应商，等待合作接入。"""
+
     def create_session(self, scenario: dict, user_id: int) -> str:
         return "mosheng:stub"
 

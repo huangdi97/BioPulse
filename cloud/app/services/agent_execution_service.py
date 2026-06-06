@@ -1,3 +1,5 @@
+"""Agent 执行服务，处理内部任务提交、重试、审批及 A2A 互通。"""
+
 import json
 import uuid
 from datetime import datetime

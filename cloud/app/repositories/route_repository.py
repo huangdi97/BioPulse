@@ -1,3 +1,5 @@
+"""路由规则、日志、统计等数据访问层。"""
+
 from cloud.shared.columns import (
     TABLE_ROUTE_LOGS_COLS,
     TABLE_ROUTE_RULES_COLS,
@@ -7,6 +9,8 @@ from cloud.shared.repository import BaseRepository
 
 
 class RouteRulesRepository(BaseRepository):
+    """路由规则表。"""
+
     def __init__(self, db):
         super().__init__(db, "route_rules", TABLE_ROUTE_RULES_COLS)
 
@@ -22,6 +26,8 @@ class RouteRulesRepository(BaseRepository):
 
 
 class RouteLogsRepository(BaseRepository):
+    """路由日志表。"""
+
     def __init__(self, db):
         super().__init__(db, "route_logs", TABLE_ROUTE_LOGS_COLS)
 
@@ -76,6 +82,8 @@ class RouteLogsRepository(BaseRepository):
 
 
 class RouteStatsRepository(BaseRepository):
+    """路由统计表。"""
+
     def __init__(self, db):
         super().__init__(db, "route_stats", TABLE_ROUTE_STATS_COLS)
 

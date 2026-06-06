@@ -1,3 +1,5 @@
+"""信任审计路由：信任评分计算、审计区块创建与链验证。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

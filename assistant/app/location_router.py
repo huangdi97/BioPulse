@@ -1,3 +1,5 @@
+"""定位路由模块，定义HCP位置管理与路线优化的 API 端点。"""
+
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends

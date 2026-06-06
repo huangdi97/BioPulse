@@ -1,3 +1,5 @@
+"""科研轨迹路由：PI 轨迹查询、预测与趋势分析。"""
+
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 

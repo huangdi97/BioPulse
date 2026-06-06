@@ -1,3 +1,5 @@
+"""情报报告器，管理洞察列表。"""
+
 from typing import Optional
 
 from cloud.app.services.decision_intel_service import DecisionIntelService

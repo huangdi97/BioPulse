@@ -1,3 +1,5 @@
+"""事件总线定义、消息、投递日志等数据访问层。"""
+
 from cloud.shared.columns import (
     TABLE_EVENT_BUS_DEFINITIONS_COLS,
     TABLE_EVENT_BUS_MESSAGES_COLS,
@@ -7,6 +9,8 @@ from cloud.shared.repository import BaseRepository
 
 
 class EventBusDefinitionsRepository(BaseRepository):
+    """事件总线定义表。"""
+
     def __init__(self, db):
         super().__init__(db, "event_bus_definitions", TABLE_EVENT_BUS_DEFINITIONS_COLS)
 
@@ -47,6 +51,8 @@ class EventBusDefinitionsRepository(BaseRepository):
 
 
 class EventBusMessagesRepository(BaseRepository):
+    """事件总线消息表。"""
+
     def __init__(self, db):
         super().__init__(db, "event_bus_messages", TABLE_EVENT_BUS_MESSAGES_COLS)
 
@@ -133,6 +139,8 @@ class EventBusMessagesRepository(BaseRepository):
 
 
 class EventDeliveryLogRepository(BaseRepository):
+    """事件投递日志表。"""
+
     def __init__(self, db):
         super().__init__(db, "event_delivery_log", TABLE_EVENT_DELIVERY_LOG_COLS)
 

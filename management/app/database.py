@@ -1,3 +1,5 @@
+"""管理端数据库模块，管理配置、视图偏好与角色缓存。"""
+
 import os
 import sqlite3
 from typing import Generator

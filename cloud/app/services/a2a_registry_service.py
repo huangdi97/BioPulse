@@ -1,3 +1,5 @@
+"""A2A (Agent-to-Agent) 注册服务，管理 Agent 注册、心跳、任务路由与事件记录。"""
+
 import json
 import uuid
 

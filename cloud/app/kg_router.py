@@ -1,3 +1,5 @@
+"""知识图谱路由。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

@@ -1,3 +1,5 @@
+"""科研报价单路由：模板列表与报价单生成。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -20,6 +22,8 @@ router = APIRouter(
 
 
 class GenerateQuotationRequest(BaseModel):
+    """报价单生成请求体。"""
+
     template_id: str
     items: list[dict]
     customer_info: Optional[dict] = None

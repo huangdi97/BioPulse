@@ -1,3 +1,5 @@
+"""Agent 运行时核心，编排 LLM 推理、工具调用、循环检测与状态持久化。"""
+
 import json
 import time
 import urllib.request
@@ -22,6 +24,8 @@ from cloud.app.agent_runtime.verifier import Verifier
 
 
 class AgentRuntime:
+    """Agent 运行时主控制器，管理 LLM 对话循环、工具调用、检查点与审批流程。"""
+
     def __init__(self, agent_db, business_db, auth_header: str, notifier: AgentNotifier | None = None):
         self._agent_db = agent_db
         self._db = business_db

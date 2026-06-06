@@ -1,3 +1,5 @@
+"""评估服务模块，提供学员评估的创建、查询、更新、删除及自动评分功能。"""
+
 import json
 from datetime import datetime, timezone
 from typing import Optional
@@ -14,6 +16,8 @@ DEFAULT_WEIGHTS = {
 
 
 class AssessmentService(BaseService):
+    """学员评估服务，管理评估记录并支持自动评分与趋势分析。"""
+
     def create(self, body, user_id: int) -> dict:
         repo = AssessmentRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()

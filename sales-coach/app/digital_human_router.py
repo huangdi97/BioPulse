@@ -1,3 +1,5 @@
+"""数字人路由模块，提供数字人会话创建、消息交互、难度调整及技能迁移接口。"""
+
 import os
 from typing import Optional
 

@@ -1,3 +1,5 @@
+"""循环检测模块，识别 Agent 决策历史中的重复与交替模式。"""
+
 from cloud.app.agent_runtime.models import AgentDecision
 
 

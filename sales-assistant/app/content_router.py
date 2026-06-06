@@ -1,3 +1,5 @@
+"""内容路由：销售内容库的CRUD接口。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

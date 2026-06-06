@@ -1,3 +1,5 @@
+"""管理端主应用入口。"""
+
 import os
 
 from fastapi import FastAPI, HTTPException, Request

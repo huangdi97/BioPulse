@@ -1,4 +1,9 @@
+"""系统配置服务，提供系统设置键值的读取与更新。"""
+
+
 class ConfigService:
+    """系统配置服务，支持全量获取、单键读取与批量更新 settings 表。"""
+
     def __init__(self, db):
         self.db = db
 

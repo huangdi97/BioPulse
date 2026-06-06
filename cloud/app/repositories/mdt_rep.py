@@ -1,3 +1,5 @@
+"""MDT会话、参与者、意见、异步意见等数据访问层。"""
+
 from cloud.shared.columns import (
     TABLE_ASYNC_MDT_OPINIONS_COLS,
     TABLE_MDT_OPINIONS_COLS,
@@ -8,6 +10,8 @@ from cloud.shared.repository import BaseRepository
 
 
 class MdtSessionsRepository(BaseRepository):
+    """MDT会话表。"""
+
     def __init__(self, db):
         super().__init__(db, "mdt_sessions", TABLE_MDT_SESSIONS_COLS)
 
@@ -31,6 +35,8 @@ class MdtSessionsRepository(BaseRepository):
 
 
 class MdtParticipantsRepository(BaseRepository):
+    """MDT参与者表。"""
+
     def __init__(self, db):
         super().__init__(db, "mdt_participants", TABLE_MDT_PARTICIPANTS_COLS)
 
@@ -62,6 +68,8 @@ class MdtParticipantsRepository(BaseRepository):
 
 
 class MdtOpinionsRepository(BaseRepository):
+    """MDT意见表。"""
+
     def __init__(self, db):
         super().__init__(db, "mdt_opinions", TABLE_MDT_OPINIONS_COLS)
 
@@ -119,6 +127,8 @@ class MdtOpinionsRepository(BaseRepository):
 
 
 class AsyncMdtOpinionsRepository(BaseRepository):
+    """异步MDT意见表。"""
+
     def __init__(self, db):
         super().__init__(db, "async_mdt_opinions", TABLE_ASYNC_MDT_OPINIONS_COLS)
 

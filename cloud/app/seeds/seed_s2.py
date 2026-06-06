@@ -1,3 +1,5 @@
+"""种子数据：S2阶段——MCP工具注册与流水线编排模板。"""
+
 import json
 import sqlite3
 

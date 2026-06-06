@@ -1,3 +1,5 @@
+"""智能体市场服务，负责效果度量与基准测试管理。"""
+
 import json
 import statistics
 from datetime import datetime
@@ -13,6 +15,8 @@ from cloud.app.services.base import BaseService
 
 
 class MarketplaceService(BaseService):
+    """智能体市场服务，提供效果度量上报、基准测试与仪表盘统计。"""
+
     def log_metric(
         self,
         agent_role: str,

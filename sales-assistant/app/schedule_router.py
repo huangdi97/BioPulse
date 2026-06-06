@@ -1,3 +1,5 @@
+"""日程路由：销售日程的CRUD接口。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

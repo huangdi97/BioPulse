@@ -1,3 +1,5 @@
+"""统计服务模块，提供教练数据的聚合统计、趋势分析和多维对比。"""
+
 import json
 from collections import defaultdict
 from typing import List
@@ -7,6 +9,8 @@ from sales_coach.app.services.base import BaseService
 
 
 class StatsService(BaseService):
+    """统计服务，提供全局统计、个人趋势、团队对比、雷达图及分类表现。"""
+
     def get_stats(self) -> dict:
         repo = StatsRepository(self.db)
         return repo.get_coach_stats()

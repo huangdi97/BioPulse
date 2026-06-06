@@ -1,3 +1,5 @@
+"""客户互动服务，负责客户拜访与互动记录的管理。"""
+
 from typing import Optional
 
 from fastapi import HTTPException
@@ -10,6 +12,8 @@ from shared.columns import TABLE_CUSTOMER_INTERACTIONS_COLS
 
 
 class InteractionService(BaseService):
+    """客户互动服务，提供客户互动的创建、查询与列表功能。"""
+
     def create_interaction(
         self,
         customer_id: int,

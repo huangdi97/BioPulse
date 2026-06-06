@@ -1,3 +1,5 @@
+"""招投标信息 CRUD。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

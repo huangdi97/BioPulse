@@ -1,3 +1,5 @@
+"""帕累托路由优化器，基于多目标帕累托最优进行路由策略的非支配排序。"""
+
 from cloud.app.services.base import BaseService
 from shared.config import settings
 

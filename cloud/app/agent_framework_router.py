@@ -1,3 +1,5 @@
+"""Agent 框架模板管理路由。"""
+
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 

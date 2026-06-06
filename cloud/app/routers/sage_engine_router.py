@@ -1,3 +1,5 @@
+"""Sage 记忆引擎路由：评分查询、演化触发、自动链接与状态。"""
+
 from fastapi import APIRouter, Depends
 
 from cloud.app.services.sage_engine_service import SageEngineService

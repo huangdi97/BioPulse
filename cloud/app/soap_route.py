@@ -1,3 +1,5 @@
+"""SOAP 决策路由与端点。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

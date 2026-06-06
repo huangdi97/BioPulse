@@ -1,3 +1,5 @@
+"""任务管理服务模块。"""
+
 from typing import List, Optional
 
 from fastapi import HTTPException
@@ -8,6 +10,8 @@ from assistant.app.services.base import BaseService
 
 
 class TaskService(BaseService):
+    """任务管理服务，提供任务的增删改查，关联HCP校验。"""
+
     def _check_hcp_exists(self, hcp_id: int) -> None:
         repo = HcpRepository(self.db)
         row = repo.get_by_id(hcp_id)

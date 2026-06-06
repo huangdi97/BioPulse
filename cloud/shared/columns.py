@@ -1,3 +1,5 @@
+"""数据库表列名常量定义，统一各服务/仓库的字段引用。"""
+
 TABLE_AGENT_EXECUTION_TASKS_COLS = [
     "id",
     "task_id",

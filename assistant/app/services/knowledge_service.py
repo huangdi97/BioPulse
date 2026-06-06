@@ -1,3 +1,5 @@
+"""知识库服务模块。"""
+
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -6,6 +8,8 @@ from assistant.app.services.base import BaseService
 
 
 class KnowledgeService(BaseService):
+    """知识库服务，提供知识条目的增删改查、分类与全文搜索。"""
+
     def create(self, body, user_id: int) -> dict:
         repo = KnowledgeBaseRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()

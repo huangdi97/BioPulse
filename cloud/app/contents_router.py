@@ -1,3 +1,5 @@
+"""内容管理路由。"""
+
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, Query

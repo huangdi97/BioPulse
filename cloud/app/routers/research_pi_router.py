@@ -1,3 +1,5 @@
+"""科研 PI 路由：研究者搜索、详情、创建与审计日志。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -16,6 +18,8 @@ router = APIRouter(
 
 
 class PiCreate(BaseModel):
+    """科研 PI 创建请求体。"""
+
     name: str
     institution: str
     department: str = ""

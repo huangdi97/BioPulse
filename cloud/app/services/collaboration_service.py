@@ -1,3 +1,5 @@
+"""协作服务，管理 Agent 技能注册、协作会话与语义路由。"""
+
 import json
 import uuid
 from typing import Optional
@@ -13,6 +15,8 @@ from cloud.app.services.base import BaseService
 
 
 class CollaborationService(BaseService):
+    """协作服务，提供技能管理、会话编排与语义路由功能。"""
+
     def register_skill(
         self,
         skill_name: str,

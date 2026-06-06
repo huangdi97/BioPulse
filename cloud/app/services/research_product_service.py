@@ -1,3 +1,5 @@
+"""科研产品服务，负责科研产品库的关键词搜索与详情查询。"""
+
 from fastapi import HTTPException
 from starlette import status
 
@@ -5,6 +7,8 @@ from cloud.app.research_database import get_research_db
 
 
 class ResearchProductService:
+    """科研产品服务，提供科研产品库的关键词搜索与详情查询。"""
+
     def search(self, q: str = "", category: str = "") -> list:
         db = get_research_db()
         try:

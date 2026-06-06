@@ -1,3 +1,5 @@
+"""HCP 沙箱仿真子路由。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

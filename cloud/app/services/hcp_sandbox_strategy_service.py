@@ -1,3 +1,5 @@
+"""HCP沙箱策略服务，负责模拟策略的创建与管理。"""
+
 import json
 
 from fastapi import HTTPException

@@ -1,3 +1,5 @@
+"""培训模块路由，提供培训课程的创建、查询、更新和删除接口。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

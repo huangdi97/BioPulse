@@ -1,3 +1,5 @@
+"""联邦节点服务，提供联邦节点的注册、管理与聚合分析入口。"""
+
 from typing import Optional
 
 from cloud.app.services.base import BaseService

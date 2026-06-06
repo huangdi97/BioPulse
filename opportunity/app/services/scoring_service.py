@@ -18,7 +18,12 @@ STAGE_SCORES = {
 DEFAULT_STAGE_SCORE = 5
 
 
+"""线索评分引擎，基于阶段、概率、金额、时效性计算商机热度分。"""
+
+
 class ScoringService(BaseService):
+    """线索评分引擎：计算热度分、生成排行榜、手动设分、全量重算。"""
+
     def calculate_heat_score(
         self,
         stage: Optional[str],

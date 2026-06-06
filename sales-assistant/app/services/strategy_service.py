@@ -1,3 +1,5 @@
+"""策略服务：AI生成与模拟销售策略。"""
+
 import json
 import logging
 import urllib.error
@@ -17,6 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 class StrategyService(BaseService):
+    """策略服务：生成销售策略、模拟策略有效性、策略对比分析。"""
+
     def create_strategy(self, body, user_id: int) -> int:
         now = datetime.now(timezone.utc).isoformat()
         repo = StrategyRepository(self.db)

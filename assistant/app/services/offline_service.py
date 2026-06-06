@@ -1,3 +1,5 @@
+"""离线同步服务模块。"""
+
 import json
 import os
 from datetime import datetime, timedelta, timezone

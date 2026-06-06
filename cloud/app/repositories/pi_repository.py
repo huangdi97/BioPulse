@@ -1,9 +1,13 @@
+"""PI（主要研究者）档案数据访问层。"""
+
 import json
 import sqlite3
 from typing import Optional
 
 
 class PiRepository:
+    """PI档案仓库，管理研究者信息、论文、基金等数据。"""
+
     def __init__(self, db: sqlite3.Connection):
         self.db = db
         self._ensure_table()

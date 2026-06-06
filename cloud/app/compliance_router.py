@@ -1,3 +1,5 @@
+"""合规检查路由。"""
+
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends

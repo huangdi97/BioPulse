@@ -1,3 +1,5 @@
+"""招投标数据仓库。"""
+
 import sqlite3
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -12,6 +14,8 @@ from shared.repository import BaseRepository
 
 
 class BiddingInfoRepository(BaseRepository):
+    """招标信息数据仓库。"""
+
     def __init__(self, db: sqlite3.Connection):
         super().__init__(db, "bidding_info", TABLE_BIDDING_INFO_COLS)
 
@@ -41,6 +45,8 @@ class BiddingInfoRepository(BaseRepository):
 
 
 class UserBookmarkRepository(BaseRepository):
+    """用户收藏数据仓库。"""
+
     def __init__(self, db: sqlite3.Connection):
         super().__init__(db, "user_bookmark", TABLE_USER_BOOKMARK_COLS)
 
@@ -72,6 +78,8 @@ class UserBookmarkRepository(BaseRepository):
 
 
 class BiddingAgentConfigRepository(BaseRepository):
+    """招投标代理配置数据仓库。"""
+
     def __init__(self, db: sqlite3.Connection):
         super().__init__(db, "bidding_agent_config", TABLE_BIDDING_AGENT_CONFIG_COLS)
 
@@ -101,6 +109,8 @@ class BiddingAgentConfigRepository(BaseRepository):
 
 
 class BiddingAgentLogRepository(BaseRepository):
+    """招投标代理日志数据仓库。"""
+
     def __init__(self, db: sqlite3.Connection):
         super().__init__(db, "bidding_agent_log", TABLE_BIDDING_AGENT_LOG_COLS)
 

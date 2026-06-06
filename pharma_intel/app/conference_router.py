@@ -1,3 +1,5 @@
+"""学术会议追踪路由。提供即将召开的会议列表、会议详情和热点趋势分析。"""
+
 from fastapi import APIRouter, HTTPException, Query
 from starlette import status
 

@@ -1,3 +1,5 @@
+"""MCP工具服务，负责工具的注册、查询与调用管理。"""
+
 import json
 from datetime import datetime
 from typing import Optional

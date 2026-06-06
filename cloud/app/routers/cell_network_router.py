@@ -1,3 +1,5 @@
+"""细胞网络路由：Agent 细胞注册、发现、路由同步等 API。"""
+
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 

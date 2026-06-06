@@ -1,3 +1,5 @@
+"""内容工厂路由：模板创建、渲染、合规检查与模板列表。"""
+
 from typing import Any
 
 from fastapi import APIRouter, Depends

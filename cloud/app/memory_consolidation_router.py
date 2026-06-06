@@ -1,3 +1,5 @@
+"""记忆整合路由。"""
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 

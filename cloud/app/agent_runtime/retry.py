@@ -1,3 +1,5 @@
+"""指数退避重试模块，支持 HTTP 错误重试及 429 限流处理。"""
+
 import random
 import time
 from urllib.error import HTTPError, URLError

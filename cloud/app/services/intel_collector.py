@@ -1,3 +1,5 @@
+"""情报采集模块，负责市场情报源的创建与模拟采集。"""
+
 import json
 from datetime import datetime
 from typing import Optional
@@ -56,6 +58,8 @@ def _do_collect(repo, src, user_id):
 
 
 class IntelCollectorMixin:
+    """情报采集混入类，提供情报源的创建、列表查询与采集操作。"""
+
     def create_source(self, name: str, source_type: str, target_keywords: list, user_id: int) -> dict:
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         sources_repo = MarketIntelSourcesRepository(self.db)

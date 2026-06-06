@@ -1,3 +1,5 @@
+"""MDT智能体服务，负责多学科团队协作的智能体管理。"""
+
 import json
 from datetime import datetime
 

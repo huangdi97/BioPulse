@@ -1,3 +1,5 @@
+"""应用入口模块，创建 FastAPI 实例，注册中间件与路由。"""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

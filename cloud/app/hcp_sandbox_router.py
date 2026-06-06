@@ -1,3 +1,5 @@
+"""HCP 沙箱路由，挂载管理与仿真子路由。"""
+
 from fastapi import APIRouter
 
 from cloud.app.sandbox_manager import manager_router

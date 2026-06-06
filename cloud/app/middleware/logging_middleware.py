@@ -1,3 +1,5 @@
+"""FastAPI 日志中间件：JSON 格式化、请求 ID 注入、访问日志记录。"""
+
 import json
 import logging
 import time
@@ -11,6 +13,8 @@ request_id_var: ContextVar[str] = ContextVar("request_id", default="")
 
 
 class JSONFormatter(logging.Formatter):
+    """结构化 JSON 日志格式化器，含 request_id、user_id、异常堆栈。"""
+
     def format(self, record: logging.LogRecord) -> str:
         log_entry = {
             "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ"),

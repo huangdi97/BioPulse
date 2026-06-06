@@ -1,3 +1,5 @@
+"""培训模块服务模块，管理培训课程的增删改查。"""
+
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -6,6 +8,8 @@ from sales_coach.app.services.base import BaseService
 
 
 class ModuleService(BaseService):
+    """培训模块服务，提供模块的创建、分页查询、更新与软删除。"""
+
     def create(self, body, user_id: int) -> dict:
         repo = ModuleRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()

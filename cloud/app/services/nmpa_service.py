@@ -1,3 +1,5 @@
+"""NMPA 合规检查服务，负责文档内容合规审查与违规日志管理。"""
+
 import json
 from datetime import datetime
 from typing import Optional
@@ -27,6 +29,8 @@ def _log_to_dict(row) -> dict:
 
 
 class NmpaService(BaseService):
+    """NMPA 合规检查服务，提供文档内容违规关键词检测与合规日志查询。"""
+
     def check(self, document_type: str, content: str, user_id: int) -> dict:
         found = [kw for kw in KEYWORDS if kw in content]
         violations_found = len(found)

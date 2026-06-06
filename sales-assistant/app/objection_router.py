@@ -1,3 +1,5 @@
+"""异议处理路由：客户异议分析与应答建议API。"""
+
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request

@@ -7,8 +7,12 @@ from starlette import status
 from opportunity.app.repositories import ResearchTrailRepository
 from opportunity.app.services.base import BaseService
 
+"""科研轨迹服务，管理HCP科研动态轨迹的增删改查。"""
+
 
 class ResearchService(BaseService):
+    """科研轨迹管理：创建、分页列表（支持HCP/主题/期刊/相关性筛选）、详情、更新、软删除。"""
+
     def create_research_trail(self, body, user_id: int) -> int:
         repo = ResearchTrailRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()

@@ -1,3 +1,5 @@
+"""种子数据：S3阶段——因果图与反事实场景预置。"""
+
 import json
 import sqlite3
 

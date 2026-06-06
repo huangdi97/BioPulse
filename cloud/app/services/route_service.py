@@ -1,3 +1,5 @@
+"""路由服务，负责路由规则的增删改查与基于 DeepSeek AI 的执行调度。"""
+
 import json
 import time
 import urllib.error
@@ -58,6 +60,8 @@ def _call_deepseek(messages: list, temperature: float, max_tokens: int) -> dict:
 
 
 class RouteService(BaseService):
+    """路由服务，提供路由规则的增删改查、基于 DeepSeek AI 的执行调度与日志统计。"""
+
     def create_rule(
         self,
         name: str,

@@ -1,3 +1,5 @@
+"""数据仓库模块，封装各数据表的CRUD操作与业务查询。"""
+
 import sqlite3
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional

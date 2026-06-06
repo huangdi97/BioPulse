@@ -1,3 +1,5 @@
+"""跟台手术服务模块。"""
+
 import asyncio
 from datetime import date, datetime, timezone
 from typing import Optional
@@ -11,6 +13,8 @@ VALID_STATUSES = {"scheduled", "in_progress", "completed", "cancelled"}
 
 
 class SurgeryService(BaseService):
+    """跟台手术服务，提供手术提醒的增删改查与实时通知。"""
+
     def create(self, body, user_id: int) -> dict:
         from fastapi import HTTPException
         from starlette import status

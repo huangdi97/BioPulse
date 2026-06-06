@@ -1,3 +1,5 @@
+"""知识库路由模块，定义知识条目增删改查与搜索的 API 端点。"""
+
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query

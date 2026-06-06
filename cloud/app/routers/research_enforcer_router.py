@@ -1,3 +1,5 @@
+"""科研合规路由：科研拜访合规检查与规则查询。"""
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
@@ -14,6 +16,8 @@ router = APIRouter(
 
 
 class ResearchVisitCheckRequest(BaseModel):
+    """科研拜访合规检查请求体。"""
+
     visit_data: dict
 
 

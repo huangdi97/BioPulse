@@ -1,3 +1,5 @@
+"""认证服务模块，处理用户注册、登录与 Token 刷新。"""
+
 from fastapi import HTTPException
 from starlette import status
 
@@ -13,6 +15,8 @@ from shared.auth import (
 
 
 class AuthService(BaseService):
+    """认证服务，提供注册、登录及 JWT Token 刷新操作。"""
+
     def register(self, username: str, password: str) -> dict:
         if len(username) < 3:
             raise HTTPException(

@@ -1,3 +1,5 @@
+"""系统配置管理路由。"""
+
 from typing import Any, List
 
 from fastapi import APIRouter, Depends

@@ -1,3 +1,5 @@
+"""内容管理服务，负责内容的创建、合规检查与状态流转。"""
+
 import json
 from datetime import datetime
 from typing import List, Optional
@@ -23,6 +25,8 @@ DEFAULT_RULES = [
 
 
 class ContentStatus:
+    """内容状态枚举。"""
+
     DRAFT = "draft"
     PENDING_REVIEW = "pending_review"
     APPROVED = "approved"
@@ -31,6 +35,8 @@ class ContentStatus:
 
 
 class ContentService(BaseService):
+    """内容服务，提供内容的增删改查与合规评分功能。"""
+
     def create_content(self, title: str, body: str, category: str, tags: List[str], user_id: int) -> dict:
         repo = ContentsRepository(self.db)
         tags_str = json.dumps(tags, ensure_ascii=False)

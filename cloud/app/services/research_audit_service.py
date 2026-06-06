@@ -1,3 +1,5 @@
+"""科研审计服务，负责审计日志的分页查询与模式切换记录。"""
+
 import json
 
 from cloud.app.research_database import get_research_db, log_research_audit

@@ -1,3 +1,5 @@
+"""推荐、内容、供应链等数据访问层。"""
+
 from cloud.shared.columns import (
     TABLE_CONTENTS_COLS,
     TABLE_RECOMMENDATIONS_COLS,
@@ -7,6 +9,8 @@ from cloud.shared.repository import BaseRepository
 
 
 class RecommendationsRepository(BaseRepository):
+    """推荐表。"""
+
     def __init__(self, db):
         super().__init__(db, "recommendations", TABLE_RECOMMENDATIONS_COLS)
 
@@ -65,11 +69,15 @@ class RecommendationsRepository(BaseRepository):
 
 
 class ContentsRepository(BaseRepository):
+    """内容表。"""
+
     def __init__(self, db):
         super().__init__(db, "contents", TABLE_CONTENTS_COLS)
 
 
 class SupplyChainItemsRepository(BaseRepository):
+    """供应链条目表。"""
+
     def __init__(self, db):
         super().__init__(db, "supply_chain_items", TABLE_SUPPLY_CHAIN_ITEMS_COLS)
 

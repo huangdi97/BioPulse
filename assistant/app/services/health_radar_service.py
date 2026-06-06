@@ -1,3 +1,5 @@
+"""健康雷达服务模块。"""
+
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -6,6 +8,8 @@ from assistant.app.services.base import BaseService
 
 
 class HealthRadarService(BaseService):
+    """健康雷达服务，提供患者健康评估的增删改查与统计分析。"""
+
     def create(self, body, user_id: int) -> dict:
         repo = HealthRadarRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()

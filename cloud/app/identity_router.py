@@ -1,3 +1,5 @@
+"""DID 去中心化身份路由。"""
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 

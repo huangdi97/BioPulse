@@ -1,3 +1,5 @@
+"""记忆条目、门控、召回日志、巩固日志、效用评分、情景记忆、工作记忆等数据访问层。"""
+
 from cloud.shared.columns import (
     TABLE_EPISODIC_MEMORY_COLS,
     TABLE_MEMORY_CONSOLIDATION_LOG_COLS,
@@ -13,6 +15,8 @@ from cloud.shared.repository import BaseRepository
 
 
 class MemoryEntriesRepository(BaseRepository):
+    """记忆条目表。"""
+
     def __init__(self, db):
         super().__init__(db, "memory_entries", TABLE_MEMORY_ENTRIES_COLS)
 
@@ -108,6 +112,8 @@ class MemoryEntriesRepository(BaseRepository):
 
 
 class MemoryGatesRepository(BaseRepository):
+    """记忆门控表。"""
+
     def __init__(self, db):
         super().__init__(db, "memory_gates", TABLE_MEMORY_GATES_COLS)
 
@@ -126,6 +132,8 @@ class MemoryGatesRepository(BaseRepository):
 
 
 class MemoryRecallLogRepository(BaseRepository):
+    """记忆召回日志表。"""
+
     def __init__(self, db):
         super().__init__(db, "memory_recall_log", TABLE_MEMORY_RECALL_LOG_COLS)
 
@@ -139,6 +147,8 @@ class MemoryRecallLogRepository(BaseRepository):
 
 
 class MemoryConsolidationLogRepository(BaseRepository):
+    """记忆巩固日志表。"""
+
     def __init__(self, db):
         super().__init__(db, "memory_consolidation_log", TABLE_MEMORY_CONSOLIDATION_LOG_COLS)
 
@@ -168,6 +178,8 @@ class MemoryConsolidationLogRepository(BaseRepository):
 
 
 class MemoryUtilityScoresRepository(BaseRepository):
+    """记忆效用评分表。"""
+
     def __init__(self, db):
         super().__init__(db, "memory_utility_scores", TABLE_MEMORY_UTILITY_SCORES_COLS)
 
@@ -203,6 +215,8 @@ class MemoryUtilityScoresRepository(BaseRepository):
 
 
 class EpisodicMemoryRepository(BaseRepository):
+    """情景记忆表。"""
+
     def __init__(self, db):
         super().__init__(db, "episodic_memory", TABLE_EPISODIC_MEMORY_COLS)
 
@@ -219,11 +233,15 @@ class EpisodicMemoryRepository(BaseRepository):
 
 
 class WorkingMemoryRepository(BaseRepository):
+    """工作记忆表。"""
+
     def __init__(self, db):
         super().__init__(db, "working_memory", TABLE_WORKING_MEMORY_COLS)
 
 
 class NodeMemoryLinksRepository(BaseRepository):
+    """节点记忆关联表。"""
+
     def __init__(self, db):
         super().__init__(db, "node_memory_links", TABLE_NODE_MEMORY_LINKS_COLS)
 
@@ -274,6 +292,8 @@ class NodeMemoryLinksRepository(BaseRepository):
 
 
 class SleepConsolidationLogsRepository(BaseRepository):
+    """休眠巩固日志表。"""
+
     def __init__(self, db):
         super().__init__(db, "sleep_consolidation_logs", TABLE_SLEEP_CONSOLIDATION_LOGS_COLS)
 

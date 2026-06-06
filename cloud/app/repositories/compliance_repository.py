@@ -1,3 +1,5 @@
+"""合规规则、审计记录、NMPA日志、数据脱敏、DID注册等数据访问层。"""
+
 from cloud.shared.columns import (
     TABLE_COMPLIANCE_AUDIT_RECORDS_COLS,
     TABLE_COMPLIANCE_RULES_COLS,
@@ -9,16 +11,22 @@ from cloud.shared.repository import BaseRepository
 
 
 class ComplianceRulesRepository(BaseRepository):
+    """合规规则表。"""
+
     def __init__(self, db):
         super().__init__(db, "compliance_rules", TABLE_COMPLIANCE_RULES_COLS)
 
 
 class ComplianceAuditRecordsRepository(BaseRepository):
+    """合规审计记录表。"""
+
     def __init__(self, db):
         super().__init__(db, "compliance_audit_records", TABLE_COMPLIANCE_AUDIT_RECORDS_COLS)
 
 
 class NmpaComplianceLogsRepository(BaseRepository):
+    """NMPA合规日志表。"""
+
     def __init__(self, db):
         super().__init__(db, "nmpa_compliance_logs", TABLE_NMPA_COMPLIANCE_LOGS_COLS)
 
@@ -41,11 +49,15 @@ class NmpaComplianceLogsRepository(BaseRepository):
 
 
 class DataMaskingRulesRepository(BaseRepository):
+    """数据脱敏规则表。"""
+
     def __init__(self, db):
         super().__init__(db, "data_masking_rules", TABLE_DATA_MASKING_RULES_COLS)
 
 
 class DidRegistryRepository(BaseRepository):
+    """DID注册表。"""
+
     def __init__(self, db):
         super().__init__(db, "did_registry", TABLE_DID_REGISTRY_COLS)
 

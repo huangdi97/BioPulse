@@ -1,3 +1,5 @@
+"""PI 服务，负责学术 PI 信息的搜索、创建与更新。"""
+
 from typing import Optional
 
 from fastapi import HTTPException
@@ -8,6 +10,8 @@ from cloud.app.services.base import BaseService
 
 
 class PiService(BaseService):
+    """PI 服务，提供学术 PI 的搜索、详情查询、创建与更新。"""
+
     def search(self, q: str) -> list:
         repo = PiRepository(self.db)
         return repo.search(q)

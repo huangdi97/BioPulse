@@ -1,3 +1,5 @@
+"""异议处理服务：AI驱动的客户异议分析与应答建议。"""
+
 import json
 import logging
 import urllib.error
@@ -20,6 +22,8 @@ SYSTEM_PROMPT = (
 
 
 class ObjectionService(BaseService):
+    """异议处理服务：调用AI网关解析客户异议并生成专业应答。"""
+
     def _build_user_message(self, body) -> str:
         parts = [f"客户异议：{body.objection}"]
         if body.customer_type:

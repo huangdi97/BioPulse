@@ -1,3 +1,5 @@
+"""Agent 运行时执行路由。"""
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 

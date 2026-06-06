@@ -1,3 +1,5 @@
+"""经理视图路由。提供团队统计、成员列表、合规和绩效数据查询。"""
+
 from fastapi import APIRouter, Path
 
 from management.app.services.manager_service import (

@@ -1,3 +1,5 @@
+"""WebSocket 连接管理器模块，维护用户连接池与消息推送。"""
+
 from typing import Dict, List
 
 from fastapi import WebSocket

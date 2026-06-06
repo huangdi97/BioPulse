@@ -1,3 +1,5 @@
+"""因果推理服务，支持因果图谱构建、反事实模拟与 HCP 处方归因。"""
+
 import json
 import uuid
 from typing import Optional
@@ -84,6 +86,8 @@ def _scenario_to_dict(row) -> dict:
 
 
 class CausalService(BaseService):
+    """因果服务，提供因果图谱管理、反事实推断与归因分析功能。"""
+
     def build_graph(self, decision_id: str, include_metrics: bool, user_id: int) -> dict:
         cg_repo = CausalGraphsRepository(self.db)
         graph_id = _gen_graph_id()

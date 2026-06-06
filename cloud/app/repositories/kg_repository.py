@@ -1,3 +1,5 @@
+"""知识图谱实体、关系、搜索缓存等数据访问层。"""
+
 from cloud.shared.columns import (
     TABLE_KG_ENTITIES_COLS,
     TABLE_KG_RELATIONS_COLS,
@@ -7,6 +9,8 @@ from cloud.shared.repository import BaseRepository
 
 
 class KgEntitiesRepository(BaseRepository):
+    """知识图谱实体表。"""
+
     def __init__(self, db):
         super().__init__(db, "kg_entities", TABLE_KG_ENTITIES_COLS)
 
@@ -77,6 +81,8 @@ class KgEntitiesRepository(BaseRepository):
 
 
 class KgRelationsRepository(BaseRepository):
+    """知识图谱关系表。"""
+
     def __init__(self, db):
         super().__init__(db, "kg_relations", TABLE_KG_RELATIONS_COLS)
 
@@ -134,6 +140,8 @@ class KgRelationsRepository(BaseRepository):
 
 
 class KgSearchCacheRepository(BaseRepository):
+    """知识图谱搜索缓存表。"""
+
     def __init__(self, db):
         super().__init__(db, "kg_search_cache", TABLE_KG_SEARCH_CACHE_COLS)
 

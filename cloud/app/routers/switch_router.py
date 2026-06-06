@@ -1,3 +1,5 @@
+"""模式切换路由：在 visit / research 模式间切换并签发新 token。"""
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
@@ -8,10 +10,14 @@ router = APIRouter(prefix="/auth", tags=["模式切换"])
 
 
 class ModeSwitchRequest(BaseModel):
+    """模式切换请求体。"""
+
     new_scope: str = Field(..., pattern="^(visit|research)$")
 
 
 class ModeSwitchResponse(BaseModel):
+    """模式切换响应体。"""
+
     access_token: str
     token_type: str = "bearer"
     scope: str

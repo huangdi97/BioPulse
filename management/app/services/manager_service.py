@@ -1,3 +1,5 @@
+"""经理服务模块。提供团队统计、成员、合规和绩效数据的聚合查询。"""
+
 import httpx
 
 CLOUD_API = "http://localhost:8000"

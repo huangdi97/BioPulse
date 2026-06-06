@@ -1,7 +1,11 @@
+"""Agent 任务队列管理模块，支持入队、出队、完成/失败及恢复。"""
+
 from datetime import datetime
 
 
 class AgentQueueManager:
+    """基于 SQLite 的 Agent 任务队列管理器。"""
+
     def __init__(self, db):
         self._db = db
         self._init_table()

@@ -1,3 +1,5 @@
+"""推荐服务，负责用户画像管理、行为记录与个性化推荐生成。"""
+
 import json
 import math
 from typing import Optional
@@ -18,6 +20,8 @@ from shared.columns import TABLE_USER_PROFILES_COLS
 
 
 class RecommendService(BaseService):
+    """推荐服务，提供用户画像管理、行为记录、个性化推荐生成与仪表盘统计。"""
+
     def create_profile(
         self,
         user_id: int,

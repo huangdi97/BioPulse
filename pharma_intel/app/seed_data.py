@@ -1,3 +1,5 @@
+"""种子数据模块。包含论文、PI 画像和靶点的模拟数据，供演示和测试使用。"""
+
 from typing import Any
 
 papers: list[dict[str, Any]] = [

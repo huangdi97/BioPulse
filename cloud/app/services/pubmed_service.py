@@ -1,3 +1,5 @@
+"""PubMed 文献检索服务，通过 NCBI E-utilities API 检索并缓存论文信息。"""
+
 import hashlib
 import json
 import logging

@@ -1,3 +1,5 @@
+"""趋势分析 API。"""
+
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query, Request

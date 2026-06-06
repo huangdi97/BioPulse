@@ -1,8 +1,12 @@
+"""合规执行服务，负责拜访记录的合规性校验。"""
+
 from cloud.app.services.base import BaseService
 from cloud.app.services.compliance_enforcer import ComplianceEnforcer
 
 
 class EnforcerService(BaseService):
+    """合规执行服务，对拜访数据进行规则校验与违规记录。"""
+
     def check_visit(self, visit_data: dict) -> dict:
         enforcer = ComplianceEnforcer(self.db)
         violations = enforcer.check_visit(visit_data)

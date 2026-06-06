@@ -1,3 +1,5 @@
+"""脑记忆服务，统一接口封装工作记忆、情景记忆、语义记忆与程序记忆操作。"""
+
 from typing import Optional
 
 from cloud.app.services.base import BaseService
@@ -6,6 +8,8 @@ from cloud.app.services.memory_writer import MemoryWriter
 
 
 class BrainMemoryService(BaseService):
+    """脑记忆门面服务，聚合 MemoryWriter 和 MemoryRetriever 提供多类型记忆读写。"""
+
     def __init__(self, db):
         super().__init__(db)
         self._writer = MemoryWriter(self.db)

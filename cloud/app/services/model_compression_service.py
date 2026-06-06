@@ -1,3 +1,5 @@
+"""模型压缩服务，提供多种压缩策略的模拟与评估。"""
+
 import json
 import uuid
 from datetime import datetime

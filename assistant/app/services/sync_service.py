@@ -1,3 +1,5 @@
+"""数据同步服务模块。"""
+
 import json
 from datetime import datetime, timezone
 from typing import Dict, List
@@ -51,6 +53,8 @@ TABLES_WITH_IS_ACTIVE = {
 
 
 class SyncService(BaseService):
+    """数据同步服务，处理客户端数据推送、拉取与冲突检测。"""
+
     def push(self, body, user_id: int) -> dict:
         now = datetime.now(timezone.utc).isoformat()
         results = []

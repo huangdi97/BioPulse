@@ -1,3 +1,5 @@
+"""科研 PI 服务，负责科研模式下的 PI 信息搜索与创建。"""
+
 import json
 from typing import Optional
 
@@ -8,6 +10,8 @@ from cloud.app.research_database import get_research_db
 
 
 class ResearchPiService:
+    """科研 PI 服务，提供科研模式下 PI 的搜索、详情查询与创建。"""
+
     def search(self, q: str) -> list:
         db = get_research_db()
         try:

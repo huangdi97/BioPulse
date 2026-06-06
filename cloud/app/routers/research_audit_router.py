@@ -1,3 +1,5 @@
+"""科研审计路由：审计日志查询与模式切换记录。"""
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from starlette import status
@@ -19,6 +21,8 @@ router = APIRouter(
 
 
 class SwitchRequest(BaseModel):
+    """模式切换记录请求体。"""
+
     from_mode: str
     to_mode: str
     device_id: str = ""

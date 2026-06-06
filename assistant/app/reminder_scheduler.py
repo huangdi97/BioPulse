@@ -1,3 +1,5 @@
+"""提醒调度器模块，定期检查手术提醒并通过WebSocket推送通知。"""
+
 import asyncio
 import logging
 import sqlite3

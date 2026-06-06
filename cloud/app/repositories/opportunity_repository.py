@@ -1,3 +1,5 @@
+"""商机、客户、客户互动、HCP互动、HCP档案、HCP仿真等数据访问层。"""
+
 from cloud.shared.columns import (
     TABLE_CUSTOMER_INTERACTIONS_COLS,
     TABLE_CUSTOMERS_COLS,
@@ -10,11 +12,15 @@ from cloud.shared.repository import BaseRepository
 
 
 class OpportunitiesRepository(BaseRepository):
+    """商机表。"""
+
     def __init__(self, db):
         super().__init__(db, "opportunities", TABLE_OPPORTUNITIES_COLS)
 
 
 class CustomersRepository(BaseRepository):
+    """客户表。"""
+
     def __init__(self, db):
         super().__init__(db, "customers", TABLE_CUSTOMERS_COLS)
 
@@ -23,6 +29,8 @@ class CustomersRepository(BaseRepository):
 
 
 class CustomerInteractionsRepository(BaseRepository):
+    """客户互动表。"""
+
     def __init__(self, db):
         super().__init__(db, "customer_interactions", TABLE_CUSTOMER_INTERACTIONS_COLS)
 
@@ -52,6 +60,8 @@ class CustomerInteractionsRepository(BaseRepository):
 
 
 class HcpInteractionsRepository(BaseRepository):
+    """HCP互动表。"""
+
     def __init__(self, db):
         super().__init__(db, "hcp_interactions", TABLE_HCP_INTERACTIONS_COLS)
 
@@ -87,6 +97,8 @@ class HcpInteractionsRepository(BaseRepository):
 
 
 class HcpProfilesRepository(BaseRepository):
+    """HCP档案表。"""
+
     def __init__(self, db):
         super().__init__(db, "hcp_profiles", TABLE_HCP_PROFILES_COLS)
 
@@ -117,6 +129,8 @@ class HcpProfilesRepository(BaseRepository):
 
 
 class HcpSimulationsRepository(BaseRepository):
+    """HCP仿真表。"""
+
     def __init__(self, db):
         super().__init__(db, "hcp_simulations", TABLE_HCP_SIMULATIONS_COLS)
 

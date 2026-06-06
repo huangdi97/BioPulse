@@ -1,3 +1,6 @@
+"""种子数据：S6阶段——效果指标、对标报告、Agent市场与供应链。"""
+
+
 def seed_s6(conn):
     import json as _json
 

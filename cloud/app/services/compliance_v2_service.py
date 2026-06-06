@@ -1,3 +1,5 @@
+"""合规 V2 门面服务，统一暴露评估器的扫描与报告器的审计/纠偏接口。"""
+
 from typing import Optional
 
 from fastapi import Depends, Request

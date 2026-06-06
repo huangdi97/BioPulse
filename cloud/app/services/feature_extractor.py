@@ -1,3 +1,5 @@
+"""特征提取模块，从研究数据库中抽取时间序列特征数据。"""
+
 import json
 from datetime import datetime, timedelta
 

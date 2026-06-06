@@ -1,3 +1,5 @@
+"""用户、团队、档案、行为、VC凭证、系统配置等数据访问层。"""
+
 from cloud.shared.columns import (
     TABLE_SYSTEM_CONFIGS_COLS,
     TABLE_USER_BEHAVIORS_COLS,
@@ -10,6 +12,8 @@ from cloud.shared.repository import BaseRepository
 
 
 class UsersRepository(BaseRepository):
+    """用户表。"""
+
     def __init__(self, db):
         super().__init__(db, "users", TABLE_USERS_COLS)
 
@@ -18,11 +22,15 @@ class UsersRepository(BaseRepository):
 
 
 class UserTeamRepository(BaseRepository):
+    """用户团队关联表。"""
+
     def __init__(self, db):
         super().__init__(db, "user_team", TABLE_USER_TEAM_COLS)
 
 
 class UserProfilesRepository(BaseRepository):
+    """用户档案表。"""
+
     def __init__(self, db):
         super().__init__(db, "user_profiles", TABLE_USER_PROFILES_COLS)
 
@@ -64,6 +72,8 @@ class UserProfilesRepository(BaseRepository):
 
 
 class UserBehaviorsRepository(BaseRepository):
+    """用户行为表。"""
+
     def __init__(self, db):
         super().__init__(db, "user_behaviors", TABLE_USER_BEHAVIORS_COLS)
 
@@ -115,6 +125,8 @@ class UserBehaviorsRepository(BaseRepository):
 
 
 class VcCredentialsRepository(BaseRepository):
+    """可验证凭证表。"""
+
     def __init__(self, db):
         super().__init__(db, "vc_credentials", TABLE_VC_CREDENTIALS_COLS)
 
@@ -150,5 +162,7 @@ class VcCredentialsRepository(BaseRepository):
 
 
 class SystemConfigsRepository(BaseRepository):
+    """系统配置表。"""
+
     def __init__(self, db):
         super().__init__(db, "system_configs", TABLE_SYSTEM_CONFIGS_COLS)

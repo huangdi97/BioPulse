@@ -1,3 +1,5 @@
+"""MDT辩论服务，负责多学科团队辩论会话的管理与AI辩论编排。"""
+
 import json
 import urllib.request
 from datetime import datetime
@@ -16,6 +18,8 @@ from shared.base import success
 
 
 class MdtDebater(BaseService):
+    """MDT辩论服务，提供辩论会话的创建、管理、发言与AI辩论功能。"""
+
     @staticmethod
     def _now() -> str:
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")

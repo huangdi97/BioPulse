@@ -1,3 +1,5 @@
+"""场景服务模块，管理教练场景的增删改查。"""
+
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -6,6 +8,8 @@ from sales_coach.app.services.base import BaseService
 
 
 class ScenarioService(BaseService):
+    """教练场景服务，提供场景的创建、分页查询、更新与软删除。"""
+
     def create(self, body, user_id: int) -> dict:
         repo = ScenarioRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()

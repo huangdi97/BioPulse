@@ -1,3 +1,5 @@
+"""知识库种子数据模块，在首次启动时填充默认知识点。"""
+
 import sqlite3
 from datetime import datetime, timezone
 

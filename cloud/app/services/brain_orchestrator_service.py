@@ -1,3 +1,5 @@
+"""脑编排服务，承接感知输入并协调多类型记忆存储与编排推理。"""
+
 import json
 from datetime import datetime, timedelta
 

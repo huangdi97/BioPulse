@@ -13,7 +13,12 @@ AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
 SYSTEM_PROMPT = "你是论文诚信分析师，请判断这篇论文是否有撤稿、数据造假等诚信问题"
 
 
+"""论文诚信查询服务，通过LLM分析论文撤稿与数据造假风险。"""
+
+
 class PubpeerService(BaseService):
+    """论文诚信查询：调用LLM检测论文诚信评分、撤稿预警，支持缓存与预警列表。"""
+
     def _call_llm(self, auth_header: str, prompt: str) -> str:
         req_body = {
             "messages": [

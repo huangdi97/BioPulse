@@ -1,3 +1,5 @@
+"""合规审查 v2 路由。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, Request

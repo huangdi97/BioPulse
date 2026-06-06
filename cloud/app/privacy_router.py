@@ -1,3 +1,5 @@
+"""差分隐私路由。"""
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 

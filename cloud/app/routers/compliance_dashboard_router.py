@@ -1,3 +1,5 @@
+"""合规仪表板路由：合规摘要与代表违规查询。"""
+
 from fastapi import APIRouter, Depends
 
 from cloud.app.services.compliance_service import ComplianceService

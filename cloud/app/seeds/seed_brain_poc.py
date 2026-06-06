@@ -1,3 +1,5 @@
+"""种子数据：Brain记忆系统概念验证——感官/程序记忆预置。"""
+
 import datetime
 import json
 import sqlite3

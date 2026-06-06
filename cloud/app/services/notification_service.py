@@ -1,3 +1,5 @@
+"""通知服务，负责通知模板管理与消息发送、列表查询及已读标记。"""
+
 import json
 import re
 from datetime import datetime
@@ -52,6 +54,8 @@ def _notification_to_dict(row) -> dict:
 
 
 class NotificationService(BaseService):
+    """通知服务，提供模板管理、消息发送、列表查询与已读标记功能。"""
+
     def create_template(self, name: str, title_template: str, body_template: str, category: str) -> dict:
         tmpl_repo = NotificationTemplatesRepository(self.db)
         row_id = tmpl_repo.create(

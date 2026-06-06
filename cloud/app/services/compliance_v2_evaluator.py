@@ -1,3 +1,5 @@
+"""合规 V2 评估器，提供内容扫描、审计记录查询及 L2 规则列表。"""
+
 import hashlib
 import json
 import math
@@ -50,6 +52,8 @@ RISK_ORDER = {"low": 0, "medium": 1, "high": 2, "critical": 3}
 
 
 class RuleEvaluator(BaseService):
+    """规则评估器，支持文本/图片等多类型的合规扫描、风险评级与审计链归档。"""
+
     def __init__(self, db):
         super().__init__(db)
         self._strategy_service = ComplianceStrategyService(None)

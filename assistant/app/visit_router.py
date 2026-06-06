@@ -1,3 +1,5 @@
+"""拜访路由模块，定义拜访记录增删改查的 API 端点。"""
+
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query

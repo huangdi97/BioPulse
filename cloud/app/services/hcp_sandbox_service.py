@@ -1,3 +1,5 @@
+"""HCP沙箱服务，负责医生画像管理与会话行为模拟。"""
+
 import json
 import urllib.error
 import urllib.request
@@ -55,6 +57,8 @@ def _call_ai(system_prompt: str, user_prompt: str) -> str:
 
 
 class HcpSandboxService(BaseService):
+    """HCP沙箱服务，提供医生画像管理、会话仿真与AI行为模拟。"""
+
     def create_profile(
         self,
         name: str,

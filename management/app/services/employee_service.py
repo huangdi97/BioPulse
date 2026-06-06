@@ -1,3 +1,5 @@
+"""员工服务模块。提供员工个人资料、任务、合规、绩效和趋势数据查询。"""
+
 import httpx
 
 CLOUD_API = "http://localhost:8000"

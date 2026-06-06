@@ -1,3 +1,5 @@
+"""语音服务模块。"""
+
 import hashlib
 import json
 import logging
@@ -25,6 +27,8 @@ for d in (AUDIO_DIR, TTS_DIR):
 
 
 class VoiceService(BaseService):
+    """语音服务，提供音频上传、AI语音对话与TTS语音合成。"""
+
     async def upload(self, file, user_id: int) -> dict:
         ts = int(time.time() * 1000)
         filename = f"{ts}_{file.filename}"

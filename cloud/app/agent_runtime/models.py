@@ -1,9 +1,13 @@
+"""Agent 运行时数据模型定义，包含工具、规格、结果、日志等结构。"""
+
 from dataclasses import dataclass
 
 from pydantic import BaseModel
 
 
 class ToolDef(BaseModel):
+    """工具定义，含名称、描述、参数及权限级别。"""
+
     name: str
     description: str
     params: dict
@@ -11,6 +15,8 @@ class ToolDef(BaseModel):
 
 
 class AgentSpec(BaseModel):
+    """Agent 规格，含角色描述、允许工具、迭代上限等配置。"""
+
     key: str
     role_desc: str
     allowed_tools: list[str]
@@ -20,6 +26,8 @@ class AgentSpec(BaseModel):
 
 
 class RuntimeResult(BaseModel):
+    """运行时执行结果，含状态、输出、迭代次数及 token 消耗。"""
+
     status: str
     result: str
     iterations: int
@@ -29,6 +37,8 @@ class RuntimeResult(BaseModel):
 
 
 class AgentLogEntry(BaseModel):
+    """单步日志条目，记录动作、工具调用、耗时及 LLM 交互信息。"""
+
     step: int
     action: str
     tool: str | None
@@ -46,6 +56,8 @@ class AgentLogEntry(BaseModel):
 
 @dataclass
 class CheckpointData:
+    """检查点数据，用于断点续跑时恢复消息与日志状态。"""
+
     trace_id: str
     step: int
     messages: list[dict]
@@ -57,6 +69,8 @@ class CheckpointData:
 
 
 class AgentDecision(BaseModel):
+    """Agent 决策，含动作类型、目标工具、参数及推理理由。"""
+
     action: str
     tool: str | None = None
     params: dict | None = None

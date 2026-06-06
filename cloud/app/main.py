@@ -1,3 +1,5 @@
+"""FastAPI 应用入口，注册所有路由与中间件。"""
+
 import logging
 import os
 import sqlite3

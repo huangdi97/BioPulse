@@ -1,3 +1,5 @@
+"""制药情报服务主应用入口。"""
+
 import time
 
 from fastapi import FastAPI
@@ -35,6 +37,7 @@ def startup():
     from pharma_intel.app.database import init_cache_db
 
     init_cache_db()
+
 
 app.include_router(health_router)
 app.include_router(intel_router)

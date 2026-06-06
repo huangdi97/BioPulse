@@ -1,3 +1,5 @@
+"""拜访管理服务模块。"""
+
 from datetime import datetime
 from typing import List, Optional
 
@@ -9,6 +11,8 @@ from assistant.app.services.base import BaseService
 
 
 class VisitService(BaseService):
+    """拜访管理服务，提供拜访记录的增删改查与智能评分。"""
+
     def _check_hcp_exists(self, hcp_id: int) -> None:
         repo = HcpRepository(self.db)
         row = repo.get_by_id(hcp_id)

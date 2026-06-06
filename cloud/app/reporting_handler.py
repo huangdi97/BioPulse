@@ -1,3 +1,5 @@
+"""决策情报报告子路由。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

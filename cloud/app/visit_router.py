@@ -1,3 +1,5 @@
+"""拜访记录路由。"""
+
 from sqlite3 import Connection
 
 from fastapi import APIRouter, Depends

@@ -1,9 +1,13 @@
+"""导出服务，负责审计日志与客户数据的CSV导出。"""
+
 from cloud.app.repositories import AuditLogsRepository, CustomersRepository
 from cloud.app.services.base import BaseService
 from shared.csv_export import export_csv
 
 
 class ExportService(BaseService):
+    """导出服务，提供审计日志与客户信息的CSV导出功能。"""
+
     def export_audit_logs(self) -> dict:
         items = AuditLogsRepository(self.db).get_all()
         columns = [

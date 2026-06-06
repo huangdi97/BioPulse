@@ -1,3 +1,5 @@
+"""审计日志服务，负责审计日志的创建、查询与统计。"""
+
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -6,6 +8,8 @@ from cloud.app.services.base import BaseService
 
 
 class AuditService(BaseService):
+    """审计服务，记录操作日志并支持按条件检索与趋势统计。"""
+
     def create_log(
         self,
         user_id: int,

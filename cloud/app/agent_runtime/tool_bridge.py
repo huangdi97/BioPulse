@@ -1,3 +1,5 @@
+"""工具桥接模块，注册工具、权限校验、调用转发及熔断保护。"""
+
 import json
 import time
 import urllib.request
@@ -7,6 +9,8 @@ from cloud.app.agent_runtime.retry import retry_with_backoff
 
 
 class ToolRegistry:
+    """工具注册中心，管理工具定义、权限校验、调用转发与熔断恢复。"""
+
     def __init__(self):
         self._tools: dict[str, ToolDef] = {}
         self._brain = None

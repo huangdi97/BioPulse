@@ -1,3 +1,5 @@
+"""事件总线服务，负责事件定义、订阅与消息管理。"""
+
 import json
 import uuid
 from typing import Optional
@@ -24,6 +26,8 @@ def _parse_targets(raw):
 
 
 class EventBusService(BaseService):
+    """事件总线服务，管理事件定义、订阅、消息发布与投递。"""
+
     def create_definition(
         self,
         event_type: str,

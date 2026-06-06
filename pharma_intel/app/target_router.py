@@ -1,3 +1,5 @@
+"""靶点研究监控路由。提供靶点学术态势分析和活跃靶点列表。"""
+
 from fastapi import APIRouter, Query
 
 from pharma_intel.app.services.target_service import (

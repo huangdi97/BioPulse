@@ -1,3 +1,5 @@
+"""数据库初始化与种子数据。"""
+
 import os
 import sqlite3
 from typing import Generator

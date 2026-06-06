@@ -1,3 +1,5 @@
+"""联邦节点聚合服务，提供联邦学习节点的数据汇总与分析。"""
+
 import csv
 import io
 from datetime import datetime, timedelta

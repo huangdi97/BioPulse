@@ -1,3 +1,5 @@
+"""产品服务，负责产品搜索与创建。"""
+
 from fastapi import HTTPException
 from starlette import status
 
@@ -6,6 +8,8 @@ from cloud.app.services.base import BaseService
 
 
 class ProductService(BaseService):
+    """产品服务，提供产品搜索与创建功能。"""
+
     def search(self, q: str = "", category: str = "") -> list:
         repo = ProductRepository(self.db)
         return repo.search(q=q, category=category)

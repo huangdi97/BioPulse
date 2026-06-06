@@ -1,3 +1,5 @@
+"""健康检查路由：服务状态、数据库连接与运行时长。"""
+
 import time
 
 from fastapi import APIRouter

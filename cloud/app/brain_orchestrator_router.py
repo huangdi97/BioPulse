@@ -1,3 +1,5 @@
+"""类脑记忆编排路由。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

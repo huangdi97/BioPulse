@@ -1,3 +1,5 @@
+"""问答服务模块。"""
+
 import json
 import logging
 import urllib.error
@@ -20,6 +22,8 @@ SYSTEM_PROMPT = (
 
 
 class QaService(BaseService):
+    """问答服务，调用AI网关进行临床药学问答。"""
+
     def answer_question(self, body, auth_header: str) -> dict:
         try:
             ai_data = self._call_ai_gateway(auth_header, body)

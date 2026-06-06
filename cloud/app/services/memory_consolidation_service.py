@@ -1,3 +1,5 @@
+"""记忆巩固服务，负责情景记忆的评分、筛选与知识图谱化。"""
+
 import json
 import uuid
 from datetime import datetime, timedelta
@@ -15,6 +17,8 @@ def _calc_utility(valence: float, intensity: float) -> float:
 
 
 class MemoryConsolidationService(BaseService):
+    """记忆巩固服务，将高价值情景记忆转化为知识图谱实体。"""
+
     def trigger_consolidation(self, triggered_by: str) -> dict:
         started = datetime.now()
         ep_repo = EpisodicMemoryRepository(self.db)

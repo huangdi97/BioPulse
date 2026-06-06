@@ -1,3 +1,5 @@
+"""定位服务模块。"""
+
 import math
 from datetime import datetime, timezone
 
@@ -17,6 +19,8 @@ def haversine(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
 
 
 class LocationService(BaseService):
+    """定位服务，提供HCP地址管理、位置查询与路线优化。"""
+
     def create(self, hcp_id: int, body, user_id: int) -> dict:
         hcp = self.db.execute("SELECT id FROM hcp WHERE id = ? AND is_active = 1", (hcp_id,)).fetchone()
         if not hcp:

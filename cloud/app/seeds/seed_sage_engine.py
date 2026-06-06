@@ -1,3 +1,5 @@
+"""种子数据：Sage记忆评分引擎初始评分与演化日志。"""
+
 from cloud.app.repositories.sage_repository import SageRepository
 from cloud.app.research_database import get_research_db
 

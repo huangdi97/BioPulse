@@ -1,3 +1,5 @@
+"""脑记忆进化服务，支持记忆演化、折叠压缩与展开还原。"""
+
 import json
 from datetime import datetime
 

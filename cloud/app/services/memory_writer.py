@@ -1,3 +1,5 @@
+"""记忆写入服务，负责工作记忆、情景记忆与语义记忆的写入。"""
+
 import json
 import urllib.request
 from datetime import datetime, timedelta
@@ -28,6 +30,8 @@ def _call_ai(messages: list[dict], auth_header: str) -> dict:
 
 
 class MemoryWriter(BaseService):
+    """记忆写入服务，提供工作记忆设置、情景记忆记录与语义记忆存储功能。"""
+
     def __init__(self, db):
         super().__init__(db)
 

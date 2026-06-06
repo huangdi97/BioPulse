@@ -1,3 +1,5 @@
+"""科研轨迹 AI 预测模块，负责构建 LLM 提示词、调用 AI 网关并解析预测结果。"""
+
 import json
 
 from cloud.app.services.ai_gateway_service import AiGatewayService

@@ -1,3 +1,5 @@
+"""联系记录 CRUD。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

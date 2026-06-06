@@ -1,3 +1,5 @@
+"""用户认证与注册路由。"""
+
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends

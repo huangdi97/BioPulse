@@ -1,3 +1,5 @@
+"""用户收藏 CRUD。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

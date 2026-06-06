@@ -1,3 +1,5 @@
+"""HCP管理服务：HCP、产品、关联关系的CRUD与图谱查询。"""
+
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -13,6 +15,8 @@ from sales_assistant.app.services.base import BaseService
 
 
 class HcpService(BaseService):
+    """HCP管理服务：管理医生信息、产品及HCP-产品关联关系图谱。"""
+
     def _now(self) -> str:
         return datetime.now(timezone.utc).isoformat()
 

@@ -15,7 +15,12 @@ from opportunity.app.services.base import BaseService
 AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
 
 
+"""招投标Agent调度服务，通过LLM自动扫描招标信息并分析评估。"""
+
+
 class BiddingAgentService(BaseService):
+    """招投标Agent调度：管理Agent配置、触发扫描、分析招标信息、记录运行日志。"""
+
     def _call_llm(self, auth_header: str, prompt: str) -> str:
         req_body = {
             "messages": [{"role": "user", "content": prompt}],

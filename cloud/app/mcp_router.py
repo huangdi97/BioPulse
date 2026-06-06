@@ -1,3 +1,5 @@
+"""MCP 工具管理路由。"""
+
 import json
 from datetime import datetime
 from typing import Optional

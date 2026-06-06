@@ -1,3 +1,5 @@
+"""内容工厂服务，负责内容模板的创建、合规校验与渲染。"""
+
 import json
 import re
 from datetime import datetime, timezone

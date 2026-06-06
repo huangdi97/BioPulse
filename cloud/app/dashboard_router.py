@@ -1,3 +1,5 @@
+"""仪表盘概览路由。"""
+
 from typing import Any
 
 from fastapi import APIRouter, Depends

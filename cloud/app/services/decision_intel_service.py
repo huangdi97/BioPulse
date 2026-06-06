@@ -1,3 +1,5 @@
+"""决策情报服务，负责决策案例的创建与AI辅助分析。"""
+
 import json
 import urllib.error
 import urllib.request
@@ -40,6 +42,8 @@ def _e404(name: str = "Resource"):
 
 
 class DecisionIntelService(BaseService):
+    """决策情报服务，提供案例管理与AI辅助因果分析。"""
+
     def __init__(self, db=None):
         super().__init__(db)
         self._logger = DecisionLogger(db)

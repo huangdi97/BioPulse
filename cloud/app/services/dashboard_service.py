@@ -1,3 +1,5 @@
+"""仪表盘服务，提供概览统计与合规分析数据。"""
+
 from datetime import date, timedelta
 
 from cloud.app.repositories import (
@@ -9,6 +11,8 @@ from cloud.app.services.base import BaseService
 
 
 class DashboardService(BaseService):
+    """仪表盘服务，汇总用户、内容与合规统计数据。"""
+
     def get_overview(self) -> dict:
         users_repo = UsersRepository(self.db)
         contents_repo = ContentsRepository(self.db)

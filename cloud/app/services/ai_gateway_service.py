@@ -1,3 +1,5 @@
+"""AI 网关服务，统一封装对大语言模型（DeepSeek）的调用。"""
+
 import json
 import urllib.error
 import urllib.request
@@ -14,6 +16,8 @@ TIMEOUT_SECONDS = 30
 
 
 class AiGatewayService(BaseService):
+    """AI 网关服务，负责调用 DeepSeek API 并记录 Token 用量。"""
+
     def _get_api_key(self) -> str:
         key = settings.deepseek_api_key
         if not key:

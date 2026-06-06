@@ -1,3 +1,5 @@
+"""员工视图路由。提供员工个人资料、任务、合规、绩效和趋势查询。"""
+
 from fastapi import APIRouter, Query
 
 from management.app.services.employee_service import (

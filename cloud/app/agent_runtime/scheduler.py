@@ -1,3 +1,5 @@
+"""Agent 调度器，定时轮询任务队列并触发 Agent 执行。"""
+
 import threading
 import time
 from datetime import datetime, timedelta
@@ -9,6 +11,8 @@ from cloud.app.agent_runtime.runtime_core import AgentRuntime
 
 
 class AgentScheduler:
+    """后台线程调度器，按间隔调度 Agent 任务并处理队列消费。"""
+
     def __init__(self, db, runtime_factory=None):
         self._db = db
         self._runtime_factory = runtime_factory

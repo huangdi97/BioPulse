@@ -1,3 +1,5 @@
+"""数据库模块，提供数据库连接、建表与迁移功能。"""
+
 import os
 import sqlite3
 from typing import Generator

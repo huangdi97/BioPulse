@@ -1,3 +1,5 @@
+"""特征分析模块，提供因果归因、动态演化预测等时间序列分析功能。"""
+
 from collections import Counter
 
 from .feature_extractor import QUALITY_MAP, extract_areas_from_quotations, normalize_areas

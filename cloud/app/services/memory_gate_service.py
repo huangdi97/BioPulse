@@ -1,3 +1,5 @@
+"""记忆门控服务，负责记忆条目的重要性评估与路由分发。"""
+
 import json
 import urllib.request
 from datetime import datetime
@@ -22,6 +24,8 @@ def _now():
 
 
 class MemoryGateService(BaseService):
+    """记忆门控服务，提供记忆门的创建、条目的评分过滤与路由。"""
+
     def _call_ai(self, messages: list[dict], auth_header: str) -> dict:
         payload = {"messages": messages, "temperature": 0.3, "max_tokens": 256}
         req = urllib.request.Request(

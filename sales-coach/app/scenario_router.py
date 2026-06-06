@@ -1,3 +1,5 @@
+"""场景路由模块，提供教练场景的CRUD、分类筛选和难度筛选接口。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

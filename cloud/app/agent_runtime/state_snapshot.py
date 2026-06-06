@@ -1,8 +1,12 @@
+"""状态快照模块，保存/加载 Agent 运行过程的全量状态。"""
+
 import json
 from datetime import datetime
 
 
 class SnapshotManager:
+    """Agent 状态快照管理器，支持保存、加载、回滚及自动清理。"""
+
     def __init__(self, agent_db):
         self._agent_db = agent_db
         self._create_table()

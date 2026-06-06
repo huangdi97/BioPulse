@@ -1,8 +1,12 @@
+"""销售漏斗服务：日程完成率、笔记覆盖率等漏斗分析。"""
+
 from sales_assistant.app.repositories import NoteRepository, ScheduleRepository
 from sales_assistant.app.services.base import BaseService
 
 
 class FunnelService(BaseService):
+    """销售漏斗服务：计算转化率、按事件类型统计漏斗数据。"""
+
     def _calc_rate(self, numerator: int, denominator: int) -> float:
         if denominator == 0:
             return 0.0

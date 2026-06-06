@@ -1,3 +1,5 @@
+"""离线模式路由模块，定义离线状态的切换与离线同步队列的 API 端点。"""
+
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, Query

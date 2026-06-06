@@ -1,3 +1,5 @@
+"""MDT解析服务，负责多学科团队辩论结果的共识分析与决策。"""
+
 import json
 import urllib.request
 from datetime import datetime
@@ -15,6 +17,8 @@ from shared.base import success
 
 
 class MdtResolver(BaseService):
+    """MDT解析服务，提供观点汇总、共识分析与决策生成功能。"""
+
     @staticmethod
     def _now() -> str:
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")

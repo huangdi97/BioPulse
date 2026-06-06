@@ -1,3 +1,5 @@
+"""商机因果归因路由。"""
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from starlette import status

@@ -1,3 +1,5 @@
+"""WebSocket 路由模块，定义WebSocket连接端点。"""
+
 import logging
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect

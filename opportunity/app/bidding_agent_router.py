@@ -1,3 +1,5 @@
+"""招投标Agent API 端点。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, Request

@@ -1,3 +1,5 @@
+"""管理员设置路由。"""
+
 import os
 import sqlite3
 

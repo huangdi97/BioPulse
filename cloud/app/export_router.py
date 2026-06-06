@@ -1,3 +1,5 @@
+"""数据导出路由。"""
+
 from typing import Any
 
 from fastapi import APIRouter, Depends

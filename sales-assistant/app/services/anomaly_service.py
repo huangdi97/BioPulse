@@ -1,3 +1,5 @@
+"""异常检测服务：规则管理、告警查询与监控统计。"""
+
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
@@ -6,6 +8,8 @@ from sales_assistant.app.services.base import BaseService
 
 
 class AnomalyService(BaseService):
+    """异常检测服务：自定义规则配置、自动检测异常并生成告警。"""
+
     def create_rule(self, body, user_id: int) -> int:
         now = datetime.now(timezone.utc).isoformat()
         repo = AnomalyRuleRepository(self.db)

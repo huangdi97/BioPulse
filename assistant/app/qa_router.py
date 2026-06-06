@@ -1,3 +1,5 @@
+"""问答路由模块，定义AI临床药学问答的 API 端点。"""
+
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request

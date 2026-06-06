@@ -1,3 +1,5 @@
+"""HCP路由：HCP、产品及关联关系管理的API端点。"""
+
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query

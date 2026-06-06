@@ -1,3 +1,5 @@
+"""科研路线规划路由：多点路径优化与距离/时间估算。"""
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
@@ -17,6 +19,8 @@ router = APIRouter(
 
 
 class PointItem(BaseModel):
+    """路线点。"""
+
     pi_id: int
     name: str
     lat: float
@@ -25,10 +29,14 @@ class PointItem(BaseModel):
 
 
 class OptimizeRequest(BaseModel):
+    """路线优化请求体。"""
+
     points: list[PointItem]
 
 
 class EstimateRequest(BaseModel):
+    """距离/时间估算请求体。"""
+
     from_lat: float
     from_lng: float
     to_lat: float

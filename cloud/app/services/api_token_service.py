@@ -1,3 +1,5 @@
+"""API Token 管理服务，负责创建、列表与撤销用户 API 令牌。"""
+
 import hashlib
 import secrets
 
@@ -8,6 +10,8 @@ from cloud.app.services.base import BaseService
 
 
 class ApiTokenService(BaseService):
+    """提供 API Token 的创建、查询与吊销功能。"""
+
     def create_token(self, name: str, user_id: int) -> dict:
         raw_token = secrets.token_urlsafe(32)
         token_hash = hashlib.sha256(raw_token.encode()).hexdigest()

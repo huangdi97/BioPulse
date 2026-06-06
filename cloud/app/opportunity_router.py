@@ -1,3 +1,5 @@
+"""商机管理路由。"""
+
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query

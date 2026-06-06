@@ -1,3 +1,5 @@
+"""策略路由：销售策略的CRUD、AI生成、对比与模拟API。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

@@ -1,3 +1,5 @@
+"""数字人记忆服务模块，管理训练记忆的保存、技能迁移与基准对比。"""
+
 from fastapi import HTTPException
 from starlette import status
 

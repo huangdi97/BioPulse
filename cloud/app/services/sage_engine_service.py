@@ -1,3 +1,5 @@
+"""Sage 引擎服务，负责多维记忆评分与热温冷分层进化管理。"""
+
 import json
 from datetime import datetime
 
@@ -12,6 +14,8 @@ from cloud.app.services.sage_linking import SageLinkingService
 
 
 class SageEngineService:
+    """Sage 引擎服务，提供多维记忆评分、热温冷分层与记忆进化管理。"""
+
     def __init__(self, db=None):
         self.db = db or get_research_db()
         self.repo = SageRepository(self.db)

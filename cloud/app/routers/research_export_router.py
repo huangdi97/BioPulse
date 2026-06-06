@@ -1,3 +1,5 @@
+"""科研导出路由：PI CSV 导出与报价单 JSON 导出。"""
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from starlette import status
 from starlette.responses import Response

@@ -1,3 +1,5 @@
+"""情报分析模块，提供市场情报的查询、分析与状态管理。"""
+
 import json
 import math
 import urllib.error
@@ -42,6 +44,8 @@ def itd(row, parse_ai=False) -> dict:
 
 
 class IntelAnalyzerMixin:
+    """情报分析混入类，提供情报条目的列表查询、详情获取与状态更新。"""
+
     def list_items(
         self,
         item_type: Optional[str] = None,

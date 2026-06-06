@@ -1,3 +1,5 @@
+"""隐私预算、隐私计算作业、传感器会话、效果指标等数据访问层。"""
+
 from cloud.shared.columns import (
     TABLE_EFFECT_METRICS_COLS,
     TABLE_PRIVACY_BUDGETS_COLS,
@@ -8,16 +10,22 @@ from cloud.shared.repository import BaseRepository
 
 
 class PrivacyBudgetsRepository(BaseRepository):
+    """隐私预算表。"""
+
     def __init__(self, db):
         super().__init__(db, "privacy_budgets", TABLE_PRIVACY_BUDGETS_COLS)
 
 
 class PrivacyComputeJobsRepository(BaseRepository):
+    """隐私计算作业表。"""
+
     def __init__(self, db):
         super().__init__(db, "privacy_compute_jobs", TABLE_PRIVACY_COMPUTE_JOBS_COLS)
 
 
 class SensorSessionsRepository(BaseRepository):
+    """传感器会话表。"""
+
     def __init__(self, db):
         super().__init__(db, "sensor_sessions", TABLE_SENSOR_SESSIONS_COLS)
 
@@ -31,6 +39,8 @@ class SensorSessionsRepository(BaseRepository):
 
 
 class EffectMetricsRepository(BaseRepository):
+    """效果指标表。"""
+
     def __init__(self, db):
         super().__init__(db, "effect_metrics", TABLE_EFFECT_METRICS_COLS)
 

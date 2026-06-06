@@ -1,3 +1,5 @@
+"""API 令牌管理。"""
+
 from typing import Any
 
 from fastapi import APIRouter, Depends

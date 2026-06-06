@@ -1,3 +1,5 @@
+"""数字人难度服务模块，根据会话表现动态调整训练难度。"""
+
 from fastapi import HTTPException
 from starlette import status
 

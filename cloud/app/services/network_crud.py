@@ -1,3 +1,5 @@
+"""网络CRUD模块，负责智能体细胞网络的注册、发现与拓扑管理。"""
+
 import json
 import uuid
 
@@ -6,6 +8,8 @@ from starlette import status
 
 
 class NetworkCrudMixin:
+    """网络CRUD混入类，提供智能体细胞的注册、自动发现与拓扑查询。"""
+
     def register_cell(self, agent_instance_key: str) -> dict:
         cell_key = f"cell:{uuid.uuid4().hex}"
         existing = self.db.execute(

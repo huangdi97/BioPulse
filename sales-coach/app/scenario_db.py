@@ -1,3 +1,5 @@
+"""场景数据库模块，从知识图谱读取药品和疾病实体数据。"""
+
 import os
 import sqlite3
 from typing import List

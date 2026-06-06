@@ -1,3 +1,5 @@
+"""跟台手术路由模块，定义手术提醒的增删改查与今日手术的 API 端点。"""
+
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Query

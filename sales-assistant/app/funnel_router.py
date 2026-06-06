@@ -1,3 +1,5 @@
+"""销售漏斗路由：漏斗分析数据API。"""
+
 from typing import Any
 
 from fastapi import APIRouter, Depends

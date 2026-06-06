@@ -1,3 +1,5 @@
+"""竞品情报路由。提供竞争对手综合情报和行业新闻动态的 API 端点。"""
+
 from fastapi import APIRouter, Query
 
 from pharma_intel.app.services.competitor_service import (

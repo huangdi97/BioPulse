@@ -1,3 +1,5 @@
+"""场景库模块，统一对外提供场景查询和模拟训练场景生成功能。"""
+
 from sales_coach.app.scenario_fetcher import FIXED_SCENARIOS  # noqa: F401
 from sales_coach.app.scenario_loader import ScenarioLoader
 from sales_coach.app.scenario_simulator import ScenarioSimulator

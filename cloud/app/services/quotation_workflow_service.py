@@ -1,3 +1,5 @@
+"""报价工作流服务，负责科研报价的提交、审批与驳回流程。"""
+
 import json
 from datetime import datetime, timezone
 

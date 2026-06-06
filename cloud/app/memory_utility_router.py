@@ -1,3 +1,5 @@
+"""记忆工具路由。"""
+
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 

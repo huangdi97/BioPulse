@@ -1,3 +1,5 @@
+"""制药情报路由。提供论文检索、PI 画像和靶点分类查询等核心情报 API。"""
+
 from fastapi import APIRouter, HTTPException, Query
 
 from pharma_intel.app.seed_data import papers, pi_profiles, targets

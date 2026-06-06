@@ -1,3 +1,5 @@
+"""产品路由：科研产品搜索、详情与创建。"""
+
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
@@ -8,6 +10,8 @@ router = APIRouter(prefix="/api/products", tags=["products"])
 
 
 class ProductCreate(BaseModel):
+    """产品创建请求体。"""
+
     name: str
     category: str = ""
     brand: str = ""

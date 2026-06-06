@@ -1,3 +1,5 @@
+"""PubMed 路由：关键词搜索与作者搜索。"""
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
@@ -8,6 +10,8 @@ router = APIRouter(prefix="/api/pubmed", tags=["pubmed"])
 
 
 class SearchRequest(BaseModel):
+    """PubMed 搜索请求体。"""
+
     keyword: str
     max_results: int = 20
 

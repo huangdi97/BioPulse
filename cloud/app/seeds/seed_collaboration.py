@@ -1,3 +1,5 @@
+"""种子数据：预设Agent技能与协作会话。"""
+
 import sqlite3
 
 

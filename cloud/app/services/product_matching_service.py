@@ -1,3 +1,5 @@
+"""产品匹配服务，基于 Jaccard 相似度对 PI 研究方向与方法描述进行产品匹配。"""
+
 import json
 import re
 from typing import Any

@@ -8,8 +8,12 @@ from starlette import status
 from opportunity.app.repositories import UserBookmarkRepository
 from opportunity.app.services.base import BaseService
 
+"""收藏管理服务，提供用户收藏的创建、查询与删除。"""
+
 
 class BookmarkService(BaseService):
+    """用户收藏管理：添加收藏（防重复）、分页列表、检查是否已收藏、软删除。"""
+
     def create_bookmark(self, body, user_id: int) -> int:
         repo = UserBookmarkRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()

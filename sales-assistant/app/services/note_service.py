@@ -1,3 +1,5 @@
+"""拜访笔记服务：日程关联笔记的创建、查阅与管理。"""
+
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
@@ -8,6 +10,8 @@ from sales_assistant.app.services.base import BaseService
 
 
 class NoteService(BaseService):
+    """拜访笔记服务：为日程记录拜访笔记，支持增删改查。"""
+
     def _check_schedule_exists(self, schedule_id: int) -> None:
         row = self.db.execute("SELECT id FROM schedule WHERE id = ?", (schedule_id,)).fetchone()
         if not row:

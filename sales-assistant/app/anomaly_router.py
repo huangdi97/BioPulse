@@ -1,3 +1,5 @@
+"""异常检测路由：异常规则与告警的CRUD接口。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

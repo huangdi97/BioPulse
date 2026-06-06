@@ -1,3 +1,5 @@
+"""HCP 管理服务模块。"""
+
 from typing import Optional
 
 from fastapi import HTTPException
@@ -8,6 +10,8 @@ from assistant.app.services.base import BaseService
 
 
 class HcpService(BaseService):
+    """HCP 管理服务，提供 HCP 的增删改查等业务操作。"""
+
     def create_hcp(self, body, user_id: int) -> dict:
         repo = HcpRepository(self.db)
         row_id = repo.create(

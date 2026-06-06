@@ -1,3 +1,5 @@
+"""多媒体服务模块。"""
+
 import json
 import logging
 import os
@@ -29,6 +31,8 @@ DOC_EXTS = {".pdf", ".docx"}
 
 
 class MediaService(BaseService):
+    """多媒体服务，提供文件上传、文本提取与AI分析。"""
+
     async def upload(self, file, user_id: int) -> dict:
         from fastapi import HTTPException
 

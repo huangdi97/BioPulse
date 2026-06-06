@@ -1,3 +1,5 @@
+"""SOAP 模板处理函数。"""
+
 from typing import Optional
 
 from fastapi import Depends

@@ -1,3 +1,5 @@
+"""销售助手应用入口：FastAPI应用组装、中间件与路由注册。"""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

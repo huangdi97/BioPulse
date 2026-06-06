@@ -1,3 +1,5 @@
+"""访前准备服务：基于客户数据生成AI驱动的拜访简报。"""
+
 import json
 import logging
 import urllib.error
@@ -24,6 +26,8 @@ SYSTEM_PROMPT = (
 
 
 class PrecallService(BaseService):
+    """访前准备服务：整合HCP、拜访记录等数据，生成个性化拜访简报。"""
+
     def _build_user_message(self, body, db_context: str = "") -> str:
         parts = [f"客户姓名：{body.customer_name}"]
         if body.hospital:

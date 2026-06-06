@@ -1,3 +1,5 @@
+"""SOAP 数据校验模型。"""
+
 from typing import Optional
 
 from pydantic import BaseModel

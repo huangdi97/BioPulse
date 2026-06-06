@@ -1,3 +1,5 @@
+"""管线竞争分析路由。提供按公司/适应症查询管线及活跃管线列表。"""
+
 from fastapi import APIRouter, Query
 
 from pharma_intel.app.services.pipeline_service import (

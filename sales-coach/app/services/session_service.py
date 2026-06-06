@@ -1,3 +1,5 @@
+"""会话服务模块，管理教练会话的创建、对话日志、评估与反思。"""
+
 import json
 from datetime import datetime, timezone
 from typing import Any, Dict, List
@@ -7,6 +9,8 @@ from sales_coach.app.services.base import BaseService
 
 
 class SessionService(BaseService):
+    """教练会话服务，处理会话生命周期、对话记录与评估更新。"""
+
     def _check_module_exists(self, module_id: int) -> None:
         ModuleRepository(self.db).get_active_or_404(module_id)
 

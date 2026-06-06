@@ -1,3 +1,5 @@
+"""会话路由模块，提供教练会话的创建、查询、对话记录管理及删除接口。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

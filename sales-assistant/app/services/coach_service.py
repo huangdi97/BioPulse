@@ -1,3 +1,5 @@
+"""教练服务：话术提示管理、AI教练建议与辅导会话。"""
+
 import json
 import logging
 import urllib.error
@@ -14,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class CoachService(BaseService):
+    """教练服务：管理销售话术模板、生成AI教练建议、跟踪辅导会话。"""
+
     def create_prompt(self, body, user_id: int) -> int:
         repo = PromptRepository(self.db)
         data = body.model_dump()

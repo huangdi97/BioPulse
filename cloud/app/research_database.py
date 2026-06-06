@@ -1,3 +1,5 @@
+"""研究数据库连接管理。"""
+
 import os
 import sqlite3
 

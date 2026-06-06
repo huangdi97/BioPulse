@@ -1,3 +1,5 @@
+"""Agent 运行时服务，管理 Agent 运行日志和审批流程。"""
+
 from fastapi import Depends
 
 from cloud.app.agent_database import (
@@ -8,6 +10,8 @@ from cloud.app.agent_database import (
 
 
 class AgentRuntimeService:
+    """提供 Agent 运行时日志查询、状态统计与审批管理功能。"""
+
     def __init__(self, db=Depends(get_agent_db)):
         self.db = db
 

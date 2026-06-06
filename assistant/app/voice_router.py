@@ -1,3 +1,5 @@
+"""语音路由模块，定义音频上传、语音对话与TTS合成的 API 端点。"""
+
 from typing import Optional
 
 from fastapi import (

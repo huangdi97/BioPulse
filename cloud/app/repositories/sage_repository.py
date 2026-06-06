@@ -1,7 +1,11 @@
+"""SAGE自进化记忆评分与演化日志数据访问层。"""
+
 from cloud.app.research_database import get_research_db
 
 
 class SageRepository:
+    """SAGE仓库，管理记忆评分、分层、演化日志等数据。"""
+
     def __init__(self, db=None):
         self.db = db or get_research_db()
 

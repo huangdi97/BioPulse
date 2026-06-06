@@ -1,3 +1,5 @@
+"""数据库模块：SQLite/PostgreSQL连接管理、表结构初始化与迁移。"""
+
 import os
 import sqlite3
 from typing import Generator

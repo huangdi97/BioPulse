@@ -1,3 +1,5 @@
+"""看板服务，管理任务看板、任务卡片及 Kanban 视图。"""
+
 from datetime import datetime
 from typing import Optional
 
@@ -41,6 +43,8 @@ def _task_to_dict(row) -> dict:
 
 
 class BoardService(BaseService):
+    """看板服务，提供看板 CRUD 及 Kanban 列视图。"""
+
     def _get_board_or_404(self, board_id: int):
         boards_repo = TaskBoardsRepository(self.db)
         rows = boards_repo.list_all(conditions=["id=?", "is_active=1"], params=[board_id])

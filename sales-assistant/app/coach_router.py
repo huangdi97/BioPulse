@@ -1,3 +1,5 @@
+"""教练路由：话术提示、AI建议与辅导会话的API端点。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

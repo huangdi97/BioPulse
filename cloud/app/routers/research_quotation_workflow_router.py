@@ -1,3 +1,5 @@
+"""科研报价审批流水线路由：提交、批准、驳回。"""
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
@@ -17,6 +19,8 @@ router = APIRouter(
 
 
 class RejectRequest(BaseModel):
+    """驳回请求体。"""
+
     reason: str
 
 

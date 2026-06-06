@@ -1,3 +1,5 @@
+"""多媒体路由模块，定义文件上传、查看与AI分析的 API 端点。"""
+
 from fastapi import APIRouter, Depends, File, Request, UploadFile
 
 from assistant.app.services.media_service import MediaService

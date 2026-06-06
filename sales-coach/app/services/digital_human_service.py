@@ -1,3 +1,5 @@
+"""数字人服务模块，管理数字人导练会话的创建、对话与评估。"""
+
 import json
 import os
 from datetime import datetime, timezone

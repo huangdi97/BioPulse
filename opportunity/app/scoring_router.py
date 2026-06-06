@@ -1,3 +1,5 @@
+"""线索评分 API。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

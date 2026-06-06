@@ -1,3 +1,5 @@
+"""市场情报路由。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, Request

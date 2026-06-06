@@ -1,3 +1,5 @@
+"""HCP 路由模块，定义 HCP 增删改查的 API 端点。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query

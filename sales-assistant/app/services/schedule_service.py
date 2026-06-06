@@ -1,3 +1,5 @@
+"""日程服务：销售日程的创建、查询、更新与删除。"""
+
 from datetime import datetime, timezone
 from typing import List, Optional
 
@@ -9,6 +11,8 @@ from sales_assistant.app.services.base import BaseService
 
 
 class ScheduleService(BaseService):
+    """日程服务：管理销售代表的工作日程与事件。"""
+
     def create_schedule(self, body, user_id: int) -> int:
         now = datetime.now(timezone.utc).isoformat()
         repo = ScheduleRepository(self.db)

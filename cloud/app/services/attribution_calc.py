@@ -1,3 +1,5 @@
+"""归因计算模块，负责商机归因得分刷新与反向模拟。"""
+
 import json
 from datetime import datetime, timedelta, timezone
 
@@ -86,6 +88,8 @@ def _calc_month_days(close_date: str) -> int:
 
 
 class AttributionCalcMixin:
+    """归因计算混入类，提供归因刷新、反向模拟及各因子打分方法。"""
+
     def refresh_attribution(self, opp_id: int) -> dict:
         opp = self.db.execute(
             "SELECT * FROM opportunities WHERE id=? AND is_active=1",

@@ -1,3 +1,5 @@
+"""总裁服务模块。提供全局概览、合规总览、团队排名和趋势报告。"""
+
 import httpx
 
 CLOUD_API = "http://localhost:8000"

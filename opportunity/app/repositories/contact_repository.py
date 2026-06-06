@@ -1,3 +1,5 @@
+"""联系记录与商机数据仓库。"""
+
 import sqlite3
 from datetime import datetime, timezone
 from typing import List
@@ -11,6 +13,8 @@ from shared.repository import BaseRepository
 
 
 class ContactRecordRepository(BaseRepository):
+    """联系记录数据仓库。"""
+
     def __init__(self, db: sqlite3.Connection):
         super().__init__(db, "contact_record", TABLE_CONTACT_RECORD_COLS)
 
@@ -46,6 +50,8 @@ class ContactRecordRepository(BaseRepository):
 
 
 class OpportunityRepository(BaseRepository):
+    """商机数据仓库。"""
+
     def __init__(self, db: sqlite3.Connection):
         super().__init__(db, "opportunity", TABLE_OPPORTUNITY_COLS)
 
@@ -75,6 +81,8 @@ class OpportunityRepository(BaseRepository):
 
 
 class ResearchTrailRepository(BaseRepository):
+    """科研轨迹数据仓库。"""
+
     def __init__(self, db: sqlite3.Connection):
         super().__init__(db, "research_trail", TABLE_RESEARCH_TRAIL_COLS)
 

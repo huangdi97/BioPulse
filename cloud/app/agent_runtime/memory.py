@@ -1,8 +1,12 @@
+"""Agent 记忆与脑状态管理模块。"""
+
 import json
 from datetime import datetime
 
 
 class AgentBrain:
+    """Agent 短期脑状态存储，支持键值对读写及 JSON/str/int/float 类型。"""
+
     def __init__(self, agent_db):
         self._agent_db = agent_db
 
@@ -55,6 +59,8 @@ class AgentBrain:
 
 
 class AgentMemory:
+    """Agent 长期记忆存储，支持按 session 存取及关键词搜索。"""
+
     def __init__(self, business_db):
         self._business_db = business_db
 

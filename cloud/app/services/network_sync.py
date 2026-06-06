@@ -1,3 +1,5 @@
+"""细胞网络同步混入类，负责细胞间任务路由与路由表同步。"""
+
 import json
 import uuid
 from datetime import datetime, timezone
@@ -7,6 +9,8 @@ from starlette import status
 
 
 class NetworkSyncMixin:
+    """细胞网络同步混入类，提供细胞间任务路由与路由表同步。"""
+
     def route_to_cell(self, source_key: str, target_key: str, task_data: dict) -> dict:
         source = self._get_cell(source_key)
         target = self._get_cell(target_key)

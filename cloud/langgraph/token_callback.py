@@ -1,9 +1,13 @@
+"""LangChain Token 用量回调，记录 LLM 调用 token 消耗并上报预算服务。"""
+
 from typing import Optional
 
 from langchain_core.callbacks import BaseCallbackHandler
 
 
 class TokenCallbackHandler(BaseCallbackHandler):
+    """监听 LLM 调用并累计 token 用量，可同步至预算服务。"""
+
     def __init__(self, user_id: Optional[str] = None, budget_service=None):
         self.user_id = user_id
         self.budget_service = budget_service

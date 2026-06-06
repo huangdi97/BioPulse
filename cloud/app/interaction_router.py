@@ -1,3 +1,5 @@
+"""拜访交互记录路由。"""
+
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query

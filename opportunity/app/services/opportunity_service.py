@@ -7,8 +7,12 @@ from starlette import status
 from opportunity.app.repositories import OpportunityRepository
 from opportunity.app.services.base import BaseService
 
+"""商机线索管理服务，负责商机的创建、列表、详情、更新与删除。"""
+
 
 class OpportunityService(BaseService):
+    """商机线索管理：创建、分页列表（支持阶段/产品/HCP筛选）、详情、更新、软删除。"""
+
     def create_opportunity(self, body, user_id: int) -> int:
         repo = OpportunityRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()

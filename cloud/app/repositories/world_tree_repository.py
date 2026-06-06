@@ -1,3 +1,5 @@
+"""世界树节点、快照等数据访问层。"""
+
 from cloud.shared.columns import (
     TABLE_WORLD_TREE_NODES_COLS,
     TABLE_WORLD_TREE_SNAPSHOTS_COLS,
@@ -6,6 +8,8 @@ from cloud.shared.repository import BaseRepository
 
 
 class WorldTreeNodesRepository(BaseRepository):
+    """世界树节点表。"""
+
     def __init__(self, db):
         super().__init__(db, "world_tree_nodes", TABLE_WORLD_TREE_NODES_COLS)
 
@@ -50,6 +54,8 @@ class WorldTreeNodesRepository(BaseRepository):
 
 
 class WorldTreeSnapshotsRepository(BaseRepository):
+    """世界树快照表。"""
+
     def __init__(self, db):
         super().__init__(db, "world_tree_snapshots", TABLE_WORLD_TREE_SNAPSHOTS_COLS)
 

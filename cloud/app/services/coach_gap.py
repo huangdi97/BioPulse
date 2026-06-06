@@ -1,3 +1,5 @@
+"""教练差距分析服务，通过 AI 分析培训效果归因并提供看板概览。"""
+
 import json
 import urllib.error
 import urllib.request
@@ -47,6 +49,8 @@ SESSION_COLS = [
 
 
 class CoachGap:
+    """教练差距类，利用 AI 分析培训指标变化并提供 Dashboard 概览。"""
+
     @staticmethod
     def _call_ai(system_prompt: str, user_prompt: str) -> str:
         api_key = settings.deepseek_api_key

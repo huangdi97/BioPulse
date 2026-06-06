@@ -1,3 +1,5 @@
+"""LangGraph 测试路由：用于验证图编排流水线的测试端点。"""
+
 import uuid
 
 from fastapi import APIRouter
@@ -7,6 +9,8 @@ router = APIRouter(prefix="/api/langgraph", tags=["langgraph"])
 
 
 class TestRequest(BaseModel):
+    """测试请求体。"""
+
     input_message: str = ""
 
 

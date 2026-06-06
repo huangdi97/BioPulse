@@ -11,7 +11,12 @@ from opportunity.app.services.base import BaseService
 AI_GATEWAY_URL = "http://localhost:8000/ai/chat"
 
 
+"""趋势分析服务，按研究主题聚合数据并通过LLM预测科研趋势。"""
+
+
 class TrendService(BaseService):
+    """趋势分析：按主题聚合时间序列数据、调用LLM预测趋势、保存分析历史。"""
+
     def _call_llm(self, auth_header: str, prompt: str, system_prompt: str = "") -> str:
         messages = []
         if system_prompt:

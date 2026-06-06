@@ -1,3 +1,5 @@
+"""客户管理服务，负责客户档案的创建、更新与查询。"""
+
 import json
 from datetime import datetime
 from typing import List, Optional
@@ -12,6 +14,8 @@ from shared.columns import TABLE_CUSTOMERS_COLS
 
 
 class CustomerService(BaseService):
+    """客户服务，提供客户信息的增删改查功能。"""
+
     def _get_customer_or_404(self, repo: CustomersRepository, customer_id: int) -> dict:
         row = repo.get_by_id(customer_id)
         if not row or row.get("status") != "active":

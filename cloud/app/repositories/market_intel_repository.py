@@ -1,3 +1,5 @@
+"""市场情报条目、数据源、MCP工具等数据访问层。"""
+
 from cloud.shared.columns import (
     TABLE_MARKET_INTEL_ITEMS_COLS,
     TABLE_MARKET_INTEL_SOURCES_COLS,
@@ -7,6 +9,8 @@ from cloud.shared.repository import BaseRepository
 
 
 class MarketIntelItemsRepository(BaseRepository):
+    """市场情报条目表。"""
+
     def __init__(self, db):
         super().__init__(db, "market_intel_items", TABLE_MARKET_INTEL_ITEMS_COLS)
 
@@ -88,6 +92,8 @@ class MarketIntelItemsRepository(BaseRepository):
 
 
 class MarketIntelSourcesRepository(BaseRepository):
+    """市场情报数据源表。"""
+
     def __init__(self, db):
         super().__init__(db, "market_intel_sources", TABLE_MARKET_INTEL_SOURCES_COLS)
 
@@ -111,6 +117,8 @@ class MarketIntelSourcesRepository(BaseRepository):
 
 
 class McpToolsRepository(BaseRepository):
+    """MCP工具表。"""
+
     def __init__(self, db):
         super().__init__(db, "mcp_tools", TABLE_MCP_TOOLS_COLS)
 

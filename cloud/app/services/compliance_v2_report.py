@@ -1,3 +1,5 @@
+"""合规 V2 报告模块，提供审计复核、审计链查验、纠偏训练与仪表盘。"""
+
 import hashlib
 import json
 import math
@@ -46,6 +48,8 @@ def _call_ai(messages: list[dict], auth_header: str) -> dict:
 
 
 class ReportGenerator(BaseService):
+    """报告生成器，提供记录复核、哈希链审计、AI 纠偏训练及统计仪表盘。"""
+
     def __init__(self, db):
         super().__init__(db)
 

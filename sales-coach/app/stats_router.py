@@ -1,3 +1,5 @@
+"""统计路由模块，提供教练数据的聚合统计、趋势、团队对比及雷达图接口。"""
+
 from typing import List
 
 from fastapi import APIRouter, Depends, Query

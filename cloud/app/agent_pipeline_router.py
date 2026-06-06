@@ -1,3 +1,5 @@
+"""Agent 流水线编排路由。"""
+
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 from starlette import status

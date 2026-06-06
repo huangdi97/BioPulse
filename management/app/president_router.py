@@ -1,3 +1,5 @@
+"""总裁视图路由。提供全局概览、合规总览、团队排名和趋势报告。"""
+
 from fastapi import APIRouter
 
 from management.app.services.president_service import (

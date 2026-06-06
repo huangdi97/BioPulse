@@ -1,3 +1,5 @@
+"""种子数据：预设Agent角色与流水线。"""
+
 import sqlite3
 
 

@@ -1,3 +1,5 @@
+"""销售机会服务，负责机会的增删改查、阶段流转与销售漏斗分析。"""
+
 from datetime import datetime
 from typing import Optional
 
@@ -15,6 +17,8 @@ STAGE_ORDER = ["lead", "qualify", "proposal", "negotiation", "won", "lost"]
 
 
 class OpportunityService(BaseService):
+    """销售机会服务，提供机会的增删改查、阶段流转与销售漏斗分析。"""
+
     def _stage_probability(self, stage: str) -> int:
         mapping = {
             "lead": 10,

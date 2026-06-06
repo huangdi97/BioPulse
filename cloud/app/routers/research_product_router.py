@@ -1,3 +1,5 @@
+"""科研产品路由：产品搜索与详情查询。"""
+
 from fastapi import APIRouter, Depends, Query
 
 from cloud.app.services.research_product_service import ResearchProductService

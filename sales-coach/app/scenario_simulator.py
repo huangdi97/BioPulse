@@ -1,3 +1,5 @@
+"""场景模拟器模块，基于知识图谱实体动态生成训练场景。"""
+
 import json
 import sqlite3
 from datetime import datetime, timezone

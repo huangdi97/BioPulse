@@ -1,7 +1,11 @@
+"""成本管控模块，按 token 用量估算并限制 LLM 调用成本。"""
+
 from cloud.app.services.token_budget_service import TokenBudgetService
 
 
 class CostGovernor:
+    """LLM 调用成本控制器，累计 token 消耗并在超预算时阻止调用。"""
+
     def __init__(self, max_cost: float = 0.50, model: str = "deepseek-chat"):
         self._max_cost = max_cost
         self._model = model

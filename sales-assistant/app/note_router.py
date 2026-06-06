@@ -1,3 +1,5 @@
+"""笔记路由：拜访笔记的CRUD接口。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

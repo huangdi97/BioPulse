@@ -1,3 +1,5 @@
+"""数据仓库层：各业务表的Repository实现，封装数据库操作。"""
+
 import sqlite3
 from typing import List
 

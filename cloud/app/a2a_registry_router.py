@@ -1,3 +1,5 @@
+"""Agent-to-Agent 注册与心跳路由。"""
+
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 

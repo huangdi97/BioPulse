@@ -1,3 +1,5 @@
+"""演示仪表板路由：概览、用户统计、合规统计、拜访趋势等。"""
+
 from fastapi import APIRouter, Depends
 
 from cloud.app.services.compliance_service import ComplianceService

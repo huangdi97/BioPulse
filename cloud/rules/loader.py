@@ -1,3 +1,5 @@
+"""规则文件加载器：签名校验 + LRU 缓存 JSON 读取。"""
+
 import functools
 import hashlib
 import json

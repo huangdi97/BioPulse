@@ -1,3 +1,5 @@
+"""数字人核心模块，提供合规检查、对话模拟与场景初始化功能。"""
+
 from typing import List
 
 import httpx

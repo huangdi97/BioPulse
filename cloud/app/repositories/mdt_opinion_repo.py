@@ -1,3 +1,5 @@
+"""SOAP决策、模板、决策案例、因果分析、因果图、反事实、跨案例洞察、协作等数据访问层。"""
+
 from datetime import datetime
 
 from cloud.shared.columns import (
@@ -15,6 +17,8 @@ from cloud.shared.repository import BaseRepository
 
 
 class SoapDecisionsRepository(BaseRepository):
+    """SOAP决策表。"""
+
     def __init__(self, db):
         super().__init__(db, "soap_decisions", TABLE_SOAP_DECISIONS_COLS)
 
@@ -59,6 +63,8 @@ class SoapDecisionsRepository(BaseRepository):
 
 
 class SoapTemplatesRepository(BaseRepository):
+    """SOAP模板表。"""
+
     def __init__(self, db):
         super().__init__(db, "soap_templates", TABLE_SOAP_TEMPLATES_COLS)
 
@@ -72,6 +78,8 @@ class SoapTemplatesRepository(BaseRepository):
 
 
 class DecisionCasesRepository(BaseRepository):
+    """决策案例表。"""
+
     def __init__(self, db):
         super().__init__(db, "decision_cases", TABLE_DECISION_CASES_COLS)
 
@@ -167,6 +175,8 @@ class DecisionCasesRepository(BaseRepository):
 
 
 class CausalAnalysesRepository(BaseRepository):
+    """因果分析表。"""
+
     def __init__(self, db):
         super().__init__(db, "causal_analyses", TABLE_CAUSAL_ANALYSES_COLS)
 
@@ -185,16 +195,22 @@ class CausalAnalysesRepository(BaseRepository):
 
 
 class CausalGraphsRepository(BaseRepository):
+    """因果图表。"""
+
     def __init__(self, db):
         super().__init__(db, "causal_graphs", TABLE_CAUSAL_GRAPHS_COLS)
 
 
 class CounterfactualScenariosRepository(BaseRepository):
+    """反事实场景表。"""
+
     def __init__(self, db):
         super().__init__(db, "counterfactual_scenarios", TABLE_COUNTERFACTUAL_SCENARIOS_COLS)
 
 
 class CrossCaseInsightsRepository(BaseRepository):
+    """跨案例洞察表。"""
+
     def __init__(self, db):
         super().__init__(db, "cross_case_insights", TABLE_CROSS_CASE_INSIGHTS_COLS)
 
@@ -237,10 +253,14 @@ class CrossCaseInsightsRepository(BaseRepository):
 
 
 class CollaborationSessionsRepository(BaseRepository):
+    """协作会话表。"""
+
     def __init__(self, db):
         super().__init__(db, "collaboration_sessions", TABLE_COLLABORATION_SESSIONS_COLS)
 
 
 class CollaborationStepsRepository(BaseRepository):
+    """协作步骤表。"""
+
     def __init__(self, db):
         super().__init__(db, "collaboration_steps", TABLE_COLLABORATION_STEPS_COLS)

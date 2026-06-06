@@ -1,3 +1,5 @@
+"""联邦学习节点路由。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

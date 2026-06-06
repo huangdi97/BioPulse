@@ -1,3 +1,5 @@
+"""路由规则管理。"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

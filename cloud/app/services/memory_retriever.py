@@ -1,3 +1,5 @@
+"""记忆检索服务，负责工作记忆、情景记忆与语义记忆的查询。"""
+
 import json
 from datetime import datetime
 from typing import Optional
@@ -23,6 +25,8 @@ def _n404(name: str = "Resource") -> HTTPException:
 
 
 class MemoryRetriever(BaseService):
+    """记忆检索服务，提供工作记忆槽位查询、情景记忆列表与语义搜索。"""
+
     def __init__(self, db):
         super().__init__(db)
 

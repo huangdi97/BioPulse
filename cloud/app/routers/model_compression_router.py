@@ -1,3 +1,5 @@
+"""模型压缩路由：量化/张量分解压缩类型查询、作业管理与策略对比。"""
+
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -19,7 +21,8 @@ router = APIRouter(
 
 
 class CompressRequest(BaseModel):
-    model_name: str
+    """模型压缩请求体。"""
+
     compression_type: str
 
 

@@ -1,3 +1,5 @@
+"""决策分析师，管理决策案例。"""
+
 from typing import Optional
 
 from cloud.app.services.decision_intel_service import DecisionIntelService

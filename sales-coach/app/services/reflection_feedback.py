@@ -1,3 +1,5 @@
+"""反思反馈模块，根据评分结果生成改进建议并推荐训练场景。"""
+
 from typing import Optional
 
 

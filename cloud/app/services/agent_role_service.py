@@ -1,3 +1,5 @@
+"""Agent 角色服务，管理 Agent 角色的增删改查（含系统提示词与参数配置）。"""
+
 from datetime import datetime
 from typing import Optional
 

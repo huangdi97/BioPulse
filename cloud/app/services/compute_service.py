@@ -1,4 +1,6 @@
 # FROZEN — 代码保留不迭代。参见一云四端-整体战略规划-v2.3-final.md 第2章
+"""隐私计算服务，管理安全计算任务、联邦学习轮次与贡献审计。"""
+
 import json
 from datetime import datetime
 from typing import Optional
@@ -56,6 +58,8 @@ def _round_to_dict(row) -> dict:
 
 
 class ComputeService(BaseService):
+    """隐私计算服务，提供可信计算任务、联邦学习及贡献验证功能。"""
+
     def create_job(self, compute_type: str, sensitivity_level: str, data_summary: str, user_id: int) -> dict:
         repo = PrivacyComputeJobsRepository(self.db)
         job_id = f"pc:{uuid4()}"

@@ -1,3 +1,5 @@
+"""种子数据：Agent-to-Agent 通信注册与任务调度。"""
+
 import sqlite3
 
 

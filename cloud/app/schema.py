@@ -1,3 +1,5 @@
+"""数据库 DDL 模式定义。"""
+
 SCHEMA_SQL = """
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

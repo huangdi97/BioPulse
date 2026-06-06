@@ -1,3 +1,5 @@
+"""决策智能路由，挂载分析与报告子路由。"""
+
 from fastapi import APIRouter
 
 from cloud.app.analysis_handler import analysis_router

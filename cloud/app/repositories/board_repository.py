@@ -1,3 +1,5 @@
+"""任务看板、看板任务、团队等数据访问层。"""
+
 from cloud.shared.columns import (
     TABLE_BOARD_TASKS_COLS,
     TABLE_TASK_BOARDS_COLS,
@@ -7,6 +9,8 @@ from cloud.shared.repository import BaseRepository
 
 
 class TaskBoardsRepository(BaseRepository):
+    """任务看板表。"""
+
     def __init__(self, db):
         super().__init__(db, "task_boards", TABLE_TASK_BOARDS_COLS)
 
@@ -20,6 +24,8 @@ class TaskBoardsRepository(BaseRepository):
 
 
 class BoardTasksRepository(BaseRepository):
+    """看板任务表。"""
+
     def __init__(self, db):
         super().__init__(db, "board_tasks", TABLE_BOARD_TASKS_COLS)
 
@@ -56,5 +62,7 @@ class BoardTasksRepository(BaseRepository):
 
 
 class TeamsRepository(BaseRepository):
+    """团队表。"""
+
     def __init__(self, db):
         super().__init__(db, "teams", TABLE_TEAMS_COLS)
