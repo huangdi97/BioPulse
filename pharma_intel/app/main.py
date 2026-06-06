@@ -13,21 +13,21 @@ from pharma_intel.app.intel_router import router as intel_router
 from pharma_intel.app.kol_router import router as kol_router
 from pharma_intel.app.pipeline_router import router as pipeline_router
 from pharma_intel.app.target_router import router as target_router
+from shared.app_settings import settings
 from shared.exception_handlers import register_exception_handlers
 from shared.middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 
 START_TIME = time.time()
-CLOUD_API_BASE = "http://localhost:8000"
 
 setup_logging("pharma_intel")
 
 app = FastAPI(
-    title="制药情报服务 · Pharma Intel",
-    version="1.0.0",
+    title=settings.app_name,
+    version=settings.version,
     description="KOL学术影响力追踪、靶点研究监控、管线竞争分析、竞品情报聚合、学术会议追踪",
 )
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(RequestIDMiddleware)
 register_exception_handlers(app)
 

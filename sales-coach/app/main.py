@@ -13,18 +13,19 @@ from sales_coach.app.scenario_router import router as scenario_router
 from sales_coach.app.session_router import router as session_router
 from sales_coach.app.stats_router import router as stats_router
 from sales_coach.app.stats_router import stats_root_router
+from shared.app_settings import settings
 from shared.exception_handlers import register_exception_handlers
 from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
 from shared.structured_logging import setup_logging
 
-app = FastAPI(title="Sales Coach Service", version="1.0.0")
+app = FastAPI(title=settings.app_name, version=settings.version)
 
 setup_logging("sales_coach")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

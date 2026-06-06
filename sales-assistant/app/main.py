@@ -17,18 +17,19 @@ from sales_assistant.app.precall_router import router as precall_router
 from sales_assistant.app.schedule_router import router as schedule_router
 from sales_assistant.app.strategy_router import router as strategy_router
 from sales_assistant.app.strategy_router import strategy_root_router
+from shared.app_settings import settings
 from shared.exception_handlers import register_exception_handlers
 from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
 from shared.structured_logging import setup_logging
 
-app = FastAPI(title="Sales Assistant Service", version="1.0.0")
+app = FastAPI(title=settings.app_name, version=settings.version)
 
 setup_logging("sales_assistant")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

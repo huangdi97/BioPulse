@@ -22,18 +22,19 @@ from assistant.app.visit_router import router as visit_router
 from assistant.app.visit_router import visit_alias_router
 from assistant.app.voice_router import router as voice_router
 from assistant.app.ws_router import router as ws_router
+from shared.app_settings import settings
 from shared.exception_handlers import register_exception_handlers
 from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
 from shared.structured_logging import setup_logging
 
-app = FastAPI(title="Assistant Service", version="1.0.0")
+app = FastAPI(title=settings.app_name, version=settings.version)
 
 setup_logging("assistant")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

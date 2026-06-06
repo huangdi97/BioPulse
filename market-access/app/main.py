@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from market_access.app.bidding_router import router as bidding_router
 from market_access.app.formulary_router import router as formulary_router
 from market_access.app.strategy_router import router as strategy_router
+from shared.app_settings import settings
 from shared.middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 
@@ -15,8 +16,8 @@ START_TIME = time.time()
 setup_logging("market-access")
 
 app = FastAPI(
-    title="MarketAccess · 准入策略服务",
-    version="1.0.0",
+    title=settings.app_name,
+    version=settings.version,
     description="医保目录查询、准入策略分析、报销信息查询",
 )
 app.add_middleware(RequestIDMiddleware)

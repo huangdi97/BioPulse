@@ -20,6 +20,7 @@ from opportunity.app.research_router import router as research_router
 from opportunity.app.scoring_router import router as scoring_router
 from opportunity.app.stats_router import router as stats_router
 from opportunity.app.trend_router import router as trend_router
+from shared.app_settings import settings
 from shared.exception_handlers import register_exception_handlers
 from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
@@ -27,11 +28,11 @@ from shared.structured_logging import setup_logging
 
 setup_logging("opportunity")
 
-app = FastAPI(title="Opportunity Service", version="1.0.0")
+app = FastAPI(title=settings.app_name, version=settings.version)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

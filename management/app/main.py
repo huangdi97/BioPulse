@@ -7,19 +7,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 
+from shared.app_settings import settings
 from shared.exception_handlers import register_exception_handlers
 from shared.middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 
 setup_logging("management")
 
-app = FastAPI(title="管理端 · Management Portal", version="1.0.0")
+app = FastAPI(title=settings.app_name, version=settings.version)
 
 app.add_middleware(RequestIDMiddleware)
 register_exception_handlers(app)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

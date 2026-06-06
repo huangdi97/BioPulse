@@ -7,13 +7,14 @@ from fastapi import FastAPI
 from clinical_ops.app.monitoring_router import router as monitoring_router
 from clinical_ops.app.recruitment_router import router as recruitment_router
 from clinical_ops.app.site_router import router as site_router
+from shared.app_settings import settings
 from shared.middleware import RequestIDMiddleware
 
 START_TIME = time.time()
 
 app = FastAPI(
-    title="ClinicalOps · 临床试验运营",
-    version="1.0.0",
+    title=settings.app_name,
+    version=settings.version,
     description="中心筛选、患者招募、监察报告管理",
 )
 app.add_middleware(RequestIDMiddleware)

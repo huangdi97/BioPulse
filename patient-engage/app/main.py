@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from patient_engage.app.education_router import router as education_router
 from patient_engage.app.followup_router import router as followup_router
 from patient_engage.app.reminder_router import router as reminder_router
+from shared.app_settings import settings
 from shared.middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 
@@ -15,8 +16,8 @@ START_TIME = time.time()
 setup_logging("patient-engage")
 
 app = FastAPI(
-    title="PatientEngage · 患者服务",
-    version="1.0.0",
+    title=settings.app_name,
+    version=settings.version,
     description="患者教育、用药提醒、随访管理",
 )
 app.add_middleware(RequestIDMiddleware)
