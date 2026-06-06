@@ -118,5 +118,5 @@ def clean_test_tables(tables: list):
                 try:
                     conn.execute(f"DELETE FROM {t}")
                 except sqlite3.OperationalError:
-                    pass
+                    pass  # 兼容操作：表可能已被删除或无数据
             conn.commit()

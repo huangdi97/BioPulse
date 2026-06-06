@@ -30,13 +30,13 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Attempt login with [username] and [password].
-  Future<bool> login(String username, String password) async {
+  Future<bool> login(String username, String password, {String scope = 'visit'}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final data = await _authService.login(username, password);
+      final data = await _authService.login(username, password, scope: scope);
       if (data != null) {
         _user = data;
         _isLoggedIn = true;
@@ -55,6 +55,16 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  /// Switch the current user's scope (mode) via backend API.
+  Future<bool> switchModeWithScope(String newScope) async {
+    final success = await _authService.switchScope(newScope);
+    if (success) {
+      _user = await _authService.getUser();
+      notifyListeners();
+    }
+    return success;
   }
 
   /// Log out and clear all user state.

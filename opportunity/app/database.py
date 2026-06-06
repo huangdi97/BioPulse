@@ -47,5 +47,5 @@ def init_db() -> None:
             conn.execute("ALTER TABLE opportunity ADD COLUMN heat_score INTEGER DEFAULT 0")
             conn.commit()
         except sqlite3.OperationalError:
-            pass
+            pass  # 兼容操作：列已存在时跳过
         conn.close()

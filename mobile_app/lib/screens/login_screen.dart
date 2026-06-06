@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:one_cloud_app/providers/auth_provider.dart';
+import 'package:one_cloud_app/providers/mode_provider.dart';
 import 'package:one_cloud_app/services/sync_service.dart';
 
 /// Login screen with username/password fields and loading state.
@@ -22,6 +23,22 @@ class _LoginScreenState extends State<LoginScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  AppMode _selectedMode = AppMode.pharma;
+
+  String _scopeFromMode(AppMode mode) {
+    switch (mode) {
+      case AppMode.pharma:
+        return 'pharma';
+      case AppMode.surgery:
+        return 'surgery';
+      case AppMode.opportunity:
+        return 'opportunity';
+      case AppMode.salesCoach:
+        return 'salesCoach';
+      case AppMode.research:
+        return 'research';
+    }
+  }
 
   @override
   void dispose() {
@@ -47,6 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final success = await auth.login(
       _usernameController.text.trim(),
       _passwordController.text,
+      scope: _scopeFromMode(_selectedMode),
     );
 
     if (success && mounted) {
@@ -139,6 +157,24 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     validator: (v) =>
                         v == null || v.isEmpty ? '请输入密码' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<AppMode>(
+                    value: _selectedMode,
+                    decoration: const InputDecoration(
+                      labelText: '登录模式',
+                      prefixIcon: Icon(Icons.swap_horiz),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: AppMode.pharma, child: Text('医药模式')),
+                      DropdownMenuItem(value: AppMode.surgery, child: Text('手术模式')),
+                      DropdownMenuItem(value: AppMode.opportunity, child: Text('商机模式')),
+                      DropdownMenuItem(value: AppMode.salesCoach, child: Text('销售教练模式')),
+                      DropdownMenuItem(value: AppMode.research, child: Text('研究模式')),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) setState(() => _selectedMode = v);
+                    },
                   ),
                   const SizedBox(height: 24),
                   Consumer<AuthProvider>(

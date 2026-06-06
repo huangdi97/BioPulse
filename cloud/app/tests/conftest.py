@@ -47,7 +47,7 @@ def app():
                 conn.execute("ALTER TABLE users ADD COLUMN updated_at TEXT")
                 conn.commit()
             except sqlite3.OperationalError:
-                pass
+                pass  # 兼容操作：列已存在时跳过
 
     os.environ["RATE_LIMIT_DISABLE"] = "1"
 

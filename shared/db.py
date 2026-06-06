@@ -1,4 +1,8 @@
+import logging
+
 from shared.config import settings
+
+logger = logging.getLogger(__name__)
 
 DATABASE_URL = settings.DATABASE_URL
 
@@ -104,6 +108,6 @@ class PGCompatConnection:
                 try:
                     cur.execute(stmt)
                 except Exception as e:
-                    print(f"[PGCompatConnection] Skipping statement: {e}")
+                    logger.warning(f"[PGCompatConnection] Skipping statement: {e}")
         cur.close()
         self._conn.commit()

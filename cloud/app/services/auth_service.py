@@ -63,6 +63,19 @@ class AuthService(BaseService):
             "role": role,
         }
 
+    def change_password(self, username: str, old_password: str, new_password: str) -> None:
+        users_repo = UsersRepository(self.db)
+        rows = users_repo.list_all(conditions=["username=?"], params=[username])
+        if not rows:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="User not found")
+
+        row = rows[0]
+        if not verify_password(old_password, row["hashed_password"]):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Old password is incorrect")
+
+        hashed = hash_password(new_password)
+        users_repo.update(row["id"], {"hashed_password": hashed})
+
     def refresh(self, refresh_token: str) -> dict:
         payload = verify_token(refresh_token)
         if payload.get("type") != "refresh":

@@ -14,7 +14,7 @@ class RuntimeHelper:
         try:
             self._agent_db.execute("ALTER TABLE agent_runtime_logs ADD COLUMN cost_data TEXT DEFAULT '{}'")
         except Exception:
-            pass
+            logger.warning("agent_runtime_logs.cost_data already exists, skipping migration")
         self._agent_db.execute(
             "INSERT INTO agent_runtime_logs (agent_key, goal, status, iterations, tool_calls, log_detail, "
             "started_at, completed_at, trace_id, cost_data) "
@@ -38,7 +38,7 @@ class RuntimeHelper:
         try:
             self._snapshot_manager.save(agent_key, step, plan, results, context, status)
         except Exception:
-            pass
+            logger.exception("Failed to save snapshot for agent %s at step %s", agent_key, step)
 
     def _restore_from_snapshot(self, snapshot_id):
         data = self._snapshot_manager.load(snapshot_id)

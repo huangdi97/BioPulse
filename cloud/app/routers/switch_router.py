@@ -3,8 +3,7 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
-from shared.auth import create_access_token
-from shared.auth_scope import require_scope
+from shared.auth import create_access_token, get_current_user
 
 router = APIRouter(prefix="/auth", tags=["模式切换"])
 
@@ -12,7 +11,7 @@ router = APIRouter(prefix="/auth", tags=["模式切换"])
 class ModeSwitchRequest(BaseModel):
     """模式切换请求体。"""
 
-    new_scope: str = Field(..., pattern="^(visit|research)$")
+    new_scope: str = Field(..., pattern="^(pharma|research|surgery|opportunity|salesCoach|visit)$")
 
 
 class ModeSwitchResponse(BaseModel):
@@ -21,12 +20,13 @@ class ModeSwitchResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     scope: str
+    role: str
 
 
 @router.post("/switch-mode", summary="切换用户模式", description="在visit和research模式之间切换并签发新Token")
 def switch_mode(
     body: ModeSwitchRequest,
-    current_user: dict = Depends(require_scope("visit")),
+    current_user: dict = Depends(get_current_user),
 ):
     user_id = current_user.get("id") or current_user.get("sub")
     role = current_user.get("role", "rep")
@@ -35,4 +35,5 @@ def switch_mode(
         "access_token": new_token,
         "token_type": "bearer",
         "scope": body.new_scope,
+        "role": role,
     }

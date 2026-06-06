@@ -35,11 +35,30 @@ class _HomeScreenState extends State<HomeScreen> {
     AppMode.research: '研究模式',
   };
 
+  String _scopeFromMode(AppMode mode) {
+    switch (mode) {
+      case AppMode.pharma:
+        return 'pharma';
+      case AppMode.surgery:
+        return 'surgery';
+      case AppMode.opportunity:
+        return 'opportunity';
+      case AppMode.salesCoach:
+        return 'salesCoach';
+      case AppMode.research:
+        return 'research';
+    }
+  }
+
   void _onItemTapped(int index) => setState(() => _currentIndex = index);
 
   Future<void> _switchMode(AppMode mode) async {
-    await context.read<ModeProvider>().switchMode(mode);
-    setState(() => _currentIndex = 0);
+    final auth = context.read<AuthProvider>();
+    final success = await auth.switchModeWithScope(_scopeFromMode(mode));
+    if (success) {
+      await context.read<ModeProvider>().switchMode(mode);
+      setState(() => _currentIndex = 0);
+    }
   }
 
   Future<void> _logout() async {

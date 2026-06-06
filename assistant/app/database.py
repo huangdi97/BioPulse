@@ -45,7 +45,7 @@ def migrate_db() -> None:
         try:
             c.execute(f"ALTER TABLE surgery_reminder ADD COLUMN {col}")
         except sqlite3.OperationalError:
-            pass
+            pass  # 兼容操作：列已存在时跳过
     conn.commit()
     conn.close()
 

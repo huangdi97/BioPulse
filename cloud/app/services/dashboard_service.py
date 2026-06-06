@@ -1,7 +1,5 @@
 """仪表盘服务，提供概览统计与合规分析数据。"""
 
-from datetime import date, timedelta
-
 from cloud.app.repositories import (
     AuditLogsRepository,
     ContentsRepository,
@@ -90,153 +88,75 @@ class DashboardService(BaseService):
             "daily_trend": [dict(r) for r in reversed(daily_trend)],
         }
 
-    def get_visit_trends(self) -> dict:
-        today = date.today()
-        dates = []
-        counts = []
-        pass_rates = []
-        for i in range(30):
-            day = today - timedelta(days=29 - i)
-            dates.append(day.isoformat())
-            count = 80 + int(40 * i / 29)
-            counts.append(count)
-            pass_rate = round(90.0 + 9.0 * i / 29, 1)
-            pass_rates.append(pass_rate)
-        return {"dates": dates, "counts": counts, "pass_rates": pass_rates}
+    def get_visit_trends(self) -> list:
+        rows = self.db.execute(
+            "SELECT DATE(created_at) as date, COUNT(*) as count "
+            "FROM visits "
+            "WHERE created_at >= DATE('now', '-30 days') "
+            "GROUP BY DATE(created_at) "
+            "ORDER BY date ASC"
+        ).fetchall()
+        return [{"date": r["date"], "count": r["count"]} for r in rows]
 
-    def get_team_ranks(self) -> dict:
-        members = [
-            {"name": "张伟", "visits": 328, "compliance_rate": 98.5, "deals": 45},
-            {"name": "李娜", "visits": 305, "compliance_rate": 97.2, "deals": 42},
-            {"name": "王强", "visits": 298, "compliance_rate": 96.8, "deals": 38},
-            {"name": "刘芳", "visits": 285, "compliance_rate": 99.1, "deals": 36},
-            {"name": "陈静", "visits": 272, "compliance_rate": 95.4, "deals": 33},
-            {"name": "赵明", "visits": 260, "compliance_rate": 94.8, "deals": 30},
-            {"name": "孙丽", "visits": 245, "compliance_rate": 93.5, "deals": 28},
-            {"name": "周杰", "visits": 230, "compliance_rate": 92.1, "deals": 25},
-        ]
-        return {"ranks": members}
+    def get_team_ranks(self) -> list:
+        rows = self.db.execute(
+            "SELECT t.name as team_name, "
+            "COUNT(DISTINCT ut.user_id) as score, "
+            "COUNT(DISTINCT ut.user_id) as member_count "
+            "FROM teams t "
+            "LEFT JOIN user_team ut ON t.id = ut.team_id "
+            "WHERE t.is_active = 1 "
+            "GROUP BY t.id "
+            "ORDER BY score DESC"
+        ).fetchall()
+        return [dict(r) for r in rows]
 
-    def get_violations(self) -> dict:
-        violations = [
-            {
-                "id": 1,
-                "rep_name": "张伟",
-                "type": "拜访记录缺失",
-                "detail": "未能按时提交拜访报告",
-                "severity": "high",
-                "date": "2025-05-28",
-                "status": "pending",
-            },
-            {
-                "id": 2,
-                "rep_name": "李娜",
-                "type": "合规评分不达标",
-                "detail": "产品推广材料未通过合规审核",
-                "severity": "medium",
-                "date": "2025-05-27",
-                "status": "resolved",
-            },
-            {
-                "id": 3,
-                "rep_name": "王强",
-                "type": "超次数拜访",
-                "detail": "单日拜访次数超出规定上限",
-                "severity": "low",
-                "date": "2025-05-25",
-                "status": "resolved",
-            },
-            {
-                "id": 4,
-                "rep_name": "刘芳",
-                "type": "会议签到缺失",
-                "detail": "学术会议未按要求签到",
-                "severity": "medium",
-                "date": "2025-05-24",
-                "status": "pending",
-            },
-            {
-                "id": 5,
-                "rep_name": "陈静",
-                "type": "费用报销异常",
-                "detail": "差旅费用超出报销标准",
-                "severity": "high",
-                "date": "2025-05-22",
-                "status": "pending",
-            },
-            {
-                "id": 6,
-                "rep_name": "赵明",
-                "type": "拜访频次不足",
-                "detail": "月度拜访量低于KPI要求",
-                "severity": "low",
-                "date": "2025-05-20",
-                "status": "resolved",
-            },
-            {
-                "id": 7,
-                "rep_name": "孙丽",
-                "type": "产品资料过期",
-                "detail": "使用过期产品说明书进行推广",
-                "severity": "high",
-                "date": "2025-05-18",
-                "status": "pending",
-            },
-            {
-                "id": 8,
-                "rep_name": "周杰",
-                "type": "客户信息不完整",
-                "detail": "拜访记录中客户信息缺失",
-                "severity": "medium",
-                "date": "2025-05-16",
-                "status": "pending",
-            },
-            {
-                "id": 9,
-                "rep_name": "吴芳",
-                "type": "未授权推广",
-                "detail": "推广未获批产品适应症",
-                "severity": "high",
-                "date": "2025-05-15",
-                "status": "pending",
-            },
-            {
-                "id": 10,
-                "rep_name": "郑浩",
-                "type": "培训未完成",
-                "detail": "合规培训未在规定期限内完成",
-                "severity": "low",
-                "date": "2025-05-12",
-                "status": "resolved",
-            },
-        ]
-        return {"violations": violations}
+    def get_violations(self) -> list:
+        rows = self.db.execute(
+            "SELECT rule_id, rule_name, severity, visit_data_json as detail, created_at FROM compliance_l2_log ORDER BY created_at DESC LIMIT 50"
+        ).fetchall()
+        return [dict(r) for r in rows]
 
-    def get_research_kpis(self) -> dict:
-        kpis = [
-            {"title": "在研项目", "value": 28, "change": 3, "icon": "flask"},
-            {"title": "临床试验", "value": 12, "change": -1, "icon": "clipboard"},
-            {"title": "发表论文", "value": 56, "change": 8, "icon": "file-text"},
-            {"title": "专利申请", "value": 9, "change": 2, "icon": "award"},
-        ]
-        return {"kpis": kpis}
+    def get_research_kpis(self) -> list:
+        pi_count = self.db.execute("SELECT COUNT(*) as cnt FROM pi_profiles").fetchone()["cnt"]
+        product_count = self.db.execute("SELECT COUNT(*) as cnt FROM products").fetchone()["cnt"]
 
-    def get_pi_sources(self) -> dict:
-        pis = [
-            {"name": "陈建国", "institution": "北京协和医院", "matches": 15, "last_activity": "2025-06-03"},
-            {"name": "李明辉", "institution": "上海瑞金医院", "matches": 12, "last_activity": "2025-06-02"},
-            {"name": "王秀英", "institution": "中山大学附属第一医院", "matches": 10, "last_activity": "2025-06-01"},
-            {"name": "赵永强", "institution": "华西医院", "matches": 9, "last_activity": "2025-05-30"},
-            {"name": "张淑芬", "institution": "解放军总医院", "matches": 8, "last_activity": "2025-05-29"},
-            {"name": "刘国栋", "institution": "武汉同济医院", "matches": 7, "last_activity": "2025-05-28"},
-        ]
-        return {"pi_sources": pis}
+        from cloud.app.research_database import get_research_db
 
-    def get_product_match_stats(self) -> dict:
-        categories = [
-            {"category": "心血管", "total": 156, "matched": 142, "rate": 91},
-            {"category": "肿瘤", "total": 128, "matched": 118, "rate": 92},
-            {"category": "糖尿病", "total": 98, "matched": 89, "rate": 91},
-            {"category": "抗感染", "total": 85, "matched": 80, "rate": 94},
+        research_db = get_research_db()
+        try:
+            quotation_count = research_db.execute("SELECT COUNT(*) as cnt FROM research_quotations").fetchone()["cnt"]
+        finally:
+            research_db.close()
+
+        return [
+            {"kpi_name": "在研PI数", "value": pi_count},
+            {"kpi_name": "产品总数", "value": product_count},
+            {"kpi_name": "报价单数", "value": quotation_count},
         ]
-        return {"categories": categories}
+
+    def get_pi_sources(self) -> list:
+        try:
+            self.db.execute("ALTER TABLE pi_profiles ADD COLUMN source TEXT NOT NULL DEFAULT ''")
+        except Exception:
+            pass  # 兼容操作：列已存在时跳过
+        rows = self.db.execute(
+            "SELECT COALESCE(NULLIF(source, ''), institution) as source, COUNT(*) as count FROM pi_profiles GROUP BY source ORDER BY count DESC"
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_product_match_stats(self) -> list:
+        self.db.execute(
+            "CREATE TABLE IF NOT EXISTS product_matches ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "product_id INTEGER, "
+            "pi_id INTEGER, "
+            "match_score REAL, "
+            "category TEXT, "
+            "created_at TEXT DEFAULT CURRENT_TIMESTAMP"
+            ")"
+        )
+        rows = self.db.execute(
+            "SELECT category, COUNT(*) as total, AVG(match_score) as avg_score FROM product_matches GROUP BY category ORDER BY total DESC"
+        ).fetchall()
+        return [dict(r) for r in rows]

@@ -33,10 +33,10 @@ class AuthService {
 
   /// Log in with [username] and [password].
   /// Returns user data on success or null on failure.
-  Future<Map<String, dynamic>?> login(String username, String password) async {
+  Future<Map<String, dynamic>?> login(String username, String password, {String scope = 'visit'}) async {
     final response = await _client.post<Map<String, dynamic>>(
       '/auth/login',
-      data: {'username': username, 'password': password},
+      data: {'username': username, 'password': password, 'scope': scope},
     );
 
     if (!response.isSuccess || response.data == null) {
@@ -62,6 +62,20 @@ class AuthService {
     }
 
     return data;
+  }
+
+  /// Switch the current user's scope by calling /auth/switch-mode.
+  /// Saves the new token on success.
+  Future<bool> switchScope(String newScope) async {
+    final response = await _client.post<Map<String, dynamic>>(
+      '/auth/switch-mode',
+      data: {'new_scope': newScope},
+    );
+    if (!response.isSuccess || response.data == null) return false;
+    final token = response.data!['access_token'] as String?;
+    if (token == null) return false;
+    await saveToken(token);
+    return true;
   }
 
   /// Log out by clearing all stored auth data.

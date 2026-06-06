@@ -27,6 +27,12 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 
+class ChangePasswordRequest(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    old_password: str = Field(..., min_length=6, max_length=128)
+    new_password: str = Field(..., min_length=6, max_length=128)
+
+
 @router.post(
     "/register",
     status_code=status.HTTP_201_CREATED,
@@ -59,3 +65,14 @@ def refresh(body: RefreshRequest, service: AuthService = Depends()) -> Any:
     """刷新访问令牌。Args: body (RefreshRequest) 刷新请求体; service (AuthService) 认证服务。Returns: Any 成功响应"""
     result = service.refresh(body.refresh_token)
     return success(data=result)
+
+
+@router.post(
+    "/change-password",
+    summary="Change user password",
+    description="Authenticates user with old password and updates to new password.",
+)
+def change_password(body: ChangePasswordRequest, service: AuthService = Depends()) -> Any:
+    """修改用户密码。Args: body (ChangePasswordRequest) 修改密码请求体; service (AuthService) 认证服务。Returns: Any 成功响应"""
+    service.change_password(body.username, body.old_password, body.new_password)
+    return success(message="Password changed successfully")
