@@ -67,6 +67,14 @@ class TrendService(BaseService):
         return data_points, total
 
     def get_trends_by_topic(self, topic: str, period: str = "monthly") -> dict:
+        """按主题聚合时间序列趋势数据。
+
+        Args:
+            topic: 研究主题; period: 聚合周期（monthly/quarterly/yearly）
+
+        Returns:
+            dict: 包含 topic、period、data_points、total 的趋势数据
+        """
         data_points, total = self._aggregate_topic_data(topic, period)
         return {
             "topic": topic,
@@ -76,6 +84,14 @@ class TrendService(BaseService):
         }
 
     def predict_trend(self, body, auth_header: str, user_id: int) -> dict:
+        """基于历史数据通过LLM预测研究主题的未来趋势。
+
+        Args:
+            body: 包含 topic 和 context 的请求体; auth_header: 认证头; user_id: 用户ID
+
+        Returns:
+            dict: 包含 prediction、confidence、driving_factors、similar_topics 的预测结果
+        """
         data_points, total = self._aggregate_topic_data(body.topic, "monthly")
         months_data = data_points[-12:] if len(data_points) > 12 else data_points
         data_summary = json.dumps(months_data, ensure_ascii=False)
@@ -120,5 +136,13 @@ class TrendService(BaseService):
         }
 
     def list_history(self, page: int, page_size: int) -> tuple:
+        """分页查询趋势分析历史记录。
+
+        Args:
+            page: 页码; page_size: 每页条数
+
+        Returns:
+            tuple: (items, total, page, page_size, total_pages)
+        """
         repo = TrendAnalysisRepository(self.db)
         return repo.paginate(page=page, page_size=page_size, order_by="analyzed_at DESC")

@@ -56,6 +56,14 @@ class SyncService(BaseService):
     """数据同步服务，处理客户端数据推送、拉取与冲突检测。"""
 
     def push(self, body, user_id: int) -> dict:
+        """接收客户端推送的同步操作并逐个应用到本地数据库。
+
+        Args:
+            body: 包含 client_id 和 operations 的推送请求体; user_id: 用户ID
+
+        Returns:
+            dict: 包含 synced、failed、conflict_count、server_operations 的推送结果
+        """
         now = datetime.now(timezone.utc).isoformat()
         results = []
         synced_count = 0
@@ -98,6 +106,14 @@ class SyncService(BaseService):
         }
 
     def pull(self, since: str) -> dict:
+        """拉取自指定时间以来服务端的数据变更。
+
+        Args:
+            since: 上次同步时间戳（ISO格式）
+
+        Returns:
+            dict: 包含 changes、deleted_ids、server_time 的拉取结果
+        """
         now = datetime.now(timezone.utc).isoformat()
         changes: Dict[str, List[dict]] = {}
         deleted_ids: Dict[str, List[int]] = {}
@@ -117,6 +133,11 @@ class SyncService(BaseService):
         }
 
     def get_status(self) -> dict:
+        """获取同步队列状态统计。
+
+        Returns:
+            dict: 包含 total、pending、synced、failed、by_entity 的统计信息
+        """
         repo = SyncQueueRepository(self.db)
         total = repo.count()
         pending = repo.count(conditions=["status='pending'"])

@@ -17,6 +17,14 @@ class BookmarkService(BaseService):
     """用户收藏管理：添加收藏（防重复）、分页列表、检查是否已收藏、软删除。"""
 
     def create_bookmark(self, body, user_id: int) -> int:
+        """添加用户收藏，重复收藏会返回冲突错误。
+
+        Args:
+            body: 收藏请求体; user_id: 用户ID
+
+        Returns:
+            int: 新收藏记录ID
+        """
         repo = UserBookmarkRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()
         try:
@@ -34,6 +42,14 @@ class BookmarkService(BaseService):
             )
 
     def list_bookmarks(self, page: int, page_size: int, user_id: int, entity_type: Optional[str] = None) -> tuple:
+        """分页查询用户收藏列表。
+
+        Args:
+            page: 页码; page_size: 每页条数; user_id: 用户ID; entity_type: 可选实体类型过滤
+
+        Returns:
+            tuple: (items, total, page, page_size, total_pages)
+        """
         conditions = ["created_by = ?"]
         params: list = [user_id]
         if entity_type:
@@ -49,11 +65,24 @@ class BookmarkService(BaseService):
         )
 
     def check_bookmark(self, entity_type: str, entity_id: int, user_id: int) -> Optional[dict]:
+        """检查用户是否已收藏指定实体。
+
+        Args:
+            entity_type: 实体类型; entity_id: 实体ID; user_id: 用户ID
+
+        Returns:
+            Optional[dict]: 已收藏时返回收藏记录，否则返回 None
+        """
         repo = UserBookmarkRepository(self.db)
         row = repo.get_by_entity(entity_type, entity_id, user_id)
         return dict(row) if row else None
 
     def delete_bookmark(self, bookmark_id: int, user_id: int) -> None:
+        """软删除用户收藏。
+
+        Args:
+            bookmark_id: 收藏记录ID; user_id: 用户ID（校验所有权）
+        """
         repo = UserBookmarkRepository(self.db)
         row = repo.get_by_id(bookmark_id)
         if not row or row["created_by"] != user_id:

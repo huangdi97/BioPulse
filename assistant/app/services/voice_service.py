@@ -31,6 +31,14 @@ class VoiceService(BaseService):
     """语音服务，提供音频上传、AI语音对话与TTS语音合成。"""
 
     async def upload(self, file, user_id: int) -> dict:
+        """上传音频文件并存入数据库。
+
+        Args:
+            file: 上传的音频文件对象; user_id: 用户ID
+
+        Returns:
+            dict: 包含 file_id、original_name、file_size、transcript 的上传结果
+        """
         ts = int(time.time() * 1000)
         filename = f"{ts}_{file.filename}"
         filepath = os.path.join(AUDIO_DIR, filename)
@@ -58,6 +66,14 @@ class VoiceService(BaseService):
         }
 
     async def chat(self, file, context, auth_header: str, user_id: int) -> dict:
+        """上传音频并通过AI语音对话获取回复及TTS合成。
+
+        Args:
+            file: 上传的音频文件对象; context: 对话上下文; auth_header: 认证头; user_id: 用户ID
+
+        Returns:
+            dict: 包含 text_reply、audio_url、file_id 的对话结果
+        """
         ts = int(time.time() * 1000)
         filename = f"{ts}_{file.filename}"
         filepath = os.path.join(AUDIO_DIR, filename)
@@ -110,6 +126,14 @@ class VoiceService(BaseService):
         }
 
     async def synthesize(self, text: str, voice: str) -> str:
+        """将文本合成为语音文件。
+
+        Args:
+            text: 待合成的文本; voice: 语音角色名称
+
+        Returns:
+            str: 合成后的音频文件路径
+        """
         hash_key = hashlib.md5(f"{text.strip()}:{voice}".encode()).hexdigest()
         tts_path = os.path.join(TTS_DIR, f"{hash_key}.mp3")
         if not os.path.exists(tts_path):
@@ -118,6 +142,14 @@ class VoiceService(BaseService):
         return tts_path
 
     def get_audio(self, file_id: int) -> dict:
+        """根据文件ID获取音频文件详情。
+
+        Args:
+            file_id: 音频文件ID
+
+        Returns:
+            dict: 音频文件记录
+        """
         repo = MediaFileRepository(self.db)
         row = repo.get_by_id(file_id)
         if not row or not row["is_active"]:

@@ -13,6 +13,14 @@ class HcpService(BaseService):
     """HCP 管理服务，提供 HCP 的增删改查等业务操作。"""
 
     def create_hcp(self, body, user_id: int) -> dict:
+        """创建HCP记录。
+
+        Args:
+            body: HCP请求体; user_id: 用户ID
+
+        Returns:
+            dict: 包含新记录 id 的结果
+        """
         conn = self._connection()
         try:
             repo = HcpRepository(conn)
@@ -33,6 +41,14 @@ class HcpService(BaseService):
         department: Optional[str] = None,
         level: Optional[str] = None,
     ) -> tuple:
+        """分页查询HCP列表。
+
+        Args:
+            page: 页码; page_size: 每页条数; name: 可选姓名模糊查询; hospital: 可选医院模糊查询; department: 可选科室模糊查询; level: 可选级别过滤
+
+        Returns:
+            tuple: (items, total, page, page_size, total_pages)
+        """
         conn = self._connection()
         try:
             repo = HcpRepository(conn)
@@ -62,6 +78,14 @@ class HcpService(BaseService):
             conn.close()
 
     def get_hcp(self, hcp_id: int) -> dict:
+        """根据ID获取HCP详情。
+
+        Args:
+            hcp_id: HCP ID
+
+        Returns:
+            dict: HCP记录详情
+        """
         conn = self._connection()
         try:
             repo = HcpRepository(conn)
@@ -73,6 +97,14 @@ class HcpService(BaseService):
             conn.close()
 
     def update_hcp(self, hcp_id: int, body) -> dict:
+        """更新HCP记录。
+
+        Args:
+            hcp_id: HCP ID; body: 更新数据请求体
+
+        Returns:
+            dict: 更新后的HCP记录
+        """
         conn = self._connection()
         try:
             repo = HcpRepository(conn)
@@ -88,6 +120,11 @@ class HcpService(BaseService):
             conn.close()
 
     def delete_hcp(self, hcp_id: int) -> None:
+        """软删除HCP记录。
+
+        Args:
+            hcp_id: HCP ID
+        """
         conn = self._connection()
         try:
             repo = HcpRepository(conn)

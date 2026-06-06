@@ -11,6 +11,14 @@ from assistant.app.services.base import BaseService
 
 
 def haversine(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """使用Haversine公式计算两点间的地表距离。
+
+    Args:
+        lat1: 起点纬度; lng1: 起点经度; lat2: 终点纬度; lng2: 终点经度
+
+    Returns:
+        float: 两点间距离（公里）
+    """
     R = 6371.0
     dlat = math.radians(lat2 - lat1)
     dlng = math.radians(lng2 - lng1)
@@ -22,6 +30,14 @@ class LocationService(BaseService):
     """定位服务，提供HCP地址管理、位置查询与路线优化。"""
 
     def create(self, hcp_id: int, body, user_id: int) -> dict:
+        """为指定HCP创建地址定位记录。
+
+        Args:
+            hcp_id: HCP ID; body: 地址信息请求体; user_id: 用户ID
+
+        Returns:
+            dict: 包含新地址记录 id 的结果
+        """
         hcp = self.db.execute("SELECT id FROM hcp WHERE id = ? AND is_active = 1", (hcp_id,)).fetchone()
         if not hcp:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
@@ -41,6 +57,14 @@ class LocationService(BaseService):
         return {"id": location_id}
 
     def list(self, hcp_id: int) -> list:
+        """列出指定HCP的所有地址记录。
+
+        Args:
+            hcp_id: HCP ID
+
+        Returns:
+            list: 地址记录列表（主地址优先）
+        """
         repo = HcpLocationRepository(self.db)
         rows = repo.list_all(
             conditions=["hcp_id=?", "is_active=1"],
@@ -50,6 +74,14 @@ class LocationService(BaseService):
         return [dict(r) for r in rows]
 
     def update(self, location_id: int, body) -> dict:
+        """更新地址记录。
+
+        Args:
+            location_id: 地址记录ID; body: 更新数据请求体
+
+        Returns:
+            dict: 更新后的地址记录
+        """
         repo = HcpLocationRepository(self.db)
         row = repo.get_by_id(location_id)
         if not row or not row["is_active"]:
@@ -62,6 +94,11 @@ class LocationService(BaseService):
         return dict(repo.get_by_id(location_id))
 
     def delete(self, location_id: int) -> None:
+        """软删除地址记录。
+
+        Args:
+            location_id: 地址记录ID
+        """
         repo = HcpLocationRepository(self.db)
         row = repo.get_by_id(location_id)
         if not row or not row["is_active"]:
@@ -69,6 +106,14 @@ class LocationService(BaseService):
         repo.soft_delete(location_id)
 
     def optimize_route(self, body) -> dict:
+        """基于贪心最近邻算法优化HCP拜访路线。
+
+        Args:
+            body: 包含 start_lat、start_lng、hcp_ids、max_results 的请求体
+
+        Returns:
+            dict: 包含 optimized_route、total_distance_km、total_hcps 的路线优化结果
+        """
         if not body.hcp_ids:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

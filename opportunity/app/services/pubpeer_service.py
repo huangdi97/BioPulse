@@ -151,6 +151,14 @@ class PubpeerService(BaseService):
         }
 
     def check_trail_integrity(self, trail_id: int, auth_header: str, user_id: int) -> dict:
+        """检查科研轨迹关联论文的诚信状况。
+
+        Args:
+            trail_id: 科研轨迹ID; auth_header: 认证头; user_id: 用户ID
+
+        Returns:
+            dict: 包含 integrity_score、retraction_warning、concerns 的诚信检查结果
+        """
         repo = ResearchTrailRepository(self.db)
         trail = dict(repo.get_or_404(trail_id))
         cached = self._check_or_get_cache(trail.get("pubmed_id"), None)
@@ -166,6 +174,14 @@ class PubpeerService(BaseService):
         return self._do_check(auth_header, trail.get("pubmed_id"), trail.get("doi"), user_id)
 
     def get_trail_integrity(self, trail_id: int) -> Optional[dict]:
+        """查询已有论文诚信记录而不触发新检测。
+
+        Args:
+            trail_id: 科研轨迹ID
+
+        Returns:
+            Optional[dict]: 已有诚信记录，无记录时返回 None
+        """
         trail = dict(ResearchTrailRepository(self.db).get_or_404(trail_id))
         conditions = ["is_active = 1"]
         params: list = []
@@ -185,6 +201,14 @@ class PubpeerService(BaseService):
         return dict(row) if row else None
 
     def pubpeer_check(self, body, auth_header: str, user_id: int) -> dict | str:
+        """对指定pubmed_id或doi进行论文诚信检查。
+
+        Args:
+            body: 包含 pubmed_id/doi 的请求体; auth_header: 认证头; user_id: 用户ID
+
+        Returns:
+            dict | str: 诚信检查结果，参数无效时返回 "validation_error"
+        """
         if not body.pubmed_id and not body.doi:
             return "validation_error"
         cached = self._check_or_get_cache(body.pubmed_id, body.doi)
@@ -200,6 +224,14 @@ class PubpeerService(BaseService):
         return self._do_check(auth_header, body.pubmed_id, body.doi, user_id)
 
     def list_alerts(self, page: int, page_size: int) -> tuple:
+        """分页查询存在诚信风险的论文预警列表。
+
+        Args:
+            page: 页码; page_size: 每页条数
+
+        Returns:
+            tuple: (items, total, page, page_size, total_pages)
+        """
         repo = PaperIntegrityRepository(self.db)
         return repo.paginate(
             page,

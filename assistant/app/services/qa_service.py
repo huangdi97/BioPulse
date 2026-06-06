@@ -26,6 +26,14 @@ class QaService(BaseService):
     """问答服务，调用AI网关进行临床药学问答。"""
 
     def answer_question(self, body, auth_header: str) -> dict:
+        """调用AI网关进行临床药学问答。
+
+        Args:
+            body: 包含 question 和 context 的请求体; auth_header: 认证头
+
+        Returns:
+            dict: 包含 question、answer、sources 的问答结果
+        """
         try:
             ai_data = self._call_ai_gateway(auth_header, body)
             reply = ai_data.get("reply", "")

@@ -23,6 +23,14 @@ class ContactService(BaseService):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found")
 
     def create_contact(self, body, opportunity_id: int, user_id: int) -> int:
+        """创建联系记录。
+
+        Args:
+            body: 联系记录请求体; opportunity_id: 关联商机ID; user_id: 用户ID
+
+        Returns:
+            int: 新联系记录ID
+        """
         self._check_opportunity_exists(opportunity_id)
         repo = ContactRecordRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()
@@ -36,6 +44,14 @@ class ContactService(BaseService):
         )
 
     def list_contacts(self, opportunity_id: int, page: int, page_size: int) -> tuple:
+        """分页查询指定商机的联系记录。
+
+        Args:
+            opportunity_id: 商机ID; page: 页码; page_size: 每页条数
+
+        Returns:
+            tuple: (items, total, page, page_size, total_pages)
+        """
         self._check_opportunity_exists(opportunity_id)
         repo = ContactRecordRepository(self.db)
         return repo.paginate(
@@ -47,6 +63,14 @@ class ContactService(BaseService):
         )
 
     def get_contact(self, contact_id: int) -> dict:
+        """根据ID获取联系记录详情。
+
+        Args:
+            contact_id: 联系记录ID
+
+        Returns:
+            dict: 联系记录详情
+        """
         repo = ContactRecordRepository(self.db)
         row = repo.get_by_id(contact_id)
         if not row:
@@ -54,6 +78,14 @@ class ContactService(BaseService):
         return dict(row)
 
     def update_contact(self, contact_id: int, body) -> dict:
+        """更新联系记录。
+
+        Args:
+            contact_id: 联系记录ID; body: 更新数据请求体
+
+        Returns:
+            dict: 更新后的联系记录
+        """
         repo = ContactRecordRepository(self.db)
         row = repo.get_by_id(contact_id)
         if not row:
@@ -67,6 +99,11 @@ class ContactService(BaseService):
         return dict(repo.get_by_id(contact_id))
 
     def delete_contact(self, contact_id: int) -> None:
+        """软删除联系记录。
+
+        Args:
+            contact_id: 联系记录ID
+        """
         repo = ContactRecordRepository(self.db)
         row = repo.get_by_id(contact_id)
         if not row:

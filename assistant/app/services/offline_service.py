@@ -37,10 +37,10 @@ class OfflineService(BaseService):
     """Offline 服务类。"""
 
     def get_status(self) -> dict:
-        """获取状态。
+        """获取离线同步状态，包括云端连通性、待同步数量、本地数据摘要。
 
         Returns:
-            描述
+            dict: 包含 online、pending_sync_count、local_data_summary、last_sync_time 的状态信息
         """
         online = self._check_cloud()
         pending_count = self._count_unsynced()
@@ -54,13 +54,13 @@ class OfflineService(BaseService):
         }
 
     def sync_pending(self, limit: int = 50) -> dict:
-        """同步待处理项。
+        """将本地待同步的离线操作逐条推送至云端。
 
         Args:
-            limit: 描述
+            limit: 单次最大同步条数
 
         Returns:
-            描述
+            dict: 包含 synced_count、failed_count、errors 的同步结果
         """
         rows = self.db.execute(
             "SELECT * FROM offline_sync_log WHERE synced = 0 ORDER BY created_at ASC LIMIT ?",
@@ -117,16 +117,13 @@ class OfflineService(BaseService):
         }
 
     def queue_change(self, entity_type: str, entity_id: int, action: str, payload: dict) -> dict:
-        """入队变更。
+        """将本地变更写入离线同步队列。
 
         Args:
-            entity_type: 描述
-            entity_id: 描述
-            action: 描述
-            payload: 描述
+            entity_type: 实体类型（如 hcp、visit）; entity_id: 实体ID; action: 操作类型（create/update/delete）; payload: 操作负载数据
 
         Returns:
-            描述
+            dict: 包含 log_id 的入队结果
         """
         cursor = self.db.execute(
             "INSERT INTO offline_sync_log (entity_type, entity_id, action, payload) VALUES (?, ?, ?, ?)",
@@ -139,23 +136,24 @@ class OfflineService(BaseService):
         """启用离线模式。
 
         Returns:
-            描述
+            dict: 包含 mode 和 pending_sync_count 的状态
         """
         os.environ[OFFLINE_MODE_VAR] = "1"
         pending = self._count_unsynced()
         return {"mode": "offline", "pending_sync_count": pending}
 
     def enable_online_mode(self) -> dict:
-        """启用在线模式。
+        """启用在线模式，自动同步本地待处理项后切换。
 
         Returns:
-            描述
+            dict: 包含 mode 的状态
         """
         self.sync_pending(limit=500)
         os.environ.pop(OFFLINE_MODE_VAR, None)
         return {"mode": "online"}
 
     def init_ai_cache_table(self) -> None:
+        """初始化离线AI缓存表结构。"""
         self.db.execute("""
             CREATE TABLE IF NOT EXISTS offline_ai_cache (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -172,6 +170,14 @@ class OfflineService(BaseService):
         self.db.commit()
 
     def cache_ai_response(self, cache_key, request_hash, response_json, ttl_hours=24) -> int:
+        """缓存AI响应到本地。
+
+        Args:
+            cache_key: 缓存键; request_hash: 请求哈希; response_json: 响应JSON; ttl_hours: 缓存有效时长（小时）
+
+        Returns:
+            int: 影响行数
+        """
         now = datetime.now(timezone.utc)
         expires_at = now + timedelta(hours=ttl_hours)
         cursor = self.db.execute(
@@ -182,6 +188,14 @@ class OfflineService(BaseService):
         return cursor.rowcount
 
     def get_cached_response(self, cache_key, request_hash) -> dict | None:
+        """获取本地缓存的AI响应。
+
+        Args:
+            cache_key: 缓存键; request_hash: 请求哈希
+
+        Returns:
+            dict | None: 缓存的响应数据，无缓存或已过期时返回 None
+        """
         now = datetime.now(timezone.utc).isoformat()
         row = self.db.execute(
             "SELECT * FROM offline_ai_cache WHERE cache_key = ? AND expires_at > ?",
@@ -197,6 +211,11 @@ class OfflineService(BaseService):
         return None
 
     def clear_expired_cache(self) -> int:
+        """清理过期的AI缓存记录。
+
+        Returns:
+            int: 删除的缓存记录数
+        """
         now = datetime.now(timezone.utc).isoformat()
         cursor = self.db.execute("DELETE FROM offline_ai_cache WHERE expires_at < ?", (now,))
         self.db.commit()

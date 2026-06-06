@@ -11,6 +11,14 @@ class HealthRadarService(BaseService):
     """健康雷达服务，提供患者健康评估的增删改查与统计分析。"""
 
     def create(self, body, user_id: int) -> dict:
+        """创建健康评估记录。
+
+        Args:
+            body: 健康评估请求体; user_id: 用户ID
+
+        Returns:
+            dict: 包含新记录 id 的结果
+        """
         repo = HealthRadarRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()
         row_id = repo.create(
@@ -33,6 +41,14 @@ class HealthRadarService(BaseService):
         date_from: Optional[str] = None,
         date_to: Optional[str] = None,
     ) -> tuple:
+        """分页查询健康评估列表。
+
+        Args:
+            page: 页码; page_size: 每页条数; patient_name: 可选患者姓名模糊查询; score_min: 可选最低分过滤; score_max: 可选最高分过滤; date_from: 可选起始日期过滤; date_to: 可选截止日期过滤
+
+        Returns:
+            tuple: (items, total, page, page_size, total_pages)
+        """
         repo = HealthRadarRepository(self.db)
         conditions = ["is_active = 1"]
         params: list = []
@@ -56,6 +72,11 @@ class HealthRadarService(BaseService):
         return repo.paginate(page, page_size, conditions, params)
 
     def get_stats(self) -> dict:
+        """获取健康评估统计数据，包括总分、均分、分布和趋势。
+
+        Returns:
+            dict: 包含 total_assessments、average_score、score_distribution、recent_trend 的统计信息
+        """
         repo = HealthRadarRepository(self.db)
         total = repo.count(conditions=["is_active = 1"])
 
@@ -106,10 +127,26 @@ class HealthRadarService(BaseService):
         }
 
     def get(self, health_radar_id: int) -> dict:
+        """根据ID获取健康评估详情。
+
+        Args:
+            health_radar_id: 健康评估记录ID
+
+        Returns:
+            dict: 健康评估记录详情
+        """
         repo = HealthRadarRepository(self.db)
         return dict(repo.get_or_404(health_radar_id))
 
     def update(self, health_radar_id: int, body) -> dict:
+        """更新健康评估记录。
+
+        Args:
+            health_radar_id: 健康评估记录ID; body: 更新数据请求体
+
+        Returns:
+            dict: 更新后的健康评估记录
+        """
         repo = HealthRadarRepository(self.db)
         repo.get_or_404(health_radar_id)
         updates = body.model_dump(exclude_unset=True)
@@ -120,6 +157,11 @@ class HealthRadarService(BaseService):
         return dict(repo.get_by_id(health_radar_id))
 
     def delete(self, health_radar_id: int) -> None:
+        """软删除健康评估记录。
+
+        Args:
+            health_radar_id: 健康评估记录ID
+        """
         repo = HealthRadarRepository(self.db)
         repo.get_or_404(health_radar_id)
         repo.soft_delete(health_radar_id)

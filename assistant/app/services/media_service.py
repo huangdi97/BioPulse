@@ -35,6 +35,14 @@ class MediaService(BaseService):
     """多媒体服务，提供文件上传、文本提取与AI分析。"""
 
     async def upload(self, file, user_id: int) -> dict:
+        """上传图片或文档文件，提取文本并存入数据库。
+
+        Args:
+            file: 上传的文件对象; user_id: 用户ID
+
+        Returns:
+            dict: 包含 file_id、file_type、original_name、extracted_text 的上传结果
+        """
         from fastapi import HTTPException
 
         ext = os.path.splitext(file.filename or "")[1].lower()
@@ -81,6 +89,14 @@ class MediaService(BaseService):
         }
 
     def get_media(self, file_id: int) -> dict:
+        """根据文件ID获取多媒体文件详情。
+
+        Args:
+            file_id: 多媒体文件ID
+
+        Returns:
+            dict: 多媒体文件记录
+        """
         from fastapi import HTTPException
 
         repo = MediaFileRepository(self.db)
@@ -90,6 +106,14 @@ class MediaService(BaseService):
         return dict(row)
 
     def analyze(self, file_id: int, auth_header: str) -> dict:
+        """调用AI对文件内容进行临床药学分析。
+
+        Args:
+            file_id: 多媒体文件ID; auth_header: 认证头
+
+        Returns:
+            dict: 包含 analysis 和 confidence 的分析结果
+        """
         from fastapi import HTTPException
 
         repo = MediaFileRepository(self.db)

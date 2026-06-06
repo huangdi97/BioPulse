@@ -20,6 +20,14 @@ class VisitService(BaseService):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
 
     def create_visit(self, body, user_id: int) -> dict:
+        """创建拜访记录。
+
+        Args:
+            body: 拜访记录请求体; user_id: 用户ID
+
+        Returns:
+            dict: 包含新记录 id 的结果
+        """
         conn = self._connection()
         try:
             self._check_hcp_exists(conn, body.hcp_id)
@@ -39,6 +47,14 @@ class VisitService(BaseService):
         hcp_id: Optional[int] = None,
         visit_type: Optional[str] = None,
     ) -> tuple:
+        """分页查询拜访记录列表。
+
+        Args:
+            page: 页码; page_size: 每页条数; hcp_id: 可选HCP ID过滤; visit_type: 可选拜访类型过滤
+
+        Returns:
+            tuple: (items, total, page, page_size, total_pages)
+        """
         conn = self._connection()
         try:
             repo = VisitRecordRepository(conn)
@@ -62,6 +78,14 @@ class VisitService(BaseService):
             conn.close()
 
     def get_visit(self, visit_id: int) -> dict:
+        """根据ID获取拜访记录详情。
+
+        Args:
+            visit_id: 拜访记录ID
+
+        Returns:
+            dict: 拜访记录详情
+        """
         conn = self._connection()
         try:
             repo = VisitRecordRepository(conn)
@@ -73,6 +97,14 @@ class VisitService(BaseService):
             conn.close()
 
     def update_visit(self, visit_id: int, body) -> dict:
+        """更新拜访记录。
+
+        Args:
+            visit_id: 拜访记录ID; body: 更新数据请求体
+
+        Returns:
+            dict: 更新后的拜访记录
+        """
         conn = self._connection()
         try:
             repo = VisitRecordRepository(conn)
@@ -93,6 +125,11 @@ class VisitService(BaseService):
             conn.close()
 
     def delete_visit(self, visit_id: int) -> None:
+        """软删除拜访记录。
+
+        Args:
+            visit_id: 拜访记录ID
+        """
         conn = self._connection()
         try:
             repo = VisitRecordRepository(conn)
@@ -136,6 +173,14 @@ class VisitService(BaseService):
         }
 
     def get_visit_score(self, visit_id: int, offline_mode: bool = False) -> dict:
+        """计算拜访记录的智能评分。
+
+        Args:
+            visit_id: 拜访记录ID; offline_mode: 是否使用离线评分模式
+
+        Returns:
+            dict: 包含 score、level、urgency、breakdown 的评分结果
+        """
         visit_data = self.get_visit(visit_id)
         if offline_mode:
             return self._offline_visit_score(visit_data)

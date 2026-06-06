@@ -154,6 +154,14 @@ class BiddingAgentService(BaseService):
         return analysis
 
     def create_agent_config(self, body, user_id: int) -> int:
+        """创建招投标Agent配置。
+
+        Args:
+            body: Agent配置请求体; user_id: 用户ID
+
+        Returns:
+            int: 新配置记录ID
+        """
         conn = self._connection()
         try:
             repo = BiddingAgentConfigRepository(conn)
@@ -170,6 +178,11 @@ class BiddingAgentService(BaseService):
             conn.close()
 
     def list_agent_configs(self) -> list:
+        """列出所有活跃的Agent配置。
+
+        Returns:
+            list: Agent配置列表
+        """
         conn = self._connection()
         try:
             repo = BiddingAgentConfigRepository(conn)
@@ -179,6 +192,14 @@ class BiddingAgentService(BaseService):
             conn.close()
 
     def update_agent_config(self, config_id: int, body) -> dict:
+        """更新Agent配置。
+
+        Args:
+            config_id: 配置ID; body: 更新数据请求体
+
+        Returns:
+            dict: 更新后的配置记录
+        """
         conn = self._connection()
         try:
             repo = BiddingAgentConfigRepository(conn)
@@ -195,6 +216,11 @@ class BiddingAgentService(BaseService):
             conn.close()
 
     def delete_agent_config(self, config_id: int) -> None:
+        """软删除Agent配置。
+
+        Args:
+            config_id: 配置ID
+        """
         conn = self._connection()
         try:
             repo = BiddingAgentConfigRepository(conn)
@@ -206,6 +232,14 @@ class BiddingAgentService(BaseService):
             conn.close()
 
     def trigger_scan(self, auth_header: str) -> dict:
+        """手动触发一次招标扫描，遍历所有活跃配置并记录日志。
+
+        Args:
+            auth_header: 认证头
+
+        Returns:
+            dict: 包含 total_found、total_parsed、errors 的扫描结果
+        """
         conn = self._connection()
         try:
             repo = BiddingAgentConfigRepository(conn)
@@ -243,6 +277,11 @@ class BiddingAgentService(BaseService):
             conn.close()
 
     def get_agent_status(self) -> dict:
+        """获取Agent运行状态统计。
+
+        Returns:
+            dict: 包含 last_run、total_runs、success_rate 的状态信息
+        """
         conn = self._connection()
         try:
             last = conn.execute("SELECT started_at FROM bidding_agent_log ORDER BY id DESC LIMIT 1").fetchone()
@@ -261,6 +300,14 @@ class BiddingAgentService(BaseService):
             conn.close()
 
     def list_agent_logs(self, page: int, page_size: int) -> tuple:
+        """分页查询Agent运行日志。
+
+        Args:
+            page: 页码; page_size: 每页条数
+
+        Returns:
+            tuple: (items, total, page, page_size, total_pages)
+        """
         conn = self._connection()
         try:
             count_row = conn.execute("SELECT COUNT(*) FROM bidding_agent_log").fetchone()
@@ -277,6 +324,14 @@ class BiddingAgentService(BaseService):
             conn.close()
 
     def auto_analyze_bidding(self, bidding_id: int, auth_header: str) -> dict:
+        """自动调用AI分析招标信息并更新分析结果。
+
+        Args:
+            bidding_id: 招标信息ID; auth_header: 认证头
+
+        Returns:
+            dict: AI分析结果
+        """
         conn = self._connection()
         try:
             return self._update_bidding_analysis(conn, bidding_id, auth_header)
@@ -284,10 +339,19 @@ class BiddingAgentService(BaseService):
             conn.close()
 
     def get_all_active_configs(self, conn) -> list:
+        """获取所有活跃的Agent配置（供调用方传入数据库连接）。
+
+        Args:
+            conn: 数据库连接
+
+        Returns:
+            list: 活跃配置列表
+        """
         configs = conn.execute("SELECT * FROM bidding_agent_config WHERE is_active = 1").fetchall()
         return [dict(c) for c in configs]
 
     def run_scheduled_scan(self) -> None:
+        """定时扫描任务入口，遍历所有活跃配置执行招标信息抓取。"""
         conn = self._connection()
         try:
             configs = self.get_all_active_configs(conn)
