@@ -50,7 +50,7 @@ class ContentOut(BaseModel):
     updated_at: Optional[str] = None
 
 
-@router.post("")
+@router.post("", summary="创建内容", description="创建销售内容")
 def create_content(
     body: ContentCreate,
     service: ContentService = Depends(),
@@ -65,7 +65,7 @@ def create_content(
     )
 
 
-@router.get("")
+@router.get("", summary="内容列表", description="获取销售内容列表")
 def list_contents(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -97,7 +97,7 @@ def list_contents(
     )
 
 
-@router.get("/types")
+@router.get("/types", summary="类型列表", description="获取内容类型列表")
 def list_content_types(
     service: ContentService = Depends(),
     current_user: dict = Depends(get_current_user),
@@ -106,7 +106,7 @@ def list_content_types(
     return success(data=service.list_content_types())
 
 
-@router.get("/{content_id}")
+@router.get("/{content_id}", summary="内容详情", description="获取指定销售内容详情")
 def get_content(
     content_id: int,
     service: ContentService = Depends(),
@@ -117,7 +117,7 @@ def get_content(
     return success(data=ContentOut(**row))
 
 
-@router.patch("/{content_id}")
+@router.patch("/{content_id}", summary="更新内容", description="更新指定销售内容")
 def update_content(
     content_id: int,
     body: ContentUpdate,
@@ -129,7 +129,7 @@ def update_content(
     return success(data=ContentOut(**row))
 
 
-@router.delete("/{content_id}")
+@router.delete("/{content_id}", summary="删除内容", description="删除指定销售内容")
 def delete_content(
     content_id: int,
     service: ContentService = Depends(),
@@ -143,7 +143,7 @@ def delete_content(
 content_root_router = APIRouter()
 
 
-@content_root_router.get("/content")
+@content_root_router.get("/content", summary="内容根路径", description="获取内容根路径")
 def get_content_root() -> list:
     """获取content。"""
     return []

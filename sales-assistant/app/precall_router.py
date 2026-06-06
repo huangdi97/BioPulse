@@ -33,7 +33,7 @@ class PrecallResponse(BaseModel):
     brief: BriefData
 
 
-@router.post("/precall", response_model=ApiResponse[PrecallResponse])
+@router.post("/precall", response_model=ApiResponse[PrecallResponse], summary="生成简报", description="生成访前准备简报")
 def precall(
     request: Request,
     body: PrecallRequest,
@@ -52,7 +52,7 @@ def precall(
     )
 
 
-@router.get("/precall")
+@router.get("/precall", summary="获取简报", description="获取访前准备简报")
 def get_precall() -> Any:
     """precall。"""
     return {}

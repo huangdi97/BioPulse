@@ -68,7 +68,7 @@ class StrategySimulateRequest(BaseModel):
     product_name: Optional[str] = None
 
 
-@router.post("")
+@router.post("", summary="创建策略", description="创建销售策略")
 def create_strategy(
     body: StrategyCreate,
     service: StrategyService = Depends(),
@@ -83,7 +83,7 @@ def create_strategy(
     )
 
 
-@router.get("")
+@router.get("", summary="策略列表", description="获取销售策略列表")
 def list_strategies(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -113,7 +113,7 @@ def list_strategies(
     )
 
 
-@router.get("/{strategy_id}")
+@router.get("/{strategy_id}", summary="策略详情", description="获取指定策略详情")
 def get_strategy(
     strategy_id: int,
     service: StrategyService = Depends(),
@@ -124,7 +124,7 @@ def get_strategy(
     return success(data=StrategyOut(**row))
 
 
-@router.patch("/{strategy_id}")
+@router.patch("/{strategy_id}", summary="更新策略", description="更新指定策略")
 def update_strategy(
     strategy_id: int,
     body: StrategyUpdate,
@@ -136,7 +136,7 @@ def update_strategy(
     return success(data=StrategyOut(**row))
 
 
-@router.delete("/{strategy_id}")
+@router.delete("/{strategy_id}", summary="删除策略", description="删除指定策略")
 def delete_strategy(
     strategy_id: int,
     service: StrategyService = Depends(),
@@ -147,7 +147,7 @@ def delete_strategy(
     return success(message="deleted")
 
 
-@router.post("/generate")
+@router.post("/generate", summary="生成策略", description="AI生成销售策略")
 def generate_strategy(
     body: StrategyGenerateRequest,
     service: StrategyService = Depends(),
@@ -162,7 +162,7 @@ def generate_strategy(
     )
 
 
-@router.get("/compare")
+@router.get("/compare", summary="策略对比", description="对比多个销售策略")
 def compare_strategies(
     ids: str = Query(...),
     service: StrategyService = Depends(),
@@ -186,7 +186,7 @@ def compare_strategies(
     )
 
 
-@router.post("/simulate")
+@router.post("/simulate", summary="模拟策略", description="模拟销售策略执行效果")
 def simulate_strategy(
     body: StrategySimulateRequest,
     service: StrategyService = Depends(),
@@ -200,7 +200,7 @@ def simulate_strategy(
 strategy_root_router = APIRouter()
 
 
-@strategy_root_router.get("/strategy")
+@strategy_root_router.get("/strategy", summary="策略根路径", description="获取策略根路径")
 def get_strategy_root() -> list:
     """获取strategy。"""
     return []

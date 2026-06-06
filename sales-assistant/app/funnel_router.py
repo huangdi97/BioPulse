@@ -26,7 +26,7 @@ class FunnelData(BaseModel):
     by_event_type: dict[str, EventTypeStats]
 
 
-@router.get("/funnel", response_model=ApiResponse[FunnelData])
+@router.get("/funnel", response_model=ApiResponse[FunnelData], summary="漏斗分析", description="获取销售漏斗分析数据")
 def funnel_analysis(
     service: FunnelService = Depends(),
     current_user: dict = Depends(get_current_user),

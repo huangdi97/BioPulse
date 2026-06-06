@@ -26,7 +26,7 @@ class ObjectionResponse(BaseModel):
     do_not_say: list[str]
 
 
-@router.post("/objection", response_model=ApiResponse[ObjectionResponse])
+@router.post("/objection", response_model=ApiResponse[ObjectionResponse], summary="异议处理", description="处理客户异议并获取应答建议")
 def handle_objection(
     request: Request,
     body: ObjectionRequest,
@@ -39,7 +39,7 @@ def handle_objection(
     return success(ObjectionResponse(**result))
 
 
-@router.get("/objections")
+@router.get("/objections", summary="异议列表", description="获取异议列表")
 def list_objections() -> list:
     """获取objections。"""
     return []

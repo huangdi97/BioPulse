@@ -37,7 +37,7 @@ class AlertUpdate(BaseModel):
     resolved_by: Optional[int] = None
 
 
-@router.post("/anomaly/rules")
+@router.post("/anomaly/rules", summary="创建规则", description="创建异常检测规则")
 def create_rule(
     body: RuleCreate,
     service: AnomalyService = Depends(),
@@ -52,7 +52,7 @@ def create_rule(
     )
 
 
-@router.get("/anomaly/rules")
+@router.get("/anomaly/rules", summary="规则列表", description="获取异常检测规则列表")
 def list_rules(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -75,7 +75,7 @@ def list_rules(
     )
 
 
-@router.patch("/anomaly/rules/{rule_id}")
+@router.patch("/anomaly/rules/{rule_id}", summary="更新规则", description="更新指定异常检测规则")
 def update_rule(
     rule_id: int,
     body: RuleUpdate,
@@ -87,7 +87,7 @@ def update_rule(
     return success(data=row)
 
 
-@router.delete("/anomaly/rules/{rule_id}")
+@router.delete("/anomaly/rules/{rule_id}", summary="删除规则", description="删除指定异常检测规则")
 def delete_rule(
     rule_id: int,
     service: AnomalyService = Depends(),
@@ -98,7 +98,7 @@ def delete_rule(
     return success(message="deleted")
 
 
-@router.post("/anomaly/check")
+@router.post("/anomaly/check", summary="异常检查", description="执行异常检测并生成告警")
 def check_anomalies(
     service: AnomalyService = Depends(),
     current_user: dict = Depends(get_current_user),
@@ -108,7 +108,7 @@ def check_anomalies(
     return success(data={"alerts_created": created})
 
 
-@router.get("/anomaly/alerts")
+@router.get("/anomaly/alerts", summary="告警列表", description="获取异常告警列表")
 def list_alerts(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -131,7 +131,7 @@ def list_alerts(
     )
 
 
-@router.patch("/anomaly/alerts/{alert_id}")
+@router.patch("/anomaly/alerts/{alert_id}", summary="更新告警", description="更新指定异常告警状态")
 def update_alert(
     alert_id: int,
     body: AlertUpdate,
@@ -144,7 +144,7 @@ def update_alert(
     return success(data=row)
 
 
-@router.get("/anomaly/stats")
+@router.get("/anomaly/stats", summary="异常统计", description="获取异常检测统计数据")
 def anomaly_stats(
     service: AnomalyService = Depends(),
     current_user: dict = Depends(get_current_user),

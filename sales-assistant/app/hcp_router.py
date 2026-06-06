@@ -99,7 +99,7 @@ class RelationOut(BaseModel):
     product_name: Optional[str] = None
 
 
-@router.post("/hcp")
+@router.post("/hcp", summary="创建HCP", description="创建HCP信息")
 def create_hcp(
     body: HcpCreate,
     service: HcpService = Depends(),
@@ -114,7 +114,7 @@ def create_hcp(
     )
 
 
-@router.get("/hcp")
+@router.get("/hcp", summary="HCP列表", description="获取HCP列表")
 def list_hcp(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -137,7 +137,7 @@ def list_hcp(
     )
 
 
-@router.get("/hcp/graph")
+@router.get("/hcp/graph", summary="关系图谱", description="获取HCP关系图谱")
 def get_graph(
     hcp_id: Optional[int] = Query(None),
     product_id: Optional[int] = Query(None),
@@ -149,7 +149,7 @@ def get_graph(
     return success(data=data)
 
 
-@router.get("/hcp/{hcp_id}")
+@router.get("/hcp/{hcp_id}", summary="HCP详情", description="获取指定HCP详情")
 def get_hcp(
     hcp_id: int,
     service: HcpService = Depends(),
@@ -160,7 +160,7 @@ def get_hcp(
     return success(data=HcpOut(**row))
 
 
-@router.patch("/hcp/{hcp_id}")
+@router.patch("/hcp/{hcp_id}", summary="更新HCP", description="更新指定HCP信息")
 def update_hcp(
     hcp_id: int,
     body: HcpUpdate,
@@ -172,7 +172,7 @@ def update_hcp(
     return success(data=HcpOut(**row))
 
 
-@router.delete("/hcp/{hcp_id}")
+@router.delete("/hcp/{hcp_id}", summary="删除HCP", description="删除指定HCP")
 def delete_hcp(
     hcp_id: int,
     service: HcpService = Depends(),
@@ -183,7 +183,7 @@ def delete_hcp(
     return success(message="deleted")
 
 
-@router.post("/products")
+@router.post("/products", summary="创建产品", description="创建产品信息")
 def create_product(
     body: ProductCreate,
     service: HcpService = Depends(),
@@ -198,7 +198,7 @@ def create_product(
     )
 
 
-@router.get("/products")
+@router.get("/products", summary="产品列表", description="获取产品列表")
 def list_products(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -220,7 +220,7 @@ def list_products(
     )
 
 
-@router.get("/products/{product_id}")
+@router.get("/products/{product_id}", summary="产品详情", description="获取指定产品详情")
 def get_product(
     product_id: int,
     service: HcpService = Depends(),
@@ -231,7 +231,7 @@ def get_product(
     return success(data=ProductOut(**row))
 
 
-@router.patch("/products/{product_id}")
+@router.patch("/products/{product_id}", summary="更新产品", description="更新指定产品信息")
 def update_product(
     product_id: int,
     body: ProductUpdate,
@@ -243,7 +243,7 @@ def update_product(
     return success(data=ProductOut(**row))
 
 
-@router.delete("/products/{product_id}")
+@router.delete("/products/{product_id}", summary="删除产品", description="删除指定产品")
 def delete_product(
     product_id: int,
     service: HcpService = Depends(),
@@ -254,7 +254,7 @@ def delete_product(
     return success(message="deleted")
 
 
-@router.post("/hcp/{hcp_id}/products")
+@router.post("/hcp/{hcp_id}/products", summary="创建关联", description="创建HCP与产品关联")
 def create_relation(
     hcp_id: int,
     body: RelationCreate,
@@ -270,7 +270,7 @@ def create_relation(
     )
 
 
-@router.get("/hcp/{hcp_id}/products")
+@router.get("/hcp/{hcp_id}/products", summary="关联列表", description="获取HCP产品关联列表")
 def list_relations(
     hcp_id: int,
     service: HcpService = Depends(),
@@ -281,7 +281,7 @@ def list_relations(
     return success(data=[RelationOut(**r) for r in rows])
 
 
-@router.delete("/hcp/relations/{relation_id}")
+@router.delete("/hcp/relations/{relation_id}", summary="删除关联", description="删除指定HCP产品关联")
 def delete_relation(
     relation_id: int,
     service: HcpService = Depends(),
