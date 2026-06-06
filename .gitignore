@@ -93,12 +93,17 @@ Flutter-*.md
 archive/*.md
 archive/test_batch*.py
 S*.md
+方向*-执行文档.md
 生产硬化-*.md
 P0-*.md
 test_s8_integration.py
 
 # 独立开发文档
 frontend-plan-tg.md
+opportunity-repo-migration.md
+
+# 代码质量报告
+code_quality_report.json
 
 # 本地开发脚本
 seed_demo_data.py
