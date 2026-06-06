@@ -175,3 +175,10 @@ class IntelAnalyzerMixin:
             "recent_critical": rc,
             "trend_7d": td,
         }
+
+
+class IntelAnalyzer(IntelAnalyzerMixin):
+    """Standalone analyzer wrapping IntelAnalyzerMixin."""
+
+    def __init__(self, db):
+        self.db = db
