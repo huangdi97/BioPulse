@@ -3,50 +3,10 @@ from datetime import datetime, timezone
 from typing import List, Optional
 
 from shared.columns import (
-    TABLE_OPPORTUNITY_COLS,
     TABLE_PAPER_INTEGRITY_COLS,
     TABLE_TREND_ANALYSIS_COLS,
 )
 from shared.repository import BaseRepository
-
-
-class ScoringRepository(BaseRepository):
-    def __init__(self, db: sqlite3.Connection):
-        super().__init__(db, "opportunity", TABLE_OPPORTUNITY_COLS)
-
-    def leaderboard(
-        self,
-        page: int = 1,
-        page_size: int = 20,
-        stage: Optional[str] = None,
-        min_score: Optional[int] = None,
-        max_score: Optional[int] = None,
-    ) -> tuple:
-        conditions = ["is_active = 1"]
-        params: list = []
-        if stage:
-            conditions.append("stage = ?")
-            params.append(stage)
-        if min_score is not None:
-            conditions.append("heat_score >= ?")
-            params.append(min_score)
-        if max_score is not None:
-            conditions.append("heat_score <= ?")
-            params.append(max_score)
-        return self.paginate(
-            page=page,
-            page_size=page_size,
-            conditions=conditions,
-            params=params if params else None,
-            order_by="heat_score DESC, id DESC",
-        )
-
-    def set_heat_score(self, opportunity_id: int, heat_score: int) -> None:
-        now = datetime.now(timezone.utc).isoformat()
-        self.update(opportunity_id, {"heat_score": heat_score, "updated_at": now})
-
-    def get_all_active(self) -> List[sqlite3.Row]:
-        return self.list_all(conditions=["is_active = 1"])
 
 
 class StatsRepository:
@@ -97,31 +57,7 @@ class StatsRepository:
         ).fetchall()
 
 
-class TrendRepository(BaseRepository):
-    def __init__(self, db: sqlite3.Connection):
-        super().__init__(db, "trend_analysis", TABLE_TREND_ANALYSIS_COLS)
-
-    def search(self, keyword: str, limit: int = 50) -> List[sqlite3.Row]:
-        return self.db.execute(
-            """SELECT * FROM trend_analysis
-               WHERE topic LIKE ? OR result LIKE ? OR analysis_type LIKE ?
-               ORDER BY analyzed_at DESC LIMIT ?""",
-            (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", limit),
-        ).fetchall()
-
-    def soft_delete(self, row_id: int) -> None:
-        self.db.execute("DELETE FROM trend_analysis WHERE id = ?", (row_id,))
-        self.db.commit()
-
-    def list_by_user(self, user_id: int) -> List[sqlite3.Row]:
-        return self.list_all(
-            conditions=["created_by = ?"],
-            params=[user_id],
-            order_by="analyzed_at DESC",
-        )
-
-
-class PubPeerRepository(BaseRepository):
+class PaperIntegrityRepository(BaseRepository):
     def __init__(self, db: sqlite3.Connection):
         super().__init__(db, "paper_integrity", TABLE_PAPER_INTEGRITY_COLS)
 
@@ -154,3 +90,27 @@ class PubPeerRepository(BaseRepository):
             "SELECT * FROM paper_integrity WHERE pubmed_id = ? AND is_active = 1",
             (pubmed_id,),
         ).fetchone()
+
+
+class TrendAnalysisRepository(BaseRepository):
+    def __init__(self, db: sqlite3.Connection):
+        super().__init__(db, "trend_analysis", TABLE_TREND_ANALYSIS_COLS)
+
+    def search(self, keyword: str, limit: int = 50) -> List[sqlite3.Row]:
+        return self.db.execute(
+            """SELECT * FROM trend_analysis
+               WHERE topic LIKE ? OR result LIKE ? OR analysis_type LIKE ?
+               ORDER BY analyzed_at DESC LIMIT ?""",
+            (f"%{keyword}%", f"%{keyword}%", f"%{keyword}%", limit),
+        ).fetchall()
+
+    def soft_delete(self, row_id: int) -> None:
+        self.db.execute("DELETE FROM trend_analysis WHERE id = ?", (row_id,))
+        self.db.commit()
+
+    def list_by_user(self, user_id: int) -> List[sqlite3.Row]:
+        return self.list_all(
+            conditions=["created_by = ?"],
+            params=[user_id],
+            order_by="analyzed_at DESC",
+        )

@@ -10,7 +10,7 @@ from shared.columns import (
 from shared.repository import BaseRepository
 
 
-class ContactRepository(BaseRepository):
+class ContactRecordRepository(BaseRepository):
     def __init__(self, db: sqlite3.Connection):
         super().__init__(db, "contact_record", TABLE_CONTACT_RECORD_COLS)
 
@@ -74,7 +74,7 @@ class OpportunityRepository(BaseRepository):
         )
 
 
-class ResearchRepository(BaseRepository):
+class ResearchTrailRepository(BaseRepository):
     def __init__(self, db: sqlite3.Connection):
         super().__init__(db, "research_trail", TABLE_RESEARCH_TRAIL_COLS)
 
