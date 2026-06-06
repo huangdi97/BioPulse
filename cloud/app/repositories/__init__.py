@@ -122,6 +122,7 @@ from cloud.app.repositories.training_repository import (
     TrainingScriptsRepository,
     TrainingSessionsRepository,
 )
+from cloud.app.repositories.visit_repository import VisitRepository
 from cloud.app.repositories.world_tree_repository import (
     WorldTreeNodesRepository,
     WorldTreeSnapshotsRepository,

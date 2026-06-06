@@ -1,11 +1,12 @@
 """拜访记录路由。"""
 
-from sqlite3 import Connection
+import sqlite3
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from cloud.app.database import get_db
+from cloud.app.database import DB_PATH
+from cloud.app.repositories.visit_repository import VisitRepository
 from cloud.app.services.visit_service import VisitService
 from shared.auth_scope import require_scope
 from shared.base import success
@@ -24,16 +25,26 @@ class VisitCreate(BaseModel):
 
 
 @router.post("/visit")
-def create_visit(body: VisitCreate, conn: Connection = Depends(get_db), user: dict = Depends(require_scope("visit"))):
-    """创建visit。"""
-    service = VisitService(conn)
-    record = service.create_visit(body)
-    return success(data=record)
+def create_visit(body: VisitCreate, user: dict = Depends(require_scope("visit"))):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    try:
+        repo = VisitRepository(conn)
+        service = VisitService(repo)
+        record = service.create_visit(body)
+        return success(data=record)
+    finally:
+        conn.close()
 
 
 @router.get("/visit/{visit_id}")
-def get_visit(visit_id: int, conn: Connection = Depends(get_db), user: dict = Depends(require_scope("visit"))):
-    """获取visit。"""
-    service = VisitService(conn)
-    record = service.get_visit(visit_id)
-    return success(data=record)
+def get_visit(visit_id: int, user: dict = Depends(require_scope("visit"))):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    try:
+        repo = VisitRepository(conn)
+        service = VisitService(repo)
+        record = service.get_visit(visit_id)
+        return success(data=record)
+    finally:
+        conn.close()
