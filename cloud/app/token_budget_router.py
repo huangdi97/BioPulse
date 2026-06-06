@@ -4,7 +4,6 @@ Provides admin endpoints for querying and updating token budget
 configurations, retrieving usage reports, and listing alerts.
 """
 
-from datetime import datetime, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -65,27 +64,4 @@ def list_alerts(
     service: TokenBudgetService = Depends(),
 ) -> Any:
     """获取所有告警配置列表。"""
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    configs = service.list_alert_configs()
-    alerts = []
-    for cfg in configs:
-        row = service.db.execute(
-            "SELECT COALESCE(SUM(tokens), 0) AS total FROM token_usage WHERE user_id=? AND model=? AND usage_date=?",
-            (cfg["user_id"], cfg["model"], today),
-        ).fetchone()
-        daily_used = row["total"] if row else 0
-        limit_today = cfg["max_tokens_per_day"]
-        ratio = daily_used / limit_today if limit_today > 0 else 0
-        if ratio >= cfg["alert_threshold"]:
-            alerts.append(
-                {
-                    "user_id": cfg["user_id"],
-                    "model": cfg["model"],
-                    "daily_used": daily_used,
-                    "daily_limit": limit_today,
-                    "usage_ratio": round(ratio, 4),
-                    "threshold": cfg["alert_threshold"],
-                    "date": today,
-                }
-            )
-    return success(data=alerts)
+    return success(data=service.get_alerts())
