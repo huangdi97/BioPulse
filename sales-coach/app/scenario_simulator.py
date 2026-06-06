@@ -3,7 +3,7 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import List
 
-from sales_coach.app.scenario_loader import _read_kg_entities
+from sales_coach.app.scenario_db import _read_kg_entities
 
 
 class ScenarioSimulator:
