@@ -68,6 +68,8 @@ jobs:
         with:
           flutter-version: '3.27.4'
           channel: 'stable'
+      - name: Install deps
+        run: flutter pub get
       - name: dart analyze
         run: dart analyze
       - name: Build APK (debug)
