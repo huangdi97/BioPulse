@@ -117,3 +117,10 @@ cloud-api.service
 **/test/
 **/RunnerTests/
 mobile_app/build/
+
+# 执行文档/任务文档/设计草稿 — 不进仓库，放 briefings/
+exec-*.md
+tasks-*.md
+S*.md
+*-audit.md
+audit*.md
