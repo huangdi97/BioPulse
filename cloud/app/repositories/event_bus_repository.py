@@ -1,11 +1,11 @@
 """事件总线定义、消息、投递日志等数据访问层。"""
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_EVENT_BUS_DEFINITIONS_COLS,
     TABLE_EVENT_BUS_MESSAGES_COLS,
     TABLE_EVENT_DELIVERY_LOG_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class EventBusDefinitionsRepository(BaseRepository):

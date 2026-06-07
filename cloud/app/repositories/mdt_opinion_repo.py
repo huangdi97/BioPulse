@@ -2,7 +2,8 @@
 
 from datetime import datetime
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_CAUSAL_ANALYSES_COLS,
     TABLE_CAUSAL_GRAPHS_COLS,
     TABLE_COLLABORATION_SESSIONS_COLS,
@@ -13,7 +14,6 @@ from cloud.shared.columns import (
     TABLE_SOAP_DECISIONS_COLS,
     TABLE_SOAP_TEMPLATES_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class SoapDecisionsRepository(BaseRepository):

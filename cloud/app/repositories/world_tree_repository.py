@@ -1,10 +1,10 @@
 """世界树节点、快照等数据访问层。"""
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_WORLD_TREE_NODES_COLS,
     TABLE_WORLD_TREE_SNAPSHOTS_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class WorldTreeNodesRepository(BaseRepository):

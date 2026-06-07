@@ -1,6 +1,7 @@
 """记忆门控、召回日志、巩固日志、效用评分、情景记忆、工作记忆等数据访问层。"""
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_EPISODIC_MEMORY_COLS,
     TABLE_MEMORY_CONSOLIDATION_LOG_COLS,
     TABLE_MEMORY_GATES_COLS,
@@ -10,7 +11,6 @@ from cloud.shared.columns import (
     TABLE_SLEEP_CONSOLIDATION_LOGS_COLS,
     TABLE_WORKING_MEMORY_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class MemoryGatesRepository(BaseRepository):

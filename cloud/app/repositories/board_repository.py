@@ -1,11 +1,11 @@
 """任务看板、看板任务、团队等数据访问层。"""
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_BOARD_TASKS_COLS,
     TABLE_TASK_BOARDS_COLS,
     TABLE_TEAMS_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class TaskBoardsRepository(BaseRepository):

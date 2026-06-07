@@ -1,3 +1,24 @@
+TABLE_FEDERATED_NODES_COLS = frozenset(
+    {
+        "id",
+        "node_id",
+        "node_name",
+        "node_type",
+        "organization",
+        "status",
+        "endpoint_url",
+        "public_key",
+        "data_summary",
+        "last_heartbeat",
+        "round_count",
+        "total_samples",
+        "reliability_score",
+        "is_active",
+        "registered_at",
+        "updated_at",
+    }
+)
+
 TABLE_FEDERATED_ROUNDS_COLS = frozenset(
     {
         "id",

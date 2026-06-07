@@ -31,6 +31,7 @@ SHARED_COLUMN_MODULES = (
     "workingmem",
     "worldtree",
 )
+
 CLOUD_SHARED_COLUMN_MODULES = (
     "auth",
     "common",

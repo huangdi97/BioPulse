@@ -1,12 +1,12 @@
 """MDT会话、参与者、意见、异步意见等数据访问层。"""
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_ASYNC_MDT_OPINIONS_COLS,
     TABLE_MDT_OPINIONS_COLS,
     TABLE_MDT_PARTICIPANTS_COLS,
     TABLE_MDT_SESSIONS_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class MdtSessionsRepository(BaseRepository):

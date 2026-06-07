@@ -1,6 +1,7 @@
 """商机、客户、客户互动、HCP互动、HCP档案、HCP仿真等数据访问层。"""
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_CUSTOMER_INTERACTIONS_COLS,
     TABLE_CUSTOMERS_COLS,
     TABLE_HCP_INTERACTIONS_COLS,
@@ -8,7 +9,6 @@ from cloud.shared.columns import (
     TABLE_HCP_SIMULATIONS_COLS,
     TABLE_OPPORTUNITIES_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class OpportunitiesRepository(BaseRepository):

@@ -1,17 +1,9 @@
 import re
-from enum import Enum
 from typing import List
 
 from pydantic import BaseModel
 
-
-class RuleCategory(str, Enum):
-    """Categories of compliance rules for medical content checking."""
-
-    PROHIBITED_WORD = "prohibited_word"
-    MANDATORY_CLAIM = "mandatory_claim"
-    DOSAGE_LIMIT = "dosage_limit"
-    COMPARATIVE_CLAIM = "comparative_claim"
+from shared.rule_category import RuleCategory  # noqa: F401
 
 
 class ComplianceCheckResult(BaseModel):

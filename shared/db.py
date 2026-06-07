@@ -1,6 +1,7 @@
 import logging
 
 from shared.config import settings
+from shared.pg_row import PGRow  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
@@ -13,19 +14,6 @@ def is_sqlite() -> bool:
 
 def get_db_type() -> str:
     return "sqlite" if is_sqlite() else "postgresql"
-
-
-class PGRow(dict):
-    def __getitem__(self, key):
-        if isinstance(key, (int, slice)):
-            return list(self.values())[key]
-        return dict.__getitem__(self, key)
-
-    def __getattr__(self, name):
-        try:
-            return self[name]
-        except KeyError:
-            raise AttributeError(name)
 
 
 class PGCompatCursor:

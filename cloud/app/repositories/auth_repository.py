@@ -1,6 +1,7 @@
 """用户、团队、档案、行为、VC凭证、系统配置等数据访问层。"""
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_SYSTEM_CONFIGS_COLS,
     TABLE_USER_BEHAVIORS_COLS,
     TABLE_USER_PROFILES_COLS,
@@ -8,7 +9,6 @@ from cloud.shared.columns import (
     TABLE_USERS_COLS,
     TABLE_VC_CREDENTIALS_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class UsersRepository(BaseRepository):

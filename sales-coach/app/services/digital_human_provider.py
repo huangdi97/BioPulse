@@ -104,6 +104,9 @@ class InternalLLMProvider(DigitalHumanProvider):
         }
 
 
+InternalDigitalHumanProvider = InternalLLMProvider
+
+
 class WaveCloudProvider(DigitalHumanProvider):
     """浪潮云数字人供应商，等待合作接入。"""
 

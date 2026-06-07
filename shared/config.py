@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseSettings):
+class Config(BaseSettings):
     # Auth
     SECRET_KEY: str = "dev-secret-key-change-in-production"
     ALGORITHM: str = "HS256"
@@ -73,4 +73,6 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 
-settings = Settings()
+Settings = Config
+
+settings = Config()

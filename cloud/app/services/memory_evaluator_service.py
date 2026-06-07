@@ -1,0 +1,120 @@
+"""记忆评估服务，负责 AI 评分与 auto_store 逻辑。"""
+
+import json
+from datetime import datetime
+
+from fastapi import HTTPException
+from starlette import status
+
+from cloud.app.repositories import (
+    ComplianceAuditRecordsRepository,
+    CrossCaseInsightsRepository,
+    DecisionCasesRepository,
+    MemoryEntriesRepository,
+    MemoryGatesRepository,
+)
+from cloud.app.services.holographic_service import HolographicService
+
+
+def _now():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+class MemoryEvaluatorService:
+    def __init__(self, db, ai_gateway=None, holographic_service=None, holographic_service_factory=None):
+        self.db = db
+        self._ai_gateway = ai_gateway
+        self._holographic_service = holographic_service
+        self._holographic_service_factory = holographic_service_factory
+
+    @property
+    def ai_gateway(self):
+        if self._ai_gateway is None:
+            from cloud.app.services.ai_gateway_service import AiGatewayService
+
+            self._ai_gateway = AiGatewayService(self.db)
+        return self._ai_gateway
+
+    @property
+    def holographic_service(self):
+        if self._holographic_service is None:
+            factory = self._holographic_service_factory or HolographicService
+            self._holographic_service = factory(self.db)
+        return self._holographic_service
+
+    def _load_source(self, source_type: str, source_id: str) -> tuple:
+        source_data = None
+        source_title = ""
+        source_content = ""
+        if source_type == "insight":
+            repo = CrossCaseInsightsRepository(self.db)
+            row = repo.get_by_id(int(source_id))
+            if row:
+                source_title = row.get("title", "")
+                source_content = f"Type: {row.get('insight_type', '')}. Summary: {row.get('summary', '')}. Detail: {row.get('detail', '')}"
+                source_data = row
+        elif source_type == "case":
+            repo = DecisionCasesRepository(self.db)
+            row = repo.get_by_id(int(source_id))
+            if row:
+                source_title = row.get("name", "")
+                source_content = f"Description: {row.get('description', '')}. Outcome: {row.get('outcome', '')}. Score: {row.get('outcome_score', 0)}"
+                source_data = row
+        elif source_type == "compliance":
+            repo = ComplianceAuditRecordsRepository(self.db)
+            row = repo.get_by_id(int(source_id))
+            if row:
+                source_title = row.get("content", "")[:100]
+                source_content = f"Content: {row.get('content', '')}. Risk: {row.get('risk_level', '')}. Score: {row.get('score', 0)}. Passed: {row.get('passed', 0)}"
+                source_data = row
+        return source_data, source_title, source_content
+
+    def auto_store(self, source_type: str, source_id: str, uid: int, auth_header: str = "") -> dict:
+        gate_repo = MemoryGatesRepository(self.db)
+        entry_repo = MemoryEntriesRepository(self.db)
+        gate = gate_repo.find_active_by_source_type(source_type)
+        if not gate:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"No active gate for source_type '{source_type}'")
+        source_data, source_title, source_content = self._load_source(source_type, source_id)
+        if not source_data:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"Source {source_type}/{source_id} not found")
+        messages = [
+            {"role": "system", "content": "判断这条信息的重要性，给出0到1之间的一个分数（只输出数字，不要任何其他文字）。"},
+            {"role": "user", "content": source_content},
+        ]
+        try:
+            ai_resp = self.ai_gateway.chat(messages=messages, temperature=0.3, max_tokens=256, user_id=uid)
+        except Exception:
+            return {"stored": False, "importance": 0, "error": "AI call failed"}
+        raw = ai_resp.get("reply", "0")
+        try:
+            importance = float(raw.strip())
+            importance = max(0.0, min(1.0, importance))
+        except (ValueError, TypeError):
+            importance = 0.0
+        stored = importance >= gate["importance_threshold"]
+        if stored:
+            existing = entry_repo.find_by_source_active(source_type, source_id)
+            if existing:
+                return {"stored": False, "importance": importance, "reason": "Already stored"}
+            now = _now()
+            tags = json.dumps([source_type], ensure_ascii=False)
+            entry_id = entry_repo.create(
+                {
+                    "title": source_title,
+                    "content": source_content,
+                    "memory_type": source_type,
+                    "source_type": source_type,
+                    "source_id": source_id,
+                    "importance": importance,
+                    "context_tags": tags,
+                    "access_count": 0,
+                    "created_by": uid,
+                    "created_at": now,
+                    "updated_at": now,
+                }
+            )
+            self.holographic_service.auto_associate(
+                entry_id, {"context_tags": tags, "source_id": source_id, "memory_type": source_type, "created_at": now}
+            )
+        return {"stored": stored, "importance": importance}

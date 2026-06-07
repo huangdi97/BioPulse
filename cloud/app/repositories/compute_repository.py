@@ -1,12 +1,12 @@
 """隐私预算、隐私计算作业、传感器会话、效果指标等数据访问层。"""
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_EFFECT_METRICS_COLS,
     TABLE_PRIVACY_BUDGETS_COLS,
     TABLE_PRIVACY_COMPUTE_JOBS_COLS,
     TABLE_SENSOR_SESSIONS_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class PrivacyBudgetsRepository(BaseRepository):

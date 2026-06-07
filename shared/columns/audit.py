@@ -46,6 +46,19 @@ TABLE_COMPLIANCE_AUDIT_RECORDS_COLS = frozenset(
     }
 )
 
+TABLE_AUDIT_CHAIN_BLOCKS_COLS = frozenset(
+    {
+        "id",
+        "block_hash",
+        "prev_block_hash",
+        "block_data",
+        "block_type",
+        "created_by",
+        "node_id",
+        "timestamp",
+    }
+)
+
 TABLE_TRAINING_CORRECTIONS_COLS = frozenset(
     {
         "id",

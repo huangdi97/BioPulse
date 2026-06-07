@@ -1,24 +1,22 @@
-"""记忆门控服务，负责记忆条目的重要性评估与路由分发。"""
+"""记忆门控服务，集成门控仓库配置阈值与保留策略实现记忆筛选，条目仓库与全息服务提供持久化存储与语义关联，评估服务基于内容特征自动评分排序，支撑高效精准的记忆召回。"""
 
 import json
-import urllib.request
 from datetime import datetime
 from typing import Optional
 
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException
 from starlette import status
 
+from cloud.app.database import get_db
 from cloud.app.repositories import (
-    ComplianceAuditRecordsRepository,
-    CrossCaseInsightsRepository,
-    DecisionCasesRepository,
     MemoryEntriesRepository,
     MemoryGatesRepository,
     MemoryRecallLogRepository,
 )
 from cloud.app.services.base import BaseService
 from cloud.app.services.holographic_service import HolographicService
-from shared.config import settings as config_settings
+from cloud.app.services.memory_dashboard_service import MemoryDashboardService
+from cloud.app.services.memory_evaluator_service import MemoryEvaluatorService
 
 
 def _now():
@@ -26,26 +24,34 @@ def _now():
 
 
 class MemoryGateService(BaseService):
-    """记忆门控服务，提供记忆门的创建、条目的评分过滤与路由。"""
+    def __init__(self, db=Depends(get_db), evaluator=None, dashboard_service=None, holographic_service=None, holographic_service_factory=None):
+        super().__init__(db)
+        self._evaluator = evaluator
+        self._dashboard_service = dashboard_service
+        self._holographic_service = holographic_service
+        self._holographic_service_factory = holographic_service_factory
 
-    def _call_ai(self, messages: list[dict], auth_header: str) -> dict:
-        payload = {"messages": messages, "temperature": 0.3, "max_tokens": 256}
-        req = urllib.request.Request(
-            f"{config_settings.ai_chat_url}",
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json", "Authorization": auth_header},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=120) as rp:
-            return json.loads(rp.read().decode("utf-8")).get("data", {})
+    @property
+    def evaluator(self):
+        if self._evaluator is None:
+            self._evaluator = MemoryEvaluatorService(self.db)
+        return self._evaluator
+
+    @property
+    def dashboard_service(self):
+        if self._dashboard_service is None:
+            self._dashboard_service = MemoryDashboardService(self.db)
+        return self._dashboard_service
+
+    @property
+    def holographic_service(self):
+        if self._holographic_service is None:
+            factory = self._holographic_service_factory or HolographicService
+            self._holographic_service = factory(self.db)
+        return self._holographic_service
 
     def create_gate(
-        self,
-        name: str,
-        source_type: str,
-        importance_threshold: float = 0.5,
-        ttl_days: int = 90,
-        retention_policy: str = "normal",
+        self, name: str, source_type: str, importance_threshold: float = 0.5, ttl_days: int = 90, retention_policy: str = "normal"
     ) -> dict:
         repo = MemoryGatesRepository(self.db)
         gate_id = repo.create(
@@ -100,14 +106,8 @@ class MemoryGateService(BaseService):
                 "updated_at": now,
             }
         )
-        HolographicService(self.db).auto_associate(
-            entry_id,
-            {
-                "context_tags": tags,
-                "source_id": source_id or "",
-                "memory_type": memory_type,
-                "created_at": now,
-            },
+        self.holographic_service.auto_associate(
+            entry_id, {"context_tags": tags, "source_id": source_id or "", "memory_type": memory_type, "created_at": now}
         )
         return {
             "id": entry_id,
@@ -129,13 +129,7 @@ class MemoryGateService(BaseService):
         page_size: int = 20,
     ) -> tuple[int, int, list[dict]]:
         repo = MemoryEntriesRepository(self.db)
-        return repo.list_filtered(
-            memory_type=memory_type,
-            importance_min=importance_min,
-            keyword=keyword,
-            page=page,
-            page_size=page_size,
-        )
+        return repo.list_filtered(memory_type=memory_type, importance_min=importance_min, keyword=keyword, page=page, page_size=page_size)
 
     def get_entry(self, entry_id: int) -> dict:
         repo = MemoryEntriesRepository(self.db)
@@ -147,16 +141,9 @@ class MemoryGateService(BaseService):
         self.db.commit()
         return row
 
-    def recall(
-        self,
-        query: str,
-        memory_types: list[str],
-        min_importance: float,
-        max_results: int,
-    ) -> dict:
+    def recall(self, query: str, memory_types: list[str], min_importance: float, max_results: int) -> dict:
         entry_repo = MemoryEntriesRepository(self.db)
         recall_repo = MemoryRecallLogRepository(self.db)
-
         conditions, params = ["is_active = 1", "importance >= ?"], [min_importance]
         if memory_types:
             placeholders = ",".join("?" for _ in memory_types)
@@ -181,137 +168,8 @@ class MemoryGateService(BaseService):
         )
         return {"results": results, "recall_count": len(results)}
 
-    def auto_store(self, source_type: str, source_id: str, uid: int, auth_header: str) -> dict:
-        gate_repo = MemoryGatesRepository(self.db)
-        entry_repo = MemoryEntriesRepository(self.db)
-
-        gate = gate_repo.find_active_by_source_type(source_type)
-        if not gate:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND,
-                detail=f"No active gate for source_type '{source_type}'",
-            )
-
-        source_data = None
-        source_title = ""
-        source_content = ""
-        if source_type == "insight":
-            repo = CrossCaseInsightsRepository(self.db)
-            row = repo.get_by_id(int(source_id))
-            if row:
-                source_title = row.get("title", "")
-                source_content = f"Type: {row.get('insight_type', '')}. Summary: {row.get('summary', '')}. Detail: {row.get('detail', '')}"
-                source_data = row
-        elif source_type == "case":
-            repo = DecisionCasesRepository(self.db)
-            row = repo.get_by_id(int(source_id))
-            if row:
-                source_title = row.get("name", "")
-                source_content = f"Description: {row.get('description', '')}. Outcome: {row.get('outcome', '')}. Score: {row.get('outcome_score', 0)}"
-                source_data = row
-        elif source_type == "compliance":
-            repo = ComplianceAuditRecordsRepository(self.db)
-            row = repo.get_by_id(int(source_id))
-            if row:
-                source_title = row.get("content", "")[:100]
-                source_content = f"Content: {row.get('content', '')}. Risk: {row.get('risk_level', '')}. Score: {row.get('score', 0)}. Passed: {row.get('passed', 0)}"
-                source_data = row
-
-        if not source_data:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND,
-                detail=f"Source {source_type}/{source_id} not found",
-            )
-
-        messages = [
-            {
-                "role": "system",
-                "content": "判断这条信息的重要性，给出0到1之间的一个分数（只输出数字，不要任何其他文字）。",
-            },
-            {"role": "user", "content": source_content},
-        ]
-        try:
-            ai_resp = self._call_ai(messages, auth_header)
-        except Exception:
-            return {"stored": False, "importance": 0, "error": "AI call failed"}
-
-        raw = ai_resp.get("reply", "0")
-        try:
-            importance = float(raw.strip())
-            importance = max(0.0, min(1.0, importance))
-        except (ValueError, TypeError):
-            importance = 0.0
-
-        stored = importance >= gate["importance_threshold"]
-        if stored:
-            existing = entry_repo.find_by_source_active(source_type, source_id)
-            if existing:
-                return {
-                    "stored": False,
-                    "importance": importance,
-                    "reason": "Already stored",
-                }
-            now = _now()
-            tags = json.dumps([source_type], ensure_ascii=False)
-            entry_id = entry_repo.create(
-                {
-                    "title": source_title,
-                    "content": source_content,
-                    "memory_type": source_type,
-                    "source_type": source_type,
-                    "source_id": source_id,
-                    "importance": importance,
-                    "context_tags": tags,
-                    "access_count": 0,
-                    "created_by": uid,
-                    "created_at": now,
-                    "updated_at": now,
-                }
-            )
-            HolographicService(self.db).auto_associate(
-                entry_id,
-                {
-                    "context_tags": tags,
-                    "source_id": source_id,
-                    "memory_type": source_type,
-                    "created_at": now,
-                },
-            )
-
-        return {"stored": stored, "importance": importance}
+    def auto_store(self, source_type: str, source_id: str, uid: int, auth_header: str = "") -> dict:
+        return self.evaluator.auto_store(source_type=source_type, source_id=source_id, uid=uid, auth_header=auth_header)
 
     def dashboard(self) -> dict:
-        entry_repo = MemoryEntriesRepository(self.db)
-        recall_repo = MemoryRecallLogRepository(self.db)
-
-        total = entry_repo.count_active()
-        type_rows = entry_repo.by_type_stats()
-        by_type = [
-            {
-                "memory_type": r["memory_type"],
-                "count": r["cnt"],
-                "avg_importance": round(r["avg_imp"], 4),
-            }
-            for r in type_rows
-        ]
-
-        tag_counter = {}
-        entries = entry_repo.all_context_tags_active()
-        for e in entries:
-            try:
-                tags = json.loads(e["context_tags"])
-            except (json.JSONDecodeError, TypeError):
-                tags = []
-            for t in tags:
-                tag_counter[t] = tag_counter.get(t, 0) + 1
-        top_tags = sorted(tag_counter.items(), key=lambda x: x[1], reverse=True)[:10]
-        top_tags = [{"tag": t, "count": c} for t, c in top_tags]
-
-        recent_logs = recall_repo.list_recent(limit=5)
-
-        return {
-            "total_entries": total,
-            "by_memory_type": by_type,
-            "top_context_tags": top_tags,
-            "recent_recall_logs": recent_logs,
-        }
+        return self.dashboard_service.dashboard()

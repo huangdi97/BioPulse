@@ -1,10 +1,10 @@
 """通知、通知模板等数据访问层。"""
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_NOTIFICATION_TEMPLATES_COLS,
     TABLE_NOTIFICATIONS_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class NotificationsRepository(BaseRepository):

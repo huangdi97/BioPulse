@@ -1,6 +1,7 @@
 """智能体执行任务、市场、管线、角色、技能、编排模板等数据访问层。"""
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_AGENT_EXECUTION_TASKS_COLS,
     TABLE_AGENT_MARKETPLACE_COLS,
     TABLE_AGENT_PIPELINES_COLS,
@@ -11,7 +12,6 @@ from cloud.shared.columns import (
     TABLE_PIPELINE_STEP_RUNS_COLS,
     TABLE_PIPELINE_STEPS_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class AgentExecutionTasksRepository(BaseRepository):

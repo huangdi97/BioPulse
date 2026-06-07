@@ -2,12 +2,12 @@
 
 import sqlite3
 
-from cloud.app.agent_database import (
+from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
+from cloud.app.agent_runtime.runtime_core import RuntimeCore
+from cloud.app.agent_runtime_log_repository import (
     AgentApprovalRepository,
     AgentRuntimeLogRepository,
 )
-from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
-from cloud.app.agent_runtime.runtime_core import RuntimeCore
 from cloud.app.database import DB_PATH
 
 

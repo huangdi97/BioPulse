@@ -24,8 +24,17 @@ from cloud.app.services.memory_format import (
 class MemoryWriter(BaseService):
     """记忆写入服务，提供工作记忆设置、情景记忆记录与语义记忆存储功能。"""
 
-    def __init__(self, db):
+    def __init__(self, db, holographic_service=None, holographic_service_factory=None):
         super().__init__(db)
+        self._holographic_service = holographic_service
+        self._holographic_service_factory = holographic_service_factory
+
+    @property
+    def holographic_service(self):
+        if self._holographic_service is None:
+            factory = self._holographic_service_factory or HolographicService
+            self._holographic_service = factory(self.db)
+        return self._holographic_service
 
     def working_set(
         self,
@@ -288,4 +297,4 @@ class MemoryWriter(BaseService):
         return {"decayed": len(rows), "hours_threshold": hours_threshold}
 
     def _auto_associate(self, entry_id: int, entry: dict):
-        HolographicService(self.db).auto_associate(entry_id, entry)
+        self.holographic_service.auto_associate(entry_id, entry)

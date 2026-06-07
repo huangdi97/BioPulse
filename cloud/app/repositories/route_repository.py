@@ -1,11 +1,11 @@
 """路由规则、日志、统计等数据访问层。"""
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_ROUTE_LOGS_COLS,
     TABLE_ROUTE_RULES_COLS,
     TABLE_ROUTE_STATS_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class RouteRulesRepository(BaseRepository):

@@ -1,7 +1,7 @@
 """记忆条目数据访问层。"""
 
-from cloud.shared.columns import TABLE_MEMORY_ENTRIES_COLS
 from cloud.shared.repository import BaseRepository
+from shared.columns import TABLE_MEMORY_ENTRIES_COLS
 
 
 class MemoryEntriesRepository(BaseRepository):

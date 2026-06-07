@@ -1,11 +1,11 @@
 """市场情报条目、数据源、MCP工具等数据访问层。"""
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_MARKET_INTEL_ITEMS_COLS,
     TABLE_MARKET_INTEL_SOURCES_COLS,
     TABLE_MCP_TOOLS_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class MarketIntelItemsRepository(BaseRepository):

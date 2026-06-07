@@ -1,21 +1,8 @@
-from enum import IntEnum
 from typing import Generic, List, Optional, TypeVar
 
 from pydantic import BaseModel
 
-
-class ErrorCode(IntEnum):
-    """Standardized error codes for API responses."""
-
-    SUCCESS = 0
-    UNAUTHORIZED = 1
-    FORBIDDEN = 2
-    NOT_FOUND = 3
-    VALIDATION_ERROR = 4
-    INTERNAL_ERROR = 5
-    CONFLICT = 6
-    RATE_LIMITED = 7
-
+from shared.error_code import ErrorCode  # noqa: F401
 
 T = TypeVar("T")
 

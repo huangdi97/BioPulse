@@ -1,13 +1,13 @@
 """合规规则、审计记录、NMPA日志、数据脱敏、DID注册等数据访问层。"""
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_COMPLIANCE_AUDIT_RECORDS_COLS,
     TABLE_COMPLIANCE_RULES_COLS,
     TABLE_DATA_MASKING_RULES_COLS,
     TABLE_DID_REGISTRY_COLS,
     TABLE_NMPA_COMPLIANCE_LOGS_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class ComplianceRulesRepository(BaseRepository):

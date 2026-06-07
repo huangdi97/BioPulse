@@ -1,11 +1,11 @@
 """推荐、内容、供应链等数据访问层。"""
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_CONTENTS_COLS,
     TABLE_RECOMMENDATIONS_COLS,
     TABLE_SUPPLY_CHAIN_ITEMS_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class RecommendationsRepository(BaseRepository):

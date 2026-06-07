@@ -1,6 +1,7 @@
 """审计日志、审计链、联邦审计、基准报告等数据访问层。"""
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_AUDIT_CHAIN_BLOCKS_COLS,
     TABLE_AUDIT_CHAIN_ENTRIES_COLS,
     TABLE_AUDIT_LOGS_COLS,
@@ -10,7 +11,6 @@ from cloud.shared.columns import (
     TABLE_FEDERATED_NODES_COLS,
     TABLE_FEDERATED_ROUNDS_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class AuditLogsRepository(BaseRepository):

@@ -19,17 +19,21 @@ class KnowledgeService(BaseService):
         Returns:
             dict: 包含新条目 id 的结果
         """
-        repo = KnowledgeBaseRepository(self.db)
-        now = datetime.now(timezone.utc).isoformat()
-        row_id = repo.create(
-            {
-                **body.model_dump(),
-                "created_by": user_id,
-                "created_at": now,
-                "updated_at": now,
-            },
-        )
-        return {"id": row_id}
+        conn = self._connection()
+        try:
+            repo = KnowledgeBaseRepository(conn)
+            now = datetime.now(timezone.utc).isoformat()
+            row_id = repo.create(
+                {
+                    **body.model_dump(),
+                    "created_by": user_id,
+                    "created_at": now,
+                    "updated_at": now,
+                },
+            )
+            return {"id": row_id}
+        finally:
+            conn.close()
 
     def list(
         self,
@@ -46,17 +50,21 @@ class KnowledgeService(BaseService):
         Returns:
             tuple: (items, total, page, page_size, total_pages)
         """
-        repo = KnowledgeBaseRepository(self.db)
-        conditions = ["is_active = 1"]
-        params: list = []
-        if category:
-            conditions.append("category = ?")
-            params.append(category)
-        if difficulty:
-            conditions.append("difficulty = ?")
-            params.append(difficulty)
+        conn = self._connection()
+        try:
+            repo = KnowledgeBaseRepository(conn)
+            conditions = ["is_active = 1"]
+            params: list = []
+            if category:
+                conditions.append("category = ?")
+                params.append(category)
+            if difficulty:
+                conditions.append("difficulty = ?")
+                params.append(difficulty)
 
-        return repo.paginate(page, page_size, conditions, params)
+            return repo.paginate(page, page_size, conditions, params)
+        finally:
+            conn.close()
 
     def list_categories(self) -> list:
         """列出所有知识分类。
@@ -64,13 +72,17 @@ class KnowledgeService(BaseService):
         Returns:
             list: 去重排序的分类列表
         """
-        repo = KnowledgeBaseRepository(self.db)
-        rows = repo.list_all(
-            conditions=["category IS NOT NULL", "is_active = 1"],
-            order_by="category ASC",
-        )
-        categories = list({r["category"] for r in rows})
-        return sorted(categories)
+        conn = self._connection()
+        try:
+            repo = KnowledgeBaseRepository(conn)
+            rows = repo.list_all(
+                conditions=["category IS NOT NULL", "is_active = 1"],
+                order_by="category ASC",
+            )
+            categories = list({r["category"] for r in rows})
+            return sorted(categories)
+        finally:
+            conn.close()
 
     def search(self, q: str, page: int, page_size: int) -> tuple:
         """全文搜索知识库。
@@ -81,21 +93,25 @@ class KnowledgeService(BaseService):
         Returns:
             tuple: (total, total_pages, rows)
         """
-        match_expr = q
-        count_row = self.db.execute(
-            "SELECT COUNT(*) FROM knowledge_fts WHERE knowledge_fts MATCH ?",
-            (match_expr,),
-        ).fetchone()
-        total = count_row[0]
-        total_pages = max(1, (total + page_size - 1) // page_size)
-        offset = (page - 1) * page_size
-        rows = self.db.execute(
-            """SELECT k.* FROM knowledge_fts f JOIN knowledge_base k ON f.rowid = k.id
-               WHERE knowledge_fts MATCH ? AND k.is_active = 1
-               ORDER BY rank LIMIT ? OFFSET ?""",
-            (match_expr, page_size, offset),
-        ).fetchall()
-        return total, total_pages, rows
+        conn = self._connection()
+        try:
+            match_expr = q
+            count_row = conn.execute(
+                "SELECT COUNT(*) FROM knowledge_fts WHERE knowledge_fts MATCH ?",
+                (match_expr,),
+            ).fetchone()
+            total = count_row[0]
+            total_pages = max(1, (total + page_size - 1) // page_size)
+            offset = (page - 1) * page_size
+            rows = conn.execute(
+                """SELECT k.* FROM knowledge_fts f JOIN knowledge_base k ON f.rowid = k.id
+                   WHERE knowledge_fts MATCH ? AND k.is_active = 1
+                   ORDER BY rank LIMIT ? OFFSET ?""",
+                (match_expr, page_size, offset),
+            ).fetchall()
+            return total, total_pages, rows
+        finally:
+            conn.close()
 
     def get(self, knowledge_id: int) -> dict:
         """根据ID获取知识条目详情。
@@ -106,8 +122,12 @@ class KnowledgeService(BaseService):
         Returns:
             dict: 知识条目详情
         """
-        repo = KnowledgeBaseRepository(self.db)
-        return dict(repo.get_or_404(knowledge_id))
+        conn = self._connection()
+        try:
+            repo = KnowledgeBaseRepository(conn)
+            return dict(repo.get_or_404(knowledge_id))
+        finally:
+            conn.close()
 
     def update(self, knowledge_id: int, body) -> dict:
         """更新知识条目。
@@ -118,14 +138,18 @@ class KnowledgeService(BaseService):
         Returns:
             dict: 更新后的知识条目
         """
-        repo = KnowledgeBaseRepository(self.db)
-        repo.get_or_404(knowledge_id)
-        updates = body.model_dump(exclude_unset=True)
-        if not updates:
+        conn = self._connection()
+        try:
+            repo = KnowledgeBaseRepository(conn)
+            repo.get_or_404(knowledge_id)
+            updates = body.model_dump(exclude_unset=True)
+            if not updates:
+                return dict(repo.get_by_id(knowledge_id))
+            updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+            repo.update(knowledge_id, updates)
             return dict(repo.get_by_id(knowledge_id))
-        updates["updated_at"] = datetime.now(timezone.utc).isoformat()
-        repo.update(knowledge_id, updates)
-        return dict(repo.get_by_id(knowledge_id))
+        finally:
+            conn.close()
 
     def delete(self, knowledge_id: int) -> None:
         """软删除知识条目。
@@ -133,6 +157,10 @@ class KnowledgeService(BaseService):
         Args:
             knowledge_id: 知识条目ID
         """
-        repo = KnowledgeBaseRepository(self.db)
-        repo.get_or_404(knowledge_id)
-        repo.soft_delete(knowledge_id)
+        conn = self._connection()
+        try:
+            repo = KnowledgeBaseRepository(conn)
+            repo.get_or_404(knowledge_id)
+            repo.soft_delete(knowledge_id)
+        finally:
+            conn.close()

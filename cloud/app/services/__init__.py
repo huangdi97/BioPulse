@@ -43,6 +43,8 @@ from cloud.app.services.mcp_tool_service import McpToolService
 from cloud.app.services.mdt_agent_service import MdtAgentService
 from cloud.app.services.mdt_engine_service import MdtEngineService
 from cloud.app.services.memory_consolidation_service import MemoryConsolidationService
+from cloud.app.services.memory_dashboard_service import MemoryDashboardService
+from cloud.app.services.memory_evaluator_service import MemoryEvaluatorService
 from cloud.app.services.memory_gate_service import MemoryGateService
 from cloud.app.services.memory_utility_service import MemoryUtilityService
 from cloud.app.services.model_compression_service import ModelCompressionService
@@ -121,6 +123,8 @@ __all__ = [
     "MdtAgentService",
     "MdtEngineService",
     "MemoryConsolidationService",
+    "MemoryDashboardService",
+    "MemoryEvaluatorService",
     "MemoryGateService",
     "MemoryUtilityService",
     "ModelCompressionService",

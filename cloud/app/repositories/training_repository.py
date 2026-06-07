@@ -1,6 +1,7 @@
 """培训模块、会话、归因、纠正、脚本、ROI分析等数据访问层。"""
 
-from cloud.shared.columns import (
+from cloud.shared.repository import BaseRepository
+from shared.columns import (
     TABLE_TRAINING_ATTRIBUTIONS_COLS,
     TABLE_TRAINING_CORRECTIONS_COLS,
     TABLE_TRAINING_MODULES_COLS,
@@ -8,7 +9,6 @@ from cloud.shared.columns import (
     TABLE_TRAINING_SCRIPTS_COLS,
     TABLE_TRAINING_SESSIONS_COLS,
 )
-from cloud.shared.repository import BaseRepository
 
 
 class TrainingModulesRepository(BaseRepository):
