@@ -8,6 +8,8 @@ import type { KpiCard as KpiCardType } from "../../types/dashboard"
 
 const modeTabs = ["标准版", "高级版"]
 
+// TODO: pipelineData 待后端 `/dashboard/research-pipeline` 端点补齐后替换为真实 API 调用
+
 const pipelineData = [
   {
     title: "报价中",

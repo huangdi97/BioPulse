@@ -75,3 +75,14 @@ class AgentDecision(BaseModel):
     tool: str | None = None
     params: dict | None = None
     reasoning: str | None = None
+
+
+class Models:
+    """Namespace for agent runtime data models."""
+
+    ToolDef = ToolDef
+    AgentSpec = AgentSpec
+    RuntimeResult = RuntimeResult
+    AgentLogEntry = AgentLogEntry
+    CheckpointData = CheckpointData
+    AgentDecision = AgentDecision

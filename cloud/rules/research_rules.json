@@ -5,7 +5,12 @@
     "level": "L1",
     "action": "block",
     "severity": "critical",
-    "description": "不得以科研名义变相推销与学术无关的产品"
+    "description": "不得以科研名义变相推销与学术无关的产品",
+    "detection": {
+      "type": "keyword_match",
+      "keywords": ["推广", "适应症", "处方"],
+      "fields": ["notes", "content"]
+    }
   },
   {
     "code": "RSR-L1-002",
@@ -13,7 +18,12 @@
     "level": "L1",
     "action": "block",
     "severity": "critical",
-    "description": "推荐产品必须有有效注册证/资质"
+    "description": "推荐产品必须有有效注册证/资质",
+    "detection": {
+      "type": "field_check",
+      "fields": ["product_cert"],
+      "condition": "missing"
+    }
   },
   {
     "code": "RSR-L1-003",
@@ -21,6 +31,178 @@
     "level": "L1",
     "action": "block",
     "severity": "critical",
-    "description": "科研支持不得附带采购条件"
+    "description": "科研支持不得附带采购条件",
+    "detection": {
+      "type": "keyword_match",
+      "keywords": ["回扣", "好处费", "提成"],
+      "fields": ["expenses", "notes"]
+    }
+  },
+  {
+    "code": "RSR-L1-004",
+    "name": "科研数据造假禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "严禁伪造、篡改或编造科研数据",
+    "detection": {
+      "type": "field_check",
+      "field": "data_integrity_verified",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "RSR-L1-005",
+    "name": "利益冲突未披露",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "科研合作中存在的利益冲突须在研究启动前书面披露",
+    "detection": {
+      "type": "field_check",
+      "field": "coi_disclosed",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "RSR-L1-006",
+    "name": "商业馈赠超限",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "向研究人员提供的馈赠不得超过规定限额",
+    "detection": {
+      "type": "threshold",
+      "field": "gift_value",
+      "operator": "gte",
+      "value": 500
+    }
+  },
+  {
+    "code": "RSR-L1-007",
+    "name": "旅行资助合规",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "向研究人员提供的旅行资助须符合学术目的且经审批",
+    "detection": {
+      "type": "field_check",
+      "field": "travel_grant_approved",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "RSR-L1-008",
+    "name": "咨询费无合同",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "支付咨询费须有正式咨询服务合同",
+    "detection": {
+      "type": "field_check",
+      "field": "consultancy_contract_signed",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "RSR-L1-009",
+    "name": "伦理审核未通过",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "涉及人体的研究须通过伦理委员会审批",
+    "detection": {
+      "type": "field_check",
+      "field": "ethics_approved",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "RSR-L1-010",
+    "name": "署名未确认",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "学术论文/研究报告的署名须经所有作者书面确认",
+    "detection": {
+      "type": "field_check",
+      "field": "authorship_confirmed",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "RSR-L1-011",
+    "name": "样本管理违规",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "生物样本的采集、存储和使用须符合伦理和法规要求",
+    "detection": {
+      "type": "field_check",
+      "field": "sample_management_compliant",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "RSR-L1-012",
+    "name": "试剂溯源缺失",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "关键试剂须有完整的采购和溯源记录",
+    "detection": {
+      "type": "field_check",
+      "field": "reagent_traceable",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "RSR-L1-013",
+    "name": "客户保密信息泄露",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "不得泄露客户的保密研究信息",
+    "detection": {
+      "type": "keyword_match",
+      "field": "notes",
+      "keywords": ["客户机密", "研究方案外传", "数据泄露"]
+    }
+  },
+  {
+    "code": "RSR-L1-014",
+    "name": "出口管制违规",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "受管制的研究材料或数据不得违规跨境传输",
+    "detection": {
+      "type": "field_check",
+      "field": "export_control_cleared",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "RSR-L1-015",
+    "name": "科研经费使用不当",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "科研经费须按预算用途使用，不得挪用",
+    "detection": {
+      "type": "field_check",
+      "field": "fund_usage_approved",
+      "operator": "eq",
+      "value": false
+    }
   }
 ]

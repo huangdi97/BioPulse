@@ -63,4 +63,71 @@ AGENT_SQL = """\
                 status TEXT DEFAULT 'pending'
             );
             CREATE INDEX IF NOT EXISTS idx_step_runs_run ON pipeline_step_runs(run_id);
+            CREATE TABLE IF NOT EXISTS agent_runtime_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                agent_key TEXT NOT NULL,
+                goal TEXT NOT NULL,
+                status TEXT DEFAULT 'pending',
+                iterations INTEGER DEFAULT 0,
+                tool_calls INTEGER DEFAULT 0,
+                result TEXT,
+                error_message TEXT,
+                started_at TEXT,
+                completed_at TEXT,
+                log_detail TEXT DEFAULT '[]',
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                checkpoint_data TEXT DEFAULT NULL,
+                trace_id TEXT DEFAULT '',
+                cost_data TEXT DEFAULT '{}'
+            );
+            CREATE INDEX IF NOT EXISTS idx_runtime_logs_agent ON agent_runtime_logs(agent_key);
+            CREATE INDEX IF NOT EXISTS idx_runtime_logs_status ON agent_runtime_logs(status);
+            CREATE INDEX IF NOT EXISTS idx_runtime_logs_trace ON agent_runtime_logs(trace_id);
+            CREATE TABLE IF NOT EXISTS agent_runtime_approvals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                trace_id TEXT NOT NULL,
+                agent_key TEXT NOT NULL,
+                goal TEXT NOT NULL,
+                step INTEGER DEFAULT 0,
+                tool TEXT NOT NULL,
+                params TEXT DEFAULT '{}',
+                reasoning TEXT DEFAULT '',
+                status TEXT DEFAULT 'pending',
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                responded_at TEXT,
+                responded_by TEXT DEFAULT ''
+            );
+            CREATE INDEX IF NOT EXISTS idx_approvals_status ON agent_runtime_approvals(status);
+            CREATE INDEX IF NOT EXISTS idx_approvals_trace ON agent_runtime_approvals(trace_id);
+            CREATE TABLE IF NOT EXISTS agent_brains (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                agent_key TEXT NOT NULL,
+                user_id INTEGER DEFAULT 0,
+                key TEXT NOT NULL,
+                value TEXT NOT NULL,
+                value_type TEXT DEFAULT 'str',
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(agent_key, user_id, key)
+            );
+            CREATE TABLE IF NOT EXISTS agent_state_snapshots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                agent_id TEXT NOT NULL,
+                step_id INTEGER DEFAULT 0,
+                plan_json TEXT DEFAULT '[]',
+                results_json TEXT DEFAULT '[]',
+                context_json TEXT DEFAULT '{}',
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                status TEXT DEFAULT 'active'
+            );
+            CREATE INDEX IF NOT EXISTS idx_state_snapshots_agent ON agent_state_snapshots(agent_id);
+            CREATE INDEX IF NOT EXISTS idx_state_snapshots_status ON agent_state_snapshots(status);
+            CREATE TABLE IF NOT EXISTS agent_runtime_snapshots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                trace_id TEXT NOT NULL,
+                step INTEGER NOT NULL,
+                state_json TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                expires_at TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_agent_runtime_snapshots_trace_step ON agent_runtime_snapshots(trace_id, step);
 """

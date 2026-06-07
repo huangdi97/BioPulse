@@ -4,7 +4,7 @@ import json
 import urllib.request
 from datetime import datetime
 
-from shared.app_settings import settings
+from shared.config import settings as config_settings
 
 
 def _now() -> str:
@@ -14,7 +14,7 @@ def _now() -> str:
 def _call_ai(messages: list[dict], auth_header: str) -> dict:
     payload = {"messages": messages, "temperature": 0.3, "max_tokens": 2048}
     req = urllib.request.Request(
-        f"{settings.cloud_api_base}/ai/chat",
+        f"{config_settings.ai_chat_url}",
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json", "Authorization": auth_header},
         method="POST",

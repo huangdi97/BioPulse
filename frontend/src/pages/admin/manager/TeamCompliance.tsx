@@ -1,27 +1,21 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts'
-
-const mockStatusData = [
-  { name: '已通过', value: 156, color: '#10b981' },
-  { name: '待审核', value: 23, color: '#f59e0b' },
-  { name: '已违规', value: 12, color: '#ef4444' },
-]
-
-const mockMemberData = [
-  { name: '赵建国', passed: 22, violations: 1 },
-  { name: '钱晓峰', passed: 20, violations: 0 },
-  { name: '孙丽华', passed: 17, violations: 1 },
-  { name: '李志远', passed: 14, violations: 2 },
-  { name: '周美琴', passed: 13, violations: 1 },
-]
+import { fetchManagerCompliance } from '@/api/adminManager'
 
 export default function TeamCompliance() {
-  const [statusData] = useState(mockStatusData)
-  const [memberData] = useState(mockMemberData)
+  const [statusData, setStatusData] = useState<Array<{ name: string; value: number; color: string }>>([])
+  const [memberData, setMemberData] = useState<Array<{ name: string; passed: number; violations: number }>>([])
+
+  useEffect(() => {
+    fetchManagerCompliance().then((data) => {
+      setStatusData(data.statusData)
+      setMemberData(data.memberData)
+    })
+  }, [])
 
   return (
     <div className="space-y-4">

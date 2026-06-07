@@ -1,30 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import StatCard from '@/components/StatCard'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { DollarSign, Users, ShieldAlert, CalendarCheck } from 'lucide-react'
+import { fetchPresidentSummary } from '@/api/adminPresident'
 
-const mockCardData = {
-  totalRevenue: 2850000,
-  totalVisits: 1256,
-  complianceBlocks: 38,
-  activeUsers: 48,
-}
-
-const mockBarData = [
-  { month: '1月', revenue: 420000, visits: 180 },
-  { month: '2月', revenue: 380000, visits: 160 },
-  { month: '3月', revenue: 510000, visits: 210 },
-  { month: '4月', revenue: 470000, visits: 195 },
-  { month: '5月', revenue: 560000, visits: 230 },
-  { month: '6月', revenue: 509000, visits: 281 },
-]
+type SummaryData = Awaited<ReturnType<typeof fetchPresidentSummary>>
 
 export default function Summary() {
-  const [data] = useState(mockCardData)
-  const [barData] = useState(mockBarData)
+  const [data, setData] = useState<SummaryData | null>(null)
+
+  useEffect(() => {
+    fetchPresidentSummary().then(setData)
+  }, [])
+
+  if (!data) return <div className="p-4 text-muted-foreground">加载中...</div>
 
   return (
     <div className="space-y-4">
@@ -32,24 +24,24 @@ export default function Summary() {
         <StatCard
           icon={<DollarSign className="h-5 w-5 text-green-600" />}
           label="双线汇总（营收）"
-          value={data.totalRevenue}
+          value={data.cardData.totalRevenue}
         />
         <StatCard
           icon={<CalendarCheck className="h-5 w-5 text-blue-600" />}
           label="拜访数"
-          value={data.totalVisits}
+          value={data.cardData.totalVisits}
           trend="up"
           trendValue="较上月+22%"
         />
         <StatCard
           icon={<Users className="h-5 w-5 text-purple-600" />}
           label="活跃用户"
-          value={data.activeUsers}
+          value={data.cardData.activeUsers}
         />
         <StatCard
           icon={<ShieldAlert className="h-5 w-5 text-red-600" />}
           label="合规拦截"
-          value={data.complianceBlocks}
+          value={data.cardData.complianceBlocks}
           trend="down"
           trendValue="较上月-5%"
         />
@@ -61,7 +53,7 @@ export default function Summary() {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={barData}>
+            <BarChart data={data.barData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis yAxisId="left" />

@@ -73,6 +73,17 @@ TABLE_MEMORY_UTILITY_SCORES_COLS = frozenset(
     }
 )
 
+TABLE_MEMORY_ASSOCIATIONS_COLS = frozenset(
+    {
+        "id",
+        "memory_id_a",
+        "memory_id_b",
+        "relation_type",
+        "weight",
+        "created_at",
+    }
+)
+
 TABLE_SLEEP_CONSOLIDATION_LOGS_COLS = frozenset(
     {
         "id",

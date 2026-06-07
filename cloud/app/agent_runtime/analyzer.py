@@ -5,7 +5,7 @@ import logging
 
 from pydantic import BaseModel
 
-from shared.app_settings import settings
+from shared.config import settings as config_settings
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class Analyzer:
         "context_drift": "medium",
     }
 
-    def __init__(self, llm_url: str = f"{settings.cloud_api_base}/ai/chat"):
+    def __init__(self, llm_url: str = config_settings.ai_chat_url):
         self._llm_url = llm_url
 
     def analyze(self, task: str, failed_step: str, result: dict, context: dict | None = None) -> Analysis:

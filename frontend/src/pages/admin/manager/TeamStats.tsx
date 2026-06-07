@@ -1,31 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import StatCard from '@/components/StatCard'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { CalendarCheck, Users, Target, AlertTriangle } from 'lucide-react'
+import { fetchManagerStats } from '@/api/adminManager'
 
-const mockStats = {
-  totalVisits: 428,
-  teamSize: 12,
-  coverageRate: 85,
-  complianceIssues: 7,
-}
-
-const mockWeeklyData = [
-  { day: '周一', visits: 18 },
-  { day: '周二', visits: 24 },
-  { day: '周三', visits: 20 },
-  { day: '周四', visits: 28 },
-  { day: '周五', visits: 22 },
-  { day: '周六', visits: 12 },
-  { day: '周日', visits: 8 },
-]
+type StatsData = Awaited<ReturnType<typeof fetchManagerStats>>
 
 export default function TeamStats() {
-  const [stats] = useState(mockStats)
-  const [weeklyData] = useState(mockWeeklyData)
+  const [data, setData] = useState<StatsData | null>(null)
+
+  useEffect(() => {
+    fetchManagerStats().then(setData)
+  }, [])
+
+  if (!data) return <div className="p-4 text-muted-foreground">加载中...</div>
+
+  const { stats, weeklyData } = data
 
   return (
     <div className="space-y-4">

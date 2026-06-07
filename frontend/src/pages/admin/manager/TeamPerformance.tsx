@@ -1,26 +1,18 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
-
-interface MemberPerf {
-  name: string
-  visits: number
-  deals: number
-  score: number
-}
-
-const mockPerfData: MemberPerf[] = [
-  { name: '赵建国', visits: 24, deals: 5, score: 92 },
-  { name: '钱晓峰', visits: 21, deals: 3, score: 88 },
-  { name: '孙丽华', visits: 18, deals: 4, score: 85 },
-  { name: '李志远', visits: 16, deals: 2, score: 78 },
-  { name: '周美琴', visits: 14, deals: 1, score: 75 },
-]
+import { fetchManagerPerformance, type MemberPerf } from '@/api/adminManager'
 
 export default function TeamPerformance() {
-  const [data] = useState(mockPerfData)
+  const [data, setData] = useState<MemberPerf[] | null>(null)
+
+  useEffect(() => {
+    fetchManagerPerformance().then(setData)
+  }, [])
+
+  if (!data) return <div className="p-4 text-muted-foreground">加载中...</div>
 
   return (
     <Card>

@@ -35,5 +35,149 @@
     },
     "threshold": 0.7,
     "description": "报价折扣低于标准价的70%时标记"
+  },
+  {
+    "id": "RSR-L2-004",
+    "name": "PI影响力下降预警",
+    "severity": "warning",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "pi_impact_score",
+      "operator": "lt"
+    },
+    "threshold": 10,
+    "description": "主要研究者学术影响力得分季度同比下降超过10分时预警"
+  },
+  {
+    "id": "RSR-L2-005",
+    "name": "引用频率偏低预警",
+    "severity": "warning",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "citation_frequency",
+      "operator": "lt"
+    },
+    "threshold": 3,
+    "description": "研究报告发表后年均引用频率低于3次时标记"
+  },
+  {
+    "id": "RSR-L2-006",
+    "name": "基金项目进度延迟",
+    "severity": "warning",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "fund_progress_delay",
+      "operator": "gt"
+    },
+    "threshold": 90,
+    "description": "基金项目进度延迟超过90天时预警"
+  },
+  {
+    "id": "RSR-L2-007",
+    "name": "匹配准确率偏低",
+    "severity": "review",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "match_accuracy_rate",
+      "operator": "lt"
+    },
+    "threshold": 0.85,
+    "description": "学术匹配准确率低于85%时标记"
+  },
+  {
+    "id": "RSR-L2-008",
+    "name": "报价偏差预警",
+    "severity": "review",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "quote_deviation",
+      "operator": "gt"
+    },
+    "threshold": 0.15,
+    "description": "实际报价与预估偏差超过15%时标记"
+  },
+  {
+    "id": "RSR-L2-009",
+    "name": "客户流失预警",
+    "severity": "warning",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "client_retention_rate",
+      "operator": "lt"
+    },
+    "threshold": 0.7,
+    "description": "客户留存率低于70%时触发预警"
+  },
+  {
+    "id": "RSR-L2-010",
+    "name": "数据同步延迟",
+    "severity": "warning",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "data_sync_delay_hours",
+      "operator": "gt"
+    },
+    "threshold": 24,
+    "description": "研究数据同步延迟超过24小时时预警"
+  },
+  {
+    "id": "RSR-L2-011",
+    "name": "合作机构风险预警",
+    "severity": "review",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "partner_risk_score",
+      "operator": "gt"
+    },
+    "threshold": 60,
+    "description": "合作机构合规风险评分超过60分时标记"
+  },
+  {
+    "id": "RSR-L2-012",
+    "name": "样本周转时长异常",
+    "severity": "warning",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "sample_turnaround_days",
+      "operator": "gt"
+    },
+    "threshold": 30,
+    "description": "样本从采集到分析的平均周转天数超过30天时预警"
+  },
+  {
+    "id": "RSR-L2-013",
+    "name": "方法验证缺失",
+    "severity": "warning",
+    "check_type": "flag_check",
+    "condition": {
+      "field": "method_validation_done",
+      "expected": true
+    },
+    "threshold": null,
+    "description": "研究方法未完成验证即投入使用"
+  },
+  {
+    "id": "RSR-L2-014",
+    "name": "研究方案偏离预警",
+    "severity": "review",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "protocol_deviation_count",
+      "operator": "gt"
+    },
+    "threshold": 3,
+    "description": "研究方案偏离次数累计超过3次时标记"
+  },
+  {
+    "id": "RSR-L2-015",
+    "name": "学术不端行为预警",
+    "severity": "warning",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "misconduct_warning_score",
+      "operator": "gt"
+    },
+    "threshold": 50,
+    "description": "学术不端预警评分超过50分时触发调查"
   }
 ]

@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
 from cloud.app.agent_runtime.models import RuntimeResult
 from cloud.app.agent_runtime.queue_manager import AgentQueueManager
-from cloud.app.agent_runtime.runtime_core import AgentRuntime
+from cloud.app.agent_runtime.runtime_core import RuntimeCore
 
 
 class AgentScheduler:
@@ -37,7 +37,7 @@ class AgentScheduler:
         self._queue.enqueue(agent_key, goal, scheduled_at)
 
     def trigger_now(self, agent_key: str, goal: str, auth_header: str) -> RuntimeResult:
-        runtime = self._runtime_factory() if self._runtime_factory else AgentRuntime(self._db, auth_header)
+        runtime = self._runtime_factory() if self._runtime_factory else RuntimeCore(self._db, self._db, auth_header)
         return runtime.execute(goal, agent_key)
 
     def _run_loop(self):
@@ -46,7 +46,7 @@ class AgentScheduler:
                 task = self._queue.dequeue()
                 if task is not None:
                     auth_header = ""
-                    runtime = self._runtime_factory() if self._runtime_factory else AgentRuntime(self._db, auth_header)
+                    runtime = self._runtime_factory() if self._runtime_factory else RuntimeCore(self._db, self._db, auth_header)
                     result = runtime.execute(task["goal"], task["agent_key"])
                     if result.status == "completed":
                         self._queue.complete(task["id"], result.result)

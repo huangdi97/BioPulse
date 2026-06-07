@@ -52,6 +52,9 @@ from cloud.app.repositories.event_bus_repository import (
     EventBusMessagesRepository,
     EventDeliveryLogRepository,
 )
+from cloud.app.repositories.holographic_repository import (
+    MemoryAssociationsRepository,
+)
 from cloud.app.repositories.kg_repository import (
     KgEntitiesRepository,
     KgRelationsRepository,

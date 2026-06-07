@@ -12,7 +12,7 @@ from starlette import status
 from cloud.app.services.base import BaseService
 from cloud.app.services.decision_logger import DecisionLogger
 from cloud.app.services.intel_analyzer import IntelAnalyzer
-from shared.app_settings import settings
+from shared.config import settings as config_settings
 
 
 def _now() -> str:
@@ -29,7 +29,7 @@ def _parse_json(raw: str, default: Any = None) -> Any:
 def _call_ai(messages: list[dict], auth_header: str) -> dict:
     payload = {"messages": messages, "temperature": 0.7, "max_tokens": 2048}
     req = urllib.request.Request(
-        f"{settings.cloud_api_base}/ai/chat",
+        f"{config_settings.ai_chat_url}",
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json", "Authorization": auth_header},
         method="POST",

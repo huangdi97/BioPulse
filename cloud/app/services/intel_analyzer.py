@@ -14,8 +14,8 @@ from cloud.app.repositories import (
     MarketIntelItemsRepository,
     MarketIntelSourcesRepository,
 )
-from shared.app_settings import settings
 from shared.base import PaginatedResponse
+from shared.config import settings as config_settings
 
 
 def itd(row, parse_ai=False) -> dict:
@@ -140,7 +140,7 @@ class IntelAnalyzerMixin:
             "max_tokens": 1024,
         }
         req = urllib.request.Request(
-            f"{settings.cloud_api_base}/ai/chat",
+            f"{config_settings.ai_chat_url}",
             data=json.dumps(payload).encode("utf-8"),
             headers={
                 "Content-Type": "application/json",

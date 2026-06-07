@@ -5,14 +5,8 @@ import KpiCard from "../../components/dashboard/KpiCard"
 import TrendChart from "../../components/dashboard/TrendChart"
 import DataTable from "../../components/dashboard/DataTable"
 import { Badge } from "../../components/ui/Badge"
-import { getPharmaKpis, getVisitTrends, getTeamRanks, getViolations } from "../../api/client"
+import { getPharmaKpis, getVisitTrends, getTeamRanks, getViolations, getComplianceKpis } from "../../api/client"
 const dateTabs = ["今日", "本周", "本月"]
-
-const compliancePieData = [
-  { name: "通过", value: 94.2, color: "var(--clr-success)" },
-  { name: "警告", value: 3.5, color: "var(--clr-warning)" },
-  { name: "违规", value: 2.3, color: "var(--clr-error)" },
-]
 
 const severityVariant: Record<string, "error" | "warning" | "neutral"> = {
   high: "error",
@@ -26,6 +20,8 @@ export default function PharmaPage() {
   const [visitTrends, setVisitTrends] = useState<any[]>([])
   const [teamRanks, setTeamRanks] = useState<any[]>([])
   const [violations, setViolations] = useState<any[]>([])
+  const [compliancePieData, setCompliancePieData] = useState<{name: string; value: number; color: string}[]>([])
+  const [complianceLoaded, setComplianceLoaded] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -33,6 +29,29 @@ export default function PharmaPage() {
     getVisitTrends().then(setVisitTrends).catch(err => console.error('Failed to load visit trends:', err))
     getTeamRanks().then(setTeamRanks).catch(err => console.error('Failed to load team ranks:', err))
     getViolations().then(setViolations).catch(err => console.error('Failed to load violations:', err))
+    getComplianceKpis()
+      .then(kpis => {
+        const findRate = (keywords: string[]) => {
+          const card = kpis.find(k => keywords.some(kw => k.title.includes(kw)))
+          return card ? Number(card.value) : 0
+        }
+        const passRate = findRate(["通过", "合规"])
+        const warnRate = findRate(["警告"])
+        const violRate = findRate(["违规"])
+        const hasData = passRate > 0 || warnRate > 0 || violRate > 0
+        if (hasData) {
+          setCompliancePieData([
+            { name: "通过", value: passRate, color: "var(--clr-success)" },
+            { name: "警告", value: warnRate, color: "var(--clr-warning)" },
+            { name: "违规", value: violRate, color: "var(--clr-error)" },
+          ])
+        }
+        setComplianceLoaded(true)
+      })
+      .catch(err => {
+        console.error('Failed to load compliance KPIs:', err)
+        setComplianceLoaded(true)
+      })
   }, [])
 
   const rankColumns = [
@@ -79,37 +98,45 @@ export default function PharmaPage() {
         </div>
         <div className="rounded-[var(--radius-lg)] bg-[var(--clr-surface-card)] shadow-[var(--shadow-border)] p-5">
           <h3 className="text-base font-semibold mb-4" style={{ color: "var(--clr-text-primary)" }}>合规率</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <Pie
-                data={compliancePieData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={90}
-                dataKey="value"
-                strokeWidth={0}
-              >
-                {compliancePieData.map((entry) => (
-                  <Cell key={entry.name} fill={entry.color} />
+          {!complianceLoaded ? (
+            <div className="flex items-center justify-center h-[280px] text-sm" style={{ color: "var(--clr-text-secondary)" }}>加载中...</div>
+          ) : compliancePieData.length === 0 ? (
+            <div className="flex items-center justify-center h-[280px] text-sm" style={{ color: "var(--clr-text-secondary)" }}>暂无合规数据</div>
+          ) : (
+            <>
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={compliancePieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    dataKey="value"
+                    strokeWidth={0}
+                  >
+                    {compliancePieData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <text x="50%" y="48%" textAnchor="middle" dominantBaseline="middle" fontSize={28} fontWeight={700} fill="var(--clr-text-primary)">
+                    {(compliancePieData.find(d => d.name === "通过")?.value ?? 0).toFixed(1)}%
+                  </text>
+                  <text x="50%" y="58%" textAnchor="middle" dominantBaseline="middle" fontSize={11} fill="var(--clr-text-secondary)">
+                    总合规率
+                  </text>
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex justify-center gap-4 mt-2">
+                {compliancePieData.map((item) => (
+                  <div key={item.name} className="flex items-center gap-1.5 text-xs" style={{ color: "var(--clr-text-secondary)" }}>
+                    <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: item.color }} />
+                    {item.name}
+                  </div>
                 ))}
-              </Pie>
-              <text x="50%" y="48%" textAnchor="middle" dominantBaseline="middle" fontSize={28} fontWeight={700} fill="var(--clr-text-primary)">
-                94.2%
-              </text>
-              <text x="50%" y="58%" textAnchor="middle" dominantBaseline="middle" fontSize={11} fill="var(--clr-text-secondary)">
-                总合规率
-              </text>
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="flex justify-center gap-4 mt-2">
-            {compliancePieData.map((item) => (
-              <div key={item.name} className="flex items-center gap-1.5 text-xs" style={{ color: "var(--clr-text-secondary)" }}>
-                <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: item.color }} />
-                {item.name}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </div>
       </div>
 

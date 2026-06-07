@@ -1,0 +1,134 @@
+[
+  {
+    "name": "opportunity_scan_pipeline",
+    "input": "扫描今日招标信息，评估高价值商机并通知销售负责人。",
+    "expected_tools": ["query_bidding", "analyze_with_llm", "create_notification"],
+    "expected_plan_count": {"min": 3, "max": 4},
+    "plan": {
+      "goal": "扫描今日招标信息，评估高价值商机并通知销售负责人。",
+      "steps": [
+        {
+          "step_id": "s1",
+          "description": "查询最新招标信息",
+          "tool": "query_bidding",
+          "params_template": {"date_range": "today"},
+          "expected_state": "bidding_records_loaded",
+          "dependencies": [],
+          "fallback": null,
+          "verification_criteria": ["返回招标记录列表"]
+        },
+        {
+          "step_id": "s2",
+          "description": "分析商机匹配度和价值",
+          "tool": "analyze_with_llm",
+          "params_template": {"input": "$s1"},
+          "expected_state": "opportunities_ranked",
+          "dependencies": ["s1"],
+          "fallback": null,
+          "verification_criteria": ["输出商机评分"]
+        },
+        {
+          "step_id": "s3",
+          "description": "推送高价值商机提醒",
+          "tool": "create_notification",
+          "params_template": {"input": "$s2"},
+          "expected_state": "notification_created",
+          "dependencies": ["s2"],
+          "fallback": null,
+          "verification_criteria": ["生成通知结果"]
+        }
+      ],
+      "max_steps": 10,
+      "completion_conditions": ["高价值商机已通知"],
+      "plan_confidence": 0.9
+    }
+  },
+  {
+    "name": "sales_training_pipeline",
+    "input": "分析销售训练记录，识别能力短板并生成训练建议。",
+    "expected_tools": ["query_training_records", "analyze_with_llm", "create_notification"],
+    "expected_plan_count": {"min": 3, "max": 5},
+    "plan": {
+      "goal": "分析销售训练记录，识别能力短板并生成训练建议。",
+      "steps": [
+        {
+          "step_id": "s1",
+          "description": "读取销售训练记录",
+          "tool": "query_training_records",
+          "params_template": {"period": "latest"},
+          "expected_state": "training_records_loaded",
+          "dependencies": [],
+          "fallback": null,
+          "verification_criteria": ["返回训练记录"]
+        },
+        {
+          "step_id": "s2",
+          "description": "分析能力短板",
+          "tool": "analyze_with_llm",
+          "params_template": {"records": "$s1"},
+          "expected_state": "skill_gaps_identified",
+          "dependencies": ["s1"],
+          "fallback": null,
+          "verification_criteria": ["输出能力短板"]
+        },
+        {
+          "step_id": "s3",
+          "description": "发送训练建议",
+          "tool": "create_notification",
+          "params_template": {"analysis": "$s2"},
+          "expected_state": "recommendation_sent",
+          "dependencies": ["s2"],
+          "fallback": null,
+          "verification_criteria": ["通知已创建"]
+        }
+      ],
+      "max_steps": 10,
+      "completion_conditions": ["训练建议已发送"],
+      "plan_confidence": 0.88
+    }
+  },
+  {
+    "name": "knowledge_maintenance_pipeline",
+    "input": "根据新客户信息更新知识图谱关系并记录发现。",
+    "expected_tools": ["query_knowledge_graph", "analyze_with_llm", "write_memory"],
+    "expected_plan_count": {"min": 3, "max": 4},
+    "plan": {
+      "goal": "根据新客户信息更新知识图谱关系并记录发现。",
+      "steps": [
+        {
+          "step_id": "s1",
+          "description": "查询已有客户知识关系",
+          "tool": "query_knowledge_graph",
+          "params_template": {"entity": "$input.customer"},
+          "expected_state": "existing_relations_loaded",
+          "dependencies": [],
+          "fallback": null,
+          "verification_criteria": ["返回知识关系"]
+        },
+        {
+          "step_id": "s2",
+          "description": "识别新增或变更关系",
+          "tool": "analyze_with_llm",
+          "params_template": {"context": "$s1"},
+          "expected_state": "relation_changes_detected",
+          "dependencies": ["s1"],
+          "fallback": null,
+          "verification_criteria": ["输出关系变更"]
+        },
+        {
+          "step_id": "s3",
+          "description": "记录知识维护发现",
+          "tool": "write_memory",
+          "params_template": {"findings": "$s2"},
+          "expected_state": "memory_written",
+          "dependencies": ["s2"],
+          "fallback": null,
+          "verification_criteria": ["写入成功"]
+        }
+      ],
+      "max_steps": 10,
+      "completion_conditions": ["知识维护发现已记录"],
+      "plan_confidence": 0.86
+    }
+  }
+]

@@ -25,11 +25,11 @@ def _parse_json(raw: str, default=None):
 def _call_ai(messages: list[dict], auth_header: str) -> dict:
     import urllib.request
 
-    from shared.app_settings import settings
+    from shared.config import settings as config_settings
 
     payload = {"messages": messages, "temperature": 0.7, "max_tokens": 2048}
     req = urllib.request.Request(
-        f"{settings.cloud_api_base}/ai/chat",
+        f"{config_settings.ai_chat_url}",
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json", "Authorization": auth_header},
         method="POST",

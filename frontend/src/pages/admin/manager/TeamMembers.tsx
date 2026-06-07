@@ -1,30 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-
-interface Member {
-  id: number
-  name: string
-  role: string
-  visits: number
-  coverage: number
-  compliance: number
-  status: 'active' | 'inactive'
-}
-
-const mockMembers: Member[] = [
-  { id: 1, name: '赵建国', role: '销售代表', visits: 24, coverage: 92, compliance: 96, status: 'active' },
-  { id: 2, name: '钱晓峰', role: '销售代表', visits: 21, coverage: 88, compliance: 100, status: 'active' },
-  { id: 3, name: '孙丽华', role: '销售代表', visits: 18, coverage: 85, compliance: 94, status: 'active' },
-  { id: 4, name: '李志远', role: '销售代表', visits: 16, coverage: 78, compliance: 88, status: 'active' },
-  { id: 5, name: '周美琴', role: '销售代表', visits: 14, coverage: 80, compliance: 92, status: 'active' },
-  { id: 6, name: '吴国强', role: '销售代表', visits: 12, coverage: 72, compliance: 85, status: 'inactive' },
-  { id: 7, name: '郑丽萍', role: '销售代表', visits: 10, coverage: 68, compliance: 90, status: 'active' },
-]
+import { fetchManagerMembers } from '@/api/adminManager'
+import type { Member } from '@/api/adminManager'
 
 export default function TeamMembers() {
-  const [members] = useState(mockMembers)
+  const [members, setMembers] = useState<Member[]>([])
   const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    fetchManagerMembers().then(setMembers)
+  }, [])
 
   const filtered = members.filter((m) =>
     m.name.toLowerCase().includes(search.toLowerCase())

@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 
-class AgentBrain:
+class Memory:
     """Agent 短期脑状态存储，支持键值对读写及 JSON/str/int/float 类型。"""
 
     def __init__(self, agent_db):
@@ -96,3 +96,6 @@ class AgentMemory:
             "session_id": session_id,
             "entries": [dict(r) for r in rows],
         }
+
+
+AgentBrain = Memory

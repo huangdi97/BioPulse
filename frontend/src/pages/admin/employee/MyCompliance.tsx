@@ -1,37 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-
-interface ComplianceItem {
-  id: number
-  date: string
-  type: string
-  result: 'passed' | 'violated' | 'pending'
-  detail: string
-}
-
-const mockRecords: ComplianceItem[] = [
-  { id: 1, date: '2026-05-28', type: '拜访合规检查', result: 'passed', detail: '5月28日拜访华东医院合规检查通过' },
-  { id: 2, date: '2026-05-25', type: '话术合规扫描', result: 'passed', detail: '话术内容合规，无违规关键词' },
-  { id: 3, date: '2026-05-20', type: '数据真实性核查', result: 'violated', detail: '拜访记录中存在数据不一致情况，需修正' },
-  { id: 4, date: '2026-05-15', type: '礼品合规检查', result: 'passed', detail: '礼品登记信息完整，无超限情况' },
-  { id: 5, date: '2026-05-10', type: '合规培训', result: 'pending', detail: '待完成合规培训课程' },
-]
-
-const resultColors: Record<string, string> = {
-  passed: 'bg-green-50 text-green-700 border-green-200',
-  violated: 'bg-red-50 text-red-700 border-red-200',
-  pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-}
-
-const resultLabels: Record<string, string> = {
-  passed: '已通过',
-  violated: '已违规',
-  pending: '待审核',
-}
+import {
+  resultColors,
+  resultLabels,
+} from '@/mock/adminEmployee'
+import { fetchEmployeeCompliance } from '@/api/adminEmployee'
+import type { ComplianceItem } from '@/api/adminEmployee'
 
 export default function MyCompliance() {
-  const [records] = useState(mockRecords)
+  const [records, setRecords] = useState<ComplianceItem[]>([])
+
+  useEffect(() => {
+    fetchEmployeeCompliance().then(setRecords)
+  }, [])
 
   return (
     <Card>

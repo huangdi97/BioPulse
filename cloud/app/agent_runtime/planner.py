@@ -5,7 +5,7 @@ import logging
 
 from pydantic import BaseModel
 
-from shared.app_settings import settings
+from shared.config import settings as config_settings
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class Plan(BaseModel):
     plan_confidence: float = 0.0
 
 
-class PlanGenerator:
+class Planner:
     """Generates structured plans via LLM and validates them against schema."""
 
     PLAN_SCHEMA_HINT = (
@@ -41,8 +41,17 @@ class PlanGenerator:
         "Use tools from: {tools}. Context: {context}"
     )
 
-    def __init__(self, llm_url: str = f"{settings.cloud_api_base}/ai/chat"):
+    def __init__(self, llm_url: str = config_settings.ai_chat_url):
         self._llm_url = llm_url
+
+    def plan(self, goal: str, agent_key: str, context: dict | None = None) -> dict:
+        return {
+            "step": -1,
+            "action": "plan",
+            "agent_key": agent_key,
+            "goal": goal,
+            "context": context or {},
+        }
 
     def generate_plan(self, goal: str, tools: list[str], context: dict | None = None) -> Plan:
         """Generate a structured Plan for the given goal using LLM."""
@@ -87,18 +96,15 @@ class PlanGenerator:
         return True
 
     def _call_llm(self, messages: list[dict]) -> str:
-        body = json.dumps({"messages": messages, "temperature": 0.2, "max_tokens": 4096}).encode("utf-8")
-        import urllib.request
+        from cloud.app.agent_runtime.runtime_llm import RuntimeLLM
 
-        req = urllib.request.Request(
-            self._llm_url,
-            data=body,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=120) as rp:
-            data = json.loads(rp.read().decode("utf-8"))
-        return data.get("data", {}).get("reply", "")
+        llm = RuntimeLLM()
+        llm._auth_header = ""
+        try:
+            result = llm._call_ai(messages, temperature=0.2, force_level=5)
+            return result.get("reply", "")
+        except Exception:
+            return ""
 
     @staticmethod
     def _extract_json(raw: str) -> dict:
@@ -107,3 +113,6 @@ class PlanGenerator:
             raw = raw.split("\n", 1)[-1]
             raw = raw.rsplit("```", 1)[0]
         return json.loads(raw)
+
+
+PlanGenerator = Planner

@@ -1,26 +1,35 @@
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserCircle, Mail, Building, Calendar, Shield } from 'lucide-react'
-
-const mockProfile = {
-  name: '张小明',
-  email: 'zhangxm@example.com',
-  dept: '销售部',
-  joinDate: '2024-03-15',
-  role: '高级销售代表',
-  region: '华东区域',
-}
+import { fetchEmployeeProfile } from '@/api/adminEmployee'
 
 export default function MyProfile() {
   const { user } = useAuth()
+  const [profileData, setProfileData] = useState<{
+    name: string
+    email: string
+    dept: string
+    joinDate: string
+    role: string
+    region: string
+  } | null>(null)
+
+  useEffect(() => {
+    fetchEmployeeProfile().then(setProfileData)
+  }, [])
+
+  if (!profileData) {
+    return null
+  }
 
   const profile = {
-    name: user?.username ?? mockProfile.name,
-    email: mockProfile.email,
-    dept: mockProfile.dept,
-    joinDate: mockProfile.joinDate,
-    role: mockProfile.role,
-    region: mockProfile.region,
+    name: user?.username ?? profileData.name,
+    email: profileData.email,
+    dept: profileData.dept,
+    joinDate: profileData.joinDate,
+    role: profileData.role,
+    region: profileData.region,
   }
 
   return (

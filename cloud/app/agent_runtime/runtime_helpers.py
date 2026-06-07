@@ -4,6 +4,8 @@ import json
 import logging
 from datetime import datetime
 
+from cloud.app.agent_runtime.state_snapshot import load_snapshot, save_snapshot
+
 logger = logging.getLogger(__name__)
 
 
@@ -29,10 +31,47 @@ class RuntimeHelper:
                 started_at,
                 datetime.now().isoformat(),
                 self._trace_id,
-                json.dumps(self._cost_tracker),
+                json.dumps(self.get_cost_usage(), ensure_ascii=False),
             ),
         )
         self._agent_db.commit()
+
+    def _make_checkpoint_state(self, agent_key, goal, step, messages, logs, tool_calls_so_far, context, status="active"):
+        return {
+            "trace_id": self._trace_id,
+            "step": step,
+            "messages": messages,
+            "logs": logs,
+            "tool_calls_so_far": tool_calls_so_far,
+            "goal": goal,
+            "agent_key": agent_key,
+            "context": context,
+            "trace": self._trace_data,
+            "cost": self.get_cost_usage(),
+            "status": status,
+        }
+
+    def _save_checkpoint(self, agent_key, goal, state):
+        save_snapshot(self._agent_db, self._trace_id, state["step"], state)
+        self._checkpoint.save(agent_key, goal, state, self._trace_id)
+
+    def _load_checkpoint(self, agent_key, goal):
+        row = self._agent_db.execute(
+            "SELECT trace_id FROM agent_runtime_logs "
+            "WHERE agent_key=? AND goal=? AND status='running' AND checkpoint_data IS NOT NULL AND trace_id != '' "
+            "ORDER BY id DESC LIMIT 1",
+            (agent_key, goal),
+        ).fetchone()
+        if row and row["trace_id"]:
+            latest = self._snapshot_manager.load_runtime_latest(row["trace_id"])
+            if latest:
+                return latest["state"]
+        checkpoint = self._checkpoint.load(agent_key, goal)
+        if checkpoint and checkpoint.get("trace_id"):
+            latest = self._snapshot_manager.load_runtime_latest(checkpoint["trace_id"])
+            if latest:
+                return latest["state"]
+        return checkpoint
 
     def _save_snapshot(self, agent_key, step, plan, results, context, status="active"):
         try:
@@ -47,6 +86,10 @@ class RuntimeHelper:
         return data
 
     def _try_rollback(self, agent_key):
+        latest_runtime = self._snapshot_manager.load_runtime_latest(self._trace_id)
+        if latest_runtime:
+            state = latest_runtime["state"]
+            return (state.get("messages", []), state.get("logs", []), state.get("context"))
         latest = self._snapshot_manager.get_latest(agent_key)
         if latest is None:
             return None
@@ -59,6 +102,12 @@ class RuntimeHelper:
             return None
         self._snapshot_manager.mark_rolled_back(snapshot_id)
         return (data["plan"], data["results"], data["context"])
+
+    def _load_runtime_snapshot(self, trace_id, step):
+        snapshot = load_snapshot(self._agent_db, trace_id, step)
+        if snapshot:
+            return snapshot["state"]
+        return None
 
     def list_snapshots(self, agent_key, limit=10):
         return self._snapshot_manager.list_snapshots(agent_key, limit)

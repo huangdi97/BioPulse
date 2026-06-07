@@ -67,5 +67,281 @@
       "field": "notes",
       "keywords": ["回扣", "提成", "返点", "返利"]
     }
+  },
+  {
+    "code": "PHR-L1-006",
+    "name": "学术会议赞助合规",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "学术会议赞助须签订合规协议且金额不得超过规定上限",
+    "detection": {
+      "type": "threshold",
+      "field": "sponsorship_amount",
+      "operator": "gte",
+      "value": 50000,
+      "exclude_when": {"field": "sponsorship_approved", "operator": "eq", "value": true}
+    }
+  },
+  {
+    "code": "PHR-L1-007",
+    "name": "讲课费标准",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "支付给医务人员的讲课费不得超过国家规定的单次标准",
+    "detection": {
+      "type": "threshold",
+      "field": "lecture_fee",
+      "operator": "gte",
+      "value": 3000
+    }
+  },
+  {
+    "code": "PHR-L1-008",
+    "name": "礼品限额",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "单次向HCP提供的礼品价值不得超过100元人民币",
+    "detection": {
+      "type": "threshold",
+      "field": "gift_value",
+      "operator": "gte",
+      "value": 100
+    }
+  },
+  {
+    "code": "PHR-L1-009",
+    "name": "用餐标准",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "商务用餐人均费用不得超过规定标准",
+    "detection": {
+      "type": "threshold",
+      "field": "meal_per_person",
+      "operator": "gte",
+      "value": 300
+    }
+  },
+  {
+    "code": "PHR-L1-010",
+    "name": "交通住宿标准",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "为HCP安排的交通住宿费用不得超过合规标准",
+    "detection": {
+      "type": "threshold",
+      "field": "travel_accommodation_cost",
+      "operator": "gte",
+      "value": 2000
+    }
+  },
+  {
+    "code": "PHR-L1-011",
+    "name": "HCP数据越权访问",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "未经授权访问HCP个人数据的行为",
+    "detection": {
+      "type": "field_check",
+      "field": "data_access_authorized",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-012",
+    "name": "患者隐私保护",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "禁止收集、使用或传播患者个人隐私信息",
+    "detection": {
+      "type": "keyword_match",
+      "field": "notes",
+      "keywords": ["患者姓名", "身份证号", "病历", "诊断信息", "床号"]
+    }
+  },
+  {
+    "code": "PHR-L1-013",
+    "name": "适应症外推广禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "不得推广超出药品说明书适应症范围的使用",
+    "detection": {
+      "type": "keyword_match",
+      "field": "promotion_content",
+      "keywords": ["超适应症", "未获批", "说明书外", "off-label"]
+    }
+  },
+  {
+    "code": "PHR-L1-014",
+    "name": "竞品贬低禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "学术推广中不得贬低或诋毁竞品",
+    "detection": {
+      "type": "keyword_match",
+      "field": "notes",
+      "keywords": ["劣于", "不如", "副作用大", "无效", "骗人"]
+    }
+  },
+  {
+    "code": "PHR-L1-015",
+    "name": "临床试验数据合规",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "临床试验数据不得伪造、篡改或选择性报告",
+    "detection": {
+      "type": "field_check",
+      "field": "trial_data_integrity",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-016",
+    "name": "医保套现拦截",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "禁止以任何形式参与或协助医保基金套现行为",
+    "detection": {
+      "type": "keyword_match",
+      "field": "notes",
+      "keywords": ["套现", "医保报销", "虚假处方", "空单"]
+    }
+  },
+  {
+    "code": "PHR-L1-017",
+    "name": "药品追溯合规",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "药品流通须有完整的追溯记录",
+    "detection": {
+      "type": "field_check",
+      "field": "traceability_code_present",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-018",
+    "name": "发票匹配检测",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "费用报销发票信息须与活动记录一致",
+    "detection": {
+      "type": "field_check",
+      "field": "invoice_matched",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-019",
+    "name": "利益冲突申报",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "存在利益冲突关系时须主动申报并获得批准",
+    "detection": {
+      "type": "field_check",
+      "field": "conflict_disclosed",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-020",
+    "name": "统方二次转发禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "禁止将统方数据二次转发给第三方",
+    "detection": {
+      "type": "keyword_match",
+      "field": "notes",
+      "keywords": ["转发统方", "分享处方", "传输数据", "外发报表"]
+    }
+  },
+  {
+    "code": "PHR-L1-021",
+    "name": "代理权限核验",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "代理商须持有有效授权书方可开展推广活动",
+    "detection": {
+      "type": "field_check",
+      "field": "agent_authorized",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-022",
+    "name": "变更备案核查",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "代表备案信息变更后须在15日内完成更新",
+    "detection": {
+      "type": "threshold",
+      "field": "days_since_change",
+      "operator": "gte",
+      "value": 15
+    }
+  },
+  {
+    "code": "PHR-L1-023",
+    "name": "签到造假检测",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "学术会议签到记录不得造假或代签",
+    "detection": {
+      "type": "field_check",
+      "field": "signature_authentic",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-024",
+    "name": "样品管理合规",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "药品样品发放须有完整登记和接收记录",
+    "detection": {
+      "type": "field_check",
+      "field": "sample_recorded",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-025",
+    "name": "捐赠审批合规",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "向医疗机构提供的捐赠须经合规部门审批",
+    "detection": {
+      "type": "field_check",
+      "field": "donation_approved",
+      "operator": "eq",
+      "value": false
+    }
   }
 ]

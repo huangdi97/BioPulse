@@ -1,0 +1,85 @@
+[
+  {
+    "name": "compliance_decision_format",
+    "schema": {
+      "type": "object",
+      "required": ["action", "violations", "summary"],
+      "properties": {
+        "action": {"type": "string"},
+        "violations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["rule_name", "severity"],
+            "properties": {
+              "rule_name": {"type": "string"},
+              "severity": {"type": "string"}
+            }
+          }
+        },
+        "summary": {"type": "string"}
+      }
+    },
+    "sample_input": {"notes": "正常拜访", "expenses": 80},
+    "sample_output": {"action": "pass", "violations": [], "summary": "未触发L1合规拦截。"}
+  },
+  {
+    "name": "pipeline_plan_format",
+    "schema": {
+      "type": "object",
+      "required": ["goal", "steps", "plan_confidence"],
+      "properties": {
+        "goal": {"type": "string"},
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["step_id", "tool", "description"],
+            "properties": {
+              "step_id": {"type": "string"},
+              "tool": {"type": "string"},
+              "description": {"type": "string"}
+            }
+          }
+        },
+        "plan_confidence": {"type": "number"}
+      }
+    },
+    "sample_input": {"goal": "扫描招标并通知销售负责人"},
+    "sample_output": {
+      "goal": "扫描招标并通知销售负责人",
+      "steps": [
+        {"step_id": "s1", "tool": "query_bidding", "description": "查询招标信息"}
+      ],
+      "plan_confidence": 0.9
+    }
+  },
+  {
+    "name": "agent_task_result_format",
+    "schema": {
+      "type": "object",
+      "required": ["status", "tool_calls", "result_verified"],
+      "properties": {
+        "status": {"type": "string"},
+        "tool_calls": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["tool", "success"],
+            "properties": {
+              "tool": {"type": "string"},
+              "success": {"type": "boolean"}
+            }
+          }
+        },
+        "result_verified": {"type": "boolean"}
+      }
+    },
+    "sample_input": {"task_id": "agentbench-001"},
+    "sample_output": {
+      "status": "completed",
+      "tool_calls": [{"tool": "query_bidding", "success": true}],
+      "result_verified": true
+    }
+  }
+]

@@ -13,8 +13,8 @@ from cloud.app.repositories import (
     MdtSessionsRepository,
 )
 from cloud.app.services.base import BaseService
-from shared.app_settings import settings
 from shared.base import success
+from shared.config import settings as config_settings
 
 
 class MdtResolver(BaseService):
@@ -28,7 +28,7 @@ class MdtResolver(BaseService):
     def _call_ai(messages: list[dict], auth_header: str) -> dict:
         with urllib.request.urlopen(
             urllib.request.Request(
-                f"{settings.cloud_api_base}/ai/chat",
+                f"{config_settings.ai_chat_url}",
                 data=json.dumps({"messages": messages, "temperature": 0.7, "max_tokens": 2048}).encode("utf-8"),
                 headers={"Content-Type": "application/json", "Authorization": auth_header},
                 method="POST",

@@ -1,7 +1,8 @@
 import json
 from unittest.mock import MagicMock, patch
 
-from cloud.app.services.research_trajectory_features import causal_attribution, extract_time_series
+from cloud.app.services.feature_analyzer import causal_attribution
+from cloud.app.services.feature_extractor import extract_time_series
 from cloud.app.services.research_trajectory_service import ResearchTrajectoryService
 
 

@@ -5,6 +5,7 @@ from .seed_compliance_v2 import seed_compliance_v2
 from .seed_decision_intel import seed_decision_intel
 from .seed_event_bus import seed_event_bus
 from .seed_hcp_sandbox import seed_hcp_sandbox
+from .seed_holographic import seed_holographic
 from .seed_kg import seed_kg
 from .seed_market_intel import seed_market_intel
 from .seed_mdt_engine import seed_mdt_engine

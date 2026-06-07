@@ -9,7 +9,7 @@ from cloud.app.agent_runtime.retry import retry_with_backoff
 from shared.app_settings import settings
 
 
-class ToolRegistry:
+class ToolBridge:
     """工具注册中心，管理工具定义、权限校验、调用转发与熔断恢复。"""
 
     def __init__(self):
@@ -154,3 +154,6 @@ class ToolRegistry:
 
     def list_tools(self) -> list[dict]:
         return [{"name": t.name, "description": t.description, "permission_level": t.permission_level} for t in self._tools.values()]
+
+
+ToolRegistry = ToolBridge

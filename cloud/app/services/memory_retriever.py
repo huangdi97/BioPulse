@@ -13,6 +13,7 @@ from cloud.app.repositories import (
     MemoryEntriesRepository,
     WorkingMemoryRepository,
 )
+from cloud.app.repositories.holographic_repository import MemoryAssociationsRepository
 from cloud.app.services.base import BaseService
 
 
@@ -153,3 +154,38 @@ class MemoryRetriever(BaseService):
                 }
             )
         return {"items": items, "trigger_context": trigger_context}
+
+    def holographic_get(self, memory_id: int, depth: int = 3) -> dict:
+        me_repo = MemoryEntriesRepository(self.db)
+        entry = me_repo.get_by_id(memory_id)
+        if not entry:
+            raise _n404(f"Memory entry {memory_id}")
+        assoc_repo = MemoryAssociationsRepository(self.db)
+        visited = {memory_id}
+        root = dict(entry)
+        root["associations"] = self._traverse_graph(memory_id, depth, visited, assoc_repo, me_repo)
+        return {"entry": root, "depth": depth, "total_nodes": len(visited)}
+
+    def _traverse_graph(self, memory_id: int, depth: int, visited: set, assoc_repo, me_repo, max_per_level: int = 10) -> list:
+        if depth <= 0:
+            return []
+        rows = assoc_repo.find_by_memory_id(memory_id, max_per_level * 2)
+        result = []
+        count = 0
+        for r in rows:
+            if count >= max_per_level:
+                break
+            other_id = r["memory_id_b"] if r["memory_id_a"] == memory_id else r["memory_id_a"]
+            if other_id in visited:
+                continue
+            visited.add(other_id)
+            other = me_repo.get_by_id(other_id)
+            if not other:
+                continue
+            node = dict(other)
+            node["relation_type"] = r["relation_type"]
+            node["weight"] = r["weight"]
+            node["associations"] = self._traverse_graph(other_id, depth - 1, visited, assoc_repo, me_repo, max_per_level)
+            result.append(node)
+            count += 1
+        return result

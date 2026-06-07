@@ -1,5 +1,7 @@
 """应用入口，注册路由和中间件。"""
 
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -22,9 +24,21 @@ from opportunity.app.stats_router import router as stats_router
 from opportunity.app.trend_router import router as trend_router
 from shared.app_settings import settings
 from shared.exception_handlers import register_exception_handlers
+from shared.l1_cache import cache_rules, init_l1_cache, load_l1_rules
 from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
 from shared.structured_logging import setup_logging
+
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
+def _init_l1_cache(category: str) -> None:
+    l1_db_path = os.path.join(_BASE_DIR, "data", "l1_cache.db")
+    conn = init_l1_cache(l1_db_path)
+    rules = load_l1_rules(category)
+    cache_rules(conn, rules, category)
+    conn.close()
+
 
 setup_logging("opportunity")
 
@@ -44,8 +58,10 @@ register_exception_handlers(app)
 
 @app.on_event("startup")
 def on_startup() -> None:
-    """Initialize database tables on application startup."""
+    """Initialize database tables and L1 rule cache on startup."""
     init_db()
+    _init_l1_cache("pharma")
+    _init_l1_cache("research")
     start_bidding_scheduler()
 
 

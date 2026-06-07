@@ -9,7 +9,7 @@ from starlette import status
 from cloud.app.services.base import BaseService
 
 
-class A2ARegistryService(BaseService):
+class A2aRegistryService(BaseService):
     """A2ARegistry 服务类。"""
 
     def register_agent(self, key, name, type_, description, capabilities, endpoint_url):
@@ -205,3 +205,7 @@ class A2ARegistryService(BaseService):
 
     def _task_id(self):
         return f"a2a:{uuid.uuid4().hex}"
+
+
+A = A2aRegistryService
+A2ARegistryService = A2aRegistryService

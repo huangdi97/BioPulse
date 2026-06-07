@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     # Cloud API
     CLOUD_API_URL: str = "http://localhost:8000"
 
+    # AI Chat
+    ai_chat_url: str = "http://localhost:8000/ai/chat"
+
     # AI Gateway
     AI_GATEWAY_URL: str = "http://localhost:8000/ai/chat"
     AI_GATEWAY_TIMEOUT: int = 120
@@ -41,10 +44,24 @@ class Settings(BaseSettings):
     sales_assistant_db_path: str = "data/sales_assistant.db"
     sales_coach_db_path: str = "data/sales_coach.db"
     cloud_port: int = 8000
+    admin_port: int = 8012
     assistant_port: int = 8003
-    opportunity_port: int = 8002
     sales_assistant_port: int = 8004
     sales_coach_port: int = 8001
+    pharma_intel_port: int = 8006
+    market_access_port: int = 8007
+    clinical_ops_port: int = 8010
+    patient_engage_port: int = 8011
+
+    # AI Routing
+    AI_ROUTING_ENABLED: bool = False
+    AI_LOCAL_ENDPOINT: str = ""
+    AI_LOCAL_MODEL: str = ""
+    AI_CLOUD_AGENT_ENABLED: bool = True
+    AI_COMPLEXITY_THRESHOLD: int = 2000
+
+    # Redis (empty string = SQLite backend for EventBus)
+    REDIS_URL: str = ""
 
     # Pareto routing objectives — direction must be "maximize" or "minimize"
     PARETO_OBJECTIVES: dict = {

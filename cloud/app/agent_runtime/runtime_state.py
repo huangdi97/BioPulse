@@ -3,7 +3,7 @@
 import json
 
 
-class CheckpointManager:
+class RuntimeState:
     """检查点管理器，持久化 Agent 运行状态以支持断点续跑。"""
 
     def __init__(self, agent_db):
@@ -12,8 +12,8 @@ class CheckpointManager:
     def save(self, agent_key, goal, data, trace_id):
         json_data = json.dumps(data, ensure_ascii=False)
         cur = self._agent_db.execute(
-            "UPDATE agent_runtime_logs SET checkpoint_data=? WHERE agent_key=? AND goal=? AND status IN ('running', 'pending')",
-            (json_data, agent_key, goal),
+            "UPDATE agent_runtime_logs SET checkpoint_data=?, trace_id=? WHERE agent_key=? AND goal=? AND status IN ('running', 'pending')",
+            (json_data, trace_id, agent_key, goal),
         )
         if cur.rowcount == 0:
             self._agent_db.execute(
@@ -56,3 +56,6 @@ class ApprovalManager:
         )
         self._agent_db.commit()
         return cur.lastrowid
+
+
+CheckpointManager = RuntimeState

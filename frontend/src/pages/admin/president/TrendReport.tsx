@@ -1,20 +1,20 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
+import { fetchPresidentTrend } from '@/api/adminPresident'
 
-const mockMonthlyData = [
-  { month: '1月', revenue: 420000, target: 400000, growth: 5.0 },
-  { month: '2月', revenue: 380000, target: 400000, growth: -5.0 },
-  { month: '3月', revenue: 510000, target: 450000, growth: 13.3 },
-  { month: '4月', revenue: 470000, target: 450000, growth: 4.4 },
-  { month: '5月', revenue: 560000, target: 500000, growth: 12.0 },
-  { month: '6月', revenue: 509000, target: 500000, growth: 1.8 },
-]
+type TrendData = Awaited<ReturnType<typeof fetchPresidentTrend>>
 
 export default function TrendReport() {
-  const [data] = useState(mockMonthlyData)
+  const [data, setData] = useState<TrendData | null>(null)
+
+  useEffect(() => {
+    fetchPresidentTrend().then(setData)
+  }, [])
+
+  if (!data) return <div className="p-4 text-muted-foreground">加载中...</div>
 
   return (
     <Card>

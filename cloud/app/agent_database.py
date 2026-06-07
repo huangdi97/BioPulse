@@ -79,6 +79,17 @@ def init_agent_db() -> None:
         )
         conn.execute("CREATE INDEX IF NOT EXISTS idx_state_snapshots_agent ON agent_state_snapshots(agent_id)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_state_snapshots_status ON agent_state_snapshots(status)")
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS agent_runtime_snapshots ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "trace_id TEXT NOT NULL, "
+            "step INTEGER NOT NULL, "
+            "state_json TEXT NOT NULL, "
+            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
+            "expires_at TIMESTAMP"
+            ")"
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_runtime_snapshots_trace_step ON agent_runtime_snapshots(trace_id, step)")
         conn.commit()
 
 

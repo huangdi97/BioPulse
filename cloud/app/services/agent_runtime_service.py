@@ -7,7 +7,7 @@ from cloud.app.agent_database import (
     AgentRuntimeLogRepository,
 )
 from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
-from cloud.app.agent_runtime.runtime_core import AgentRuntime
+from cloud.app.agent_runtime.runtime_core import RuntimeCore
 from cloud.app.database import DB_PATH
 
 
@@ -62,7 +62,7 @@ class AgentRuntimeService:
     def execute_agent(self, goal: str, agent_key: str, context: dict | None, auth_header: str) -> dict:
         conn = self._connect()
         try:
-            runtime = AgentRuntime(conn, conn, auth_header)
+            runtime = RuntimeCore(conn, conn, auth_header)
             result = runtime.execute(goal, agent_key, context)
             return result.model_dump()
         finally:
@@ -77,7 +77,7 @@ class AgentRuntimeService:
         goal = goal or spec["role_desc"]
         conn = self._connect()
         try:
-            runtime = AgentRuntime(conn, conn, auth_header)
+            runtime = RuntimeCore(conn, conn, auth_header)
             result = runtime.execute(goal, agent_key)
             return result.model_dump()
         finally:
@@ -86,8 +86,16 @@ class AgentRuntimeService:
     def resume_execution(self, auth_header: str) -> dict:
         conn = self._connect()
         try:
-            runtime = AgentRuntime(conn, conn, auth_header)
+            runtime = RuntimeCore(conn, conn, auth_header)
             result = runtime.resume("", "")
             return result.model_dump()
+        finally:
+            conn.close()
+
+    def rollback_execution(self, trace_id: str, step: int, auth_header: str) -> dict:
+        conn = self._connect()
+        try:
+            runtime = RuntimeCore(conn, conn, auth_header)
+            return runtime.rollback(trace_id, step)
         finally:
             conn.close()

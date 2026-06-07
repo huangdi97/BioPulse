@@ -1,32 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts'
+import { PIE_COLORS } from '@/mock/adminPresident'
+import { fetchPresidentCompliance } from '@/api/adminPresident'
 
-const mockTrendData = [
-  { month: '1月', violations: 12, processed: 8 },
-  { month: '2月', violations: 10, processed: 7 },
-  { month: '3月', violations: 15, processed: 11 },
-  { month: '4月', violations: 8, processed: 6 },
-  { month: '5月', violations: 6, processed: 5 },
-  { month: '6月', violations: 4, processed: 4 },
-]
-
-const mockCategoryData = [
-  { name: '话术违规', value: 35 },
-  { name: '竞品提及', value: 25 },
-  { name: '数据造假', value: 18 },
-  { name: '礼品超限', value: 12 },
-  { name: '其他', value: 10 },
-]
-
-const COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981', '#8b5cf6']
+type ComplianceData = Awaited<ReturnType<typeof fetchPresidentCompliance>>
 
 export default function ComplianceOverview() {
-  const [trendData] = useState(mockTrendData)
-  const [categoryData] = useState(mockCategoryData)
+  const [data, setData] = useState<ComplianceData | null>(null)
+
+  useEffect(() => {
+    fetchPresidentCompliance().then(setData)
+  }, [])
+
+  if (!data) return <div className="p-4 text-muted-foreground">加载中...</div>
+
+  const { trendData, categoryData } = data
 
   return (
     <div className="space-y-4">
@@ -64,7 +56,7 @@ export default function ComplianceOverview() {
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
               >
                 {categoryData.map((_, index) => (
-                  <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                 ))}
               </Pie>
               <Legend />

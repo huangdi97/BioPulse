@@ -8,12 +8,8 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.research_database import get_research_db
-from cloud.app.services.research_trajectory_features import (
-    causal_attribution,
-    extract_time_series,
-    normalize_areas,
-    run_prediction_fallback,
-)
+from cloud.app.services.feature_analyzer import causal_attribution, run_prediction_fallback
+from cloud.app.services.feature_extractor import extract_time_series, normalize_areas
 
 
 class ResearchTrajectoryService:

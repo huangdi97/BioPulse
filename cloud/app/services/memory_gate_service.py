@@ -17,7 +17,8 @@ from cloud.app.repositories import (
     MemoryRecallLogRepository,
 )
 from cloud.app.services.base import BaseService
-from shared.app_settings import settings
+from cloud.app.services.holographic_service import HolographicService
+from shared.config import settings as config_settings
 
 
 def _now():
@@ -30,7 +31,7 @@ class MemoryGateService(BaseService):
     def _call_ai(self, messages: list[dict], auth_header: str) -> dict:
         payload = {"messages": messages, "temperature": 0.3, "max_tokens": 256}
         req = urllib.request.Request(
-            f"{settings.cloud_api_base}/ai/chat",
+            f"{config_settings.ai_chat_url}",
             data=json.dumps(payload).encode("utf-8"),
             headers={"Content-Type": "application/json", "Authorization": auth_header},
             method="POST",
@@ -98,6 +99,15 @@ class MemoryGateService(BaseService):
                 "created_at": now,
                 "updated_at": now,
             }
+        )
+        HolographicService(self.db).auto_associate(
+            entry_id,
+            {
+                "context_tags": tags,
+                "source_id": source_id or "",
+                "memory_type": memory_type,
+                "created_at": now,
+            },
         )
         return {
             "id": entry_id,
@@ -243,7 +253,7 @@ class MemoryGateService(BaseService):
                 }
             now = _now()
             tags = json.dumps([source_type], ensure_ascii=False)
-            entry_repo.create(
+            entry_id = entry_repo.create(
                 {
                     "title": source_title,
                     "content": source_content,
@@ -257,6 +267,15 @@ class MemoryGateService(BaseService):
                     "created_at": now,
                     "updated_at": now,
                 }
+            )
+            HolographicService(self.db).auto_associate(
+                entry_id,
+                {
+                    "context_tags": tags,
+                    "source_id": source_id,
+                    "memory_type": source_type,
+                    "created_at": now,
+                },
             )
 
         return {"stored": stored, "importance": importance}

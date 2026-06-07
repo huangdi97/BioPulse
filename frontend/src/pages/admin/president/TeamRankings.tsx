@@ -1,27 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-
-interface TeamRank {
-  rank: number
-  name: string
-  visits: number
-  compliance: number
-  performance: number
-  score: number
-}
-
-const mockRankings: TeamRank[] = [
-  { rank: 1, name: '华东大区', visits: 245, compliance: 98, performance: 92, score: 96 },
-  { rank: 2, name: '华南大区', visits: 218, compliance: 95, performance: 89, score: 92 },
-  { rank: 3, name: '华北区域', visits: 196, compliance: 92, performance: 85, score: 88 },
-  { rank: 4, name: '华中区域', visits: 175, compliance: 88, performance: 82, score: 84 },
-  { rank: 5, name: '西南区域', visits: 152, compliance: 85, performance: 78, score: 80 },
-  { rank: 6, name: '西北区域', visits: 128, compliance: 82, performance: 75, score: 76 },
-  { rank: 7, name: '东北区域', visits: 110, compliance: 78, performance: 72, score: 72 },
-]
+import { fetchPresidentRankings, type TeamRank } from '@/api/adminPresident'
 
 export default function TeamRankings() {
-  const [rankings] = useState(mockRankings)
+  const [rankings, setRankings] = useState<TeamRank[] | null>(null)
+
+  useEffect(() => {
+    fetchPresidentRankings().then(setRankings)
+  }, [])
+
+  if (!rankings) return <div className="p-4 text-muted-foreground">加载中...</div>
 
   return (
     <Card>

@@ -108,3 +108,6 @@ class BrainMemoryService(BaseService):
 
     def memory_decay(self, hours_threshold: int = 72) -> dict:
         return self._writer.memory_decay(hours_threshold)
+
+    def holographic_get(self, memory_id: int, depth: int = 3) -> dict:
+        return self._retriever.holographic_get(memory_id, depth)

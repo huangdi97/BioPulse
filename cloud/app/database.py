@@ -94,6 +94,21 @@ def _ensure_token_budget_tables(conn) -> None:
     conn.commit()
 
 
+def _ensure_agent_runtime_snapshot_table(conn) -> None:
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS agent_runtime_snapshots ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "trace_id TEXT NOT NULL, "
+        "step INTEGER NOT NULL, "
+        "state_json TEXT NOT NULL, "
+        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
+        "expires_at TIMESTAMP"
+        ")"
+    )
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_runtime_snapshots_trace_step ON agent_runtime_snapshots(trace_id, step)")
+    conn.commit()
+
+
 def init_db() -> None:
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     with sqlite3.connect(DB_PATH) as conn:
@@ -132,6 +147,7 @@ def init_db() -> None:
             ")"
         )
         _ensure_token_budget_tables(conn)
+        _ensure_agent_runtime_snapshot_table(conn)
         seed_market_intel(conn)
         seed_agent_data(conn)
         seed_decision_intel(conn)

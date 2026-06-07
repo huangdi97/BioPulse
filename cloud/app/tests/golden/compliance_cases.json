@@ -1,0 +1,75 @@
+[
+  {
+    "name": "normal_visit_passes",
+    "input": {
+      "rep_id": 101,
+      "hcp_id": 2001,
+      "notes": "正常拜访，讨论说明书内适应症和用药注意事项。",
+      "expenses": 80,
+      "location_type": "hospital_public_area",
+      "rep_verified": true,
+      "call_type": "日常拜访"
+    },
+    "expected": {
+      "action": "pass",
+      "rule_names": []
+    }
+  },
+  {
+    "name": "prescription_statistics_keyword_blocks",
+    "input": {
+      "rep_id": 102,
+      "hcp_id": 2002,
+      "notes": "希望获取统方和处方统计数据，用于后续市场分析。",
+      "expenses": 0,
+      "location_type": "hospital_public_area"
+    },
+    "expected": {
+      "action": "block",
+      "rule_names": ["统方禁止"]
+    }
+  },
+  {
+    "name": "kickback_keyword_blocks",
+    "input": {
+      "rep_id": 103,
+      "hcp_id": 2003,
+      "notes": "承诺给予回扣支持采购。",
+      "expenses": 0,
+      "location_type": "hospital_public_area"
+    },
+    "expected": {
+      "action": "block",
+      "rule_names": ["回扣红线"]
+    }
+  },
+  {
+    "name": "unauthorized_location_blocks",
+    "input": {
+      "rep_id": 104,
+      "hcp_id": 2004,
+      "notes": "在非指定区域进行产品沟通。",
+      "expenses": 0,
+      "location_type": "unauthorized"
+    },
+    "expected": {
+      "action": "block",
+      "rule_names": ["场所异常检测"]
+    }
+  },
+  {
+    "name": "excessive_benefit_transfer_blocks",
+    "input": {
+      "rep_id": 105,
+      "hcp_id": 2005,
+      "notes": "普通科室拜访后报销接待费用。",
+      "expenses": 600,
+      "location_type": "hospital_public_area",
+      "call_type": "日常拜访"
+    },
+    "expected": {
+      "action": "block",
+      "rule_names": ["利益输送拦截"]
+    }
+  }
+]

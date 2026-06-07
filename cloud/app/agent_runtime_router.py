@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
-from cloud.app.agent_runtime.tool_bridge import ToolRegistry
+from cloud.app.agent_runtime.tool_bridge import ToolBridge
 from cloud.app.services.agent_runtime_service import AgentRuntimeService
 from shared.auth_scope import require_scope
 
@@ -18,6 +18,10 @@ class ExecuteRequest(BaseModel):
 
 class TriggerRequest(BaseModel):
     goal: str | None = None
+
+
+class RollbackRequest(BaseModel):
+    step: int
 
 
 def _auth_header(request: Request) -> str:
@@ -67,7 +71,7 @@ def trigger_agent(
 def list_tools(
     user=Depends(require_scope("visit")),
 ):
-    registry = ToolRegistry()
+    registry = ToolBridge()
     registry.register_default_tools()
     return registry.list_tools()
 
@@ -107,3 +111,14 @@ def resume_execution(
     """恢复一个等待审批的 Agent 执行。"""
     service = AgentRuntimeService()
     return service.resume_execution(_auth_header(request))
+
+
+@router.post("/rollback/{trace_id}")
+def rollback_execution(
+    trace_id: str,
+    body: RollbackRequest,
+    request: Request,
+    user=Depends(require_scope("visit")),
+):
+    service = AgentRuntimeService()
+    return service.rollback_execution(trace_id, body.step, _auth_header(request))

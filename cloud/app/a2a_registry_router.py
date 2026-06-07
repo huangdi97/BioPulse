@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
-from cloud.app.services.a2a_registry_service import A2ARegistryService
+from cloud.app.services.a2a_registry_service import A2aRegistryService
 from shared.auth_scope import require_scope
 from shared.base import success
 
@@ -48,7 +48,7 @@ router = APIRouter(prefix="/a2a", tags=["A2A Agent Registry"])
 @router.post("/agents/register", summary="注册Agent", description="向注册中心注册新的Agent实例")
 def register_agent(
     body: RegisterRequest,
-    service: A2ARegistryService = Depends(),
+    service: A2aRegistryService = Depends(),
     _=Depends(require_scope(["pharma", "research"])),
 ):
     """register_agent 操作。
@@ -71,7 +71,7 @@ def register_agent(
 @router.get("/agents/{agent_key}", summary="查询Agent", description="根据agent_key获取Agent详情")
 def get_agent(
     agent_key: str,
-    service: A2ARegistryService = Depends(),
+    service: A2aRegistryService = Depends(),
     _=Depends(require_scope(["pharma", "research"])),
 ):
     """get_agent 操作。
@@ -89,7 +89,7 @@ def list_agents(
     type: str = Query(None, alias="type"),
     status: str = Query(None),
     capability: str = Query(None),
-    service: A2ARegistryService = Depends(),
+    service: A2aRegistryService = Depends(),
     _=Depends(require_scope(["pharma", "research"])),
 ):
     """list_agents 操作。
@@ -107,7 +107,7 @@ def list_agents(
 @router.post("/agents/{agent_key}/heartbeat", summary="Agent心跳", description="发送Agent心跳更新最后活跃时间")
 def agent_heartbeat(
     agent_key: str,
-    service: A2ARegistryService = Depends(),
+    service: A2aRegistryService = Depends(),
     _=Depends(require_scope(["pharma", "research"])),
 ):
     """agent_heartbeat 操作。
@@ -124,7 +124,7 @@ def agent_heartbeat(
 def update_agent_status(
     agent_key: str,
     body: StatusUpdateRequest,
-    service: A2ARegistryService = Depends(),
+    service: A2aRegistryService = Depends(),
     _=Depends(require_scope(["pharma", "research"])),
 ):
     """update_agent_status 操作。
@@ -140,7 +140,7 @@ def update_agent_status(
 @router.post("/tasks/submit", summary="提交任务", description="向目标Agent提交一个任务")
 def submit_task(
     body: TaskSubmitRequest,
-    service: A2ARegistryService = Depends(),
+    service: A2aRegistryService = Depends(),
     _=Depends(require_scope(["pharma", "research"])),
 ):
     """submit_task 操作。
@@ -162,7 +162,7 @@ def submit_task(
 @router.get("/tasks/{task_id}", summary="查询任务", description="根据task_id获取任务详情")
 def get_task(
     task_id: str,
-    service: A2ARegistryService = Depends(),
+    service: A2aRegistryService = Depends(),
     _=Depends(require_scope(["pharma", "research"])),
 ):
     """获取任务。
@@ -180,7 +180,7 @@ def list_tasks(
     status: str = Query(None),
     agent_key: str = Query(None),
     limit: int = Query(50),
-    service: A2ARegistryService = Depends(),
+    service: A2aRegistryService = Depends(),
     _=Depends(require_scope(["pharma", "research"])),
 ):
     """获取任务列表。
@@ -200,7 +200,7 @@ def list_events(
     event_type: str = Query(None),
     agent_key: str = Query(None),
     limit: int = Query(50),
-    service: A2ARegistryService = Depends(),
+    service: A2aRegistryService = Depends(),
     _=Depends(require_scope(["pharma", "research"])),
 ):
     """list_events 操作。

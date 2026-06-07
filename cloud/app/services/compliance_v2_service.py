@@ -72,3 +72,6 @@ class ComplianceV2Service(BaseService):
 
     def dashboard(self) -> dict:
         return self._reporter.dashboard()
+
+
+ComplianceV = ComplianceV2Service

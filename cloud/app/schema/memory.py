@@ -76,4 +76,17 @@ MEMORY_SQL = """\
                 details TEXT DEFAULT \"{}\",
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
+            CREATE TABLE IF NOT EXISTS memory_associations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                memory_id_a INTEGER NOT NULL REFERENCES memory_entries(id),
+                memory_id_b INTEGER NOT NULL REFERENCES memory_entries(id),
+                relation_type TEXT NOT NULL DEFAULT 'related',
+                weight REAL DEFAULT 1.0,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_mema_a ON memory_associations(memory_id_a);
+            CREATE INDEX IF NOT EXISTS idx_mema_b ON memory_associations(memory_id_b);
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_mema_pair ON memory_associations(
+                MIN(memory_id_a, memory_id_b), MAX(memory_id_a, memory_id_b)
+            );
 """

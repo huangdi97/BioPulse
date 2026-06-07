@@ -165,6 +165,6 @@ class MdtAgentService(BaseService):
         return dict(row) if row else {}
 
     def _a2a_service(self):
-        from cloud.app.services.a2a_registry_service import A2ARegistryService
+        from cloud.app.services.a2a_registry_service import A2aRegistryService
 
-        return A2ARegistryService(db=self.db)
+        return A2aRegistryService(db=self.db)

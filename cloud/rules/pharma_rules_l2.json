@@ -47,5 +47,198 @@
     },
     "threshold": 0.8,
     "description": "同一科室拜访集中度异常（占比超过80%）"
+  },
+  {
+    "id": "PHR-L2-005",
+    "name": "月度拜访频率异常",
+    "severity": "warning",
+    "check_type": "frequency_count",
+    "condition": {
+      "field": "hcp_id",
+      "window_days": 30
+    },
+    "threshold": 8,
+    "description": "同一HCP月度拜访次数超过8次时触发预警"
+  },
+  {
+    "id": "PHR-L2-006",
+    "name": "学术会议费用不足预警",
+    "severity": "review",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "meeting_budget_ratio",
+      "operator": "lt"
+    },
+    "threshold": 0.8,
+    "description": "实际会议费用低于预算80%时标记（可能未如实报销）"
+  },
+  {
+    "id": "PHR-L2-007",
+    "name": "推广材料版本过期",
+    "severity": "warning",
+    "check_type": "expiry_check",
+    "condition": {
+      "field": "material_version_date",
+      "lead_days": 0
+    },
+    "threshold": null,
+    "description": "使用的推广材料版本已过有效期"
+  },
+  {
+    "id": "PHR-L2-008",
+    "name": "礼品登记缺失",
+    "severity": "warning",
+    "check_type": "flag_check",
+    "condition": {
+      "field": "gift_recorded",
+      "expected": true
+    },
+    "threshold": null,
+    "description": "礼品发放未在系统中登记"
+  },
+  {
+    "id": "PHR-L2-009",
+    "name": "HCP关系超年限预警",
+    "severity": "review",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "relationship_years",
+      "operator": "gt"
+    },
+    "threshold": 5,
+    "description": "同一代表与同一HCP保持超过5年合作关系时标记"
+  },
+  {
+    "id": "PHR-L2-010",
+    "name": "参会率异常",
+    "severity": "warning",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "attendance_rate",
+      "operator": "lt"
+    },
+    "threshold": 0.6,
+    "description": "HCP参会率低于60%时触发预警"
+  },
+  {
+    "id": "PHR-L2-011",
+    "name": "拜访报告延迟",
+    "severity": "warning",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "report_delay_days",
+      "operator": "gt"
+    },
+    "threshold": 3,
+    "description": "拜访报告提交延迟超过3个工作日"
+  },
+  {
+    "id": "PHR-L2-012",
+    "name": "差旅费用异常",
+    "severity": "review",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "travel_cost_deviation",
+      "operator": "gt"
+    },
+    "threshold": 0.3,
+    "description": "差旅费用超出标准30%以上时标记"
+  },
+  {
+    "id": "PHR-L2-013",
+    "name": "合规培训未完成",
+    "severity": "warning",
+    "check_type": "flag_check",
+    "condition": {
+      "field": "compliance_training_done",
+      "expected": true
+    },
+    "threshold": null,
+    "description": "代表未完成年度合规培训"
+  },
+  {
+    "id": "PHR-L2-014",
+    "name": "高风险科室拜访预警",
+    "severity": "review",
+    "check_type": "concentration_check",
+    "condition": {
+      "field": "department",
+      "ratio_threshold": 0.5,
+      "window_days": 30
+    },
+    "threshold": 0.5,
+    "description": "高风限科室（外科/ICU/药剂科）拜访占比超过50%"
+  },
+  {
+    "id": "PHR-L2-015",
+    "name": "HCP价值等级匹配异常",
+    "severity": "review",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "call_value_mismatch",
+      "operator": "gt"
+    },
+    "threshold": 2,
+    "description": "代表拜访频率与HCP价值等级不匹配（等级差超过2级）"
+  },
+  {
+    "id": "PHR-L2-016",
+    "name": "合规承诺书过期",
+    "severity": "warning",
+    "check_type": "expiry_check",
+    "condition": {
+      "field": "compliance_pledge_expiry",
+      "lead_days": 30
+    },
+    "threshold": 30,
+    "description": "合规承诺书到期前30天提醒"
+  },
+  {
+    "id": "PHR-L2-017",
+    "name": "合规评分过低预警",
+    "severity": "warning",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "compliance_score",
+      "operator": "lt"
+    },
+    "threshold": 60,
+    "description": "代表合规评分低于60分时触发预警"
+  },
+  {
+    "id": "PHR-L2-018",
+    "name": "跨区拜访未报备",
+    "severity": "warning",
+    "check_type": "flag_check",
+    "condition": {
+      "field": "cross_region_approved",
+      "expected": true
+    },
+    "threshold": null,
+    "description": "跨区域拜访未提前报备"
+  },
+  {
+    "id": "PHR-L2-019",
+    "name": "资料分发未登记",
+    "severity": "warning",
+    "check_type": "flag_check",
+    "condition": {
+      "field": "material_distribution_recorded",
+      "expected": true
+    },
+    "threshold": null,
+    "description": "推广资料分发未登记接收人信息"
+  },
+  {
+    "id": "PHR-L2-020",
+    "name": "线上会议记录缺失",
+    "severity": "warning",
+    "check_type": "flag_check",
+    "condition": {
+      "field": "online_meeting_recorded",
+      "expected": true
+    },
+    "threshold": null,
+    "description": "线上学术会议未保存参会记录或回放"
   }
 ]

@@ -10,6 +10,7 @@ from cloud.app.repositories import (
     WorkingMemoryRepository,
 )
 from cloud.app.services.base import BaseService
+from cloud.app.services.holographic_service import HolographicService
 from cloud.app.services.memory_format import (
     _call_ai,
     _now,
@@ -181,6 +182,9 @@ class MemoryWriter(BaseService):
             }
         )
         em_repo.update(memory_id, {"is_consolidated": 1})
+        fetched = me_repo.get_by_id(entry_id)
+        if fetched:
+            self._auto_associate(entry_id, fetched)
         return {
             "memory_id": memory_id,
             "entry_id": entry_id,
@@ -229,6 +233,9 @@ class MemoryWriter(BaseService):
                 "updated_at": n,
             }
         )
+        fetched = MemoryEntriesRepository(self.db).get_by_id(eid)
+        if fetched:
+            self._auto_associate(eid, fetched)
         return {"id": eid, "title": d.get("title", ""), "content": d.get("content", "")}
 
     def procedural_learn(
@@ -262,6 +269,9 @@ class MemoryWriter(BaseService):
                 "updated_at": n,
             }
         )
+        fetched = MemoryEntriesRepository(self.db).get_by_id(eid)
+        if fetched:
+            self._auto_associate(eid, fetched)
         return {"id": eid, "pattern_name": pattern_name, "success_rate": success_rate}
 
     def memory_decay(self, hours_threshold: int = 72) -> dict:
@@ -276,3 +286,6 @@ class MemoryWriter(BaseService):
         if rows:
             me_repo.db.commit()
         return {"decayed": len(rows), "hours_threshold": hours_threshold}
+
+    def _auto_associate(self, entry_id: int, entry: dict):
+        HolographicService(self.db).auto_associate(entry_id, entry)

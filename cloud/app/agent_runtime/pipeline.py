@@ -4,8 +4,8 @@ import json
 
 from pydantic import BaseModel
 
-from cloud.app.agent_runtime.tool_bridge import ToolRegistry
-from shared.app_settings import settings
+from cloud.app.agent_runtime.tool_bridge import ToolBridge
+from shared.config import settings as config_settings
 
 
 class PipelineStep(BaseModel):
@@ -18,10 +18,10 @@ class PipelineStep(BaseModel):
     output_key: str
 
 
-class AgentPipeline:
+class Pipeline:
     """Agent 流水线执行器，按依赖拓扑排序解析参数并依次调用工具。"""
 
-    def __init__(self, steps: list[PipelineStep], tool_registry: ToolRegistry, llm_func=None):
+    def __init__(self, steps: list[PipelineStep], tool_registry: ToolBridge, llm_func=None):
         self._steps = steps
         self._step_map = {s.step_id: s for s in steps}
         self._tool_registry = tool_registry
@@ -32,7 +32,7 @@ class AgentPipeline:
 
         body = json.dumps({"messages": messages, "temperature": 0.3, "max_tokens": 1024}).encode("utf-8")
         req = urllib.request.Request(
-            f"{settings.cloud_api_base}/ai/chat",
+            f"{config_settings.ai_chat_url}",
             data=body,
             headers={"Content-Type": "application/json"},
             method="POST",
@@ -96,3 +96,6 @@ class AgentPipeline:
             run_ctx[step.output_key] = result
 
         return outputs
+
+
+AgentPipeline = Pipeline

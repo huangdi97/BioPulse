@@ -34,6 +34,7 @@ from cloud.app.event_bus_router import router as event_bus_router
 from cloud.app.export_router import router as export_router
 from cloud.app.federated_node_router import router as federated_node_router
 from cloud.app.hcp_sandbox_router import router as hcp_sandbox_router
+from cloud.app.holographic_router import router as holographic_router
 from cloud.app.interaction_router import router as interaction_router
 from cloud.app.kg_router import router as kg_router
 from cloud.app.market_intel_router import router as market_intel_router
@@ -137,6 +138,7 @@ def register_routers(app: FastAPI) -> None:
     app.include_router(collaboration_router)
     app.include_router(event_bus_router)
     app.include_router(memory_consolidation_router)
+    app.include_router(holographic_router)
     app.include_router(sage_engine_router)
     app.include_router(agent_execution_router)
     app.include_router(agent_runtime_router)

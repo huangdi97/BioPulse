@@ -1,25 +1,24 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import StatCard from '@/components/StatCard'
 import { CalendarCheck, DollarSign, TrendingUp, Star } from 'lucide-react'
-
-const mockPerf = {
-  monthlyVisits: 22,
-  monthlyRevenue: 185000,
-  growth: 15,
-  score: 88,
-  rank: 'A',
-}
-
-const mockDetails = [
-  { label: '拜访完成率', value: '92%', color: 'text-green-600' },
-  { label: '合规通过率', value: '96%', color: 'text-green-600' },
-  { label: '客户转化率', value: '23%', color: 'text-blue-600' },
-  { label: '任务完成率', value: '85%', color: 'text-yellow-600' },
-]
+import { fetchEmployeePerformance } from '@/api/adminEmployee'
 
 export default function MyPerformance() {
-  const [perf] = useState(mockPerf)
+  const [perf, setPerf] = useState<{ monthlyVisits: number; monthlyRevenue: number; growth: number; score: number }>({
+    monthlyVisits: 0,
+    monthlyRevenue: 0,
+    growth: 0,
+    score: 0,
+  })
+  const [details, setDetails] = useState<Array<{ label: string; value: string }>>([])
+
+  useEffect(() => {
+    fetchEmployeePerformance().then((data) => {
+      setPerf(data.perf)
+      setDetails(data.details)
+    })
+  }, [])
 
   return (
     <div className="space-y-4">
@@ -52,7 +51,7 @@ export default function MyPerformance() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {mockDetails.map((d) => (
+            {details.map((d) => (
               <div key={d.label} className="text-center p-4 rounded-lg bg-muted/50">
                 <p className="text-2xl font-bold mb-1">{d.value}</p>
                 <p className="text-sm text-muted-foreground">{d.label}</p>

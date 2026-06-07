@@ -6,8 +6,9 @@ import logging
 from pydantic import BaseModel
 
 from cloud.app.agent_runtime.analyzer import Analysis
-from cloud.app.agent_runtime.planner import Plan, PlanGenerator, PlanStep
+from cloud.app.agent_runtime.planner import Plan, Planner, PlanStep
 from cloud.app.agent_runtime.verifier import SafetyGuard
+from shared.config import settings as config_settings
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +28,8 @@ class Reflector:
     If cannot fix  → return None (triggers escalation protocol)
     """
 
-    def __init__(self, plan_generator: PlanGenerator | None = None, llm_url: str = "http://localhost:8000/ai/chat"):
-        self._plan_generator = plan_generator or PlanGenerator(llm_url=llm_url)
+    def __init__(self, plan_generator: Planner | None = None, llm_url: str = config_settings.ai_chat_url):
+        self._plan_generator = plan_generator or Planner(llm_url=llm_url)
         self._llm_url = llm_url
         self._max_reflections = 3
         self._guard = SafetyGuard()

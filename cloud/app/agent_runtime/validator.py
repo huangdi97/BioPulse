@@ -7,7 +7,7 @@ from cloud.app.agent_runtime.models import AgentDecision
 ALLOWED_ACTIONS = {"call_tool", "complete", "error"}
 
 
-class AgentOutputValidator:
+class Validator:
     """Agent 输出校验器，将 LLM 响应解析为 AgentDecision 并校验动作有效性。"""
 
     @staticmethod
@@ -28,3 +28,6 @@ class AgentOutputValidator:
             reasoning=data.get("reasoning"),
         )
         return decision, None
+
+
+AgentOutputValidator = Validator

@@ -4,38 +4,34 @@ import json
 import uuid
 from typing import Optional
 
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException
 from starlette import status
 
+from cloud.app.database import get_db
 from cloud.app.repositories import (
     EventBusDefinitionsRepository,
     EventBusMessagesRepository,
     EventDeliveryLogRepository,
 )
 from cloud.app.services.base import BaseService
-from shared.app_settings import settings
-
-try:
-    import redis
-    from redis.exceptions import RedisError, ResponseError
-except ImportError:
-    redis = None
-    RedisError = Exception
-    ResponseError = Exception
-
-ALL_ENDS = ["cloud", "sales-coach", "sales-assistant", "assistant", "opportunity"]
-
-
-def _parse_targets(raw):
-    try:
-        parsed = json.loads(raw) if isinstance(raw, str) else raw
-        return parsed if parsed else ALL_ENDS.copy()
-    except (json.JSONDecodeError, TypeError):
-        return ALL_ENDS.copy()
+from cloud.app.services.event_bus_backend_common import parse_targets
+from cloud.app.services.redis_event_backend import RedisEventBackend
+from cloud.app.services.sqlite_event_backend import SqliteEventBackend
 
 
 class EventBusService(BaseService):
     """事件总线服务，管理事件定义、订阅、消息发布与投递。"""
+
+    def __init__(self, db=Depends(get_db)):
+        super().__init__(db)
+        self._backend = self._create_backend()
+
+    def _create_backend(self):
+        from shared.config import settings as app_cfg
+
+        if app_cfg.REDIS_URL:
+            return RedisEventBackend(app_cfg.REDIS_URL)
+        return SqliteEventBackend()
 
     def create_definition(
         self,
@@ -88,7 +84,8 @@ class EventBusService(BaseService):
         msg_repo = EventBusMessagesRepository(self.db)
         delivery_repo = EventDeliveryLogRepository(self.db)
         message_id = f"evt:{uuid.uuid4()}"
-        targets = _parse_targets(definition["target_ends"])
+        targets = parse_targets(definition["target_ends"])
+        payload_json = json.dumps(payload, ensure_ascii=False)
         msg_repo.create(
             {
                 "message_id": message_id,
@@ -96,36 +93,20 @@ class EventBusService(BaseService):
                 "source_end": definition["source_end"],
                 "source_entity_type": source_entity_type,
                 "source_entity_id": source_entity_id,
-                "payload": json.dumps(payload, ensure_ascii=False),
+                "payload": payload_json,
                 "correlation_id": correlation_id,
                 "priority": definition["priority"],
             }
         )
-        results = []
-        for i, target in enumerate(targets):
-            is_delivered = i == 0
-            status_val = "delivered" if is_delivered else "pending"
-            resp = "OK: 200 (simulated)" if is_delivered else ""
-            err = "" if is_delivered else f"simulated pending for {target}"
-            dur = 25 if is_delivered else 0
-            delivery_repo.create(
-                {
-                    "message_id": message_id,
-                    "target_end": target,
-                    "delivery_status": status_val,
-                    "attempt": 1,
-                    "response_summary": resp,
-                    "duration_ms": dur,
-                    "error_message": err,
-                }
-            )
-            results.append(
-                {
-                    "target_end": target,
-                    "delivery_status": status_val,
-                    "error_message": err,
-                }
-            )
+        results = self._backend.deliver(
+            self.db,
+            delivery_repo,
+            message_id,
+            targets,
+            event_type,
+            definition["source_end"],
+            payload_json,
+        )
         msg_repo.mark_delivered(message_id)
         return {
             "message": msg_repo.get_by_message_id(message_id),
@@ -165,12 +146,7 @@ class EventBusService(BaseService):
         return msg_repo.get_by_message_id(message_id)
 
     def subscribe(self, target_end: str, event_types: list, callback_url: str = "") -> dict:
-        return {
-            "acknowledged": True,
-            "target_end": target_end,
-            "event_types": event_types,
-            "callback_url": callback_url,
-        }
+        return self._backend.subscribe(target_end, event_types, callback_url)
 
     def list_delivery_log(
         self,
@@ -209,79 +185,4 @@ class EventBusService(BaseService):
         }
 
 
-class RedisEventBus:
-    """Redis Streams 事件总线，自动降级到 SQLite EventBusService。"""
-
-    def __init__(self, redis_url: str = settings.redis_url):
-        self._available = False
-        self._pool = None
-        self._client = None
-        if redis is None:
-            return
-        try:
-            self._pool = redis.ConnectionPool.from_url(redis_url, max_connections=10)
-            self._client = redis.Redis(connection_pool=self._pool)
-            self._client.ping()
-            self._available = True
-        except (RedisError, OSError, ValueError):
-            self._available = False
-
-    def is_available(self) -> bool:
-        return self._available
-
-    def publish(self, stream: str, event: dict) -> Optional[str]:
-        if not self._available or not self._client:
-            return None
-        try:
-            fields = {}
-            for k, v in event.items():
-                fields[k] = json.dumps(v, ensure_ascii=False) if not isinstance(v, str) else v
-            return self._client.xadd(stream, fields, id="*")
-        except RedisError:
-            return None
-
-    def subscribe(self, stream: str, group: str, consumer: str, timeout_ms: int = 5000) -> list:
-        if not self._available or not self._client:
-            return []
-        try:
-            try:
-                self._client.xgroup_create(stream, group, id="0", mkstream=True)
-            except ResponseError as exc:
-                if "BUSYGROUP" not in str(exc):
-                    raise
-            resp = self._client.xreadgroup(group, consumer, {stream: ">"}, count=10, block=timeout_ms)
-            if not resp:
-                return []
-            result = []
-            for _stream_name, messages in resp:
-                for msg_id, fields in messages:
-                    entry = {"id": msg_id}
-                    for k, v in fields.items():
-                        try:
-                            entry[k] = json.loads(v)
-                        except (json.JSONDecodeError, TypeError):
-                            entry[k] = v
-                    result.append(entry)
-            return result
-        except RedisError:
-            return []
-
-    def ack(self, stream: str, group: str, message_id: str) -> Optional[int]:
-        if not self._available or not self._client:
-            return None
-        try:
-            return self._client.xack(stream, group, message_id)
-        except RedisError:
-            return None
-
-    def pending(self, stream: str, group: str) -> list:
-        if not self._available or not self._client:
-            return []
-        try:
-            resp = self._client.xpending(stream, group)
-            if not resp:
-                return []
-            total = resp.get("pending", 0) if isinstance(resp, dict) else resp
-            return [{"stream": stream, "group": group, "pending": total}]
-        except RedisError:
-            return []
+__all__ = ["EventBusService", "RedisEventBackend", "SqliteEventBackend"]
