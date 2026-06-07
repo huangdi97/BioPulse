@@ -32,6 +32,28 @@ def app():
             "rule_code TEXT, rule_name TEXT, severity TEXT, "
             "action TEXT, visit_data_json TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)"
         )
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS agent_execution_tasks ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "task_id TEXT UNIQUE, "
+            "source TEXT DEFAULT 'internal', "
+            "session_id TEXT DEFAULT '', "
+            "agent_role TEXT DEFAULT '', "
+            "action_type TEXT DEFAULT 'process', "
+            "input_data TEXT DEFAULT '{}', "
+            "output_data TEXT DEFAULT '{}', "
+            "status TEXT DEFAULT 'pending', "
+            "retry_count INTEGER DEFAULT 0, "
+            "max_retries INTEGER DEFAULT 3, "
+            "result_verified INTEGER DEFAULT 0, "
+            "verification_detail TEXT DEFAULT '', "
+            "requires_human_approval INTEGER DEFAULT 0, "
+            "assigned_to TEXT DEFAULT '', "
+            "created_at TEXT DEFAULT CURRENT_TIMESTAMP, "
+            "completed_at TEXT, "
+            "duration_ms INTEGER DEFAULT 0"
+            ")"
+        )
         conn.commit()
     import cloud.app.research_database as mod_research
 
@@ -50,6 +72,10 @@ def app():
                 pass  # 兼容操作：列已存在时跳过
 
     os.environ["RATE_LIMIT_DISABLE"] = "1"
+
+    import cloud.app.services.agent_execution_service as aes
+
+    aes.DB_PATH = TEST_DB
 
     import cloud.app.main as mod_main
 

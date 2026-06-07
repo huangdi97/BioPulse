@@ -1,0 +1,67 @@
+--- docker-compose.yml
++++ docker-compose.yml
+@@ -140,64 +140,3 @@
+       retries: 3
+       start_period: 15s
+ 
+-  clinical-ops:
+-    build:
+-      context: .
+-      dockerfile: clinical-ops/Dockerfile
+-    ports:
+-      - "8010:8010"
+-    volumes:
+-      - ./data/clinical_ops.db:/app/data/clinical_ops.db
+-    env_file:
+-      - .env
+-    environment:
+-      - DSN=sqlite:///data/clinical_ops.db
+-    networks:
+-      - yysd-net
+-    healthcheck:
+-      test: ["CMD-SHELL", "curl -f http://localhost:8010/health || exit 1"]
+-      interval: 30s
+-      timeout: 10s
+-      retries: 3
+-      start_period: 15s
+-
+-  market-access:
+-    build:
+-      context: .
+-      dockerfile: market-access/Dockerfile
+-    ports:
+-      - "8007:8007"
+-    volumes:
+-      - ./data/market_access.db:/app/data/market_access.db
+-    env_file:
+-      - .env
+-    environment:
+-      - DSN=sqlite:///data/market_access.db
+-    networks:
+-      - yysd-net
+-    healthcheck:
+-      test: ["CMD-SHELL", "curl -f http://localhost:8007/health || exit 1"]
+-      interval: 30s
+-      timeout: 10s
+-      retries: 3
+-      start_period: 15s
+-
+-  patient-engage:
+-    build:
+-      context: .
+-      dockerfile: patient-engage/Dockerfile
+-    ports:
+-      - "8011:8011"
+-    volumes:
+-      - ./data/patient_engage.db:/app/data/patient_engage.db
+-    env_file:
+-      - .env
+-    environment:
+-      - DSN=sqlite:///data/patient_engage.db
+-    networks:
+-      - yysd-net
+-    healthcheck:
+-      test: ["CMD-SHELL", "curl -f http://localhost:8011/health || exit 1"]
+-      interval: 30s
+-      timeout: 10s
+-      retries: 3
