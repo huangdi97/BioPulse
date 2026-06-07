@@ -124,3 +124,7 @@ tasks-*.md
 S*.md
 *-audit.md
 audit*.md
+
+# 死代码/归档 — 本地参考不进仓库
+_archive/
+archive/
