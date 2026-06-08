@@ -6,11 +6,15 @@ from fastapi import HTTPException
 from starlette import status
 
 from opportunity.app.repositories import BiddingAgentConfigRepository
+from opportunity.app.services.base import BaseCrudService
 from opportunity.app.services.bidding_agent_llm import BiddingAgentLLM
 
 
-class BiddingAgentService(BiddingAgentLLM):
+class BiddingAgentService(BiddingAgentLLM, BaseCrudService):
     """招投标Agent调度：管理Agent配置、触发扫描、分析招标信息、记录运行日志。"""
+
+    def __init__(self, db=None):
+        BaseCrudService.__init__(self, repository_class=BiddingAgentConfigRepository, entity_name="Config", db=db)
 
     def create_agent_config(self, body, user_id: int) -> int:
         """创建投标Agent配置。
@@ -38,7 +42,7 @@ class BiddingAgentService(BiddingAgentLLM):
                 },
             )
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def list_agent_configs(self) -> list:
         """列出所有活跃投标Agent配置。
@@ -58,7 +62,7 @@ class BiddingAgentService(BiddingAgentLLM):
             rows = repo.list_all(conditions=["is_active = 1"], order_by="id DESC")
             return [dict(r) for r in rows]
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def update_agent_config(self, config_id: int, body) -> dict:
         """更新投标Agent配置。
@@ -87,7 +91,7 @@ class BiddingAgentService(BiddingAgentLLM):
             repo.update(config_id, updates)
             return dict(repo.get_by_id(config_id))
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def delete_agent_config(self, config_id: int) -> None:
         """软删除投标Agent配置。
@@ -110,7 +114,7 @@ class BiddingAgentService(BiddingAgentLLM):
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Config not found")
             repo.soft_delete(config_id)
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def trigger_scan(self, auth_header: str) -> dict:
         """按所有活跃配置触发一次投标扫描。
@@ -158,7 +162,7 @@ class BiddingAgentService(BiddingAgentLLM):
                 "errors": errors,
             }
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def get_agent_status(self) -> dict:
         """读取投标Agent最近运行状态。
@@ -187,7 +191,7 @@ class BiddingAgentService(BiddingAgentLLM):
                 "success_rate": success_rate,
             }
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def list_agent_logs(self, page: int, page_size: int) -> tuple:
         """分页列出投标Agent运行日志。
@@ -215,4 +219,4 @@ class BiddingAgentService(BiddingAgentLLM):
             items = [dict(r) for r in rows]
             return items, total, page, page_size, total_pages
         finally:
-            conn.close()
+            self._close_connection(conn)

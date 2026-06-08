@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from assistant.app.repositories import HcpLocationRepository
-from assistant.app.services.base import BaseService
+from assistant.app.services.base import BaseCrudService
 
 
 def haversine(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
@@ -26,8 +26,11 @@ def haversine(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
-class LocationService(BaseService):
+class LocationService(BaseCrudService):
     """定位服务，提供HCP地址管理、位置查询与路线优化。"""
+
+    def __init__(self, db=None):
+        super().__init__(repository_class=HcpLocationRepository, entity_name="Location", db=db)
 
     def create(self, hcp_id: int, body, user_id: int) -> dict:
         """为指定HCP创建地址定位记录。

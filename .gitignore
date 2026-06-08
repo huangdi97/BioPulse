@@ -67,6 +67,7 @@ benchmarks/
 *.orig
 *.backup
 briefings/
+briefings/archive/
 docs/
 vibecoding/
 start_*.sh

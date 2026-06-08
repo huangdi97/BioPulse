@@ -4,11 +4,14 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from assistant.app.repositories import KnowledgeBaseRepository
-from assistant.app.services.base import BaseService
+from assistant.app.services.base import BaseCrudService
 
 
-class KnowledgeService(BaseService):
+class KnowledgeService(BaseCrudService):
     """知识库服务，提供知识条目的增删改查、分类与全文搜索。"""
+
+    def __init__(self, db=None):
+        super().__init__(repository_class=KnowledgeBaseRepository, entity_name="Knowledge", db=db)
 
     def create(self, body, user_id: int) -> dict:
         """创建知识库条目。
@@ -33,7 +36,7 @@ class KnowledgeService(BaseService):
             )
             return {"id": row_id}
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def list(
         self,
@@ -64,7 +67,7 @@ class KnowledgeService(BaseService):
 
             return repo.paginate(page, page_size, conditions, params)
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def list_categories(self) -> list:
         """列出所有知识分类。
@@ -82,7 +85,7 @@ class KnowledgeService(BaseService):
             categories = list({r["category"] for r in rows})
             return sorted(categories)
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def search(self, q: str, page: int, page_size: int) -> tuple:
         """全文搜索知识库。
@@ -111,7 +114,7 @@ class KnowledgeService(BaseService):
             ).fetchall()
             return total, total_pages, rows
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def get(self, knowledge_id: int) -> dict:
         """根据ID获取知识条目详情。
@@ -127,7 +130,7 @@ class KnowledgeService(BaseService):
             repo = KnowledgeBaseRepository(conn)
             return dict(repo.get_or_404(knowledge_id))
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def update(self, knowledge_id: int, body) -> dict:
         """更新知识条目。
@@ -149,7 +152,7 @@ class KnowledgeService(BaseService):
             repo.update(knowledge_id, updates)
             return dict(repo.get_by_id(knowledge_id))
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def delete(self, knowledge_id: int) -> None:
         """软删除知识条目。
@@ -163,4 +166,4 @@ class KnowledgeService(BaseService):
             repo.get_or_404(knowledge_id)
             repo.soft_delete(knowledge_id)
         finally:
-            conn.close()
+            self._close_connection(conn)

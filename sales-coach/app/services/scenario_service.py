@@ -4,11 +4,14 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sales_coach.app.repositories import ScenarioRepository
-from sales_coach.app.services.base import BaseService
+from sales_coach.app.services.base import BaseCrudService
 
 
-class ScenarioService(BaseService):
+class ScenarioService(BaseCrudService):
     """教练场景服务，提供场景的创建、分页查询、更新与软删除。"""
+
+    def __init__(self, db=None):
+        super().__init__(repository_class=ScenarioRepository, entity_name="Scenario", db=db)
 
     def create(self, body, user_id: int) -> dict:
         """创建教练场景。

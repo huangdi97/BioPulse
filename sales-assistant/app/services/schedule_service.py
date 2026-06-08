@@ -7,11 +7,14 @@ from fastapi import HTTPException
 from starlette import status
 
 from sales_assistant.app.repositories import ScheduleRepository
-from sales_assistant.app.services.base import BaseService
+from sales_assistant.app.services.base import BaseCrudService
 
 
-class ScheduleService(BaseService):
+class ScheduleService(BaseCrudService):
     """日程服务：管理销售代表的工作日程与事件。"""
+
+    _repo_class = ScheduleRepository
+    _entity_name = "Schedule"
 
     def create_schedule(self, body, user_id: int) -> int:
         """创建日程事件。

@@ -7,13 +7,16 @@ from fastapi import HTTPException
 from starlette import status
 
 from opportunity.app.repositories import BiddingInfoRepository
-from opportunity.app.services.base import BaseService
+from opportunity.app.services.base import BaseCrudService
 
 """招投标管理服务，负责招标信息的增删改查。"""
 
 
-class BiddingService(BaseService):
+class BiddingService(BaseCrudService):
     """招投标信息管理：创建、列表查询（支持多条件筛选）、更新、软删除。"""
+
+    def __init__(self, db=None):
+        super().__init__(repository_class=BiddingInfoRepository, entity_name="Bidding", db=db)
 
     def create_bidding(self, body, user_id: int) -> int:
         """创建招标信息记录。

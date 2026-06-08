@@ -7,13 +7,16 @@ from fastapi import HTTPException
 from starlette import status
 
 from sales_assistant.app.repositories import HcpRepository
-from sales_assistant.app.services.base import BaseService
+from sales_assistant.app.services.base import BaseCrudService
 from sales_assistant.app.services.hcp_search import HcpSearchMixin
 from sales_assistant.app.services.hcp_stats import HcpStatsMixin
 
 
-class HcpService(HcpSearchMixin, HcpStatsMixin, BaseService):
+class HcpService(HcpSearchMixin, HcpStatsMixin, BaseCrudService):
     """HCP管理服务：管理医生信息、产品及HCP-产品关联关系图谱。"""
+
+    _repo_class = HcpRepository
+    _entity_name = "HCP"
 
     def _now(self) -> str:
         return datetime.now(timezone.utc).isoformat()

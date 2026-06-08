@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sales_assistant.app.repositories import PromptRepository, SessionRepository
-from sales_assistant.app.services.base import BaseService
+from sales_assistant.app.services.base import BaseCrudService
 from shared.app_settings import settings
 
 AI_GATEWAY_URL = f"{settings.cloud_api_base}/ai/chat"
@@ -16,8 +16,10 @@ TIMEOUT_SECONDS = 30
 logger = logging.getLogger(__name__)
 
 
-class CoachService(BaseService):
+class CoachService(BaseCrudService):
     """教练服务：管理销售话术模板、生成AI教练建议、跟踪辅导会话。"""
+
+    _entity_name = "Coach"
 
     def create_prompt(self, body, user_id: int) -> int:
         """创建话术模板。

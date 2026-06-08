@@ -4,11 +4,14 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from assistant.app.repositories import HealthRadarRepository
-from assistant.app.services.base import BaseService
+from assistant.app.services.base import BaseCrudService
 
 
-class HealthRadarService(BaseService):
+class HealthRadarService(BaseCrudService):
     """健康雷达服务，提供患者健康评估的增删改查与统计分析。"""
+
+    def __init__(self, db=None):
+        super().__init__(repository_class=HealthRadarRepository, entity_name="HealthRadar", db=db)
 
     def create(self, body, user_id: int) -> dict:
         """创建健康评估记录。

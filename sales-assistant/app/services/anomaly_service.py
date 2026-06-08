@@ -4,11 +4,13 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from sales_assistant.app.repositories import AlertRepository, AnomalyRuleRepository
-from sales_assistant.app.services.base import BaseService
+from sales_assistant.app.services.base import BaseCrudService
 
 
-class AnomalyService(BaseService):
+class AnomalyService(BaseCrudService):
     """异常检测服务：自定义规则配置、自动检测异常并生成告警。"""
+
+    _entity_name = "AnomalyRule"
 
     def create_rule(self, body, user_id: int) -> int:
         """创建异常检测规则。

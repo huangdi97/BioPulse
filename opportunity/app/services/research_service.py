@@ -7,13 +7,16 @@ from fastapi import HTTPException
 from starlette import status
 
 from opportunity.app.repositories import ResearchTrailRepository
-from opportunity.app.services.base import BaseService
+from opportunity.app.services.base import BaseCrudService
 
 """科研轨迹服务，管理HCP科研动态轨迹的增删改查。"""
 
 
-class ResearchService(BaseService):
+class ResearchService(BaseCrudService):
     """科研轨迹管理：创建、分页列表（支持HCP/主题/期刊/相关性筛选）、详情、更新、软删除。"""
+
+    def __init__(self, db=None):
+        super().__init__(repository_class=ResearchTrailRepository, entity_name="ResearchTrail", db=db)
 
     def create_research_trail(self, body, user_id: int) -> int:
         """创建科研轨迹记录。

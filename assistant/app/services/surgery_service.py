@@ -6,14 +6,17 @@ from typing import Optional
 
 from assistant.app.reminder_scheduler import check_reminders
 from assistant.app.repositories import SurgeryReminderRepository
-from assistant.app.services.base import BaseService
+from assistant.app.services.base import BaseCrudService
 from assistant.app.ws_manager import connection_manager
 
 VALID_STATUSES = {"scheduled", "in_progress", "completed", "cancelled"}
 
 
-class SurgeryService(BaseService):
+class SurgeryService(BaseCrudService):
     """跟台手术服务，提供手术提醒的增删改查与实时通知。"""
+
+    def __init__(self, db=None):
+        super().__init__(repository_class=SurgeryReminderRepository, entity_name="Surgery", db=db)
 
     def create(self, body, user_id: int) -> dict:
         """创建跟台手术提醒并通过WebSocket推送通知。

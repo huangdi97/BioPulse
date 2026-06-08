@@ -8,13 +8,16 @@ from fastapi import HTTPException
 from starlette import status
 
 from opportunity.app.repositories import UserBookmarkRepository
-from opportunity.app.services.base import BaseService
+from opportunity.app.services.base import BaseCrudService
 
 """收藏管理服务，提供用户收藏的创建、查询与删除。"""
 
 
-class BookmarkService(BaseService):
+class BookmarkService(BaseCrudService):
     """用户收藏管理：添加收藏（防重复）、分页列表、检查是否已收藏、软删除。"""
+
+    def __init__(self, db=None):
+        super().__init__(repository_class=UserBookmarkRepository, entity_name="Bookmark", db=db)
 
     def create_bookmark(self, body, user_id: int) -> int:
         """添加用户收藏，重复收藏会返回冲突错误。

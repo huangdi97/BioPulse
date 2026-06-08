@@ -32,7 +32,6 @@ iniconfig==2.3.0
 jsonpatch==1.33
 psycopg2-binary==2.9.12
 sqlite-vec==0.1.9
-frozenlist==1.8.0
 
 # ---------- HTTP 客户端 ----------
 nodeenv==1.10.0
@@ -47,7 +46,6 @@ pre_commit==4.6.0
 propcache==0.5.2
 psycopg==3.3.4
 psycopg-pool==3.3.1
-psycopg2-binary==2.9.12
 py-cpuinfo==9.0.0
 pyasn1==0.6.3
 pycparser==3.0
@@ -60,18 +58,15 @@ pytest==9.0.3
 pytest-asyncio==1.4.0
 pytest-benchmark==5.2.3
 pytest-cov==7.1.0
-python-discovery==1.4.0
 python-docx==1.2.0
 python-dotenv==1.2.2
 python-jose==3.5.0
 python-multipart==0.0.30
 PyYAML==6.0.3
-requests==2.34.2
 requests-toolbelt==1.0.0
 rsa==4.9.1
 ruff==0.15.15
 six==1.17.0
-sqlite-vec==0.1.9
 starlette==1.1.0
 tabulate==0.10.0
 tenacity==9.1.4

@@ -6,11 +6,14 @@ from fastapi import HTTPException
 from starlette import status
 
 from assistant.app.repositories import HcpRepository, TaskRepository
-from assistant.app.services.base import BaseService
+from assistant.app.services.base import BaseCrudService
 
 
-class TaskService(BaseService):
+class TaskService(BaseCrudService):
     """任务管理服务，提供任务的增删改查，关联HCP校验。"""
+
+    def __init__(self, db=None):
+        super().__init__(repository_class=TaskRepository, entity_name="Task", db=db)
 
     def _check_hcp_exists(self, hcp_id: int) -> None:
         repo = HcpRepository(self.db)

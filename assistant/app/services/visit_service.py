@@ -7,11 +7,14 @@ from fastapi import HTTPException
 from starlette import status
 
 from assistant.app.repositories import HcpRepository, VisitRecordRepository
-from assistant.app.services.base import BaseService
+from assistant.app.services.base import BaseCrudService
 
 
-class VisitService(BaseService):
+class VisitService(BaseCrudService):
     """拜访管理服务，提供拜访记录的增删改查与智能评分。"""
+
+    def __init__(self, db=None):
+        super().__init__(repository_class=VisitRecordRepository, entity_name="Visit", db=db)
 
     def _check_hcp_exists(self, conn, hcp_id: int) -> None:
         repo = HcpRepository(conn)
@@ -36,9 +39,9 @@ class VisitService(BaseService):
                 body.model_dump(),
                 extra={"created_by": user_id},
             )
-            return {"id": row_id}
+            return {"id": row_id, "hcp_id": body.hcp_id}
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def list_visits(
         self,
@@ -75,7 +78,7 @@ class VisitService(BaseService):
                 params=params,
             )
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def get_visit(self, visit_id: int) -> dict:
         """根据ID获取拜访记录详情。
@@ -86,15 +89,7 @@ class VisitService(BaseService):
         Returns:
             dict: 拜访记录详情
         """
-        conn = self._connection()
-        try:
-            repo = VisitRecordRepository(conn)
-            row = repo.get_by_id(visit_id)
-            if not row:
-                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
-            return dict(row)
-        finally:
-            conn.close()
+        return self.get_by_id(visit_id)
 
     def update_visit(self, visit_id: int, body) -> dict:
         """更新拜访记录。
@@ -122,7 +117,7 @@ class VisitService(BaseService):
             repo.update(visit_id, updates)
             return dict(repo.get_by_id(visit_id))
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def delete_visit(self, visit_id: int) -> None:
         """软删除拜访记录。
@@ -138,7 +133,7 @@ class VisitService(BaseService):
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visit not found")
             repo.soft_delete(visit_id)
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def _offline_visit_score(self, visit_data: dict) -> dict:
         base_score = 50

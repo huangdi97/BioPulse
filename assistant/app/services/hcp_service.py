@@ -6,11 +6,14 @@ from fastapi import HTTPException
 from starlette import status
 
 from assistant.app.repositories import HcpRepository
-from assistant.app.services.base import BaseService
+from assistant.app.services.base import BaseCrudService
 
 
-class HcpService(BaseService):
+class HcpService(BaseCrudService):
     """HCP 管理服务，提供 HCP 的增删改查等业务操作。"""
+
+    def __init__(self, db=None):
+        super().__init__(repository_class=HcpRepository, entity_name="HCP", db=db)
 
     def create_hcp(self, body, user_id: int) -> dict:
         """创建HCP记录。
@@ -21,16 +24,7 @@ class HcpService(BaseService):
         Returns:
             dict: 包含新记录 id 的结果
         """
-        conn = self._connection()
-        try:
-            repo = HcpRepository(conn)
-            row_id = repo.create(
-                body.model_dump(),
-                extra={"created_by": user_id},
-            )
-            return {"id": row_id}
-        finally:
-            conn.close()
+        return self.create(body, user_id)
 
     def list_hcps(
         self,
@@ -75,7 +69,7 @@ class HcpService(BaseService):
                 params=params,
             )
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def get_hcp(self, hcp_id: int) -> dict:
         """根据ID获取HCP详情。
@@ -94,7 +88,7 @@ class HcpService(BaseService):
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
             return dict(row)
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def update_hcp(self, hcp_id: int, body) -> dict:
         """更新HCP记录。
@@ -117,7 +111,7 @@ class HcpService(BaseService):
             repo.update(hcp_id, updates)
             return dict(repo.get_by_id(hcp_id))
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def delete_hcp(self, hcp_id: int) -> None:
         """软删除HCP记录。
@@ -133,4 +127,4 @@ class HcpService(BaseService):
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
             repo.soft_delete(hcp_id)
         finally:
-            conn.close()
+            self._close_connection(conn)

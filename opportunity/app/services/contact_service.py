@@ -6,13 +6,16 @@ from fastapi import HTTPException
 from starlette import status
 
 from opportunity.app.repositories import ContactRecordRepository
-from opportunity.app.services.base import BaseService
+from opportunity.app.services.base import BaseCrudService
 
 """联系记录服务，管理商机线索下的联系沟通记录。"""
 
 
-class ContactService(BaseService):
+class ContactService(BaseCrudService):
     """联系记录管理：创建、分页列表（按商机关联）、详情查询、更新、软删除。"""
+
+    def __init__(self, db=None):
+        super().__init__(repository_class=ContactRecordRepository, entity_name="Contact", db=db)
 
     def _check_opportunity_exists(self, opportunity_id: int) -> None:
         row = self.db.execute(

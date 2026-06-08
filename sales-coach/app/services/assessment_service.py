@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sales_coach.app.repositories import AssessmentRepository, SessionRepository
-from sales_coach.app.services.base import BaseService
+from sales_coach.app.services.base import BaseCrudService
 
 DEFAULT_WEIGHTS = {
     "product_knowledge": 0.3,
@@ -15,8 +15,11 @@ DEFAULT_WEIGHTS = {
 }
 
 
-class AssessmentService(BaseService):
+class AssessmentService(BaseCrudService):
     """学员评估服务，管理评估记录并支持自动评分与趋势分析。"""
+
+    def __init__(self, db=None):
+        super().__init__(repository_class=AssessmentRepository, entity_name="Assessment", db=db)
 
     def create(self, body, user_id: int) -> dict:
         """创建学员评估记录。
@@ -37,7 +40,7 @@ class AssessmentService(BaseService):
             assessment_id = repo.create(data, extra=extra)
             return {"id": assessment_id}
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def list(
         self,
@@ -77,7 +80,7 @@ class AssessmentService(BaseService):
 
             return repo.paginate_active(page, page_size, conditions, params)
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def get_stats(self) -> dict:
         """获取评估统计数据。
@@ -90,7 +93,7 @@ class AssessmentService(BaseService):
             repo = AssessmentRepository(conn)
             return repo.get_stats()
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def get(self, assessment_id: int) -> dict:
         """获取单个评估详情。
@@ -106,7 +109,7 @@ class AssessmentService(BaseService):
             repo = AssessmentRepository(conn)
             return dict(repo.get_active_or_404(assessment_id))
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def update(self, assessment_id: int, body) -> dict:
         """更新评估记录。
@@ -129,7 +132,7 @@ class AssessmentService(BaseService):
             repo.update(assessment_id, updates)
             return dict(repo.get_by_id(assessment_id))
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def delete(self, assessment_id: int) -> None:
         """软删除评估记录。
@@ -143,7 +146,7 @@ class AssessmentService(BaseService):
             repo.get_active_or_404(assessment_id)
             repo.soft_delete_assessment(assessment_id)
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     @staticmethod
     def calculate_auto_score(dialogue_log: list, weights: Optional[dict] = None) -> dict:
@@ -198,7 +201,7 @@ class AssessmentService(BaseService):
             ).fetchall()
             return [dict(r) for r in rows]
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def get_sessions(self, trainee_name: str) -> Optional[dict]:
         """根据学员姓名查询最近一次会话。
@@ -219,7 +222,7 @@ class AssessmentService(BaseService):
                 return dict(row)
             return None
         finally:
-            conn.close()
+            self._close_connection(conn)
 
     def update_assessment_with_reflection(self, assessment_id: int, reflection: dict) -> dict:
         """将反思报告数据回写至评估记录。
@@ -250,4 +253,4 @@ class AssessmentService(BaseService):
             )
             return dict(repo.get_by_id(assessment_id))
         finally:
-            conn.close()
+            self._close_connection(conn)

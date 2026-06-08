@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from sales_assistant.app.repositories import ContentRepository
-from sales_assistant.app.services.base import BaseService
+from sales_assistant.app.services.base import BaseCrudService
 
 TYPES = [
     {"value": "product_material", "label": "产品资料"},
@@ -18,8 +18,11 @@ TYPES = [
 ]
 
 
-class ContentService(BaseService):
+class ContentService(BaseCrudService):
     """内容服务：管理内容库的增删改查与分类。"""
+
+    _repo_class = ContentRepository
+    _entity_name = "Content"
 
     def create_content(self, body, user_id: int) -> int:
         """创建内容条目。

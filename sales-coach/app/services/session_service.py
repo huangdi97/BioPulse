@@ -5,11 +5,14 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List
 
 from sales_coach.app.repositories import ModuleRepository, SessionRepository
-from sales_coach.app.services.base import BaseService
+from sales_coach.app.services.base import BaseCrudService
 
 
-class SessionService(BaseService):
+class SessionService(BaseCrudService):
     """教练会话服务，处理会话生命周期、对话记录与评估更新。"""
+
+    def __init__(self, db=None):
+        super().__init__(repository_class=SessionRepository, entity_name="Session", db=db)
 
     def _check_module_exists(self, module_id: int) -> None:
         ModuleRepository(self.db).get_active_or_404(module_id)

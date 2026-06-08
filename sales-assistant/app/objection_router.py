@@ -40,6 +40,6 @@ def handle_objection(
 
 
 @router.get("/objections", summary="异议列表", description="获取异议列表")
-def list_objections() -> list:
+def list_objections():
     """获取objections。"""
-    return []
+    return success(data=[])

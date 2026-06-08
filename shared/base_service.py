@@ -2,6 +2,9 @@
 
 import sqlite3
 
+from fastapi import HTTPException
+from starlette import status
+
 
 class BaseService:
     """服务基类，支持两种数据库连接模式：
@@ -25,3 +28,78 @@ class BaseService:
         if hasattr(self, "db") and self.db is not None:
             return self.db
         raise NotImplementedError("Override _connection() or pass db to __init__")
+
+
+class BaseCrudService(BaseService):
+    """CRUD 基类，自动处理连接/404 检查。"""
+
+    def __init__(self, repository_class=None, entity_name="entity", db=None):
+        super().__init__(db)
+        self._repo_class = repository_class
+        self._entity_name = entity_name
+
+    def _close_connection(self, conn):
+        conn.close()
+
+    def create(self, body, user_id: int, **extra) -> dict:
+        conn = self._connection()
+        try:
+            repo = self._repo_class(conn)
+            row_id = repo.create(body.model_dump(), extra={"created_by": user_id, **extra})
+            return {"id": row_id}
+        finally:
+            self._close_connection(conn)
+
+    def get_by_id(self, entity_id: int) -> dict:
+        conn = self._connection()
+        try:
+            repo = self._repo_class(conn)
+            row = repo.get_by_id(entity_id)
+            if not row:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{self._entity_name} not found")
+            return dict(row)
+        finally:
+            self._close_connection(conn)
+
+    def update(self, entity_id: int, body) -> dict:
+        conn = self._connection()
+        try:
+            repo = self._repo_class(conn)
+            existing = repo.get_by_id(entity_id)
+            if not existing:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{self._entity_name} not found")
+            repo.update(entity_id, body.model_dump(exclude_unset=True))
+            return {"updated": entity_id}
+        finally:
+            self._close_connection(conn)
+
+    def delete(self, entity_id: int) -> None:
+        conn = self._connection()
+        try:
+            repo = self._repo_class(conn)
+            existing = repo.get_by_id(entity_id)
+            if not existing:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{self._entity_name} not found")
+            repo.delete(entity_id)
+        finally:
+            self._close_connection(conn)
+
+    def list(self, page: int = 1, page_size: int = 20, **filters) -> tuple:
+        conn = self._connection()
+        try:
+            repo = self._repo_class(conn)
+            rows = repo.list(page=page, page_size=page_size, **filters)
+            total = repo.count(**filters)
+            return [dict(r) for r in rows], total
+        finally:
+            self._close_connection(conn)
+
+    def paginate(self, page: int = 1, page_size: int = 20, **filters) -> dict:
+        items, total = self.list(page=page, page_size=page_size, **filters)
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": (total + page_size - 1) // page_size,
+        }

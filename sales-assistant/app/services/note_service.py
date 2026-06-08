@@ -6,11 +6,14 @@ from fastapi import HTTPException
 from starlette import status
 
 from sales_assistant.app.repositories import NoteRepository
-from sales_assistant.app.services.base import BaseService
+from sales_assistant.app.services.base import BaseCrudService
 
 
-class NoteService(BaseService):
+class NoteService(BaseCrudService):
     """拜访笔记服务：为日程记录拜访笔记，支持增删改查。"""
+
+    _repo_class = NoteRepository
+    _entity_name = "Note"
 
     def _check_schedule_exists(self, schedule_id: int) -> None:
         row = self.db.execute("SELECT id FROM schedule WHERE id = ?", (schedule_id,)).fetchone()
