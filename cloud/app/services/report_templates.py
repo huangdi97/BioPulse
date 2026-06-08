@@ -1,7 +1,15 @@
 """报表模板字符串与工具函数，供 ReportGenerator 使用。"""
 
 import json
+import urllib.request
 from datetime import datetime, timedelta
+
+from fastapi import HTTPException, Request
+from starlette import status
+
+from cloud.app.repositories import ComplianceAuditRecordsRepository, TrainingCorrectionsRepository
+from shared.base import success
+from shared.config import settings as config_settings
 
 
 def _now() -> str:
@@ -9,9 +17,6 @@ def _now() -> str:
 
 
 def _n404(name="Resource"):
-    from fastapi import HTTPException
-    from starlette import status
-
     raise HTTPException(status.HTTP_404_NOT_FOUND, f"{name} not found")
 
 
@@ -23,10 +28,6 @@ def _parse_json(raw: str, default=None):
 
 
 def _call_ai(messages: list[dict], auth_header: str) -> dict:
-    import urllib.request
-
-    from shared.config import settings as config_settings
-
     payload = {"messages": messages, "temperature": 0.7, "max_tokens": 2048}
     req = urllib.request.Request(
         f"{config_settings.ai_chat_url}",
@@ -107,3 +108,78 @@ def build_dashboard_data(db, audit_repo, corrections_repo) -> dict:
         "top_violations": [{"violation": v, "count": c} for v, c in top_v],
         "recent_corrections": recent_corrections,
     }
+
+
+class ReportTemplateMixin:
+    """AI 纠偏模板生成和报表统计方法。"""
+
+    def train_correction(self, record_id: int, request: Request, uid: int) -> dict:
+        """基于违规记录生成 AI 纠偏训练条目。
+
+        Args:
+            record_id: 审计记录 ID
+            request: HTTP 请求对象（用于获取 Authorization）
+            uid: 操作者 ID
+
+        Returns:
+            含 title、description、category、severity 的纠偏记录
+        """
+        audit_repo = ComplianceAuditRecordsRepository(self.db)
+        corrections_repo = TrainingCorrectionsRepository(self.db)
+        row = audit_repo.get_by_id(record_id)
+        if not row:
+            _n404("Record")
+        violations = _parse_json(row["violations"], [])
+        messages = [
+            {"role": "system", "content": TRAINING_SYS_PROMPT},
+            {
+                "role": "user",
+                "content": f"内容类型: {row['message_type']}\n内容: {row['content']}\n违规: {json.dumps(violations, ensure_ascii=False)}\n风险等级: {row['risk_level']}",
+            },
+        ]
+        auth = request.headers.get("Authorization", "")
+        ai_data = _call_ai(messages, auth)
+        ai_reply = ai_data.get("reply", "")
+        parsed = _parse_json(ai_reply, {})
+        if isinstance(parsed, dict):
+            title = parsed.get("title", "培训纠正")
+            desc = parsed.get("description", ai_reply[:300])
+            cat = parsed.get("category", "general")
+            sev = parsed.get("severity", "medium")
+        else:
+            title = "培训纠正"
+            desc = ai_reply[:300]
+            cat = "general"
+            sev = "medium"
+        n = _now()
+        corrections_repo.create(
+            {
+                "audit_record_id": record_id,
+                "title": title,
+                "description": desc,
+                "category": cat,
+                "severity": sev,
+                "status": "pending",
+                "created_by": uid,
+                "created_at": n,
+            }
+        )
+        return success(
+            data={
+                "audit_record_id": record_id,
+                "title": title,
+                "description": desc,
+                "category": cat,
+                "severity": sev,
+            }
+        )
+
+    def dashboard(self) -> dict:
+        """合规仪表盘，汇总审计与纠偏统计。
+
+        Returns:
+            仪表盘统计数据
+        """
+        audit_repo = ComplianceAuditRecordsRepository(self.db)
+        corrections_repo = TrainingCorrectionsRepository(self.db)
+        return success(data=build_dashboard_data(self.db, audit_repo, corrections_repo))

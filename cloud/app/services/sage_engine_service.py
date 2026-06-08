@@ -10,17 +10,11 @@ from cloud.app.services.brain_memory_service import BrainMemoryService
 from cloud.app.services.memory_consolidation_service import MemoryConsolidationService
 from cloud.app.services.sage_linking import SageLinkingService
 from cloud.app.services.sage_scoring import (
-    determine_tier,
-    normalize,
-    score_episodic,
-    score_procedural,
-    score_semantic,
-    score_world_tree,
-    ts_to_epoch,
+    SageScoringMixin,
 )
 
 
-class SageEngineService:
+class SageEngineService(SageScoringMixin):
     """Sage 引擎服务，提供多维记忆评分、热温冷分层与记忆进化管理。"""
 
     def __init__(self, db=None):
@@ -32,94 +26,6 @@ class SageEngineService:
         self.db = db or get_research_db()
         self.repo = SageRepository(self.db)
         self.linking = SageLinkingService(db)
-
-    def _normalize(self, value, min_val, max_val) -> float:
-        """将值归一化到 [0, 1] 区间。
-
-        Args:
-            value: 原始值
-            min_val: 最小值
-            max_val: 最大值
-
-        Returns:
-            归一化后的浮点数
-        """
-        return normalize(value, min_val, max_val)
-
-    @staticmethod
-    def _ts_to_epoch(ts_str):
-        """将时间戳字符串转换为 Unix epoch 秒数。
-
-        Args:
-            ts_str: 时间戳字符串
-
-        Returns:
-            Unix epoch 秒数
-        """
-        return ts_to_epoch(ts_str)
-
-    @staticmethod
-    def _determine_tier(score):
-        """根据分数判定记忆分层（hot / warm / cold）。
-
-        Args:
-            score: 记忆评分
-
-        Returns:
-            分层标签字符串
-        """
-        return determine_tier(score)
-
-    def _score_episodic(self, bms, tier_dist, comp):
-        """对情景记忆进行评分。
-
-        Args:
-            bms: BrainMemoryService 实例
-            tier_dist: 分层分布字典（hot / warm / cold 计数）
-            comp: 组件计数字典
-
-        Returns:
-            评分的记忆数量
-        """
-        return score_episodic(self.repo, bms, tier_dist, comp)
-
-    def _score_semantic(self, bms, tier_dist, comp):
-        """对语义记忆进行评分。
-
-        Args:
-            bms: BrainMemoryService 实例
-            tier_dist: 分层分布字典
-            comp: 组件计数字典
-
-        Returns:
-            评分的记忆数量
-        """
-        return score_semantic(self.repo, bms, tier_dist, comp)
-
-    def _score_procedural(self, bms, tier_dist, comp):
-        """对程序性记忆进行评分。
-
-        Args:
-            bms: BrainMemoryService 实例
-            tier_dist: 分层分布字典
-            comp: 组件计数字典
-
-        Returns:
-            评分的记忆数量
-        """
-        return score_procedural(self.repo, bms, tier_dist, comp)
-
-    def _score_world_tree(self, tier_dist, comp):
-        """对世界树知识图谱进行评分。
-
-        Args:
-            tier_dist: 分层分布字典
-            comp: 组件计数字典
-
-        Returns:
-            评分的实体数量
-        """
-        return score_world_tree(self.repo, self.db, tier_dist, comp)
 
     def score_all_memories(self) -> dict:
         """对全部记忆进行多维评分并返回汇总结果。
