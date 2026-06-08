@@ -137,3 +137,6 @@ design.md
 ARCHITECTURE.md
 code_cleanup_report.md
 scripts/backup_schedule.md
+
+# 本地 symlink（Python 包名 sales_coach←→目录名 sales-coach 的桥接）
+sales_coach
