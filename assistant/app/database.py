@@ -13,7 +13,7 @@ from .schema_sql import PG_SCHEMA_SQL, SCHEMA_SQL
 
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DB_PATH = os.path.join(_BASE_DIR, "data", "assistant.db")
-DATABASE_URL = settings.ASSISTANT_DATABASE_URL
+DATABASE_URL = settings.assistant_database_url
 
 
 def get_db() -> Generator:

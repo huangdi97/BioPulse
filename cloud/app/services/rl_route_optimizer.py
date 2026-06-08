@@ -13,7 +13,7 @@ class RouteOptimizer(BaseService):
         Returns:
             dict: 以目标名称为键，值为 {"direction": "maximize"/"minimize", "weight": float} 的字典。
         """
-        objectives = settings.PARETO_OBJECTIVES or {}
+        objectives = settings.pareto_objectives or {}
         if not objectives:
             return {
                 "success_rate": {"direction": "maximize", "weight": 1.0},

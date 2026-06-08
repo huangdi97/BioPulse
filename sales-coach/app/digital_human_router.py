@@ -265,7 +265,7 @@ def transfer_skills(
 def voice_input(session_id: int, current_user: dict = Depends(require_scope("visit"))):
     return success(
         data={
-            "provider": settings.DIGITAL_HUMAN_PROVIDER,
+            "provider": settings.digital_human_provider,
             "status": "not_implemented",
             "message": "多模态语音输入，等待数字人供应商接入",
         }
@@ -276,7 +276,7 @@ def voice_input(session_id: int, current_user: dict = Depends(require_scope("vis
 def video_input(session_id: int, current_user: dict = Depends(require_scope("visit"))):
     return success(
         data={
-            "provider": settings.DIGITAL_HUMAN_PROVIDER,
+            "provider": settings.digital_human_provider,
             "status": "not_implemented",
             "message": "多模态视频输入，等待数字人供应商接入",
         }

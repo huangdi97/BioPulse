@@ -9,7 +9,7 @@ import httpx
 from assistant.app.services.base import BaseService
 from shared.config import settings
 
-CLOUD_API_URL = settings.CLOUD_API_URL
+CLOUD_API_URL = settings.cloud_api_url
 OFFLINE_MODE_VAR = "OFFLINE_MODE"
 AI_CACHE_TTL_HOURS = 24
 

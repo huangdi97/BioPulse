@@ -5,7 +5,7 @@ from shared.pg_row import PGRow  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = settings.DATABASE_URL
+DATABASE_URL = settings.database_url
 
 
 def is_sqlite() -> bool:

@@ -11,7 +11,7 @@ from shared.db import PGCompatConnection
 
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DB_PATH = os.path.join(_BASE_DIR, "data", "sales_coach.db")
-DATABASE_URL = settings.SALES_COACH_DATABASE_URL
+DATABASE_URL = settings.sales_coach_database_url
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS training_module (

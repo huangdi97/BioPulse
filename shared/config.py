@@ -2,39 +2,27 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Config(BaseSettings):
-    # Auth
-    SECRET_KEY: str = "dev-secret-key-change-in-production"
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+    refresh_token_expire_days: int = 7
 
-    # Database
-    DATABASE_URL: str = "sqlite:///./data/cloud.db"
-    ASSISTANT_DATABASE_URL: str = "sqlite:///./data/assistant.db"
-    OPPORTUNITY_DATABASE_URL: str = "sqlite:///./data/opportunity.db"
-    SALES_ASSISTANT_DATABASE_URL: str = "sqlite:///./data/sales_assistant.db"
-    SALES_COACH_DATABASE_URL: str = "sqlite:///./data/sales_coach.db"
-    DB_POOL_SIZE: int = 5
-    DB_MAX_OVERFLOW: int = 20
+    database_url: str = "sqlite:///./data/cloud.db"
+    assistant_database_url: str = "sqlite:///./data/assistant.db"
+    opportunity_database_url: str = "sqlite:///./data/opportunity.db"
+    sales_assistant_database_url: str = "sqlite:///./data/sales_assistant.db"
+    sales_coach_database_url: str = "sqlite:///./data/sales_coach.db"
+    db_pool_size: int = 5
+    db_max_overflow: int = 20
 
-    # Server
-    HOST: str = "0.0.0.0"
-    PORT: int = 8000
+    host: str = "0.0.0.0"
 
-    # Digital Human
-    DIGITAL_HUMAN_PROVIDER: str = "internal"
+    digital_human_provider: str = "internal"
 
-    # Cloud API
-    CLOUD_API_URL: str = "http://localhost:8000"
+    cloud_api_url: str = "http://localhost:8000"
 
-    # AI Chat
     ai_chat_url: str = "http://localhost:8000/ai/chat"
+    ai_gateway_timeout: int = 120
 
-    # AI Gateway
-    AI_GATEWAY_URL: str = "http://localhost:8000/ai/chat"
-    AI_GATEWAY_TIMEOUT: int = 120
-
-    # Legacy fields — kept for backward compatibility
     deepseek_api_key: str = ""
     jwt_secret_key: str = "dev-secret-key-change-in-production"
     cors_origins: str = "*"
@@ -53,18 +41,15 @@ class Config(BaseSettings):
     clinical_ops_port: int = 8010
     patient_engage_port: int = 8011
 
-    # AI Routing
-    AI_ROUTING_ENABLED: bool = False
-    AI_LOCAL_ENDPOINT: str = ""
-    AI_LOCAL_MODEL: str = ""
-    AI_CLOUD_AGENT_ENABLED: bool = True
-    AI_COMPLEXITY_THRESHOLD: int = 2000
+    ai_routing_enabled: bool = False
+    ai_local_endpoint: str = ""
+    ai_local_model: str = ""
+    ai_cloud_agent_enabled: bool = True
+    ai_complexity_threshold: int = 2000
 
-    # Redis (empty string = SQLite backend for EventBus)
-    REDIS_URL: str = ""
+    redis_url: str = ""
 
-    # Pareto routing objectives — direction must be "maximize" or "minimize"
-    PARETO_OBJECTIVES: dict = {
+    pareto_objectives: dict = {
         "success_rate": {"direction": "maximize", "weight": 1.0},
         "avg_duration_ms": {"direction": "minimize", "weight": 1.0},
         "load": {"direction": "minimize", "weight": 0.5},

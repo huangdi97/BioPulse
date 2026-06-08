@@ -3,8 +3,8 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel
 
+from cloud.app.event_bus_handlers import EventDefCreate, EventPublish, EventSubscribe
 from cloud.app.services.event_bus_service import EventBusService
 from shared.auth_scope import require_scope
 from shared.base import success
@@ -12,30 +12,6 @@ from shared.base import success
 router = APIRouter(prefix="/events", tags=["Event Bus"])
 
 ALL_ENDS = ["cloud", "sales-coach", "sales-assistant", "assistant", "opportunity"]
-
-
-class EventDefCreate(BaseModel):
-    event_type: str
-    display_name: str = ""
-    description: str = ""
-    source_end: str = "cloud"
-    target_ends: list[str] = []
-    schema_template: dict = {}
-    priority: int = 100
-
-
-class EventPublish(BaseModel):
-    event_type: str
-    source_entity_type: str = ""
-    source_entity_id: str = ""
-    payload: dict = {}
-    correlation_id: str = ""
-
-
-class EventSubscribe(BaseModel):
-    event_types: list[str] = []
-    target_end: str
-    callback_url: str = ""
 
 
 @router.post("/definitions/create", summary="创建事件定义", description="创建一个新的事件定义，指定事件类型、来源端、目标端和优先级等。")

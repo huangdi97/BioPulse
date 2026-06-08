@@ -3,9 +3,10 @@
 from fastapi import Depends
 
 from sales_assistant.app.database import get_db
+from shared.base_service import BaseService as _BaseService
 
 
-class BaseService:
+class BaseService(_BaseService):
     """服务基类：通过 FastAPI Depends 注入数据库连接。"""
 
     def __init__(self, db=Depends(get_db)):

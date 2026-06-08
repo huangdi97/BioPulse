@@ -44,7 +44,7 @@ DB_PATH = os.path.join(
     "cloud.db",
 )
 
-DATABASE_URL = settings.DATABASE_URL
+DATABASE_URL = settings.database_url
 
 
 def get_db() -> Generator:

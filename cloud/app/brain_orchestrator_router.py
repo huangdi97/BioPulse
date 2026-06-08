@@ -3,8 +3,15 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel
 
+from cloud.app.brain_orchestrator_handlers import (
+    CreateProcedural,
+    EvolveMemory,
+    FoldMemories,
+    InvokeProcedural,
+    Orchestrate,
+    SensoryIngest,
+)
 from cloud.app.services.brain_evolution_service import BrainEvolutionService
 from cloud.app.services.brain_orchestrator_service import BrainOrchestratorService
 from cloud.app.services.brain_search_service import BrainSearchService
@@ -12,52 +19,6 @@ from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/memory/brain", tags=["类脑记忆"])
-
-
-class SensoryIngest(BaseModel):
-    """SensoryIngest 服务类。"""
-
-    input_type: str = "message"
-    raw_content: str = ""
-    source: str = ""
-
-
-class CreateProcedural(BaseModel):
-    """CreateProcedural 服务类。"""
-
-    procedure_key: str
-    name: str = ""
-    description: str = ""
-    steps: str = "[]"
-    trigger_conditions: str = "[]"
-
-
-class InvokeProcedural(BaseModel):
-    """InvokeProcedural 服务类。"""
-
-    context: dict = {}
-
-
-class Orchestrate(BaseModel):
-    """Orchestrate 服务类。"""
-
-    input_text: str = ""
-    input_type: str = "message"
-    source: str = ""
-
-
-class EvolveMemory(BaseModel):
-    """EvolveMemory 服务类。"""
-
-    memory_id: int
-    new_evidence: str = ""
-    memory_type: str = "episodic"
-
-
-class FoldMemories(BaseModel):
-    """FoldMemories 服务类。"""
-
-    memory_ids: list[int]
 
 
 @router.post("/sensory/ingest", summary="感官输入", description="接收并处理感官输入数据")

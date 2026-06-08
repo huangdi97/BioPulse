@@ -20,7 +20,6 @@ rsa==4.9.1
 
 # ---------- HTTP 客户端 ----------
 httpx==0.28.1
-requests==2.34.2
 
 # ---------- 数据库 ----------
 aiosqlite==0.22.1
@@ -28,7 +27,6 @@ psycopg2-binary==2.9.12
 sqlite-vec==0.1.9
 redis>=5.0
 
-# ---------- HTTP 客户端 ----------
 # ---------- 任务调度 ----------
 APScheduler==3.11.2
 tzlocal==5.3.1
@@ -40,7 +38,6 @@ python-docx==1.2.0
 Pillow==12.2.0
 
 # ---------- 工具库 ----------
-httpx==0.28.1
 orjson==3.11.9
 PyYAML==6.0.3
 tabulate==0.10.0
@@ -48,7 +45,6 @@ tenacity==9.1.4
 websockets==16.0
 aiofiles==25.1.0
 lxml==6.1.1
-python-discovery==1.4.0
 jsonpatch==1.33
 transformers>=4.40
 

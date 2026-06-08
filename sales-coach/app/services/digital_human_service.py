@@ -15,4 +15,4 @@ class DigitalHumanService(DHDialogMixin, DHProfileMixin, BaseService):
 
     def __init__(self, db=Depends(get_db)):
         super().__init__(db)
-        self._provider = get_provider(settings.DIGITAL_HUMAN_PROVIDER)
+        self._provider = get_provider(settings.digital_human_provider)

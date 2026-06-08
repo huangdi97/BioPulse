@@ -64,13 +64,13 @@ class RuntimeLLM:
     def _call_local(self, messages: list[dict], temperature: float) -> dict:
         prompt_text = "\n\n".join(f"{m.get('role', 'user')}: {m.get('content', '')}" for m in messages)
         body = {
-            "model": config_settings.AI_LOCAL_MODEL,
+            "model": config_settings.ai_local_model,
             "prompt": prompt_text,
             "stream": False,
             "options": {"temperature": temperature},
         }
         req = urllib.request.Request(
-            config_settings.AI_LOCAL_ENDPOINT,
+            config_settings.ai_local_endpoint,
             data=json.dumps(body).encode("utf-8"),
             headers={"Content-Type": "application/json"},
             method="POST",
@@ -142,7 +142,7 @@ class RuntimeLLM:
     def _route_call(self, messages: list[dict], temperature: float, force_level: int | None = None) -> dict:
         if force_level is not None:
             level = force_level
-        elif not config_settings.AI_ROUTING_ENABLED:
+        elif not config_settings.ai_routing_enabled:
             return self._annotate_route_result(self._call_cloud_normal(messages, temperature), "cloud_normal")
         else:
             level = self._estimate_complexity(messages)
