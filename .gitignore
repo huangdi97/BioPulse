@@ -132,5 +132,8 @@ archive/
 # 本地助手/规划文件
 .hermes/
 
-# 一次性代码质量报告（不上传）
+# 设计文档/架构文档（不上传）
+design.md
+ARCHITECTURE.md
 code_cleanup_report.md
+scripts/backup_schedule.md
