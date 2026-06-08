@@ -17,6 +17,15 @@ from shared.columns import TABLE_SOAP_DECISIONS_COLS
 
 
 def _row(row, json_keys=None):
+    """将数据库行转为字典并解析指定的 JSON 字段。
+
+    Args:
+        row: 数据库行
+        json_keys: 需解析为 JSON 的字段名列表
+
+    Returns:
+        转换后的字典，None 输入返回 None
+    """
     if row is None:
         return None
     d = dict(row)

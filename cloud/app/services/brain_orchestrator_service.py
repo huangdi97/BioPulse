@@ -229,6 +229,15 @@ class BrainOrchestratorService(BaseService):
         }
 
     def _read_memory(self, memory_id: int, memory_type: str) -> dict | None:
+        """读取指定类型的记忆记录。
+
+        Args:
+            memory_id: 记忆 ID
+            memory_type: 记忆类型（episodic/sensory/procedural）
+
+        Returns:
+            记忆记录字典，不存在返回 None
+        """
         table_map = {
             "episodic": "episodic_memory",
             "sensory": "sensory_memory",
@@ -241,6 +250,17 @@ class BrainOrchestratorService(BaseService):
         return dict(row) if row else None
 
     def _update_memory_field(self, memory_id: int, memory_type: str, field: str, new_value: str) -> bool:
+        """更新记忆记录的指定字段。
+
+        Args:
+            memory_id: 记忆 ID
+            memory_type: 记忆类型
+            field: 字段名
+            new_value: 新值
+
+        Returns:
+            更新成功返回 True，失败返回 False
+        """
         table_map = {
             "episodic": "episodic_memory",
             "sensory": "sensory_memory",

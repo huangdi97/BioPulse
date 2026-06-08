@@ -17,14 +17,24 @@ from cloud.app.services.base import BaseService
 
 
 def _gen_graph_id() -> str:
+    """生成因果图谱 ID，格式 cg:xxxxxxxx。"""
     return "cg:" + uuid.uuid4().hex[:8]
 
 
 def _gen_scenario_id() -> str:
+    """生成反事实场景 ID，格式 cf:xxxxxxxx。"""
     return "cf:" + uuid.uuid4().hex[:8]
 
 
 def _generate_template_graph(decision_id: str) -> dict:
+    """生成包含默认节点和边的因果图谱模板。
+
+    Args:
+        decision_id: 决策 ID
+
+    Returns:
+        含 nodes 和 edges 的图谱数据字典
+    """
     return {
         "nodes": [
             {"id": "factor_a", "label": "关键因子A", "weight": 0.5},
@@ -39,6 +49,14 @@ def _generate_template_graph(decision_id: str) -> dict:
 
 
 def _linear_simulate(scenario: dict) -> dict:
+    """对单个反事实场景执行线性模拟计算。
+
+    Args:
+        scenario: 含 variable、from、to 的场景字典
+
+    Returns:
+        含变量、delta、预测结果和置信度的字典
+    """
     variable = scenario.get("variable", "unknown")
     from_val = float(scenario.get("from", 0))
     to_val = float(scenario.get("to", 0))
@@ -58,6 +76,14 @@ def _linear_simulate(scenario: dict) -> dict:
 
 
 def _causal_graph_to_dict(row) -> dict:
+    """将因果图谱数据库行转换为字典。
+
+    Args:
+        row: 数据库行或字典
+
+    Returns:
+        含解析后 graph_data 的图谱字典
+    """
     return {
         "id": row["id"],
         "graph_id": row["graph_id"],
@@ -72,6 +98,14 @@ def _causal_graph_to_dict(row) -> dict:
 
 
 def _scenario_to_dict(row) -> dict:
+    """将反事实场景数据库行转换为字典。
+
+    Args:
+        row: 数据库行或字典
+
+    Returns:
+        含解析后 variable_changes 和 predicted_outcome 的场景字典
+    """
     return {
         "id": row["id"],
         "scenario_id": row["scenario_id"],

@@ -16,13 +16,29 @@ from cloud.app.services.base import BaseService
 
 
 class WorldTreeService(BaseService):
+    """世界树服务，管理层次化知识树节点的增删改查与记忆关联。"""
+
     def _now(self) -> str:
+        """返回当前时间字符串。"""
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def _n404(self, name: str = "Node") -> HTTPException:
+        """构造 404 异常。
+
+        Args:
+            name: 资源名称
+
+        Returns:
+            HTTPException 实例
+        """
         return HTTPException(status_code=404, detail=f"{name} not found")
 
     def _get_repos(self):
+        """获取世界树相关的四个仓库实例。
+
+        Returns:
+            (nodes_repo, snapshots_repo, links_repo, memory_repo) 元组
+        """
         return (
             WorldTreeNodesRepository(self.db),
             WorldTreeSnapshotsRepository(self.db),
@@ -31,17 +47,42 @@ class WorldTreeService(BaseService):
         )
 
     def _node_or_404(self, nodes_repo: WorldTreeNodesRepository, node_id: int) -> dict:
+        """按 ID 获取节点，不存在则抛出 404。
+
+        Args:
+            nodes_repo: 节点仓库
+            node_id: 节点 ID
+
+        Returns:
+            节点记录字典
+
+        Raises:
+            HTTPException: 节点不存在时返回 404
+        """
         row = nodes_repo.get_by_id(node_id)
         if not row:
             raise self._n404()
         return row
 
     def _build(self, row) -> dict:
+        """将数据库行转为带解析 metadata 的字典。
+
+        Args:
+            row: 数据库行或字典
+
+        Returns:
+            含解析后 metadata 的节点字典
+        """
         d = dict(row) if not isinstance(row, dict) else row
         d["metadata"] = json.loads(d.get("metadata") or "{}")
         return d
 
     def _refresh_path(self, node_id: int) -> None:
+        """刷新单个节点的路径和层级。
+
+        Args:
+            node_id: 节点 ID
+        """
         nodes_repo = WorldTreeNodesRepository(self.db)
         node = nodes_repo.get_by_id(node_id)
         if not node:
@@ -56,6 +97,11 @@ class WorldTreeService(BaseService):
         nodes_repo.update_path(node_id, path, level, self._now())
 
     def _refresh_children(self, parent_id: int) -> None:
+        """递归刷新所有子节点的路径和层级。
+
+        Args:
+            parent_id: 父节点 ID
+        """
         nodes_repo = WorldTreeNodesRepository(self.db)
         children = nodes_repo.list_all(conditions=["parent_id=?"], params=[parent_id], order_by="id ASC")
         for child in children:

@@ -22,6 +22,14 @@ class AgentPipelineService(BaseService):
 
     @staticmethod
     def _pd(row) -> dict:
+        """将流水线数据库行转为标准字典。
+
+        Args:
+            row: 数据库行或字典
+
+        Returns:
+            流水线基本信息字典
+        """
         return {
             "id": row["id"],
             "name": row["name"],
@@ -34,6 +42,14 @@ class AgentPipelineService(BaseService):
 
     @staticmethod
     def _sd(row) -> dict:
+        """将步骤数据库行转为标准字典。
+
+        Args:
+            row: 数据库行或字典
+
+        Returns:
+            步骤基本信息字典
+        """
         return {
             "id": row["id"],
             "pipeline_id": row["pipeline_id"],
@@ -45,6 +61,17 @@ class AgentPipelineService(BaseService):
         }
 
     def _p404(self, pid: int):
+        """按流水线 ID 获取记录，不存在则抛出 404。
+
+        Args:
+            pid: 流水线 ID
+
+        Returns:
+            流水线记录字典
+
+        Raises:
+            HTTPException: 流水线不存在时返回 404
+        """
         repo = AgentPipelinesRepository(self.db)
         row = repo.get_by_id(pid)
         if not row:

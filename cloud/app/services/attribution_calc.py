@@ -8,10 +8,19 @@ from starlette import status
 
 
 def _today_str() -> str:
+    """返回 UTC 今天的日期字符串 YYYY-MM-DD。"""
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
 def _days_ago(n: int) -> str:
+    """返回 n 天前的 UTC 日期字符串。
+
+    Args:
+        n: 回溯天数
+
+    Returns:
+        YYYY-MM-DD 格式的日期字符串
+    """
     return (datetime.now(timezone.utc) - timedelta(days=n)).strftime("%Y-%m-%d")
 
 
@@ -77,6 +86,14 @@ _RECOMMENDATIONS = {
 
 
 def _calc_month_days(close_date: str) -> int:
+    """计算距关闭日期的剩余天数。
+
+    Args:
+        close_date: ISO 格式的关闭日期字符串
+
+    Returns:
+        剩余天数，解析失败返回 -1
+    """
     try:
         clean = close_date.replace("Z", "+00:00")
         dt = datetime.fromisoformat(clean)
@@ -215,6 +232,14 @@ class AttributionCalcMixin:
         }
 
     def _count_visits(self, customer_id: int) -> int:
+        """统计近30天客户拜访次数并转换为拜访频率得分。
+
+        Args:
+            customer_id: 客户 ID
+
+        Returns:
+            拜访频率得分（0-35）
+        """
         since = _days_ago(30)
         row = self.db.execute(
             "SELECT COUNT(*) AS cnt FROM customer_interactions WHERE customer_id=? AND conducted_at>=?",
@@ -230,6 +255,14 @@ class AttributionCalcMixin:
         return 0
 
     def _calc_product_match(self, stage: str) -> int:
+        """根据商机阶段计算产品匹配度得分。
+
+        Args:
+            stage: 商机阶段
+
+        Returns:
+            匹配度得分（0-25）
+        """
         stage_lower = stage.lower()
         if stage_lower in ("negotiation", "closed_won", "won"):
             return 25
@@ -240,6 +273,14 @@ class AttributionCalcMixin:
         return 0
 
     def _calc_hcp_relation(self, customer_id: int) -> int:
+        """计算近60天与该客户关联的 HCP 关系强度得分。
+
+        Args:
+            customer_id: 客户 ID
+
+        Returns:
+            关系强度得分（0-20）
+        """
         since = _days_ago(60)
         rows = self.db.execute(
             "SELECT outcome FROM episodic_memory WHERE related_entity_id=? AND created_at>=?",
@@ -252,6 +293,14 @@ class AttributionCalcMixin:
         return int(ratio * 20)
 
     def _calc_competitor_threat(self, customer_id: int) -> int:
+        """计算近60天竞品活动威胁得分。
+
+        Args:
+            customer_id: 客户 ID
+
+        Returns:
+            竞品威胁得分（0-15）
+        """
         since = _days_ago(60)
         row = self.db.execute(
             "SELECT COUNT(*) AS cnt FROM market_intel_items WHERE item_type='competitor' AND collected_at>=?",
@@ -261,6 +310,14 @@ class AttributionCalcMixin:
         return min(count * 5, 15)
 
     def _calc_time_window(self, close_date: str) -> int:
+        """根据关闭日期计算时间窗口紧迫度得分。
+
+        Args:
+            close_date: 关闭日期字符串
+
+        Returns:
+            时间窗口得分（0-10）
+        """
         if not close_date:
             return 0
         days = _calc_month_days(close_date)

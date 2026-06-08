@@ -26,6 +26,16 @@ TIMEOUT_SECONDS = 30
 
 
 def _call_deepseek(messages: list, temperature: float, max_tokens: int) -> dict:
+    """调用 DeepSeek API 发送对话并返回回复内容。
+
+    Args:
+        messages: 对话消息列表
+        temperature: 温度参数
+        max_tokens: 最大 token 数
+
+    Returns:
+        含 reply 和 usage 的字典
+    """
     api_key = settings.deepseek_api_key
     if not api_key:
         raise HTTPException(

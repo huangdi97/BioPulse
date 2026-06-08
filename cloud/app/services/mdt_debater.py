@@ -23,10 +23,20 @@ class MdtDebater(BaseService):
 
     @staticmethod
     def _now() -> str:
+        """返回当前时间字符串。"""
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     @staticmethod
     def _call_ai(messages: list[dict], auth_header: str) -> dict:
+        """调用配置的 AI 对话接口并返回响应数据。
+
+        Args:
+            messages: 对话消息列表
+            auth_header: Authorization 头
+
+        Returns:
+            AI 响应的 data 字段字典
+        """
         with urllib.request.urlopen(
             urllib.request.Request(
                 f"{config_settings.ai_chat_url}",
@@ -40,6 +50,15 @@ class MdtDebater(BaseService):
 
     @staticmethod
     def _parse_json(raw: str, default=None):
+        """安全解析 JSON 字符串。
+
+        Args:
+            raw: JSON 字符串
+            default: 解析失败时的默认返回值
+
+        Returns:
+            解析后的对象或默认值
+        """
         try:
             return json.loads(raw)
         except (json.JSONDecodeError, TypeError):

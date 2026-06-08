@@ -80,6 +80,14 @@ class MarketplaceService(BaseService):
         return result
 
     def _compute_percentiles(self, values: list) -> dict:
+        """计算数值列表的百分位数分布。
+
+        Args:
+            values: 数值列表
+
+        Returns:
+            含 p5/p25/p50/p75/p90/p95/p99 的字典
+        """
         if not values:
             return {}
         sorted_vals = sorted(values)
@@ -104,6 +112,15 @@ class MarketplaceService(BaseService):
         }
 
     def _compute_agent_percentile_rank(self, agent_value: float, all_values: list) -> float:
+        """计算 Agent 指标值在全部值中的百分位排名。
+
+        Args:
+            agent_value: Agent 的指标值
+            all_values: 全部 Agent 的指标值列表
+
+        Returns:
+            百分位排名（0-100）
+        """
         if not all_values:
             return 0.0
         below = sum(1 for v in all_values if v <= agent_value)

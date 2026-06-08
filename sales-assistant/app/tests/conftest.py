@@ -47,6 +47,8 @@ TABLES = [
     "meeting_note",
     "schedule",
     "hcp",
+    "anomaly_alert",
+    "anomaly_rule",
 ]
 
 

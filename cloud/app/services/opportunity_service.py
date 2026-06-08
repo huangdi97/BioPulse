@@ -20,6 +20,14 @@ class OpportunityService(BaseService):
     """销售机会服务，提供机会的增删改查、阶段流转与销售漏斗分析。"""
 
     def _stage_probability(self, stage: str) -> int:
+        """返回指定阶段的成功概率百分比。
+
+        Args:
+            stage: 阶段名称
+
+        Returns:
+            概率值（0-100）
+        """
         mapping = {
             "lead": 10,
             "qualify": 30,
@@ -31,6 +39,15 @@ class OpportunityService(BaseService):
         return mapping.get(stage, 0)
 
     def _validate_stage_transition(self, current: str, target: str) -> None:
+        """校验阶段流转合法性，终态不可再流转。
+
+        Args:
+            current: 当前阶段
+            target: 目标阶段
+
+        Raises:
+            HTTPException: 当前阶段为终态时抛出 400
+        """
         if current in TERMINAL_STAGES:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
@@ -38,6 +55,17 @@ class OpportunityService(BaseService):
             )
 
     def _get_opp_or_404(self, opp_id: int) -> dict:
+        """按 ID 获取活跃机会，不存在则抛出 404。
+
+        Args:
+            opp_id: 机会 ID
+
+        Returns:
+            机会记录字典
+
+        Raises:
+            HTTPException: 机会不存在时返回 404
+        """
         opp_repo = OpportunitiesRepository(self.db)
         rows = opp_repo.list_all(
             conditions=["id=?", "is_active=1"],
@@ -48,6 +76,14 @@ class OpportunityService(BaseService):
         return rows[0]
 
     def _row_to_dict(self, row) -> dict:
+        """将数据库行转为含客户名称的字典。
+
+        Args:
+            row: 数据库行或字典
+
+        Returns:
+            含 customer_name 的完整机会字典
+        """
         cust_repo = CustomersRepository(self.db)
         customer = cust_repo.get_by_id(row["customer_id"])
         return {
