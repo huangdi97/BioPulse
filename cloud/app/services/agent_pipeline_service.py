@@ -18,7 +18,7 @@ from shared.base import PaginatedResponse, success
 
 
 class AgentPipelineService(BaseService):
-    """AgentPipeline 服务类。"""
+    """AgentPipeline 服务，提供流水线 CRUD、运行与执行记录查询。"""
 
     @staticmethod
     def _pd(row) -> dict:
@@ -52,13 +52,14 @@ class AgentPipelineService(BaseService):
         return row
 
     def create_pipeline(self, body, uid: int) -> dict:
-        """create_pipeline 操作。
+        """创建流水线及其步骤。
 
         Args:
-            uid: 描述
+            body: 请求体（含 name、description、steps）
+            uid: 创建者 ID
 
         Returns:
-            描述
+            创建的流水线记录
         """
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         pipelines_repo = AgentPipelinesRepository(self.db)
@@ -85,10 +86,10 @@ class AgentPipelineService(BaseService):
         return success(data=self._pd(pipelines_repo.get_by_id(pid)))
 
     def list_pipelines(self) -> dict:
-        """list_pipelines 操作。
+        """列出所有流水线（含步骤数）。
 
         Returns:
-            描述
+            流水线列表
         """
         pipelines_repo = AgentPipelinesRepository(self.db)
         steps_repo = PipelineStepsRepository(self.db)
@@ -100,13 +101,13 @@ class AgentPipelineService(BaseService):
         return success(data=result)
 
     def get_pipeline(self, pipeline_id: int) -> dict:
-        """get_pipeline 操作。
+        """获取流水线详情（含步骤列表）。
 
         Args:
-            pipeline_id: 描述
+            pipeline_id: 流水线 ID
 
         Returns:
-            描述
+            流水线记录含步骤
         """
         steps_repo = PipelineStepsRepository(self.db)
         row = self._p404(pipeline_id)
@@ -114,13 +115,13 @@ class AgentPipelineService(BaseService):
         return success(data={**self._pd(row), "steps": [self._sd(s) for s in steps]})
 
     def delete_pipeline(self, pipeline_id: int) -> dict:
-        """delete_pipeline 操作。
+        """删除流水线及其关联的步骤和运行记录。
 
         Args:
-            pipeline_id: 描述
+            pipeline_id: 流水线 ID
 
         Returns:
-            描述
+            成功响应
         """
         pipelines_repo = AgentPipelinesRepository(self.db)
         steps_repo = PipelineStepsRepository(self.db)
@@ -134,13 +135,13 @@ class AgentPipelineService(BaseService):
         return success()
 
     def get_run(self, run_id: int) -> dict:
-        """get_run 操作。
+        """获取运行记录及步骤执行结果。
 
         Args:
-            run_id: 描述
+            run_id: 运行 ID
 
         Returns:
-            描述
+            含 run 和 step_runs 的记录
         """
         runs_repo = PipelineRunsRepository(self.db)
         step_runs_repo = PipelineStepRunsRepository(self.db)
@@ -156,15 +157,15 @@ class AgentPipelineService(BaseService):
         )
 
     def list_runs(self, pipeline_id: int, page: int, page_size: int) -> dict:
-        """list_runs 操作。
+        """分页查询流水线运行记录。
 
         Args:
-            pipeline_id: 描述
-            page: 描述
-            page_size: 描述
+            pipeline_id: 流水线 ID
+            page: 页码
+            page_size: 每页条数
 
         Returns:
-            描述
+            分页运行记录
         """
         runs_repo = PipelineRunsRepository(self.db)
         self._p404(pipeline_id)
@@ -186,14 +187,16 @@ class AgentPipelineService(BaseService):
         )
 
     def run_pipeline(self, pipeline_id: int, body, request: Request, uid: int) -> dict:
-        """run_pipeline 操作。
+        """执行流水线，通过 LangGraph 编排多步骤 Agent。
 
         Args:
-            pipeline_id: 描述
-            uid: 描述
+            pipeline_id: 流水线 ID
+            body: 请求体（含 user_input）
+            request: HTTP 请求对象（用于传递 Authorization）
+            uid: 执行者 ID
 
         Returns:
-            描述
+            含 run_id、status 和 step_results 的执行结果
         """
         runs_repo = PipelineRunsRepository(self.db)
         step_runs_repo = PipelineStepRunsRepository(self.db)

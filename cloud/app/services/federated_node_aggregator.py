@@ -58,16 +58,16 @@ def _to_csv(rows: list[dict], fieldnames: list[str]) -> str:
 
 
 class FedAggregator(BaseService):
-    """FederatedNode 聚合分析类。"""
+    """联邦节点聚合服务，提供仪表盘、审计日志、合规摘要与 CSV 导出。"""
 
     def get_dashboard(self, days: Optional[int] = None) -> dict:
-        """get_dashboard 操作。
+        """获取联邦学习仪表盘汇总。
 
         Args:
-            days: 描述
+            days: 统计周期天数，None 为全部
 
         Returns:
-            描述
+            含节点统计、审计日志和贡献记录的字典
         """
         node_repo = FederatedNodesRepository(self.db)
         round_repo = FederatedRoundsRepository(self.db)
@@ -120,13 +120,13 @@ class FedAggregator(BaseService):
         }
 
     def export_dashboard_csv(self, days: Optional[int] = None) -> str:
-        """export_dashboard_csv 操作。
+        """导出仪表盘数据为 CSV。
 
         Args:
-            days: 描述
+            days: 统计周期天数
 
         Returns:
-            描述
+            CSV 格式字符串
         """
         data = self.get_dashboard(days=days)
         rows = []
@@ -146,13 +146,13 @@ class FedAggregator(BaseService):
         return _to_csv(rows, ["id", "action", "entity_type", "entity_id", "detail", "created_at"])
 
     def get_audit_log(self, days: Optional[int] = None) -> dict:
-        """get_audit_log 操作。
+        """获取审计日志与合规贡献记录。
 
         Args:
-            days: 描述
+            days: 统计周期天数
 
         Returns:
-            描述
+            含 operation_logs 和 compliance_checks 的字典
         """
         audit_repo = AuditLogsRepository(self.db)
         contrib_repo = FedAuditContributionsRepository(self.db)
@@ -170,10 +170,10 @@ class FedAggregator(BaseService):
         return {"operation_logs": logs, "compliance_checks": contribs}
 
     def get_compliance_summary(self) -> list:
-        """get_compliance_summary 操作。
+        """获取所有节点的合规摘要。
 
         Returns:
-            描述
+            节点合规状态列表（含 compliant 标志）
         """
         repo = FederatedNodesRepository(self.db)
         all_nodes = repo.get_all()
@@ -194,13 +194,13 @@ class FedAggregator(BaseService):
         return result
 
     def export_audit_log_csv(self, days: Optional[int] = None) -> str:
-        """export_audit_log_csv 操作。
+        """导出审计日志为 CSV。
 
         Args:
-            days: 描述
+            days: 统计周期天数
 
         Returns:
-            描述
+            CSV 格式字符串
         """
         data = self.get_audit_log(days=days)
         rows = []

@@ -27,6 +27,20 @@ class CollaborationService(BaseService):
         confidence: float,
         priority: int,
     ) -> dict:
+        """注册一个新的 Agent 技能。
+
+        Args:
+            skill_name: 技能名称
+            agent_role: 关联的 Agent 角色
+            description: 技能描述
+            entity_types: 支持处理的实体类型列表
+            capabilities: 技能能力标签列表
+            confidence: 置信度评分 (0.0-1.0)
+            priority: 调度优先级，数值越小越优先
+
+        Returns:
+            新创建的技能记录字典
+        """
         repo = AgentSkillsRepository(self.db)
         row_id = repo.create(
             {
@@ -42,6 +56,15 @@ class CollaborationService(BaseService):
         return repo.get_by_id(row_id)
 
     def list_skills(self, agent_role: Optional[str] = None, enabled: Optional[int] = None) -> list:
+        """按条件查询已注册的技能列表。
+
+        Args:
+            agent_role: 可选，按 Agent 角色过滤
+            enabled: 可选，按启用状态过滤 (1=启用, 0=禁用)
+
+        Returns:
+            技能记录列表，按优先级升序排列
+        """
         repo = AgentSkillsRepository(self.db)
         conditions, params = [], []
         if agent_role:
@@ -57,6 +80,14 @@ class CollaborationService(BaseService):
         )
 
     def delete_skill(self, skill_id: int) -> None:
+        """删除指定技能。
+
+        Args:
+            skill_id: 待删除的技能 ID
+
+        Raises:
+            HTTPException: 技能不存在时返回 404
+        """
         repo = AgentSkillsRepository(self.db)
         row = repo.get_by_id(skill_id)
         if not row:
@@ -71,6 +102,18 @@ class CollaborationService(BaseService):
         orchestrator_agent: str,
         routing_strategy: str,
     ) -> dict:
+        """创建一个新的协作会话。
+
+        Args:
+            task_description: 任务描述
+            source_entity_id: 发起协作的实体 ID
+            source_agent_role: 发起 Agent 的角色
+            orchestrator_agent: 编排 Agent 名称
+            routing_strategy: 路由策略标识
+
+        Returns:
+            新创建的会话记录字典
+        """
         repo = CollaborationSessionsRepository(self.db)
         sid = f"collab:{uuid.uuid4()}"
         repo.create(
@@ -94,6 +137,21 @@ class CollaborationService(BaseService):
         input_summary: str,
         entity_id: str,
     ) -> dict:
+        """向协作会话中添加一个新的执行步骤。
+
+        Args:
+            session_id: 协作会话 ID
+            agent_role: 执行该步骤的 Agent 角色
+            action_type: 动作类型
+            input_summary: 输入摘要
+            entity_id: 关联的实体 ID
+
+        Returns:
+            新创建的步骤记录字典
+
+        Raises:
+            HTTPException: 会话不存在时返回 404
+        """
         sess_repo = CollaborationSessionsRepository(self.db)
         steps_repo = CollaborationStepsRepository(self.db)
 
@@ -141,6 +199,21 @@ class CollaborationService(BaseService):
         status_val: str,
         duration_seconds: int,
     ) -> dict:
+        """标记协作步骤为完成状态并更新会话进度。
+
+        Args:
+            session_id: 协作会话 ID
+            step_id: 步骤 ID
+            output_summary: 输出摘要
+            status_val: 步骤状态值 (如 "completed", "failed")
+            duration_seconds: 执行耗时（秒）
+
+        Returns:
+            包含更新后的步骤和会话信息的字典
+
+        Raises:
+            HTTPException: 步骤不存在时返回 404
+        """
         steps_repo = CollaborationStepsRepository(self.db)
         sess_repo = CollaborationSessionsRepository(self.db)
 
@@ -181,6 +254,16 @@ class CollaborationService(BaseService):
         source_agent_role: Optional[str] = None,
         routing_strategy: Optional[str] = None,
     ) -> list:
+        """按条件查询协作会话列表。
+
+        Args:
+            status: 可选，按会话状态过滤
+            source_agent_role: 可选，按发起 Agent 角色过滤
+            routing_strategy: 可选，按路由策略过滤
+
+        Returns:
+            会话记录列表，按开始时间降序排列
+        """
         repo = CollaborationSessionsRepository(self.db)
         conditions, params = [], []
         if status:
@@ -199,6 +282,17 @@ class CollaborationService(BaseService):
         )
 
     def get_session(self, session_id: str) -> dict:
+        """获取指定会话及其所有步骤的详细信息。
+
+        Args:
+            session_id: 协作会话 ID
+
+        Returns:
+            包含 session 和 steps 键的字典
+
+        Raises:
+            HTTPException: 会话不存在时返回 404
+        """
         sess_repo = CollaborationSessionsRepository(self.db)
         steps_repo = CollaborationStepsRepository(self.db)
         sess_rows = sess_repo.list_all(conditions=["session_id=?"], params=[session_id])
@@ -214,6 +308,20 @@ class CollaborationService(BaseService):
         entity_id: str,
         routing_strategy: str,
     ) -> dict:
+        """根据实体类型进行语义匹配路由，返回最佳匹配的技能。
+
+        Args:
+            task_description: 任务描述
+            entity_type: 实体类型，用于匹配技能的 entity_types 字段
+            entity_id: 实体 ID
+            routing_strategy: 路由策略标识
+
+        Returns:
+            包含匹配结果和最佳匹配技能的字典
+
+        Raises:
+            HTTPException: 无匹配技能时返回 404
+        """
         repo = AgentSkillsRepository(self.db)
         if entity_type:
             like = f"%{entity_type}%"
@@ -237,6 +345,11 @@ class CollaborationService(BaseService):
         }
 
     def dashboard(self) -> dict:
+        """获取协作仪表盘汇总数据。
+
+        Returns:
+            包含技能统计、会话统计、步骤统计、热门 Agent 角色及最近会话的字典
+        """
         skills_repo = AgentSkillsRepository(self.db)
         sess_repo = CollaborationSessionsRepository(self.db)
         steps_repo = CollaborationStepsRepository(self.db)

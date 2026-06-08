@@ -12,13 +12,16 @@ logger = logging.getLogger(__name__)
 
 
 class AgentFrameworkService(BaseService):
-    """AgentFramework 服务类。"""
+    """Agent 框架服务，提供模板管理、实例生命周期与 A2A 自动注册。"""
 
     def list_templates(self, domain=None):
-        """list_templates 操作。
+        """列出 Agent 角色模板。
 
         Args:
-            domain: 描述
+            domain: 按领域筛选
+
+        Returns:
+            模板列表
         """
         sql = "SELECT * FROM agent_role_templates WHERE 1=1"
         params = []
@@ -29,10 +32,10 @@ class AgentFrameworkService(BaseService):
         return [self._row_to_dict(r) for r in rows]
 
     def get_template(self, template_key):
-        """get_template 操作。
+        """获取指定模板。
 
         Args:
-            template_key: 描述
+            template_key: 模板键
         """
         row = self.db.execute("SELECT * FROM agent_role_templates WHERE template_key=?", (template_key,)).fetchone()
         if not row:
@@ -40,17 +43,17 @@ class AgentFrameworkService(BaseService):
         return self._row_to_dict(row)
 
     def create_template(self, key, name, description, domain, capabilities, default_config, triggers, endpoints):
-        """create_template 操作。
+        """创建角色模板。
 
         Args:
-            key: 描述
-            name: 描述
+            key: 模板唯一键
+            name: 名称
             description: 描述
-            domain: 描述
-            capabilities: 描述
-            default_config: 描述
-            triggers: 描述
-            endpoints: 描述
+            domain: 领域
+            capabilities: 能力列表
+            default_config: 默认配置
+            triggers: 触发器配置
+            endpoints: 端点配置
         """
         self.db.execute(
             "INSERT INTO agent_role_templates (template_key, name, description, domain, capabilities, default_config, triggers, endpoints) "
@@ -70,11 +73,14 @@ class AgentFrameworkService(BaseService):
         return self.get_template(key)
 
     def list_instances(self, status=None, template_key=None):
-        """list_instances 操作。
+        """列出 Agent 实例。
 
         Args:
-            status: 描述
-            template_key: 描述
+            status: 按状态筛选
+            template_key: 按模板键筛选
+
+        Returns:
+            实例列表
         """
         sql = "SELECT * FROM agent_instances WHERE 1=1"
         params = []
@@ -88,10 +94,10 @@ class AgentFrameworkService(BaseService):
         return [self._row_to_dict(r) for r in rows]
 
     def get_instance(self, instance_key):
-        """get_instance 操作。
+        """获取指定实例。
 
         Args:
-            instance_key: 描述
+            instance_key: 实例键
         """
         row = self.db.execute("SELECT * FROM agent_instances WHERE instance_key=?", (instance_key,)).fetchone()
         if not row:
@@ -99,14 +105,14 @@ class AgentFrameworkService(BaseService):
         return self._row_to_dict(row)
 
     def create_instance(self, instance_key, template_key, display_name, bind_to_end, config_overrides):
-        """create_instance 操作。
+        """创建 Agent 实例，可选自动注册到 A2A。
 
         Args:
-            instance_key: 描述
-            template_key: 描述
-            display_name: 描述
-            bind_to_end: 描述
-            config_overrides: 描述
+            instance_key: 实例唯一键
+            template_key: 关联模板键
+            display_name: 显示名称
+            bind_to_end: 绑定端点
+            config_overrides: 配置覆盖
         """
         template = self.get_template(template_key)
         self.db.execute(
@@ -137,10 +143,10 @@ class AgentFrameworkService(BaseService):
         return instance
 
     def start_instance(self, instance_key):
-        """start_instance 操作。
+        """启动实例并注册到 A2A。
 
         Args:
-            instance_key: 描述
+            instance_key: 实例键
         """
         instance = self.get_instance(instance_key)
         if instance.get("status") == "running":
@@ -165,10 +171,10 @@ class AgentFrameworkService(BaseService):
         return self.get_instance(instance_key)
 
     def stop_instance(self, instance_key):
-        """stop_instance 操作。
+        """停止实例并更新 A2A 状态。
 
         Args:
-            instance_key: 描述
+            instance_key: 实例键
         """
         instance = self.get_instance(instance_key)
         self.db.execute(
@@ -182,10 +188,10 @@ class AgentFrameworkService(BaseService):
         return self.get_instance(instance_key)
 
     def heartbeat_instance(self, instance_key):
-        """heartbeat_instance 操作。
+        """发送实例心跳并同步 A2A。
 
         Args:
-            instance_key: 描述
+            instance_key: 实例键
         """
         instance = self.get_instance(instance_key)
         self.db.execute(

@@ -28,6 +28,16 @@ class ReportGenerator(BaseService):
     """报告生成器，提供记录复核、哈希链审计、AI 纠偏训练及统计仪表盘。"""
 
     def review_record(self, record_id: int, body, uid: int) -> dict:
+        """复核合规记录并写入审计链。
+
+        Args:
+            record_id: 审计记录 ID
+            body: 请求体（含 review_notes、override_passed）
+            uid: 复核者 ID
+
+        Returns:
+            复核后的记录
+        """
         audit_repo = ComplianceAuditRecordsRepository(self.db)
         chain_repo = AuditChainEntriesRepository(self.db)
         row = audit_repo.get_by_id(record_id)
@@ -65,6 +75,15 @@ class ReportGenerator(BaseService):
         return success(data=audit_repo.get_by_id(record_id))
 
     def create_audit_chain(self, body, uid: int) -> dict:
+        """创建审计链条目（追加哈希链接）。
+
+        Args:
+            body: 请求体（含 entity_type、entity_id、action、payload）
+            uid: 操作者 ID
+
+        Returns:
+            含 current_hash 和 previous_hash 的确认信息
+        """
         repo = AuditChainEntriesRepository(self.db)
         n = _now()
         prev_hash = ""
@@ -100,6 +119,15 @@ class ReportGenerator(BaseService):
         )
 
     def get_audit_chain(self, entity_type: str, entity_id: str) -> dict:
+        """获取指定实体的审计链。
+
+        Args:
+            entity_type: 实体类型
+            entity_id: 实体 ID
+
+        Returns:
+            审计链条目列表
+        """
         repo = AuditChainEntriesRepository(self.db)
         rows = repo.list_all(
             conditions=["entity_type=?", "entity_id=?"],
@@ -109,6 +137,15 @@ class ReportGenerator(BaseService):
         return success(data=rows)
 
     def verify_audit_chain(self, entity_type: str, entity_id: str) -> dict:
+        """验证审计链完整性（哈希比对）。
+
+        Args:
+            entity_type: 实体类型
+            entity_id: 实体 ID
+
+        Returns:
+            含 valid、total_entries 和 broken_at 的验证结果
+        """
         repo = AuditChainEntriesRepository(self.db)
         rows = repo.list_all(
             conditions=["entity_type=?", "entity_id=?"],
@@ -140,6 +177,16 @@ class ReportGenerator(BaseService):
         )
 
     def train_correction(self, record_id: int, request: Request, uid: int) -> dict:
+        """基于违规记录生成 AI 纠偏训练条目。
+
+        Args:
+            record_id: 审计记录 ID
+            request: HTTP 请求对象（用于获取 Authorization）
+            uid: 操作者 ID
+
+        Returns:
+            含 title、description、category、severity 的纠偏记录
+        """
         audit_repo = ComplianceAuditRecordsRepository(self.db)
         corrections_repo = TrainingCorrectionsRepository(self.db)
         row = audit_repo.get_by_id(record_id)
@@ -198,6 +245,18 @@ class ReportGenerator(BaseService):
         page: int,
         page_size: int,
     ) -> dict:
+        """分页查询纠偏训练列表。
+
+        Args:
+            category: 按类别筛选
+            severity: 按严重程度筛选
+            status: 按状态筛选
+            page: 页码
+            page_size: 每页条数
+
+        Returns:
+            分页结果
+        """
         repo = TrainingCorrectionsRepository(self.db)
         conditions, params = [], []
         if category:
@@ -228,6 +287,15 @@ class ReportGenerator(BaseService):
         )
 
     def update_correction(self, correction_id: int, body) -> dict:
+        """更新纠偏训练状态。
+
+        Args:
+            correction_id: 纠偏记录 ID
+            body: 请求体（含 status、assigned_to）
+
+        Returns:
+            更新后的纠偏记录
+        """
         repo = TrainingCorrectionsRepository(self.db)
         row = repo.get_by_id(correction_id)
         if not row:
@@ -242,6 +310,11 @@ class ReportGenerator(BaseService):
         return success(data=repo.get_by_id(correction_id))
 
     def dashboard(self) -> dict:
+        """合规仪表盘，汇总审计与纠偏统计。
+
+        Returns:
+            仪表盘统计数据
+        """
         audit_repo = ComplianceAuditRecordsRepository(self.db)
         corrections_repo = TrainingCorrectionsRepository(self.db)
         return success(data=build_dashboard_data(self.db, audit_repo, corrections_repo))

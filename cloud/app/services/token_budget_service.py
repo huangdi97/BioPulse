@@ -53,6 +53,14 @@ class TokenBudgetService:
 
     @classmethod
     def get_pricing(cls, model: str) -> dict:
+        """Return the pricing configuration for a given model.
+
+        Args:
+            model: The model name (e.g. "deepseek-chat").
+
+        Returns:
+            A dict with input_per_million and output_per_million cost values.
+        """
         return cls.PRICING.get(model, {"input_per_million": 0.14, "output_per_million": 0.28})
 
     def _get_model_config(self, model: str) -> dict:
@@ -71,6 +79,17 @@ class TokenBudgetService:
         return user_overrides.get(model)
 
     def get_budget(self, user_id: int, model: str) -> dict:
+        """Retrieve the token budget configuration for a user and model.
+
+        Merges the model-wide defaults with any user-specific overrides.
+
+        Args:
+            user_id: The user's ID.
+            model: The model name.
+
+        Returns:
+            A dict with user_id, model, max_tokens_per_day, max_tokens_per_request, and alert_threshold.
+        """
         model_config = self._get_model_config(model)
         override = self._get_override(user_id, model)
         alert_threshold = self._rules.get("default_alert_threshold", 0.8)
@@ -87,6 +106,18 @@ class TokenBudgetService:
         }
 
     def check_budget(self, user_id: int, model: str, estimated_tokens: int) -> dict:
+        """Check whether an estimated token usage would exceed the user's budget limits.
+
+        Verifies both the per-request limit and the cumulative daily limit.
+
+        Args:
+            user_id: The user's ID.
+            model: The model name.
+            estimated_tokens: The estimated number of tokens for the upcoming request.
+
+        Returns:
+            A dict with allowed (bool), reason (str), daily_used (int), and daily_limit (int).
+        """
         budget = self.get_budget(user_id, model)
         daily_limit = budget["max_tokens_per_day"]
         request_limit = budget["max_tokens_per_request"]
@@ -125,6 +156,17 @@ class TokenBudgetService:
         }
 
     def record_usage(self, user_id: int, model: str, tokens: int, cost: float) -> dict:
+        """Record actual token usage and update the daily budget tracking table.
+
+        Args:
+            user_id: The user's ID.
+            model: The model name.
+            tokens: The number of tokens consumed.
+            cost: The cost incurred for this usage.
+
+        Returns:
+            A dict containing the recorded usage details (user_id, model, tokens, cost, usage_date).
+        """
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         now = datetime.now(timezone.utc).isoformat()
         conn = _connect()
@@ -153,6 +195,15 @@ class TokenBudgetService:
         }
 
     def get_usage_report(self, user_id: int, days: int = 30) -> list:
+        """Generate a token usage report for a user over a specified number of days.
+
+        Args:
+            user_id: The user's ID.
+            days: Number of days to look back (default 30).
+
+        Returns:
+            A list of dicts grouped by usage_date and model, each with total_tokens, total_cost, and call_count.
+        """
         cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
         conn = _connect()
         try:
@@ -168,6 +219,11 @@ class TokenBudgetService:
         return [dict(r) for r in rows]
 
     def list_alert_configs(self) -> list:
+        """List current budget configurations for all users and models.
+
+        Returns:
+            A list of dicts, each representing a user-model budget configuration.
+        """
         conn = _connect()
         try:
             rows = conn.execute("SELECT DISTINCT user_id, model FROM token_budget ORDER BY user_id, model").fetchall()
@@ -186,6 +242,21 @@ class TokenBudgetService:
         max_tokens_per_request: Optional[int] = None,
         alert_threshold: Optional[float] = None,
     ) -> dict:
+        """Update token budget overrides for a specific user and model.
+
+        Only provided fields are updated; others retain existing values.
+        The overrides are persisted to the rules JSON file.
+
+        Args:
+            user_id: The user's ID.
+            model: The model name.
+            max_tokens_per_day: Optional new daily token limit.
+            max_tokens_per_request: Optional new per-request token limit.
+            alert_threshold: Optional new alert threshold (0.0 to 1.0).
+
+        Returns:
+            A dict representing the updated budget configuration.
+        """
         override_key = str(user_id)
         overrides = self._rules.setdefault("overrides", {})
         user_override = overrides.setdefault(override_key, {})
@@ -202,6 +273,11 @@ class TokenBudgetService:
         return self.get_budget(user_id, model)
 
     def get_alerts(self) -> list:
+        """Retrieve alerts for all users whose usage ratio meets or exceeds their alert threshold.
+
+        Returns:
+            A list of alert dicts with user_id, model, daily_used, daily_limit, usage_ratio, threshold, and date.
+        """
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         configs = self.list_alert_configs()
         alerts = []

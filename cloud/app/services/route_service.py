@@ -75,6 +75,23 @@ class RouteService(BaseService):
         temperature: float,
         created_by: int,
     ) -> dict:
+        """创建一条新的路由规则。
+
+        Args:
+            name: 规则名称
+            priority: 优先级，数值越小越优先
+            condition_field: 条件字段名
+            condition_operator: 条件运算符 (contains, equals, starts_with)
+            condition_value: 条件匹配值
+            target_role_id: 匹配后指派的目标 Agent 角色 ID
+            fallback_role_id: 可选，回退角色 ID
+            max_tokens: DeepSeek API 最大 token 数
+            temperature: DeepSeek API 温度参数
+            created_by: 创建者用户 ID
+
+        Returns:
+            新创建的路由规则记录字典
+        """
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         rules_repo = RouteRulesRepository(self.db)
         rule_id = rules_repo.create(
@@ -96,6 +113,11 @@ class RouteService(BaseService):
         return rules_repo.get_by_id(rule_id)
 
     def list_rules(self) -> list:
+        """获取所有路由规则列表。
+
+        Returns:
+            路由规则记录列表，按优先级排序
+        """
         rules_repo = RouteRulesRepository(self.db)
         return rules_repo.list_all_ordered()
 
@@ -108,6 +130,22 @@ class RouteService(BaseService):
         target_role_id: Optional[int] = None,
         is_active: Optional[int] = None,
     ) -> dict:
+        """更新一条路由规则的指定字段。
+
+        Args:
+            rule_id: 规则 ID
+            name: 可选，新规则名称
+            priority: 可选，新优先级
+            condition_value: 可选，新条件值
+            target_role_id: 可选，新目标角色 ID
+            is_active: 可选，启用状态 (1=启用, 0=禁用)
+
+        Returns:
+            更新后的路由规则记录字典
+
+        Raises:
+            HTTPException: 规则不存在时返回 404
+        """
         rules_repo = RouteRulesRepository(self.db)
         existing = rules_repo.get_by_id(rule_id)
         if not existing:
@@ -124,6 +162,14 @@ class RouteService(BaseService):
         return rules_repo.get_by_id(rule_id)
 
     def delete_rule(self, rule_id: int) -> None:
+        """删除一条路由规则。
+
+        Args:
+            rule_id: 规则 ID
+
+        Raises:
+            HTTPException: 规则不存在时返回 404
+        """
         rules_repo = RouteRulesRepository(self.db)
         existing = rules_repo.get_by_id(rule_id)
         if not existing:
@@ -131,6 +177,16 @@ class RouteService(BaseService):
         rules_repo.delete(rule_id)
 
     def execute_route(self, input_text: str, uid: int, source: str) -> dict:
+        """根据输入文本匹配路由规则并调用 DeepSeek AI 执行调度。
+
+        Args:
+            input_text: 用户输入文本
+            uid: 用户 ID
+            source: 来源标识
+
+        Returns:
+            包含角色名称、AI 回复、置信度、延迟及匹配规则信息的字典
+        """
         start = time.time()
         rules_repo = RouteRulesRepository(self.db)
         logs_repo = RouteLogsRepository(self.db)
@@ -216,6 +272,19 @@ class RouteService(BaseService):
         page: int = 1,
         page_size: int = 20,
     ) -> dict:
+        """分页查询路由执行日志。
+
+        Args:
+            role_id: 可选，按指派角色 ID 过滤
+            source: 可选，按来源过滤
+            date_from: 可选，开始日期
+            date_to: 可选，结束日期
+            page: 页码，默认 1
+            page_size: 每页条数，默认 20
+
+        Returns:
+            包含 items、total、page、page_size、total_pages 的字典
+        """
         logs_repo = RouteLogsRepository(self.db)
         total, total_pages, items = logs_repo.list_filtered(
             role_id=role_id,
@@ -234,6 +303,17 @@ class RouteService(BaseService):
         }
 
     def get_log(self, log_id: int) -> dict:
+        """获取单条路由执行日志详情。
+
+        Args:
+            log_id: 日志 ID
+
+        Returns:
+            日志记录字典
+
+        Raises:
+            HTTPException: 日志不存在时返回 404
+        """
         logs_repo = RouteLogsRepository(self.db)
         row = logs_repo.get_by_id(log_id)
         if not row:
@@ -241,10 +321,20 @@ class RouteService(BaseService):
         return row
 
     def get_stats(self) -> list:
+        """获取路由统计数据。
+
+        Returns:
+            包含角色名称的统计记录列表
+        """
         stats_repo = RouteStatsRepository(self.db)
         return stats_repo.list_with_role_name()
 
     def get_dashboard(self) -> dict:
+        """获取路由仪表盘汇总数据。
+
+        Returns:
+            包含总执行次数、角色分布、平均延迟和最近日志的字典
+        """
         logs_repo = RouteLogsRepository(self.db)
         total = logs_repo.count()
         if total == 0:

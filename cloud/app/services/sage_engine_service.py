@@ -24,34 +24,112 @@ class SageEngineService:
     """Sage 引擎服务，提供多维记忆评分、热温冷分层与记忆进化管理。"""
 
     def __init__(self, db=None):
+        """初始化 Sage 引擎服务。
+
+        Args:
+            db: 可选的研究数据库连接，为 None 时使用默认连接
+        """
         self.db = db or get_research_db()
         self.repo = SageRepository(self.db)
         self.linking = SageLinkingService(db)
 
     def _normalize(self, value, min_val, max_val) -> float:
+        """将值归一化到 [0, 1] 区间。
+
+        Args:
+            value: 原始值
+            min_val: 最小值
+            max_val: 最大值
+
+        Returns:
+            归一化后的浮点数
+        """
         return normalize(value, min_val, max_val)
 
     @staticmethod
     def _ts_to_epoch(ts_str):
+        """将时间戳字符串转换为 Unix epoch 秒数。
+
+        Args:
+            ts_str: 时间戳字符串
+
+        Returns:
+            Unix epoch 秒数
+        """
         return ts_to_epoch(ts_str)
 
     @staticmethod
     def _determine_tier(score):
+        """根据分数判定记忆分层（hot / warm / cold）。
+
+        Args:
+            score: 记忆评分
+
+        Returns:
+            分层标签字符串
+        """
         return determine_tier(score)
 
     def _score_episodic(self, bms, tier_dist, comp):
+        """对情景记忆进行评分。
+
+        Args:
+            bms: BrainMemoryService 实例
+            tier_dist: 分层分布字典（hot / warm / cold 计数）
+            comp: 组件计数字典
+
+        Returns:
+            评分的记忆数量
+        """
         return score_episodic(self.repo, bms, tier_dist, comp)
 
     def _score_semantic(self, bms, tier_dist, comp):
+        """对语义记忆进行评分。
+
+        Args:
+            bms: BrainMemoryService 实例
+            tier_dist: 分层分布字典
+            comp: 组件计数字典
+
+        Returns:
+            评分的记忆数量
+        """
         return score_semantic(self.repo, bms, tier_dist, comp)
 
     def _score_procedural(self, bms, tier_dist, comp):
+        """对程序性记忆进行评分。
+
+        Args:
+            bms: BrainMemoryService 实例
+            tier_dist: 分层分布字典
+            comp: 组件计数字典
+
+        Returns:
+            评分的记忆数量
+        """
         return score_procedural(self.repo, bms, tier_dist, comp)
 
     def _score_world_tree(self, tier_dist, comp):
+        """对世界树知识图谱进行评分。
+
+        Args:
+            tier_dist: 分层分布字典
+            comp: 组件计数字典
+
+        Returns:
+            评分的实体数量
+        """
         return score_world_tree(self.repo, self.db, tier_dist, comp)
 
     def score_all_memories(self) -> dict:
+        """对全部记忆进行多维评分并返回汇总结果。
+
+        依次对情景记忆、语义记忆、程序性记忆和世界树进行评分，
+        汇总分层分布与组件统计。
+
+        Returns:
+            含 total_scored、tier_distribution、by_component、last_scored_at 的字典
+        """
         now = datetime.now().isoformat()
         tier_dist = {"hot": 0, "warm": 0, "cold": 0}
         comp = {"brain_memory": 0, "world_tree": 0}
@@ -71,6 +149,18 @@ class SageEngineService:
         }
 
     def score_detail(self, memory_type, memory_id) -> dict | None:
+        """查询指定记忆的详细评分解构。
+
+        返回评分记录、分解项（访问频率、时效性、效用、置信度的贡献）
+        以及最近的进化日志。
+
+        Args:
+            memory_type: 记忆类型
+            memory_id: 记忆 ID
+
+        Returns:
+            评分解构字典，若记忆不存在则返回 None
+        """
         row = self.repo.get_score(memory_type, memory_id)
         if not row:
             return None
@@ -96,6 +186,18 @@ class SageEngineService:
         }
 
     def evolve(self, triggered_by="manual") -> dict:
+        """执行记忆进化：对热温冷三层记忆分别做刷新、进化与整合。
+
+        冷记忆触发 consolidation 或 folding，温记忆按调用次数触发进化，
+        热记忆刷新访问时间。
+
+        Args:
+            triggered_by: 触发来源标识，默认 "manual"
+
+        Returns:
+            含 scored_count、cold_consolidated、warm_evolved、hot_refreshed、
+            total_processed、duration_ms 的字典
+        """
         start = datetime.now()
         result = self.score_all_memories()
         cold_count = 0

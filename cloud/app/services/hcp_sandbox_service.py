@@ -35,6 +35,25 @@ class HcpSandboxService(BaseService):
         digital_engagement: float,
         user_id: int,
     ) -> dict:
+        """Create a new HCP (Healthcare Professional) profile.
+
+        Args:
+            name: The HCP's name.
+            title: The HCP's professional title.
+            hospital: The HCP's affiliated hospital.
+            department: The HCP's department.
+            specialty: The HCP's medical specialty.
+            city: The HCP's city.
+            tier: The HCP tier classification.
+            traits: A dict of behavioral traits.
+            prescription_volume: The HCP's prescription volume metric.
+            influence_score: The HCP's influence score.
+            digital_engagement: The HCP's digital engagement score.
+            user_id: The ID of the user creating the profile.
+
+        Returns:
+            A dict representing the created HCP profile.
+        """
         repo = HcpProfilesRepository(self.db)
         data = {
             "name": name,
@@ -61,6 +80,18 @@ class HcpSandboxService(BaseService):
         page: int = 1,
         page_size: int = 20,
     ) -> PaginatedResponse:
+        """List HCP profiles with optional filtering and pagination.
+
+        Args:
+            tier: Optional filter by HCP tier.
+            specialty: Optional filter by specialty.
+            city: Optional filter by city.
+            page: Page number for pagination.
+            page_size: Number of items per page.
+
+        Returns:
+            A PaginatedResponse containing HCP profile items.
+        """
         repo = HcpProfilesRepository(self.db)
         total, total_pages, items = repo.list_filtered(tier=tier, specialty=specialty, city=city, page=page, page_size=page_size)
         return PaginatedResponse(
@@ -72,6 +103,17 @@ class HcpSandboxService(BaseService):
         )
 
     def get_profile(self, hcp_id: int) -> dict:
+        """Retrieve a single HCP profile with interaction and simulation counts.
+
+        Args:
+            hcp_id: The HCP's ID.
+
+        Returns:
+            A dict representing the HCP profile with interaction_count, simulation_count, and last_interaction.
+
+        Raises:
+            HTTPException: 404 if the HCP profile is not found.
+        """
         profiles_repo = HcpProfilesRepository(self.db)
         interactions_repo = HcpInteractionsRepository(self.db)
         simulations_repo = HcpSimulationsRepository(self.db)
@@ -99,6 +141,29 @@ class HcpSandboxService(BaseService):
         digital_engagement: Optional[float] = None,
         is_active: Optional[int] = None,
     ) -> dict:
+        """Update fields of an existing HCP profile.
+
+        Args:
+            hcp_id: The HCP's ID.
+            name: Optional new name.
+            title: Optional new title.
+            hospital: Optional new hospital.
+            department: Optional new department.
+            specialty: Optional new specialty.
+            city: Optional new city.
+            tier: Optional new tier.
+            traits: Optional new traits dict.
+            prescription_volume: Optional new prescription volume.
+            influence_score: Optional new influence score.
+            digital_engagement: Optional new digital engagement score.
+            is_active: Optional active flag (1 for active, 0 for inactive).
+
+        Returns:
+            A dict representing the updated HCP profile.
+
+        Raises:
+            HTTPException: 404 if the HCP profile is not found.
+        """
         repo = HcpProfilesRepository(self.db)
         row = repo.get_by_id(hcp_id)
         if not row:
@@ -135,6 +200,24 @@ class HcpSandboxService(BaseService):
         conducted_at: Optional[str],
         user_id: int,
     ) -> dict:
+        """Record a new interaction with an HCP.
+
+        Args:
+            hcp_id: The HCP's ID.
+            interaction_type: The type of interaction (e.g. "visit", "call", "email").
+            content: The content of the interaction.
+            response: The HCP's response.
+            outcome: The interaction outcome.
+            strategy_used: The engagement strategy used.
+            conducted_at: Optional timestamp of when the interaction occurred.
+            user_id: The user ID who conducted the interaction.
+
+        Returns:
+            A dict representing the created interaction record.
+
+        Raises:
+            HTTPException: 404 if the HCP profile is not found.
+        """
         profiles_repo = HcpProfilesRepository(self.db)
         interactions_repo = HcpInteractionsRepository(self.db)
         if not profiles_repo.get_by_id(hcp_id):
@@ -153,6 +236,19 @@ class HcpSandboxService(BaseService):
         return interactions_repo.get_by_id(row_id)
 
     def list_interactions(self, hcp_id: int, page: int = 1, page_size: int = 20) -> PaginatedResponse:
+        """List interactions for a specific HCP with pagination.
+
+        Args:
+            hcp_id: The HCP's ID.
+            page: Page number for pagination.
+            page_size: Number of items per page.
+
+        Returns:
+            A PaginatedResponse containing interaction items.
+
+        Raises:
+            HTTPException: 404 if the HCP profile is not found.
+        """
         profiles_repo = HcpProfilesRepository(self.db)
         interactions_repo = HcpInteractionsRepository(self.db)
         if not profiles_repo.get_by_id(hcp_id):
@@ -167,6 +263,23 @@ class HcpSandboxService(BaseService):
         )
 
     def simulate(self, hcp_id: int, scenario: str, strategy: str, user_id: int) -> dict:
+        """Run an AI-powered simulation of an HCP interaction.
+
+        Uses the HCP's profile traits, recent interactions, and an AI call to generate
+        a simulated conversation outcome.
+
+        Args:
+            hcp_id: The HCP's ID.
+            scenario: The simulation scenario description.
+            strategy: The engagement strategy to simulate.
+            user_id: The user ID initiating the simulation.
+
+        Returns:
+            A dict representing the created simulation record.
+
+        Raises:
+            HTTPException: 404 if the HCP profile is not found.
+        """
         profiles_repo = HcpProfilesRepository(self.db)
         interactions_repo = HcpInteractionsRepository(self.db)
         simulations_repo = HcpSimulationsRepository(self.db)
@@ -185,6 +298,17 @@ class HcpSandboxService(BaseService):
         page: int = 1,
         page_size: int = 20,
     ) -> PaginatedResponse:
+        """List simulation records with optional filtering and pagination.
+
+        Args:
+            hcp_id: Optional filter by HCP ID.
+            status: Optional filter by simulation status.
+            page: Page number for pagination.
+            page_size: Number of items per page.
+
+        Returns:
+            A PaginatedResponse containing simulation items.
+        """
         repo = HcpSimulationsRepository(self.db)
         total, total_pages, items = repo.list_filtered(hcp_id=hcp_id, status_=status, page=page, page_size=page_size)
         return PaginatedResponse(
@@ -196,6 +320,17 @@ class HcpSandboxService(BaseService):
         )
 
     def get_simulation(self, sim_id: int) -> dict:
+        """Retrieve a single simulation record by ID.
+
+        Args:
+            sim_id: The simulation ID.
+
+        Returns:
+            A dict representing the simulation record.
+
+        Raises:
+            HTTPException: 404 if the simulation is not found.
+        """
         repo = HcpSimulationsRepository(self.db)
         row = repo.get_by_id(sim_id)
         if not row:
@@ -203,6 +338,11 @@ class HcpSandboxService(BaseService):
         return row
 
     def dashboard(self) -> dict:
+        """Retrieve aggregated HCP sandbox statistics for the dashboard.
+
+        Returns:
+            A dict with total_hcp, tier_distribution, total_simulations, and recent_simulations.
+        """
         profiles_repo = HcpProfilesRepository(self.db)
         simulations_repo = HcpSimulationsRepository(self.db)
         total = profiles_repo.count_active()

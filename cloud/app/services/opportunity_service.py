@@ -82,6 +82,26 @@ class OpportunityService(BaseService):
         notes: str,
         user_id: int,
     ) -> dict:
+        """创建一个新的销售机会。
+
+        Args:
+            customer_id: 关联的客户 ID
+            name: 机会名称
+            description: 机会描述
+            stage: 初始阶段 (lead/qualify/proposal/negotiation/won/lost)
+            estimated_value: 预估价值
+            actual_value: 实际价值
+            assigned_to: 可选，指派负责人 ID
+            close_date: 可选，预计关闭日期
+            notes: 备注
+            user_id: 创建者用户 ID
+
+        Returns:
+            新创建的机会记录字典（含客户名称）
+
+        Raises:
+            HTTPException: 客户不存在或无效阶段时抛出
+        """
         cust_repo = CustomersRepository(self.db)
         placeholders = ", ".join(cust_repo.cols)
         customer = self.db.execute(
@@ -130,6 +150,19 @@ class OpportunityService(BaseService):
         page: int = 1,
         page_size: int = 20,
     ) -> dict:
+        """分页查询销售机会列表。
+
+        Args:
+            stage: 可选，按阶段过滤
+            assigned_to: 可选，按负责人 ID 过滤
+            customer_id: 可选，按客户 ID 过滤
+            search: 可选，按名称或描述模糊搜索
+            page: 页码，默认 1
+            page_size: 每页条数，默认 20
+
+        Returns:
+            包含 items、total、page、page_size 的字典
+        """
         opp_repo = OpportunitiesRepository(self.db)
         conditions = ["is_active = 1"]
         params: list = []
@@ -161,6 +194,11 @@ class OpportunityService(BaseService):
         }
 
     def get_pipeline(self) -> dict:
+        """获取销售漏斗数据，按阶段统计机会数量和金额。
+
+        Returns:
+            包含 pipeline 列表的字典，每项含 stage、count、total_value
+        """
         opp_repo = OpportunitiesRepository(self.db)
         rows = self.db.execute(
             f"""SELECT stage, COUNT(*) as count, SUM(estimated_value) as total_value
@@ -179,6 +217,17 @@ class OpportunityService(BaseService):
         return {"pipeline": pipeline}
 
     def get_opportunity(self, opp_id: int) -> dict:
+        """获取单个销售机会详情。
+
+        Args:
+            opp_id: 机会 ID
+
+        Returns:
+            机会记录字典（含客户名称）
+
+        Raises:
+            HTTPException: 机会不存在时返回 404
+        """
         row = self._get_opp_or_404(opp_id)
         return self._row_to_dict(row)
 
@@ -194,6 +243,25 @@ class OpportunityService(BaseService):
         close_date: Optional[str] = None,
         notes: Optional[str] = None,
     ) -> dict:
+        """更新销售机会的指定字段。
+
+        Args:
+            opp_id: 机会 ID
+            name: 可选，新机会名称
+            description: 可选，新描述
+            stage: 可选，新阶段，变更时会重新计算概率并校验阶段流转合法性
+            estimated_value: 可选，新预估价值
+            actual_value: 可选，新实际价值
+            assigned_to: 可选，新负责人 ID
+            close_date: 可选，新预计关闭日期
+            notes: 可选，新备注
+
+        Returns:
+            更新后的机会记录字典
+
+        Raises:
+            HTTPException: 机会不存在、阶段无效或从终态流转时抛出
+        """
         self._get_opp_or_404(opp_id)
 
         opp_repo = OpportunitiesRepository(self.db)
@@ -236,11 +304,32 @@ class OpportunityService(BaseService):
         return self._row_to_dict(row)
 
     def delete_opportunity(self, opp_id: int) -> None:
+        """软删除一个销售机会。
+
+        Args:
+            opp_id: 机会 ID
+
+        Raises:
+            HTTPException: 机会不存在时返回 404
+        """
         self._get_opp_or_404(opp_id)
         opp_repo = OpportunitiesRepository(self.db)
         opp_repo.soft_delete(opp_id)
 
     def transition_stage(self, opp_id: int, stage: str, actual_value: Optional[float] = None) -> dict:
+        """执行机会阶段流转操作。
+
+        Args:
+            opp_id: 机会 ID
+            stage: 目标阶段，必须是有效阶段之一
+            actual_value: 可选，当流转到 won 阶段时的实际成交金额
+
+        Returns:
+            更新后的机会记录字典
+
+        Raises:
+            HTTPException: 机会不存在、阶段无效或从终态流转时抛出
+        """
         row = self._get_opp_or_404(opp_id)
 
         if stage not in VALID_STAGES:

@@ -41,6 +41,17 @@ class ResearchTrajectoryService:
             db.close()
 
     def get_trajectory(self, pi_id: int) -> dict:
+        """Retrieve the full research trajectory for a PI, including observations, predictions, and quotations.
+
+        Args:
+            pi_id: The PI's ID.
+
+        Returns:
+            A dict with pi_info, trajectory_points, recent_predictions, and quotation_trend.
+
+        Raises:
+            HTTPException: 404 if the PI is not found.
+        """
         db = get_research_db()
         try:
             pi_row = db.execute("SELECT * FROM research_pi_profiles WHERE pi_id = ?", (pi_id,)).fetchone()
@@ -63,6 +74,21 @@ class ResearchTrajectoryService:
             db.close()
 
     def predict_trajectory(self, pi_id: int, horizon_days: int = 90) -> dict:
+        """Predict a PI's future research trajectory using AI analysis of time-series features.
+
+        Extracts features from trajectory points and quotations over the past year,
+        calls an LLM for prediction, and stores the result in pi_predictions.
+
+        Args:
+            pi_id: The PI's ID.
+            horizon_days: Number of days to forecast (default 90).
+
+        Returns:
+            A dict containing predicted_areas, confidence, rationale, and area_transition.
+
+        Raises:
+            HTTPException: 404 if the PI is not found.
+        """
         self._init_db_table()
         db = get_research_db()
         try:
@@ -127,6 +153,18 @@ class ResearchTrajectoryService:
         return result
 
     def get_pi_trajectory_score(self, pi_id: int, area: str | None = None) -> dict:
+        """Compute a trajectory score for a PI, optionally scoped to a specific research area.
+
+        Uses the latest prediction, data quality weighting, and trend bonuses to produce
+        a 0-100 score with a human-readable recommendation.
+
+        Args:
+            pi_id: The PI's ID.
+            area: Optional specific research area to score. If None, scores all areas.
+
+        Returns:
+            A dict with pi_id, area, trajectory_score, data_quality, recommendation, and source_prediction_id.
+        """
         QUALITY_MAP = {"high": 1.0, "medium": 0.8, "low": 0.5}
         db = get_research_db()
         try:
@@ -188,6 +226,17 @@ class ResearchTrajectoryService:
             db.close()
 
     def get_trends(self, days: int = 90) -> dict:
+        """Retrieve research area trends including hot, emerging, and declining areas.
+
+        Analyzes dominant areas from trajectories and predicted areas from predictions
+        over the specified number of days.
+
+        Args:
+            days: Lookback window in days (default 90).
+
+        Returns:
+            A dict with hot_areas, emerging_areas, and declining_areas lists.
+        """
         db = get_research_db()
         try:
             since = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")

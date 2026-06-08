@@ -18,6 +18,14 @@ KEYWORD_MAP = [
 
 
 def _calc_importance(text: str) -> float:
+    """基于关键词计算文本重要性。
+
+    Args:
+        text: 输入文本
+
+    Returns:
+        重要性分数（0-1）
+    """
     lower = text.lower()
     for keywords, lo, hi in KEYWORD_MAP:
         if any(kw in lower or kw in text for kw in keywords):
@@ -28,18 +36,18 @@ def _calc_importance(text: str) -> float:
 
 
 class BrainOrchestratorService(BaseService):
-    """BrainOrchestrator 服务类。"""
+    """脑编排服务，提供感知输入摄取、多级记忆路由与编排推理功能。"""
 
     def ingest_sensory(self, input_type: str, raw_content: str, source: str) -> dict:
-        """ingest_sensory 操作。
+        """摄取感知输入并根据重要性路由到不同记忆层。
 
         Args:
-            input_type: 描述
-            raw_content: 描述
-            source: 描述
+            input_type: 输入类型
+            raw_content: 原始内容
+            source: 来源
 
         Returns:
-            描述
+            含 sensory_id、importance 和 routed_to 的摄取结果
         """
         importance = _calc_importance(raw_content)
         n = _now()
@@ -88,13 +96,13 @@ class BrainOrchestratorService(BaseService):
         return {"sensory_id": sid, "importance": importance, "processed": 0, "routed_to": routed_to}
 
     def get_sensory_buffer(self, limit: int = 50) -> list[dict]:
-        """get_sensory_buffer 操作。
+        """获取未过期的感知缓冲区记录。
 
         Args:
-            limit: 描述
+            limit: 最大返回数
 
         Returns:
-            描述
+            感知记录列表（按重要性降序）
         """
         n = _now()
         rows = self.db.execute(
@@ -104,13 +112,13 @@ class BrainOrchestratorService(BaseService):
         return [dict(r) for r in rows]
 
     def list_procedural(self, trigger_event: str | None = None) -> list[dict]:
-        """list_procedural 操作。
+        """列出程序性记忆。
 
         Args:
-            trigger_event: 描述
+            trigger_event: 按触发条件筛选
 
         Returns:
-            描述
+            程序性记忆列表（按调用次数降序）
         """
         if trigger_event:
             rows = self.db.execute(
@@ -122,17 +130,17 @@ class BrainOrchestratorService(BaseService):
         return [dict(r) for r in rows]
 
     def create_procedural(self, procedure_key: str, name: str, description: str, steps: str, trigger_conditions: str) -> dict:
-        """create_procedural 操作。
+        """创建程序性记忆条目。
 
         Args:
-            procedure_key: 描述
-            name: 描述
+            procedure_key: 唯一键
+            name: 名称
             description: 描述
-            steps: 描述
-            trigger_conditions: 描述
+            steps: 步骤（JSON 字符串）
+            trigger_conditions: 触发条件
 
         Returns:
-            描述
+            创建的程序性记忆基本信息
         """
         n = _now()
         self.db.execute(
@@ -143,14 +151,14 @@ class BrainOrchestratorService(BaseService):
         return {"procedure_key": procedure_key, "name": name, "created_at": n}
 
     def invoke_procedural(self, procedure_key: str, context: dict) -> dict:
-        """invoke_procedural 操作。
+        """调用程序性记忆并增加调用计数。
 
         Args:
-            procedure_key: 描述
-            context: 描述
+            procedure_key: 唯一键
+            context: 执行上下文
 
         Returns:
-            描述
+            含步骤和调用计数的执行结果
         """
         row = self.db.execute("SELECT * FROM procedural_memory WHERE procedure_key=?", (procedure_key,)).fetchone()
         if not row:
@@ -176,15 +184,15 @@ class BrainOrchestratorService(BaseService):
         }
 
     def orchestrate(self, input_text: str, input_type: str, source: str) -> dict:
-        """orchestrate 操作。
+        """执行完整的记忆编排：感知→工作→情景→语义→程序→情绪。
 
         Args:
-            input_text: 描述
-            input_type: 描述
-            source: 描述
+            input_text: 输入文本
+            input_type: 输入类型
+            source: 来源
 
         Returns:
-            描述
+            各记忆层查询结果的综合字典
         """
         n = _now()
         sensory = self.ingest_sensory(input_type, input_text, source)

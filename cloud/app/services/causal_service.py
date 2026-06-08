@@ -89,6 +89,16 @@ class CausalService(BaseService):
     """因果服务，提供因果图谱管理、反事实推断与归因分析功能。"""
 
     def build_graph(self, decision_id: str, include_metrics: bool, user_id: int) -> dict:
+        """构建一个因果图谱并持久化。
+
+        Args:
+            decision_id: 决策 ID，用于关联图与决策
+            include_metrics: 是否包含额外指标（当前模板生成不使用）
+            user_id: 创建者用户 ID
+
+        Returns:
+            新创建的因果图谱记录字典
+        """
         cg_repo = CausalGraphsRepository(self.db)
         graph_id = _gen_graph_id()
         graph_data = _generate_template_graph(decision_id)
@@ -108,6 +118,17 @@ class CausalService(BaseService):
         return _causal_graph_to_dict(row)
 
     def get_graph(self, graph_id: str) -> dict:
+        """获取指定因果图谱详情。
+
+        Args:
+            graph_id: 图谱 ID
+
+        Returns:
+            因果图谱记录字典
+
+        Raises:
+            HTTPException: 图谱不存在时返回 404
+        """
         cg_repo = CausalGraphsRepository(self.db)
         row = cg_repo.db.execute("SELECT * FROM causal_graphs WHERE graph_id=?", (graph_id,)).fetchone()
         if not row:
@@ -115,6 +136,16 @@ class CausalService(BaseService):
         return _causal_graph_to_dict(row)
 
     def simulate_counterfactual(self, strategy_id: str, scenarios: list[dict], user_id: int) -> dict:
+        """对给定策略执行反事实模拟并持久化结果。
+
+        Args:
+            strategy_id: 策略 ID
+            scenarios: 场景列表，每项含 variable、from、to 字段
+            user_id: 创建者用户 ID
+
+        Returns:
+            包含 simulations 列表和 total 计数的字典
+        """
         cs_repo = CounterfactualScenariosRepository(self.db)
         results: list[dict] = []
         for sc in scenarios:
@@ -152,6 +183,16 @@ class CausalService(BaseService):
         return {"simulations": results, "total": len(results)}
 
     def list_counterfactuals(self, strategy_id: Optional[str] = None, page: int = 1, page_size: int = 20) -> dict:
+        """分页查询反事实模拟场景列表。
+
+        Args:
+            strategy_id: 可选，按策略 ID 过滤
+            page: 页码，默认 1
+            page_size: 每页条数，默认 20
+
+        Returns:
+            包含 items、total、page、page_size 的字典
+        """
         cs_repo = CounterfactualScenariosRepository(self.db)
         conditions = []
         params: list = []
@@ -173,6 +214,16 @@ class CausalService(BaseService):
         }
 
     def causal_infer(self, features: dict, target: str, method: str = "linear") -> dict:
+        """对输入特征执行因果推断，计算各特征的归一化权重。
+
+        Args:
+            features: 特征名到权重的映射
+            target: 目标变量名
+            method: 推断方法，默认 "linear"
+
+        Returns:
+            包含 method、target、feature_weights 的字典
+        """
         total_weight = sum(abs(v) for v in features.values()) if features else 1.0
         weights = {k: round(v / total_weight if total_weight else 0, 4) for k, v in features.items()}
         return {
@@ -182,6 +233,19 @@ class CausalService(BaseService):
         }
 
     def hcp_prescription_attribution(self, hcp_entity_id: str, factors: list[str], date_range: dict) -> dict:
+        """对 HCP 实体进行处方归因分析，关联情景记忆活动。
+
+        Args:
+            hcp_entity_id: HCP 实体 ID
+            factors: 活动事件类型列表，用于过滤相关活动
+            date_range: 日期范围字典，含 start 和 end 键
+
+        Returns:
+            包含 HCP 信息、关联活动列表及聚合指标的归因字典
+
+        Raises:
+            HTTPException: HCP 实体不存在时返回 404
+        """
         kg_repo = KgEntitiesRepository(self.db)
         em_repo = EpisodicMemoryRepository(self.db)
         hcp_row = kg_repo.db.execute(

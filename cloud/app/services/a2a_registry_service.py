@@ -13,18 +13,18 @@ logger = logging.getLogger(__name__)
 
 
 class A2aRegistryService(BaseService):
-    """A2ARegistry 服务类。"""
+    """A2A 注册服务，提供 Agent 注册/发现、心跳维护、任务路由与事件审计。"""
 
     def register_agent(self, key, name, type_, description, capabilities, endpoint_url):
-        """register_agent 操作。
+        """注册或更新 Agent 到注册中心。
 
         Args:
-            key: 描述
-            name: 描述
-            type_: 描述
+            key: Agent 唯一键
+            name: 名称
+            type_: 类型
             description: 描述
-            capabilities: 描述
-            endpoint_url: 描述
+            capabilities: 能力列表
+            endpoint_url: 端点 URL
         """
         caps_str = json.dumps(capabilities, ensure_ascii=False)
         existing = self.db.execute("SELECT id FROM agent_registry WHERE agent_key=?", (key,)).fetchone()
@@ -45,10 +45,10 @@ class A2aRegistryService(BaseService):
         return self.get_agent(key)
 
     def get_agent(self, agent_key):
-        """get_agent 操作。
+        """获取 Agent 信息。
 
         Args:
-            agent_key: 描述
+            agent_key: Agent 键
         """
         row = self.db.execute("SELECT * FROM agent_registry WHERE agent_key=?", (agent_key,)).fetchone()
         if not row:
@@ -56,12 +56,15 @@ class A2aRegistryService(BaseService):
         return self._row_to_dict(row)
 
     def list_agents(self, agent_type=None, status=None, capability=None):
-        """list_agents 操作。
+        """按条件搜索 Agent 列表。
 
         Args:
-            agent_type: 描述
-            status: 描述
-            capability: 描述
+            agent_type: 按类型筛选
+            status: 按状态筛选
+            capability: 按能力关键词筛选
+
+        Returns:
+            Agent 列表（在线优先）
         """
         sql = "SELECT * FROM agent_registry WHERE 1=1"
         params = []
@@ -79,10 +82,10 @@ class A2aRegistryService(BaseService):
         return [self._row_to_dict(r) for r in rows]
 
     def heartbeat(self, agent_key):
-        """heartbeat 操作。
+        """更新 Agent 心跳时间并置为在线。
 
         Args:
-            agent_key: 描述
+            agent_key: Agent 键
         """
         self.db.execute(
             "UPDATE agent_registry SET last_heartbeat=CURRENT_TIMESTAMP, status='online' WHERE agent_key=?",
@@ -96,11 +99,11 @@ class A2aRegistryService(BaseService):
         return self.get_agent(agent_key)
 
     def update_status(self, agent_key, status_val):
-        """update_status 操作。
+        """更新 Agent 状态（online/offline/paused）。
 
         Args:
-            agent_key: 描述
-            status_val: 描述
+            agent_key: Agent 键
+            status_val: 新状态
         """
         if status_val not in ("online", "offline", "paused"):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="invalid status")
@@ -117,14 +120,14 @@ class A2aRegistryService(BaseService):
         return self.get_agent(agent_key)
 
     def submit_task(self, source_key, target_key, task_type, input_data, priority):
-        """submit_task 操作。
+        """提交 A2A 任务。
 
         Args:
-            source_key: 描述
-            target_key: 描述
-            task_type: 描述
-            input_data: 描述
-            priority: 描述
+            source_key: 源 Agent 键
+            target_key: 目标 Agent 键
+            task_type: 任务类型
+            input_data: 输入数据
+            priority: 优先级
         """
         task_id = self._task_id()
         input_str = json.dumps(input_data, ensure_ascii=False)
@@ -137,10 +140,10 @@ class A2aRegistryService(BaseService):
         return self.get_task(task_id)
 
     def get_task(self, task_id):
-        """获取任务。
+        """获取任务详情。
 
         Args:
-            task_id: 描述
+            task_id: 任务 ID
         """
         row = self.db.execute("SELECT * FROM agent_tasks WHERE task_id=?", (task_id,)).fetchone()
         if not row:
@@ -148,12 +151,12 @@ class A2aRegistryService(BaseService):
         return self._row_to_dict(row)
 
     def list_tasks(self, status=None, agent_key=None, limit=50):
-        """获取任务列表。
+        """按条件查询任务列表。
 
         Args:
-            status: 描述
-            agent_key: 描述
-            limit: 描述
+            status: 按状态筛选
+            agent_key: 按 Agent 键筛选（源或目标）
+            limit: 最大返回数
         """
         sql = "SELECT * FROM agent_tasks WHERE 1=1"
         params = []
@@ -169,12 +172,12 @@ class A2aRegistryService(BaseService):
         return [self._row_to_dict(r) for r in rows]
 
     def list_events(self, event_type=None, agent_key=None, limit=50):
-        """list_events 操作。
+        """查询 Agent 网络事件。
 
         Args:
-            event_type: 描述
-            agent_key: 描述
-            limit: 描述
+            event_type: 按事件类型筛选
+            agent_key: 按 Agent 键筛选
+            limit: 最大返回数
         """
         sql = "SELECT * FROM agent_network_events WHERE 1=1"
         params = []

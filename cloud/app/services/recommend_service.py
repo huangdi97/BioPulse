@@ -31,6 +31,19 @@ class RecommendService(BaseService):
         preferred_content_types: list,
         custom_tags: list,
     ) -> dict:
+        """Create or upsert a user recommendation profile.
+
+        Args:
+            user_id: The user's ID.
+            persona_type: The user's persona type.
+            specialization: The user's specialization.
+            experience_level: The user's experience level.
+            preferred_content_types: A list of preferred content types.
+            custom_tags: A list of custom tags for the user profile.
+
+        Returns:
+            A dict representing the upserted profile row.
+        """
         pct = json.dumps(preferred_content_types, ensure_ascii=False)
         tags = json.dumps(custom_tags, ensure_ascii=False)
         profiles_repo = UserProfilesRepository(self.db)
@@ -38,6 +51,17 @@ class RecommendService(BaseService):
         return row
 
     def get_profile(self, user_id: int) -> dict:
+        """Retrieve a user's recommendation profile.
+
+        Args:
+            user_id: The user's ID.
+
+        Returns:
+            A dict representing the user profile.
+
+        Raises:
+            HTTPException: 404 if the profile is not found.
+        """
         profiles_repo = UserProfilesRepository(self.db)
         row = profiles_repo.get_by_user_id(user_id)
         if not row:
@@ -53,6 +77,22 @@ class RecommendService(BaseService):
         preferred_content_types: Optional[list] = None,
         custom_tags: Optional[list] = None,
     ) -> dict:
+        """Update fields of an existing user recommendation profile.
+
+        Args:
+            user_id: The user's ID.
+            persona_type: Optional new persona type.
+            specialization: Optional new specialization.
+            experience_level: Optional new experience level.
+            preferred_content_types: Optional new list of preferred content types.
+            custom_tags: Optional new list of custom tags.
+
+        Returns:
+            A dict representing the updated profile.
+
+        Raises:
+            HTTPException: 404 if the profile is not found.
+        """
         profiles_repo = UserProfilesRepository(self.db)
         existing = profiles_repo.get_by_user_id(user_id)
         if not existing:
@@ -89,6 +129,20 @@ class RecommendService(BaseService):
         session_id: str,
         duration_seconds: int,
     ) -> dict:
+        """Log a user behavior event for the recommendation engine.
+
+        Args:
+            user_id: The user's ID.
+            action_type: The type of action (e.g. "view", "click", "download").
+            target_type: The type of target (e.g. "article", "protocol").
+            target_id: The target's unique identifier.
+            metadata: Additional metadata about the behavior event.
+            session_id: The session identifier.
+            duration_seconds: Duration of the interaction in seconds.
+
+        Returns:
+            A dict representing the created behavior record.
+        """
         behaviors_repo = UserBehaviorsRepository(self.db)
         meta = json.dumps(metadata, ensure_ascii=False)
         row_id = behaviors_repo.create(
@@ -113,6 +167,18 @@ class RecommendService(BaseService):
         limit: int = 50,
         offset: int = 0,
     ) -> PaginatedResponse:
+        """Retrieve paginated user behavior history with optional filters.
+
+        Args:
+            user_id: Optional filter by user ID.
+            action_type: Optional filter by action type.
+            target_type: Optional filter by target type.
+            limit: Maximum number of items to return.
+            offset: Number of items to skip.
+
+        Returns:
+            A PaginatedResponse containing behavior items.
+        """
         behaviors_repo = UserBehaviorsRepository(self.db)
         total, _, items = behaviors_repo.list_filtered(
             user_id=user_id,
@@ -132,6 +198,19 @@ class RecommendService(BaseService):
         )
 
     def generate_recommendations(self, user_id: int, rec_types: list, limit: int) -> list:
+        """Generate personalized recommendations for a user.
+
+        Uses hot-action strategy if the user has >= 3 behaviors, otherwise falls back
+        to knowledge-graph popularity.
+
+        Args:
+            user_id: The user's ID.
+            rec_types: A list of recommendation types to cycle through.
+            limit: Maximum number of recommendations to generate.
+
+        Returns:
+            A list of dicts representing the generated recommendation records.
+        """
         behaviors_repo = UserBehaviorsRepository(self.db)
         recs_repo = RecommendationsRepository(self.db)
         kg_repo = KgEntitiesRepository(self.db)
@@ -182,6 +261,19 @@ class RecommendService(BaseService):
         limit: int = 50,
         offset: int = 0,
     ) -> PaginatedResponse:
+        """List recommendations with optional filtering and pagination.
+
+        Args:
+            user_id: Optional filter by user ID.
+            rec_type: Optional filter by recommendation type.
+            clicked: Optional filter by click status (1 for clicked, 0 otherwise).
+            dismissed: Optional filter by dismiss status (1 for dismissed, 0 otherwise).
+            limit: Maximum number of items to return.
+            offset: Number of items to skip.
+
+        Returns:
+            A PaginatedResponse containing recommendation items.
+        """
         recs_repo = RecommendationsRepository(self.db)
         total, _, items = recs_repo.list_filtered(
             user_id=user_id,
@@ -202,6 +294,14 @@ class RecommendService(BaseService):
         )
 
     def mark_clicked(self, rec_id: int) -> None:
+        """Mark a recommendation as clicked.
+
+        Args:
+            rec_id: The ID of the recommendation.
+
+        Raises:
+            HTTPException: 404 if the recommendation is not found.
+        """
         recs_repo = RecommendationsRepository(self.db)
         row = recs_repo.get_by_id(rec_id)
         if not row:
@@ -209,6 +309,14 @@ class RecommendService(BaseService):
         recs_repo.mark_clicked(rec_id)
 
     def mark_dismissed(self, rec_id: int) -> None:
+        """Mark a recommendation as dismissed.
+
+        Args:
+            rec_id: The ID of the recommendation.
+
+        Raises:
+            HTTPException: 404 if the recommendation is not found.
+        """
         recs_repo = RecommendationsRepository(self.db)
         row = recs_repo.get_by_id(rec_id)
         if not row:
@@ -216,6 +324,12 @@ class RecommendService(BaseService):
         recs_repo.mark_dismissed(rec_id)
 
     def dashboard(self) -> dict:
+        """Retrieve aggregated recommendation statistics for the dashboard.
+
+        Returns:
+            A dict with total_users, total_profiles, total_behaviors, total_recommendations,
+            total_clicked, total_dismissed, click_rate, dismiss_rate, top_actions, and rec_by_type.
+        """
         users_repo = UsersRepository(self.db)
         profiles_repo = UserProfilesRepository(self.db)
         behaviors_repo = UserBehaviorsRepository(self.db)

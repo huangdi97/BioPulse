@@ -72,6 +72,23 @@ class WorldTreeService(BaseService):
         metadata: dict,
         uid: int,
     ) -> dict:
+        """创建世界树节点。
+
+        Args:
+            name: 节点名称
+            description: 节点描述
+            parent_id: 父节点 ID，None 表示根节点
+            node_type: 节点类型
+            sort_order: 排序序号
+            metadata: 节点元数据字典
+            uid: 创建者用户 ID
+
+        Returns:
+            新创建的节点记录字典
+
+        Raises:
+            HTTPException: 父节点不存在时返回 404
+        """
         now = self._now()
         nodes_repo, _, _, _ = self._get_repos()
 
@@ -101,6 +118,15 @@ class WorldTreeService(BaseService):
         return self._build(nodes_repo.get_by_id(node_id))
 
     def list_nodes(self, node_type: Optional[str] = None, parent_id: Optional[int] = None) -> List[dict]:
+        """查询节点列表。
+
+        Args:
+            node_type: 可选，按节点类型过滤
+            parent_id: 可选，按父节点 ID 过滤；均未指定时返回根节点
+
+        Returns:
+            节点记录列表，按排序号和名称排序
+        """
         nodes_repo, _, _, _ = self._get_repos()
         conditions, params = [], []
         if node_type:
@@ -119,6 +145,17 @@ class WorldTreeService(BaseService):
         return [self._build(r) for r in rows]
 
     def get_node(self, node_id: int) -> dict:
+        """获取单个节点详情，含子节点数和关联记忆数。
+
+        Args:
+            node_id: 节点 ID
+
+        Returns:
+            节点记录字典，含 child_count 和 memory_count 字段
+
+        Raises:
+            HTTPException: 节点不存在时返回 404
+        """
         nodes_repo, _, nml_repo, _ = self._get_repos()
         n = self._node_or_404(nodes_repo, node_id)
         d = self._build(n)
@@ -135,6 +172,22 @@ class WorldTreeService(BaseService):
         sort_order: Optional[int] = None,
         metadata: Optional[dict] = None,
     ) -> dict:
+        """更新节点属性，并刷新自身及后代路径。
+
+        Args:
+            node_id: 节点 ID
+            name: 可选，新名称（会触发路径刷新）
+            description: 可选，新描述
+            node_type: 可选，新节点类型
+            sort_order: 可选，新排序序号
+            metadata: 可选，新元数据字典
+
+        Returns:
+            更新后的节点记录字典
+
+        Raises:
+            HTTPException: 节点不存在时返回 404
+        """
         nodes_repo, _, _, _ = self._get_repos()
         n = self._node_or_404(nodes_repo, node_id)
         old_pid = n["parent_id"]
@@ -164,6 +217,17 @@ class WorldTreeService(BaseService):
         return self._build(nodes_repo.get_by_id(node_id))
 
     def delete_node(self, node_id: int) -> str:
+        """删除节点及其所有后代节点。
+
+        Args:
+            node_id: 根节点 ID
+
+        Returns:
+            包含删除结果的描述字符串
+
+        Raises:
+            HTTPException: 节点不存在时返回 404
+        """
         nodes_repo, snapshots_repo, nml_repo, _ = self._get_repos()
         self._node_or_404(nodes_repo, node_id)
         ids = nodes_repo.descendant_ids(node_id)
@@ -174,12 +238,34 @@ class WorldTreeService(BaseService):
         return f"Deleted node {node_id} and {len(ids) - 1} descendants"
 
     def get_children(self, node_id: int) -> List[dict]:
+        """获取节点的直接子节点列表。
+
+        Args:
+            node_id: 节点 ID
+
+        Returns:
+            子节点记录列表，按排序号和名称排序
+
+        Raises:
+            HTTPException: 节点不存在时返回 404
+        """
         nodes_repo, _, _, _ = self._get_repos()
         self._node_or_404(nodes_repo, node_id)
         rows = nodes_repo.list_all(conditions=["parent_id=?"], params=[node_id], order_by="sort_order, name")
         return [self._build(r) for r in rows]
 
     def get_ancestors(self, node_id: int) -> List[dict]:
+        """获取节点从根到父节点的所有祖先节点。
+
+        Args:
+            node_id: 节点 ID
+
+        Returns:
+            祖先节点记录列表，从直接父节点到根节点
+
+        Raises:
+            HTTPException: 节点不存在时返回 404
+        """
         nodes_repo, _, _, _ = self._get_repos()
         ancestors = []
         cur = self._node_or_404(nodes_repo, node_id)
@@ -192,6 +278,15 @@ class WorldTreeService(BaseService):
         return ancestors
 
     def link_memory(self, node_id: int, memory_id: int) -> None:
+        """将记忆条目关联到节点。
+
+        Args:
+            node_id: 节点 ID
+            memory_id: 记忆条目 ID
+
+        Raises:
+            HTTPException: 节点或记忆条目不存在时返回 404
+        """
         nodes_repo, _, nml_repo, mem_repo = self._get_repos()
         self._node_or_404(nodes_repo, node_id)
         if not mem_repo.find_active_by_id(memory_id):
@@ -205,6 +300,15 @@ class WorldTreeService(BaseService):
         )
 
     def unlink_memory(self, node_id: int, memory_id: int) -> None:
+        """取消节点与记忆条目的关联。
+
+        Args:
+            node_id: 节点 ID
+            memory_id: 记忆条目 ID
+
+        Raises:
+            HTTPException: 节点不存在时返回 404
+        """
         nodes_repo, _, _, _ = self._get_repos()
         self._node_or_404(nodes_repo, node_id)
         self.db.execute(
@@ -214,6 +318,17 @@ class WorldTreeService(BaseService):
         self.db.commit()
 
     def get_node_memories(self, node_id: int) -> List[dict]:
+        """获取节点关联的所有记忆条目。
+
+        Args:
+            node_id: 节点 ID
+
+        Returns:
+            记忆条目记录列表，按关联评分和重要性排序
+
+        Raises:
+            HTTPException: 节点不存在时返回 404
+        """
         nodes_repo, _, _, _ = self._get_repos()
         self._node_or_404(nodes_repo, node_id)
         rows = self.db.execute(
@@ -231,6 +346,11 @@ class WorldTreeService(BaseService):
         return results
 
     def get_full_tree(self) -> List[dict]:
+        """获取完整的世界树结构，以嵌套子节点形式返回。
+
+        Returns:
+            根节点列表，每个节点含嵌套 children 列表和 memory_count
+        """
         nodes_repo, _, nml_repo, _ = self._get_repos()
         rows = nodes_repo.list_active_sorted()
         nodes = [self._build(r) for r in rows]

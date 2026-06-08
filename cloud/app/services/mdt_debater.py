@@ -46,13 +46,14 @@ class MdtDebater(BaseService):
             return default if default is not None else raw
 
     def create_session(self, body, uid: int) -> dict:
-        """创建会话。
+        """创建辩论会话。
 
         Args:
-            uid: 描述
+            body: 请求体（含 title、question、context、participants）
+            uid: 创建者 ID
 
         Returns:
-            描述
+            会话基本信息
         """
         n = self._now()
         sessions_repo = MdtSessionsRepository(self.db)
@@ -89,15 +90,15 @@ class MdtDebater(BaseService):
         return success({"id": sid, "title": body.title, "participant_count": len(parts)})
 
     def list_sessions(self, status_filter, page: int, page_size: int) -> dict:
-        """获取会话列表。
+        """分页查询辩论会话列表。
 
         Args:
-            status_filter: 描述
-            page: 描述
-            page_size: 描述
+            status_filter: 按状态筛选
+            page: 页码
+            page_size: 每页条数
 
         Returns:
-            描述
+            分页会话列表
         """
         sessions_repo = MdtSessionsRepository(self.db)
         conditions, params = [], []
@@ -114,13 +115,13 @@ class MdtDebater(BaseService):
         return success({"items": items, "total": total, "page": page, "page_size": page_size, "total_pages": total_pages})
 
     def get_session(self, session_id: int) -> dict:
-        """获取会话。
+        """获取辩论会话详情（含参与者和观点）。
 
         Args:
-            session_id: 描述
+            session_id: 会话 ID
 
         Returns:
-            描述
+            含 session、participants 和 opinions 的详情
         """
         sessions_repo = MdtSessionsRepository(self.db)
         participants_repo = MdtParticipantsRepository(self.db)
@@ -133,15 +134,15 @@ class MdtDebater(BaseService):
         return success({"session": s, "participants": parts, "opinions": opinions})
 
     def debate(self, session_id: int, max_rounds: int, auth_header: str) -> dict:
-        """debate 操作。
+        """执行多轮 AI 辩论，各参与者依次发言。
 
         Args:
-            session_id: 描述
-            max_rounds: 描述
-            auth_header: 描述
+            session_id: 会话 ID
+            max_rounds: 最大轮数
+            auth_header: Authorization 头
 
         Returns:
-            描述
+            含 round 和 results 的辩论结果
         """
         sessions_repo = MdtSessionsRepository(self.db)
         participants_repo = MdtParticipantsRepository(self.db)
@@ -214,14 +215,14 @@ class MdtDebater(BaseService):
         return success({"round": current_round, "results": results})
 
     def get_opinions(self, session_id: int, round_number: int | None = None) -> dict:
-        """get_opinions 操作。
+        """获取辩论会话的观点列表。
 
         Args:
-            session_id: 描述
-            round_number: 描述
+            session_id: 会话 ID
+            round_number: 按轮次筛选
 
         Returns:
-            描述
+            观点列表
         """
         sessions_repo = MdtSessionsRepository(self.db)
         opinions_repo = MdtOpinionsRepository(self.db)
@@ -234,13 +235,13 @@ class MdtDebater(BaseService):
         return success(rows)
 
     def timeline(self, session_id: int) -> dict:
-        """timeline 操作。
+        """获取辩论时间线（按轮次分组）。
 
         Args:
-            session_id: 描述
+            session_id: 会话 ID
 
         Returns:
-            描述
+            含 rounds 和 consensus 的时间线数据
         """
         sessions_repo = MdtSessionsRepository(self.db)
         opinions_repo = MdtOpinionsRepository(self.db)

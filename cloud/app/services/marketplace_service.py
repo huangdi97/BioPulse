@@ -26,6 +26,19 @@ class MarketplaceService(BaseService):
         period_start: str = "",
         period_end: str = "",
     ) -> dict:
+        """上报效果度量数据点。
+
+        Args:
+            agent_role: Agent 角色
+            metric_type: 指标类型
+            metric_value: 指标值
+            metric_unit: 单位
+            period_start: 周期起始
+            period_end: 周期结束
+
+        Returns:
+            含 metric_id 的确认信息
+        """
         metrics_repo = EffectMetricsRepository(self.db)
         metric_id = f"em:{uuid4().hex[:12]}"
         now = datetime.utcnow().isoformat()
@@ -44,6 +57,14 @@ class MarketplaceService(BaseService):
         return {"metric_id": metric_id}
 
     def metrics_dashboard(self, agent_role: Optional[str] = None) -> list:
+        """效果度量仪表盘汇总。
+
+        Args:
+            agent_role: 按 Agent 角色筛选
+
+        Returns:
+            按 agent_role+metric_type 分组的汇总数据
+        """
         metrics_repo = EffectMetricsRepository(self.db)
         rows = metrics_repo.dashboard(agent_role=agent_role)
         result = []
@@ -89,6 +110,16 @@ class MarketplaceService(BaseService):
         return round(below / len(all_values) * 100, 2)
 
     def generate_benchmark(self, report_name: str, report_type: str = "", period: str = "") -> dict:
+        """生成基准测试报告。
+
+        Args:
+            report_name: 报告名称
+            report_type: 报告类型（efficiency/quality/cost/general）
+            period: 时间周期（start/end）
+
+        Returns:
+            含 industry_comparison 和 agent_rankings 的基准报告
+        """
         bench_repo = BenchmarkReportsRepository(self.db)
         metrics_repo = EffectMetricsRepository(self.db)
 
@@ -170,6 +201,14 @@ class MarketplaceService(BaseService):
         }
 
     def list_benchmarks(self, report_type: Optional[str] = None) -> list:
+        """列出基准测试报告。
+
+        Args:
+            report_type: 按报告类型筛选
+
+        Returns:
+            基准报告列表
+        """
         bench_repo = BenchmarkReportsRepository(self.db)
         rows = bench_repo.list_by_report_type(report_type=report_type)
         result = []
@@ -197,6 +236,19 @@ class MarketplaceService(BaseService):
         price_model: str,
         publisher_sub: str,
     ) -> dict:
+        """发布市场模板。
+
+        Args:
+            item_name: 模板名称
+            description: 描述
+            agent_config: Agent 配置字典
+            category: 类别
+            price_model: 定价模式
+            publisher_sub: 发布者标识
+
+        Returns:
+            含 item_id 的确认信息
+        """
         marketplace_repo = AgentMarketplaceRepository(self.db)
         item_id = f"mp:{uuid4().hex[:12]}"
         now = datetime.utcnow().isoformat()
@@ -224,6 +276,16 @@ class MarketplaceService(BaseService):
         price_model: Optional[str] = None,
         enabled: Optional[int] = None,
     ) -> list:
+        """发现市场模板。
+
+        Args:
+            category: 按类别筛选
+            price_model: 按定价模式筛选
+            enabled: 按启用状态筛选
+
+        Returns:
+            模板列表
+        """
         marketplace_repo = AgentMarketplaceRepository(self.db)
         rows = marketplace_repo.list_filtered(category=category, price_model=price_model, enabled=enabled)
         result = []

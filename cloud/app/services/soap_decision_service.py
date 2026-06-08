@@ -27,7 +27,21 @@ def _row(row, json_keys=None):
 
 
 class SoapDecisionService(BaseService):
+    """SOAP决策服务，提供模板管理、决策 CRUD、意见征询与最终裁定功能。"""
+
     def create_template(self, name: str, category: str, description: str, structure: dict, created_by) -> dict:
+        """创建 SOAP 决策模板。
+
+        Args:
+            name: 模板名称
+            category: 分类
+            description: 描述
+            structure: 结构化模板定义
+            created_by: 创建者 ID
+
+        Returns:
+            创建的模板记录
+        """
         templates_repo = SoapTemplatesRepository(self.db)
         tmpl_id = templates_repo.create(
             {
@@ -45,6 +59,14 @@ class SoapDecisionService(BaseService):
         return _row(row, ["structure"])
 
     def list_templates(self, category: Optional[str] = None) -> list:
+        """列出有效模板。
+
+        Args:
+            category: 按分类筛选
+
+        Returns:
+            模板列表
+        """
         templates_repo = SoapTemplatesRepository(self.db)
         rows = templates_repo.list_active(category=category)
         return [_row(r, ["structure"]) for r in rows]
@@ -61,6 +83,22 @@ class SoapDecisionService(BaseService):
         tags: list,
         created_by,
     ) -> dict:
+        """创建 SOAP 决策记录（S-O-A-P 四要素）。
+
+        Args:
+            title: 决策标题
+            template_id: 关联模板 ID
+            subjective: 主观信息（S）
+            objective: 客观信息（O）
+            assessment: 评估（A）
+            plan: 计划（P）
+            priority: 优先级
+            tags: 标签列表
+            created_by: 创建者 ID
+
+        Returns:
+            创建的决策记录
+        """
         templates_repo = SoapTemplatesRepository(self.db)
         decisions_repo = SoapDecisionsRepository(self.db)
         if template_id:
@@ -94,6 +132,18 @@ class SoapDecisionService(BaseService):
         page: int = 1,
         page_size: int = 20,
     ) -> dict:
+        """分页查询决策列表。
+
+        Args:
+            status: 按状态筛选
+            priority: 按优先级筛选
+            tag: 按标签筛选
+            page: 页码
+            page_size: 每页条数
+
+        Returns:
+            分页决策列表
+        """
         decisions_repo = SoapDecisionsRepository(self.db)
         total, tp, items = decisions_repo.list_active_filtered(status=status, priority=priority, tag=tag, page=page, page_size=page_size)
         return PaginatedResponse(
@@ -105,6 +155,14 @@ class SoapDecisionService(BaseService):
         )
 
     def get_decision(self, decision_id: int) -> dict:
+        """获取决策详情。
+
+        Args:
+            decision_id: 决策 ID
+
+        Returns:
+            决策记录
+        """
         decisions_repo = SoapDecisionsRepository(self.db)
         row = decisions_repo.get_by_id(decision_id)
         if not row or not row.get("is_active"):
@@ -121,6 +179,20 @@ class SoapDecisionService(BaseService):
         priority: Optional[str] = None,
         tags: Optional[list] = None,
     ) -> dict:
+        """更新决策字段。
+
+        Args:
+            decision_id: 决策 ID
+            subjective: 新主观信息
+            objective: 新客观信息
+            assessment: 新评估
+            plan: 新计划
+            priority: 新优先级
+            tags: 新标签
+
+        Returns:
+            更新后的决策记录
+        """
         decisions_repo = SoapDecisionsRepository(self.db)
         row = decisions_repo.get_by_id(decision_id)
         if not row or not row.get("is_active"):
@@ -143,6 +215,14 @@ class SoapDecisionService(BaseService):
         return _row(row, ["tags"])
 
     def submit_decision(self, decision_id: int) -> dict:
+        """提交决策进入意见收集状态。
+
+        Args:
+            decision_id: 决策 ID
+
+        Returns:
+            更新后的决策记录
+        """
         decisions_repo = SoapDecisionsRepository(self.db)
         row = decisions_repo.get_by_id(decision_id)
         if not row or not row.get("is_active"):
@@ -169,6 +249,21 @@ class SoapDecisionService(BaseService):
         user_id,
         role: str,
     ) -> dict:
+        """为决策添加异步 MDT 意见。
+
+        Args:
+            decision_id: 决策 ID
+            opinion: 意见内容
+            stance: 立场（support/oppose/neutral）
+            supporting_data: 支撑数据
+            confidence: 置信度
+            attachments: 附件列表
+            user_id: 提交者 ID
+            role: 提交者角色
+
+        Returns:
+            创建的意见记录
+        """
         decisions_repo = SoapDecisionsRepository(self.db)
         opinions_repo = AsyncMdtOpinionsRepository(self.db)
         dec = decisions_repo.get_by_id(decision_id)
@@ -193,6 +288,14 @@ class SoapDecisionService(BaseService):
         return _row(row, ["attachments"])
 
     def list_opinions(self, decision_id: int) -> list:
+        """列出决策的所有异步意见。
+
+        Args:
+            decision_id: 决策 ID
+
+        Returns:
+            意见列表
+        """
         decisions_repo = SoapDecisionsRepository(self.db)
         opinions_repo = AsyncMdtOpinionsRepository(self.db)
         dec = decisions_repo.get_by_id(decision_id)
@@ -202,6 +305,16 @@ class SoapDecisionService(BaseService):
         return [_row(r, ["attachments"]) for r in rows]
 
     def finalize_decision(self, decision_id: int, decision_summary: str, user_id) -> dict:
+        """最终裁定决策，写入摘要和裁定者。
+
+        Args:
+            decision_id: 决策 ID
+            decision_summary: 裁定摘要
+            user_id: 裁定者 ID
+
+        Returns:
+            已裁定的决策记录
+        """
         decisions_repo = SoapDecisionsRepository(self.db)
         row = decisions_repo.get_by_id(decision_id)
         if not row or not row.get("is_active"):
@@ -228,6 +341,11 @@ class SoapDecisionService(BaseService):
         return _row(row, ["tags"])
 
     def dashboard(self) -> dict:
+        """SOAP 决策仪表盘，汇总决策与意见统计。
+
+        Returns:
+            含总数、状态分布、优先级分布和最近决策的字典
+        """
         decisions_repo = SoapDecisionsRepository(self.db)
         opinions_repo = AsyncMdtOpinionsRepository(self.db)
         total = decisions_repo.count_active()

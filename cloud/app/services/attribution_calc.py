@@ -91,6 +91,17 @@ class AttributionCalcMixin:
     """归因计算混入类，提供归因刷新、反向模拟及各因子打分方法。"""
 
     def refresh_attribution(self, opp_id: int) -> dict:
+        """刷新指定商机的归因得分，计算各因子影响并持久化。
+
+        Args:
+            opp_id: 商机 ID
+
+        Returns:
+            刷新后的归因记录字典，包含 total_score、confidence、factors 等
+
+        Raises:
+            HTTPException: 商机不存在时返回 404
+        """
         opp = self.db.execute(
             "SELECT * FROM opportunities WHERE id=? AND is_active=1",
             (opp_id,),
@@ -157,6 +168,15 @@ class AttributionCalcMixin:
         return self.get_attribution(opp_id)
 
     def simulate_outcome(self, opp_id: int, what_if_changes: dict[str, float]) -> dict:
+        """基于 What-If 假设变更模拟商机归因结果。
+
+        Args:
+            opp_id: 商机 ID
+            what_if_changes: 因子名称到模拟值的映射，如 {"visit_frequency": 30}
+
+        Returns:
+            包含原始得分、模拟得分、delta 及各因子影响对比的字典
+        """
         attribution = self.refresh_attribution(opp_id)
 
         original_score = attribution["total_score"]
