@@ -1,7 +1,6 @@
 """通知服务，负责通知模板管理与消息发送、列表查询及已读标记。"""
 
 import json
-import re
 from datetime import datetime
 from typing import Optional
 
@@ -13,27 +12,7 @@ from cloud.app.repositories import (
     NotificationTemplatesRepository,
 )
 from cloud.app.services.base import BaseService
-from shared.base import validate_columns
-from shared.columns import TABLE_NOTIFICATION_TEMPLATES_COLS
-
-
-def _render_template(template: str, context: dict) -> str:
-    def replacer(match):
-        key = match.group(1)
-        return str(context.get(key, match.group(0)))
-
-    return re.sub(r"\{(\w+)\}", replacer, template)
-
-
-def _template_to_dict(row) -> dict:
-    return {
-        "id": row["id"],
-        "name": row["name"],
-        "title_template": row["title_template"],
-        "body_template": row["body_template"],
-        "category": row["category"],
-        "created_at": row["created_at"],
-    }
+from cloud.app.services.notification_builder import NotificationBuilderMixin, _render_template
 
 
 def _notification_to_dict(row) -> dict:
@@ -53,56 +32,8 @@ def _notification_to_dict(row) -> dict:
     }
 
 
-class NotificationService(BaseService):
+class NotificationService(NotificationBuilderMixin, BaseService):
     """通知服务，提供模板管理、消息发送、列表查询与已读标记功能。"""
-
-    def create_template(self, name: str, title_template: str, body_template: str, category: str) -> dict:
-        tmpl_repo = NotificationTemplatesRepository(self.db)
-        row_id = tmpl_repo.create(
-            {
-                "name": name,
-                "title_template": title_template,
-                "body_template": body_template,
-                "category": category,
-            }
-        )
-        row = tmpl_repo.get_by_id(row_id)
-        return _template_to_dict(row)
-
-    def list_templates(self) -> list:
-        tmpl_repo = NotificationTemplatesRepository(self.db)
-        rows = tmpl_repo.list_all(order_by="created_at DESC")
-        return [_template_to_dict(r) for r in rows]
-
-    def get_template(self, template_id: int) -> dict:
-        tmpl_repo = NotificationTemplatesRepository(self.db)
-        row = tmpl_repo.get_by_id(template_id)
-        if not row:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Template not found")
-        return _template_to_dict(row)
-
-    def update_template(self, template_id: int, **updates) -> dict:
-        tmpl_repo = NotificationTemplatesRepository(self.db)
-        existing = tmpl_repo.get_by_id(template_id)
-        if not existing:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Template not found")
-        filtered = {}
-        for field in ("name", "title_template", "body_template", "category"):
-            val = updates.get(field)
-            if val is not None:
-                filtered[field] = val
-        if filtered:
-            validate_columns(filtered, "notification_templates", TABLE_NOTIFICATION_TEMPLATES_COLS)
-            tmpl_repo.update(template_id, filtered)
-        row = tmpl_repo.get_by_id(template_id)
-        return _template_to_dict(row)
-
-    def delete_template(self, template_id: int) -> None:
-        tmpl_repo = NotificationTemplatesRepository(self.db)
-        existing = tmpl_repo.get_by_id(template_id)
-        if not existing:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Template not found")
-        tmpl_repo.delete(template_id)
 
     def send(
         self,

@@ -1,7 +1,6 @@
 """推荐服务，负责用户画像管理、行为记录与个性化推荐生成。"""
 
 import json
-import math
 from typing import Optional
 
 from fastapi import HTTPException
@@ -11,9 +10,9 @@ from cloud.app.repositories import (
     RecommendationsRepository,
     UserBehaviorsRepository,
     UserProfilesRepository,
-    UsersRepository,
 )
 from cloud.app.services.base import BaseService
+from cloud.app.services.recommend_filter import calc_dashboard_stats, paginate_behaviors
 from cloud.app.services.recommend_strategy import RecommendStrategyMixin
 from shared.base import PaginatedResponse, validate_columns
 from shared.columns import TABLE_USER_PROFILES_COLS
@@ -31,19 +30,7 @@ class RecommendService(RecommendStrategyMixin, BaseService):
         preferred_content_types: list,
         custom_tags: list,
     ) -> dict:
-        """Create or upsert a user recommendation profile.
-
-        Args:
-            user_id: The user's ID.
-            persona_type: The user's persona type.
-            specialization: The user's specialization.
-            experience_level: The user's experience level.
-            preferred_content_types: A list of preferred content types.
-            custom_tags: A list of custom tags for the user profile.
-
-        Returns:
-            A dict representing the upserted profile row.
-        """
+        """Create or upsert a user recommendation profile."""
         pct = json.dumps(preferred_content_types, ensure_ascii=False)
         tags = json.dumps(custom_tags, ensure_ascii=False)
         profiles_repo = UserProfilesRepository(self.db)
@@ -52,12 +39,6 @@ class RecommendService(RecommendStrategyMixin, BaseService):
 
     def get_profile(self, user_id: int) -> dict:
         """Retrieve a user's recommendation profile.
-
-        Args:
-            user_id: The user's ID.
-
-        Returns:
-            A dict representing the user profile.
 
         Raises:
             HTTPException: 404 if the profile is not found.
@@ -78,17 +59,6 @@ class RecommendService(RecommendStrategyMixin, BaseService):
         custom_tags: Optional[list] = None,
     ) -> dict:
         """Update fields of an existing user recommendation profile.
-
-        Args:
-            user_id: The user's ID.
-            persona_type: Optional new persona type.
-            specialization: Optional new specialization.
-            experience_level: Optional new experience level.
-            preferred_content_types: Optional new list of preferred content types.
-            custom_tags: Optional new list of custom tags.
-
-        Returns:
-            A dict representing the updated profile.
 
         Raises:
             HTTPException: 404 if the profile is not found.
@@ -129,20 +99,7 @@ class RecommendService(RecommendStrategyMixin, BaseService):
         session_id: str,
         duration_seconds: int,
     ) -> dict:
-        """Log a user behavior event for the recommendation engine.
-
-        Args:
-            user_id: The user's ID.
-            action_type: The type of action (e.g. "view", "click", "download").
-            target_type: The type of target (e.g. "article", "protocol").
-            target_id: The target's unique identifier.
-            metadata: Additional metadata about the behavior event.
-            session_id: The session identifier.
-            duration_seconds: Duration of the interaction in seconds.
-
-        Returns:
-            A dict representing the created behavior record.
-        """
+        """Log a user behavior event for the recommendation engine."""
         behaviors_repo = UserBehaviorsRepository(self.db)
         meta = json.dumps(metadata, ensure_ascii=False)
         row_id = behaviors_repo.create(
@@ -167,41 +124,11 @@ class RecommendService(RecommendStrategyMixin, BaseService):
         limit: int = 50,
         offset: int = 0,
     ) -> PaginatedResponse:
-        """Retrieve paginated user behavior history with optional filters.
-
-        Args:
-            user_id: Optional filter by user ID.
-            action_type: Optional filter by action type.
-            target_type: Optional filter by target type.
-            limit: Maximum number of items to return.
-            offset: Number of items to skip.
-
-        Returns:
-            A PaginatedResponse containing behavior items.
-        """
-        behaviors_repo = UserBehaviorsRepository(self.db)
-        total, _, items = behaviors_repo.list_filtered(
-            user_id=user_id,
-            action_type=action_type,
-            target_type=target_type,
-            limit=limit,
-            offset=offset,
-        )
-        page = offset // max(limit, 1) + 1
-        total_pages = math.ceil(total / max(limit, 1))
-        return PaginatedResponse(
-            items=items,
-            total=total,
-            page=page,
-            page_size=limit,
-            total_pages=total_pages,
-        )
+        """Retrieve paginated user behavior history with optional filters."""
+        return paginate_behaviors(self.db, user_id, action_type, target_type, limit, offset)
 
     def mark_clicked(self, rec_id: int) -> None:
         """Mark a recommendation as clicked.
-
-        Args:
-            rec_id: The ID of the recommendation.
 
         Raises:
             HTTPException: 404 if the recommendation is not found.
@@ -215,9 +142,6 @@ class RecommendService(RecommendStrategyMixin, BaseService):
     def mark_dismissed(self, rec_id: int) -> None:
         """Mark a recommendation as dismissed.
 
-        Args:
-            rec_id: The ID of the recommendation.
-
         Raises:
             HTTPException: 404 if the recommendation is not found.
         """
@@ -228,35 +152,5 @@ class RecommendService(RecommendStrategyMixin, BaseService):
         recs_repo.mark_dismissed(rec_id)
 
     def dashboard(self) -> dict:
-        """Retrieve aggregated recommendation statistics for the dashboard.
-
-        Returns:
-            A dict with total_users, total_profiles, total_behaviors, total_recommendations,
-            total_clicked, total_dismissed, click_rate, dismiss_rate, top_actions, and rec_by_type.
-        """
-        users_repo = UsersRepository(self.db)
-        profiles_repo = UserProfilesRepository(self.db)
-        behaviors_repo = UserBehaviorsRepository(self.db)
-        recs_repo = RecommendationsRepository(self.db)
-        total_users = users_repo.count_all()
-        total_profiles = profiles_repo.count()
-        total_behaviors = behaviors_repo.count()
-        total_recs = recs_repo.count_all()
-        total_clicked = recs_repo.count_clicked()
-        total_dismissed = recs_repo.count_dismissed()
-        click_rate = round(total_clicked / total_recs, 4) if total_recs > 0 else 0.0
-        dismiss_rate = round(total_dismissed / total_recs, 4) if total_recs > 0 else 0.0
-        top_actions = behaviors_repo.top_actions_global(10)
-        rec_by_type = recs_repo.count_by_rec_type()
-        return {
-            "total_users": total_users,
-            "total_profiles": total_profiles,
-            "total_behaviors": total_behaviors,
-            "total_recommendations": total_recs,
-            "total_clicked": total_clicked,
-            "total_dismissed": total_dismissed,
-            "click_rate": click_rate,
-            "dismiss_rate": dismiss_rate,
-            "top_actions": top_actions,
-            "rec_by_type": rec_by_type,
-        }
+        """Retrieve aggregated recommendation statistics for the dashboard."""
+        return calc_dashboard_stats(self.db)

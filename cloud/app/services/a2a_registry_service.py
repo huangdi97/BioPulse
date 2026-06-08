@@ -1,18 +1,16 @@
 """A2A (Agent-to-Agent) 注册服务，管理 Agent 注册、心跳、任务路由与事件记录。"""
 
 import json
-import logging
 import uuid
 
 from fastapi import HTTPException
 from starlette import status
 
+from cloud.app.services.a2a_discovery import A2aDiscoveryMixin, _row_to_dict
 from cloud.app.services.base import BaseService
 
-logger = logging.getLogger(__name__)
 
-
-class A2aRegistryService(BaseService):
+class A2aRegistryService(A2aDiscoveryMixin, BaseService):
     """A2A 注册服务，提供 Agent 注册/发现、心跳维护、任务路由与事件审计。"""
 
     def register_agent(self, key, name, type_, description, capabilities, endpoint_url):
@@ -53,33 +51,7 @@ class A2aRegistryService(BaseService):
         row = self.db.execute("SELECT * FROM agent_registry WHERE agent_key=?", (agent_key,)).fetchone()
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="agent not found")
-        return self._row_to_dict(row)
-
-    def list_agents(self, agent_type=None, status=None, capability=None):
-        """按条件搜索 Agent 列表。
-
-        Args:
-            agent_type: 按类型筛选
-            status: 按状态筛选
-            capability: 按能力关键词筛选
-
-        Returns:
-            Agent 列表（在线优先）
-        """
-        sql = "SELECT * FROM agent_registry WHERE 1=1"
-        params = []
-        if agent_type:
-            sql += " AND agent_type=?"
-            params.append(agent_type)
-        if status:
-            sql += " AND status=?"
-            params.append(status)
-        if capability:
-            sql += " AND capabilities LIKE ?"
-            params.append(f'%"{capability}"%')
-        sql += " ORDER BY CASE WHEN status='online' THEN 0 ELSE 1 END, created_at DESC"
-        rows = self.db.execute(sql, params).fetchall()
-        return [self._row_to_dict(r) for r in rows]
+        return _row_to_dict(row)
 
     def heartbeat(self, agent_key):
         """更新 Agent 心跳时间并置为在线。
@@ -148,7 +120,7 @@ class A2aRegistryService(BaseService):
         row = self.db.execute("SELECT * FROM agent_tasks WHERE task_id=?", (task_id,)).fetchone()
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="task not found")
-        return self._row_to_dict(row)
+        return _row_to_dict(row)
 
     def list_tasks(self, status=None, agent_key=None, limit=50):
         """按条件查询任务列表。
@@ -169,46 +141,7 @@ class A2aRegistryService(BaseService):
         sql += " ORDER BY created_at DESC LIMIT ?"
         params.append(limit)
         rows = self.db.execute(sql, params).fetchall()
-        return [self._row_to_dict(r) for r in rows]
-
-    def list_events(self, event_type=None, agent_key=None, limit=50):
-        """查询 Agent 网络事件。
-
-        Args:
-            event_type: 按事件类型筛选
-            agent_key: 按 Agent 键筛选
-            limit: 最大返回数
-        """
-        sql = "SELECT * FROM agent_network_events WHERE 1=1"
-        params = []
-        if event_type:
-            sql += " AND event_type=?"
-            params.append(event_type)
-        if agent_key:
-            sql += " AND agent_key=?"
-            params.append(agent_key)
-        sql += " ORDER BY created_at DESC LIMIT ?"
-        params.append(limit)
-        rows = self.db.execute(sql, params).fetchall()
-        return [self._row_to_dict(r) for r in rows]
-
-    def _row_to_dict(self, row):
-        """将数据库行对象转换为字典，自动解析 JSON 字段。
-
-        Args:
-            row: 数据库行对象。
-
-        Returns:
-            字典，其中 capabilities, metadata, input_data, output_data, detail 字段已从 JSON 解析。
-        """
-        d = dict(row)
-        for col in ("capabilities", "metadata", "input_data", "output_data", "detail"):
-            if col in d and isinstance(d[col], str) and d[col]:
-                try:
-                    d[col] = json.loads(d[col])
-                except (json.JSONDecodeError, TypeError):
-                    logger.warning("Failed to parse A2A registry JSON field '%s'", col, exc_info=True)
-        return d
+        return [_row_to_dict(r) for r in rows]
 
     def _event(self, etype, agent_key, detail=None):
         """向 agent_network_events 表插入一条审计事件记录。

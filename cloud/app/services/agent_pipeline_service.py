@@ -9,15 +9,15 @@ from starlette import status
 from cloud.app.repositories import (
     AgentPipelinesRepository,
     PipelineRunsRepository,
-    PipelineStepRunsRepository,
     PipelineStepsRepository,
 )
+from cloud.app.services.agent_pipeline_exec import PipelineRunQueryMixin
 from cloud.app.services.base import BaseService
 from cloud.app.services.pipeline_executor import PipelineExecutorMixin
-from shared.base import PaginatedResponse, success
+from shared.base import success
 
 
-class AgentPipelineService(PipelineExecutorMixin, BaseService):
+class AgentPipelineService(PipelineRunQueryMixin, PipelineExecutorMixin, BaseService):
     """AgentPipeline 服务，提供流水线 CRUD、运行与执行记录查询。"""
 
     @staticmethod
@@ -160,55 +160,3 @@ class AgentPipelineService(PipelineExecutorMixin, BaseService):
             runs_repo.delete(run["id"])
         pipelines_repo.delete(pipeline_id)
         return success()
-
-    def get_run(self, run_id: int) -> dict:
-        """获取运行记录及步骤执行结果。
-
-        Args:
-            run_id: 运行 ID
-
-        Returns:
-            含 run 和 step_runs 的记录
-        """
-        runs_repo = PipelineRunsRepository(self.db)
-        step_runs_repo = PipelineStepRunsRepository(self.db)
-        row = runs_repo.get_by_id(run_id)
-        if not row:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Run not found")
-        steps = step_runs_repo.list_all(conditions=["run_id=?"], params=[run_id], order_by="step_order ASC")
-        return success(
-            data={
-                "run": dict(row),
-                "step_runs": steps,
-            }
-        )
-
-    def list_runs(self, pipeline_id: int, page: int, page_size: int) -> dict:
-        """分页查询流水线运行记录。
-
-        Args:
-            pipeline_id: 流水线 ID
-            page: 页码
-            page_size: 每页条数
-
-        Returns:
-            分页运行记录
-        """
-        runs_repo = PipelineRunsRepository(self.db)
-        self._p404(pipeline_id)
-        total, total_pages, rows = runs_repo.paginate(
-            page=page,
-            page_size=page_size,
-            conditions=["pipeline_id=?"],
-            params=[pipeline_id],
-            order_by="started_at DESC",
-        )
-        return success(
-            data=PaginatedResponse(
-                items=rows,
-                total=total,
-                page=page,
-                page_size=page_size,
-                total_pages=total_pages,
-            )
-        )

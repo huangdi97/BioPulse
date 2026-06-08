@@ -9,10 +9,10 @@ from starlette import status
 from cloud.app.repositories import (
     RouteLogsRepository,
     RouteRulesRepository,
-    RouteStatsRepository,
 )
 from cloud.app.services.base import BaseService
 from cloud.app.services.route_calculation import RouteCalculationMixin
+from cloud.app.services.route_optimization import RouteOptimizationMixin
 from shared.base import validate_columns
 from shared.columns import TABLE_ROUTE_RULES_COLS
 
@@ -20,7 +20,7 @@ DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
 TIMEOUT_SECONDS = 30
 
 
-class RouteService(RouteCalculationMixin, BaseService):
+class RouteService(RouteCalculationMixin, RouteOptimizationMixin, BaseService):
     """路由服务，提供路由规则的增删改查、基于 DeepSeek AI 的执行调度与日志统计。"""
 
     def create_rule(
@@ -193,46 +193,3 @@ class RouteService(RouteCalculationMixin, BaseService):
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Log not found")
         return row
-
-    def get_stats(self) -> list:
-        """获取路由统计数据。
-
-        Returns:
-            包含角色名称的统计记录列表
-        """
-        stats_repo = RouteStatsRepository(self.db)
-        return stats_repo.list_with_role_name()
-
-    def get_dashboard(self) -> dict:
-        """获取路由仪表盘汇总数据。
-
-        Returns:
-            包含总执行次数、角色分布、平均延迟和最近日志的字典
-        """
-        logs_repo = RouteLogsRepository(self.db)
-        total = logs_repo.count()
-        if total == 0:
-            return {
-                "total_executions": 0,
-                "role_distribution": [],
-                "avg_latency_ms": 0,
-                "recent_logs": [],
-            }
-        rows = logs_repo.role_distribution()
-        role_dist = [
-            {
-                "role_id": r["assigned_role_id"],
-                "role_name": r["assigned_role_name"],
-                "count": r["cnt"],
-                "percentage": round(r["cnt"] / total * 100, 2),
-            }
-            for r in rows
-        ]
-        avg_lat = logs_repo.avg_latency()
-        recent = logs_repo.list_recent(10)
-        return {
-            "total_executions": total,
-            "role_distribution": role_dist,
-            "avg_latency_ms": round(avg_lat, 2),
-            "recent_logs": recent,
-        }

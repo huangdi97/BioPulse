@@ -15,6 +15,19 @@ class SessionService(BaseService):
         ModuleRepository(self.db).get_active_or_404(module_id)
 
     def create(self, module_id: int, body, user_id: int) -> dict:
+        """创建教练模块下的训练会话。
+
+        Args:
+            module_id: 所属训练模块ID。
+            body: 会话创建请求体。
+            user_id: 创建人用户ID。
+
+        Returns:
+            包含新会话ID的字典。
+
+        Raises:
+            HTTPException: 当训练模块不存在时由仓储层抛出。
+        """
         self._check_module_exists(module_id)
         repo = SessionRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()
@@ -32,7 +45,22 @@ class SessionService(BaseService):
         scenario_id: int = None,
         role: str = None,
     ) -> dict:
-        """Create a digital human coach session with extended fields."""
+        """创建带数字人扩展字段的教练会话。
+
+        Args:
+            module_id: 所属训练模块ID。
+            body: 会话创建请求体。
+            user_id: 创建人用户ID。
+            session_type: 会话类型。
+            scenario_id: 可选的场景ID。
+            role: 可选的扮演角色。
+
+        Returns:
+            包含新会话ID的字典。
+
+        Raises:
+            HTTPException: 当训练模块不存在时由仓储层抛出。
+        """
         self._check_module_exists(module_id)
         repo = SessionRepository(self.db)
         now = datetime.now(timezone.utc).isoformat()
@@ -47,7 +75,19 @@ class SessionService(BaseService):
         return {"id": session_id}
 
     def update_dialogue_log(self, session_id: int, entry: dict) -> dict:
-        """Append a dialogue entry to the session's dialogue log."""
+        """追加一条数字人会话对话记录。
+
+        Args:
+            session_id: 会话ID。
+            entry: 需要追加的对话记录。
+
+        Returns:
+            更新后的会话字典。
+
+        Raises:
+            HTTPException: 当会话不存在时由仓储层抛出。
+            json.JSONDecodeError: 当已有对话日志不是合法JSON时抛出。
+        """
         repo = SessionRepository(self.db)
         row = repo.get_session_or_404(session_id)
         log = json.loads(row["dialogue_log"] or "[]")
@@ -56,35 +96,104 @@ class SessionService(BaseService):
         return dict(repo.get_session_or_404(session_id))
 
     def get_dialogue_history(self, session_id: int) -> List[Dict[str, Any]]:
-        """Return the full dialogue history for a session."""
+        """读取会话完整对话历史。
+
+        Args:
+            session_id: 会话ID。
+
+        Returns:
+            对话记录列表。
+
+        Raises:
+            HTTPException: 当会话不存在时由仓储层抛出。
+            json.JSONDecodeError: 当对话日志不是合法JSON时抛出。
+        """
         repo = SessionRepository(self.db)
         row = repo.get_session_or_404(session_id)
         return json.loads(row["dialogue_log"] or "[]")
 
     def update_assessment(self, session_id: int, assessment: dict) -> dict:
-        """Update the auto_assessment field for a session."""
+        """更新会话自动评估结果。
+
+        Args:
+            session_id: 会话ID。
+            assessment: 自动评估结果字典。
+
+        Returns:
+            更新后的会话字典。
+
+        Raises:
+            HTTPException: 当会话不存在时由仓储层抛出。
+        """
         repo = SessionRepository(self.db)
         repo.get_session_or_404(session_id)
         repo.update(session_id, {"auto_assessment": json.dumps(assessment)})
         return dict(repo.get_session_or_404(session_id))
 
     def update_reflection(self, session_id: int, report: dict) -> dict:
-        """Update the reflection_report field for a session."""
+        """更新会话反思报告。
+
+        Args:
+            session_id: 会话ID。
+            report: 反思报告字典。
+
+        Returns:
+            更新后的会话字典。
+
+        Raises:
+            HTTPException: 当会话不存在时由仓储层抛出。
+        """
         repo = SessionRepository(self.db)
         repo.get_session_or_404(session_id)
         repo.update(session_id, {"reflection_report": json.dumps(report)})
         return dict(repo.get_session_or_404(session_id))
 
     def list(self, module_id: int, page: int, page_size: int) -> tuple:
+        """分页列出训练模块下的会话。
+
+        Args:
+            module_id: 所属训练模块ID。
+            page: 当前页码。
+            page_size: 每页数量。
+
+        Returns:
+            仓储层分页元组。
+
+        Raises:
+            HTTPException: 当训练模块不存在时由仓储层抛出。
+        """
         self._check_module_exists(module_id)
         repo = SessionRepository(self.db)
         return repo.paginate_by_module(module_id, page=page, page_size=page_size)
 
     def get(self, session_id: int) -> dict:
+        """读取单个训练会话。
+
+        Args:
+            session_id: 会话ID。
+
+        Returns:
+            会话字典。
+
+        Raises:
+            HTTPException: 当会话不存在时由仓储层抛出。
+        """
         repo = SessionRepository(self.db)
         return dict(repo.get_session_or_404(session_id))
 
     def update(self, session_id: int, body) -> dict:
+        """更新训练会话字段。
+
+        Args:
+            session_id: 会话ID。
+            body: 会话更新请求体。
+
+        Returns:
+            更新后的会话字典。
+
+        Raises:
+            HTTPException: 当会话不存在时由仓储层抛出。
+        """
         repo = SessionRepository(self.db)
         repo.get_session_or_404(session_id)
         updates = body.model_dump(exclude_unset=True)
@@ -94,6 +203,17 @@ class SessionService(BaseService):
         return dict(repo.get_session_or_404(session_id))
 
     def delete(self, session_id: int) -> None:
+        """硬删除训练会话。
+
+        Args:
+            session_id: 会话ID。
+
+        Returns:
+            None。
+
+        Raises:
+            HTTPException: 当会话不存在时由仓储层抛出。
+        """
         repo = SessionRepository(self.db)
         repo.get_session_or_404(session_id)
         repo.hard_delete(session_id)

@@ -1,4 +1,4 @@
-"""因果图谱构建与反事实模拟方法。"""
+"""因果图谱构建与持久化方法。"""
 
 import json
 import uuid
@@ -8,16 +8,12 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.repositories import CausalGraphsRepository, CounterfactualScenariosRepository
+from cloud.app.services.causal_inference import CausalInferenceMixin
 
 
 def _gen_graph_id() -> str:
     """生成因果图谱 ID，格式 cg:xxxxxxxx。"""
     return "cg:" + uuid.uuid4().hex[:8]
-
-
-def _gen_scenario_id() -> str:
-    """生成反事实场景 ID，格式 cf:xxxxxxxx。"""
-    return "cf:" + uuid.uuid4().hex[:8]
 
 
 def _generate_template_graph(decision_id: str) -> dict:
@@ -39,33 +35,6 @@ def _generate_template_graph(decision_id: str) -> dict:
             {"source": "factor_a", "target": "outcome", "strength": 0.5},
             {"source": "factor_b", "target": "outcome", "strength": 0.3},
         ],
-    }
-
-
-def _linear_simulate(scenario: dict) -> dict:
-    """对单个反事实场景执行线性模拟计算。
-
-    Args:
-        scenario: 含 variable、from、to 的场景字典
-
-    Returns:
-        含变量、delta、预测结果和置信度的字典
-    """
-    variable = scenario.get("variable", "unknown")
-    from_val = float(scenario.get("from", 0))
-    to_val = float(scenario.get("to", 0))
-    delta = to_val - from_val
-    multiplier = 5.0
-    change_pct = round(delta * multiplier, 1)
-    outcome = {f"{variable}影响": f"{change_pct:+.1f}%"}
-    conf = min(0.95, max(0.3, 0.55 + abs(delta) * 0.05))
-    return {
-        "variable": variable,
-        "from": from_val,
-        "to": to_val,
-        "delta": delta,
-        "predicted_outcome": outcome,
-        "confidence": round(conf, 4),
     }
 
 
@@ -113,20 +82,11 @@ def _scenario_to_dict(row) -> dict:
     }
 
 
-class CausalGraphMixin:
+class CausalGraphMixin(CausalInferenceMixin):
     """因果图谱持久化和反事实场景查询方法。"""
 
     def build_graph(self, decision_id: str, include_metrics: bool, user_id: int) -> dict:
-        """构建一个因果图谱并持久化。
-
-        Args:
-            decision_id: 决策 ID，用于关联图与决策
-            include_metrics: 是否包含额外指标（当前模板生成不使用）
-            user_id: 创建者用户 ID
-
-        Returns:
-            新创建的因果图谱记录字典
-        """
+        """构建因果图谱并持久化。"""
         cg_repo = CausalGraphsRepository(self.db)
         graph_id = _gen_graph_id()
         graph_data = _generate_template_graph(decision_id)
@@ -162,53 +122,6 @@ class CausalGraphMixin:
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Causal graph not found")
         return _causal_graph_to_dict(row)
-
-    def simulate_counterfactual(self, strategy_id: str, scenarios: list[dict], user_id: int) -> dict:
-        """对给定策略执行反事实模拟并持久化结果。
-
-        Args:
-            strategy_id: 策略 ID
-            scenarios: 场景列表，每项含 variable、from、to 字段
-            user_id: 创建者用户 ID
-
-        Returns:
-            包含 simulations 列表和 total 计数的字典
-        """
-        cs_repo = CounterfactualScenariosRepository(self.db)
-        results: list[dict] = []
-        for sc in scenarios:
-            sim = _linear_simulate(sc)
-            scenario_id = _gen_scenario_id()
-            cs_repo.create(
-                {
-                    "scenario_id": scenario_id,
-                    "strategy_id": strategy_id,
-                    "variable_changes": json.dumps(
-                        [
-                            {
-                                "variable": sim["variable"],
-                                "from": sim["from"],
-                                "to": sim["to"],
-                            }
-                        ],
-                        ensure_ascii=False,
-                    ),
-                    "predicted_outcome": json.dumps(sim["predicted_outcome"], ensure_ascii=False),
-                    "confidence": sim["confidence"],
-                    "created_by": user_id,
-                }
-            )
-            results.append(
-                {
-                    "scenario_id": scenario_id,
-                    "strategy_id": strategy_id,
-                    "variable": sim["variable"],
-                    "delta": sim["delta"],
-                    "predicted_outcome": sim["predicted_outcome"],
-                    "confidence": sim["confidence"],
-                }
-            )
-        return {"simulations": results, "total": len(results)}
 
     def list_counterfactuals(self, strategy_id: Optional[str] = None, page: int = 1, page_size: int = 20) -> dict:
         """分页查询反事实模拟场景列表。

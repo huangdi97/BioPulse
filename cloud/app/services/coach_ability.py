@@ -6,11 +6,8 @@ from typing import Optional
 from fastapi import HTTPException
 from starlette import status
 
-from cloud.app.repositories import (
-    TrainingAttributionsRepository,
-    TrainingModulesRepository,
-    TrainingSessionsRepository,
-)
+from cloud.app.repositories import TrainingModulesRepository, TrainingSessionsRepository
+from cloud.app.services.coach_suggestion import CoachSuggestionMixin
 
 DIFFICULTY_LEVELS = ["beginner", "medium", "advanced", "expert"]
 
@@ -42,23 +39,9 @@ SESSION_COLS = [
     "completed_at",
     "created_at",
 ]
-ATTR_COLS = [
-    "id",
-    "user_id",
-    "training_session_id",
-    "metric_name",
-    "metric_before",
-    "metric_after",
-    "change_pct",
-    "attribution_score",
-    "confidence",
-    "analysis",
-    "period_days",
-    "created_at",
-]
 
 
-class CoachAbility:
+class CoachAbility(CoachSuggestionMixin):
     """教练能力类，提供培训模块与培训记录的创建、查询及难度自适应。"""
 
     @staticmethod
@@ -191,43 +174,3 @@ class CoachAbility:
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Session not found")
         return self._rd(row, SESSION_COLS)
-
-    def create_attribution(
-        self,
-        user_id: int,
-        metric_name: str,
-        metric_before: float,
-        metric_after: float,
-        period_days: int,
-    ) -> dict:
-        attrs_repo = TrainingAttributionsRepository(self.db)
-        cp = round((metric_after - metric_before) / metric_before, 4) if metric_before else 0.0
-        att_id = attrs_repo.create(
-            {
-                "user_id": user_id,
-                "metric_name": metric_name,
-                "metric_before": metric_before,
-                "metric_after": metric_after,
-                "change_pct": cp,
-                "period_days": period_days,
-            }
-        )
-        row = attrs_repo.get_by_id(att_id)
-        return self._rd(row, ATTR_COLS)
-
-    def list_attributions(self, user_id: Optional[int] = None, metric_name: Optional[str] = None) -> list:
-        attrs_repo = TrainingAttributionsRepository(self.db)
-        conditions = []
-        params = []
-        if user_id is not None:
-            conditions.append("user_id=?")
-            params.append(user_id)
-        if metric_name:
-            conditions.append("metric_name=?")
-            params.append(metric_name)
-        rows = attrs_repo.list_all(
-            conditions=conditions or None,
-            params=params or None,
-            order_by="created_at DESC",
-        )
-        return [self._rd(r, ATTR_COLS) for r in rows]

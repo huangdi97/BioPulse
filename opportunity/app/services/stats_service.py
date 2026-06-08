@@ -16,6 +16,18 @@ class StatsService(BaseService):
         start_date: Optional[str] = None,
         end_date: Optional[str] = None,
     ) -> dict:
+        """汇总商机统计报表。
+
+        Args:
+            start_date: 可选的统计开始日期。
+            end_date: 可选的统计结束日期。
+
+        Returns:
+            包含总量、总金额、阶段分布、产品分布、均价和赢单率的字典。
+
+        Raises:
+            sqlite3.Error: 当统计查询失败时由仓储层抛出。
+        """
         repo = StatsRepository(self.db)
         total_count, total_value = repo.get_totals(start_date, end_date)
 

@@ -8,13 +8,13 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.repositories import (
-    CausalAnalysesRepository,
     CrossCaseInsightsRepository,
     DecisionCasesRepository,
     PipelineRunsRepository,
     PipelineStepRunsRepository,
 )
 from cloud.app.services.base import BaseService
+from cloud.app.services.decision_report import DecisionReportMixin
 from shared.base import validate_columns
 from shared.columns import TABLE_CROSS_CASE_INSIGHTS_COLS, TABLE_DECISION_CASES_COLS
 
@@ -27,7 +27,7 @@ def _e404(name: str = "Resource"):
     raise HTTPException(status.HTTP_404_NOT_FOUND, f"{name} not found")
 
 
-class DecisionLogger(BaseService):
+class DecisionLogger(DecisionReportMixin, BaseService):
     """决策日志服务，记录决策案例、流水线运行与跨案例洞察。"""
 
     def create_case(
@@ -187,20 +187,3 @@ class DecisionLogger(BaseService):
             validate_columns(updates, "cross_case_insights", TABLE_CROSS_CASE_INSIGHTS_COLS)
             repo.update(insight_id, updates)
         return repo.get_by_id(insight_id)
-
-    def dashboard(self) -> dict:
-        case_repo = DecisionCasesRepository(self.db)
-        analysis_repo = CausalAnalysesRepository(self.db)
-        insight_repo = CrossCaseInsightsRepository(self.db)
-        total_cases = case_repo.count_active()
-        analyzed = analysis_repo.count_distinct_case_ids()
-        score_dist = case_repo.score_distribution()
-        insight_counts = insight_repo.count_by_type()
-        top_insights = insight_repo.top_by_confidence(5)
-        return {
-            "total_cases": total_cases,
-            "analyzed_cases": analyzed,
-            "score_distribution": score_dist,
-            "insights_by_type": insight_counts,
-            "top_insights": top_insights,
-        }

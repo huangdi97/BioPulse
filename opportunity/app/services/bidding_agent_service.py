@@ -13,6 +13,18 @@ class BiddingAgentService(BiddingAgentLLM):
     """招投标Agent调度：管理Agent配置、触发扫描、分析招标信息、记录运行日志。"""
 
     def create_agent_config(self, body, user_id: int) -> int:
+        """创建投标Agent配置。
+
+        Args:
+            body: 投标Agent配置请求体。
+            user_id: 创建人用户ID。
+
+        Returns:
+            新配置ID。
+
+        Raises:
+            sqlite3.Error: 当配置写入失败时由仓储层抛出。
+        """
         conn = self._connection()
         try:
             repo = BiddingAgentConfigRepository(conn)
@@ -29,6 +41,17 @@ class BiddingAgentService(BiddingAgentLLM):
             conn.close()
 
     def list_agent_configs(self) -> list:
+        """列出所有活跃投标Agent配置。
+
+        Args:
+            None.
+
+        Returns:
+            活跃配置字典列表。
+
+        Raises:
+            sqlite3.Error: 当配置查询失败时由仓储层抛出。
+        """
         conn = self._connection()
         try:
             repo = BiddingAgentConfigRepository(conn)
@@ -38,6 +61,19 @@ class BiddingAgentService(BiddingAgentLLM):
             conn.close()
 
     def update_agent_config(self, config_id: int, body) -> dict:
+        """更新投标Agent配置。
+
+        Args:
+            config_id: 配置ID。
+            body: 配置更新请求体。
+
+        Returns:
+            更新后的配置字典；无更新字段时返回原配置。
+
+        Raises:
+            HTTPException: 当配置不存在或已停用时抛出404。
+            sqlite3.Error: 当配置更新失败时由仓储层抛出。
+        """
         conn = self._connection()
         try:
             repo = BiddingAgentConfigRepository(conn)
@@ -54,6 +90,18 @@ class BiddingAgentService(BiddingAgentLLM):
             conn.close()
 
     def delete_agent_config(self, config_id: int) -> None:
+        """软删除投标Agent配置。
+
+        Args:
+            config_id: 配置ID。
+
+        Returns:
+            None。
+
+        Raises:
+            HTTPException: 当配置不存在或已停用时抛出404。
+            sqlite3.Error: 当软删除失败时由仓储层抛出。
+        """
         conn = self._connection()
         try:
             repo = BiddingAgentConfigRepository(conn)
@@ -65,6 +113,17 @@ class BiddingAgentService(BiddingAgentLLM):
             conn.close()
 
     def trigger_scan(self, auth_header: str) -> dict:
+        """按所有活跃配置触发一次投标扫描。
+
+        Args:
+            auth_header: 透传给LLM或外部扫描流程的认证头。
+
+        Returns:
+            包含发现数量、解析数量和错误列表的扫描摘要。
+
+        Raises:
+            sqlite3.Error: 当配置读取或日志写入失败时抛出。
+        """
         conn = self._connection()
         try:
             repo = BiddingAgentConfigRepository(conn)
@@ -102,6 +161,17 @@ class BiddingAgentService(BiddingAgentLLM):
             conn.close()
 
     def get_agent_status(self) -> dict:
+        """读取投标Agent最近运行状态。
+
+        Args:
+            None.
+
+        Returns:
+            最近运行时间、总运行次数和成功率。
+
+        Raises:
+            sqlite3.Error: 当状态统计查询失败时抛出。
+        """
         conn = self._connection()
         try:
             last = conn.execute("SELECT started_at FROM bidding_agent_log ORDER BY id DESC LIMIT 1").fetchone()
@@ -120,6 +190,18 @@ class BiddingAgentService(BiddingAgentLLM):
             conn.close()
 
     def list_agent_logs(self, page: int, page_size: int) -> tuple:
+        """分页列出投标Agent运行日志。
+
+        Args:
+            page: 当前页码。
+            page_size: 每页数量。
+
+        Returns:
+            包含日志列表、总数、页码、页大小和总页数的元组。
+
+        Raises:
+            sqlite3.Error: 当日志查询失败时抛出。
+        """
         conn = self._connection()
         try:
             count_row = conn.execute("SELECT COUNT(*) FROM bidding_agent_log").fetchone()

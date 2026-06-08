@@ -5,12 +5,8 @@ import json
 from fastapi import HTTPException
 from starlette import status
 
-from cloud.app.services.attribution_metrics import (
-    _RECOMMENDATIONS,
-    _STAGE_WEIGHTS,
-    AttributionMetricsMixin,
-    _today_str,
-)
+from cloud.app.services.attribution_assigner import _RECOMMENDATIONS, _STAGE_WEIGHTS, _today_str
+from cloud.app.services.attribution_metrics import AttributionMetricsMixin
 
 
 class AttributionCalcMixin(AttributionMetricsMixin):

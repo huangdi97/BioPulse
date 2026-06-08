@@ -5,7 +5,7 @@ import json
 from fastapi import HTTPException
 from starlette import status
 
-from cloud.app.services.attribution_metrics import _FACTOR_META
+from cloud.app.services.attribution_assigner import _FACTOR_META
 
 
 class AttributionCheckMixin:

@@ -1,4 +1,4 @@
-"""销售机会分析与阶段流转方法。"""
+"""销售漏斗分析、阶段概率和阶段流转方法。"""
 
 from datetime import datetime
 from typing import Optional
@@ -7,53 +7,24 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.repositories import OpportunitiesRepository
+from cloud.app.services.opportunity_scoring import (
+    STAGE_ORDER,
+    VALID_STAGES,
+    calc_stage_probability,
+    validate_stage_transition,
+)
 from shared.base import validate_columns
 from shared.columns import TABLE_OPPORTUNITIES_COLS
-
-VALID_STAGES = ["lead", "qualify", "proposal", "negotiation", "won", "lost"]
-
-TERMINAL_STAGES = {"won", "lost"}
-
-STAGE_ORDER = ["lead", "qualify", "proposal", "negotiation", "won", "lost"]
 
 
 class OpportunityAnalysisMixin:
     """销售漏斗分析、阶段概率和阶段流转方法。"""
 
     def _stage_probability(self, stage: str) -> int:
-        """返回指定阶段的成功概率百分比。
-
-        Args:
-            stage: 阶段名称
-
-        Returns:
-            概率值（0-100）
-        """
-        mapping = {
-            "lead": 10,
-            "qualify": 30,
-            "proposal": 50,
-            "negotiation": 75,
-            "won": 100,
-            "lost": 0,
-        }
-        return mapping.get(stage, 0)
+        return calc_stage_probability(stage)
 
     def _validate_stage_transition(self, current: str, target: str) -> None:
-        """校验阶段流转合法性，终态不可再流转。
-
-        Args:
-            current: 当前阶段
-            target: 目标阶段
-
-        Raises:
-            HTTPException: 当前阶段为终态时抛出 400
-        """
-        if current in TERMINAL_STAGES:
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST,
-                detail="Cannot transition from a terminal stage",
-            )
+        validate_stage_transition(current, target)
 
     def get_pipeline(self) -> dict:
         """获取销售漏斗数据，按阶段统计机会数量和金额。

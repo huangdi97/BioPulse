@@ -6,12 +6,10 @@ and usage reporting for LLM token consumption per user per model.
 
 import json
 import os
-import sqlite3
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from cloud.app.database import DB_PATH
+from cloud.app.services.budget_tracker import BudgetTracker
 from cloud.app.services.token_estimator import TokenEstimatorMixin
 
 _RULES_DIR = os.path.join(
@@ -31,59 +29,37 @@ class TokenBudgetConfig:
 
 
 def _load_rules() -> dict:
-    """从规则 JSON 文件中加载 token 预算规则配置。
-
-    Returns:
-        规则字典，含 default_alert_threshold, models, overrides。
-    """
     if not os.path.exists(_RULES_PATH):
         return {"default_alert_threshold": 0.8, "models": {}, "overrides": {}}
     with open(_RULES_PATH, encoding="utf-8") as f:
         return json.load(f)
 
 
-def _connect():
-    """创建并返回一个 SQLite 数据库连接，使用字典行工厂。
-
-    Returns:
-        sqlite3.Connection 对象。
-    """
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-class TokenBudgetService(TokenEstimatorMixin):
+class TokenBudgetService(TokenEstimatorMixin, BudgetTracker):
     PRICING = {
         "deepseek-chat": {"input_per_million": 0.14, "output_per_million": 0.28},
         "deepseek-v4-pro": {"input_per_million": 0.14, "output_per_million": 0.28},
     }
 
     def __init__(self):
-        """初始化 TokenBudgetService，加载规则配置。"""
         self._rules = _load_rules()
 
     @classmethod
     def get_pricing(cls, model: str) -> dict:
-        """Return the pricing configuration for a given model.
-
-        Args:
-            model: The model name (e.g. "deepseek-chat").
-
-        Returns:
-            A dict with input_per_million and output_per_million cost values.
-        """
-        return cls.PRICING.get(model, {"input_per_million": 0.14, "output_per_million": 0.28})
-
-    def _get_model_config(self, model: str) -> dict:
-        """获取指定模型的全局 token 预算配置。
+        """返回指定模型的Token计价配置。
 
         Args:
             model: 模型名称。
 
         Returns:
-            含 max_tokens_per_day 和 max_tokens_per_request 的配置字典。
+            包含每百万输入和输出Token价格的字典。
+
+        Raises:
+            KeyError: 不会主动抛出；未知模型返回默认价格。
         """
+        return cls.PRICING.get(model, {"input_per_million": 0.14, "output_per_million": 0.28})
+
+    def _get_model_config(self, model: str) -> dict:
         models = self._rules.get("models", {})
         config = models.get(model, {})
         if not config:
@@ -94,30 +70,22 @@ class TokenBudgetService(TokenEstimatorMixin):
         return config
 
     def _get_override(self, user_id: int, model: str) -> Optional[dict]:
-        """获取指定用户和模型的自定义预算覆盖配置。
-
-        Args:
-            user_id: 用户 ID。
-            model: 模型名称。
-
-        Returns:
-            覆盖配置字典，若未配置则返回 None。
-        """
         overrides = self._rules.get("overrides", {})
         user_overrides = overrides.get(str(user_id), {})
         return user_overrides.get(model)
 
     def get_budget(self, user_id: int, model: str) -> dict:
-        """Retrieve the token budget configuration for a user and model.
-
-        Merges the model-wide defaults with any user-specific overrides.
+        """读取用户在指定模型上的预算配置。
 
         Args:
-            user_id: The user's ID.
-            model: The model name.
+            user_id: 用户ID。
+            model: 模型名称。
 
         Returns:
-            A dict with user_id, model, max_tokens_per_day, max_tokens_per_request, and alert_threshold.
+            包含日限额、单请求限额和告警阈值的预算字典。
+
+        Raises:
+            OSError: 当规则文件读取异常时由初始化流程抛出。
         """
         model_config = self._get_model_config(model)
         override = self._get_override(user_id, model)
@@ -134,75 +102,20 @@ class TokenBudgetService(TokenEstimatorMixin):
             "alert_threshold": alert_threshold,
         }
 
-    def record_usage(self, user_id: int, model: str, tokens: int, cost: float) -> dict:
-        """Record actual token usage and update the daily budget tracking table.
-
-        Args:
-            user_id: The user's ID.
-            model: The model name.
-            tokens: The number of tokens consumed.
-            cost: The cost incurred for this usage.
-
-        Returns:
-            A dict containing the recorded usage details (user_id, model, tokens, cost, usage_date).
-        """
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        now = datetime.now(timezone.utc).isoformat()
-        conn = _connect()
-        try:
-            conn.execute(
-                "INSERT INTO token_usage (user_id, model, tokens, cost, usage_date, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-                (user_id, model, tokens, cost, today, now),
-            )
-            conn.execute(
-                "INSERT OR REPLACE INTO token_budget (user_id, model, daily_used, alert_sent, updated_at) "
-                "VALUES (?, ?, "
-                "  COALESCE((SELECT SUM(tokens) FROM token_usage WHERE user_id=? AND model=? AND usage_date=?), 0), "
-                "  0, ?)",
-                (user_id, model, user_id, model, today, now),
-            )
-            conn.execute("DELETE FROM token_budget WHERE rowid NOT IN (SELECT MAX(rowid) FROM token_budget GROUP BY user_id, model)")
-            conn.commit()
-        finally:
-            conn.close()
-        return {
-            "user_id": user_id,
-            "model": model,
-            "tokens": tokens,
-            "cost": cost,
-            "usage_date": today,
-        }
-
-    def get_usage_report(self, user_id: int, days: int = 30) -> list:
-        """Generate a token usage report for a user over a specified number of days.
-
-        Args:
-            user_id: The user's ID.
-            days: Number of days to look back (default 30).
-
-        Returns:
-            A list of dicts grouped by usage_date and model, each with total_tokens, total_cost, and call_count.
-        """
-        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
-        conn = _connect()
-        try:
-            rows = conn.execute(
-                "SELECT usage_date, model, SUM(tokens) AS total_tokens, SUM(cost) AS total_cost, "
-                "COUNT(*) AS call_count "
-                "FROM token_usage WHERE user_id=? AND usage_date>=? "
-                "GROUP BY usage_date, model ORDER BY usage_date DESC, model",
-                (user_id, cutoff),
-            ).fetchall()
-        finally:
-            conn.close()
-        return [dict(r) for r in rows]
-
     def list_alert_configs(self) -> list:
-        """List current budget configurations for all users and models.
+        """列出已有用量记录对应的告警配置。
+
+        Args:
+            None.
 
         Returns:
-            A list of dicts, each representing a user-model budget configuration.
+            用户和模型维度的预算配置列表。
+
+        Raises:
+            sqlite3.Error: 当token budget数据库查询失败时抛出。
         """
+        from cloud.app.services.budget_tracker import _connect
+
         conn = _connect()
         try:
             rows = conn.execute("SELECT DISTINCT user_id, model FROM token_budget ORDER BY user_id, model").fetchall()
@@ -221,20 +134,20 @@ class TokenBudgetService(TokenEstimatorMixin):
         max_tokens_per_request: Optional[int] = None,
         alert_threshold: Optional[float] = None,
     ) -> dict:
-        """Update token budget overrides for a specific user and model.
-
-        Only provided fields are updated; others retain existing values.
-        The overrides are persisted to the rules JSON file.
+        """更新用户指定模型的预算覆盖配置。
 
         Args:
-            user_id: The user's ID.
-            model: The model name.
-            max_tokens_per_day: Optional new daily token limit.
-            max_tokens_per_request: Optional new per-request token limit.
-            alert_threshold: Optional new alert threshold (0.0 to 1.0).
+            user_id: 用户ID。
+            model: 模型名称。
+            max_tokens_per_day: 可选的新每日Token上限。
+            max_tokens_per_request: 可选的新单请求Token上限。
+            alert_threshold: 可选的新告警阈值。
 
         Returns:
-            A dict representing the updated budget configuration.
+            更新后的预算配置字典。
+
+        Raises:
+            OSError: 当规则目录创建或规则文件写入失败时抛出。
         """
         override_key = str(user_id)
         overrides = self._rules.setdefault("overrides", {})
@@ -252,36 +165,16 @@ class TokenBudgetService(TokenEstimatorMixin):
         return self.get_budget(user_id, model)
 
     def get_alerts(self) -> list:
-        """Retrieve alerts for all users whose usage ratio meets or exceeds their alert threshold.
+        """计算当前触发阈值的Token预算告警。
+
+        Args:
+            None.
 
         Returns:
-            A list of alert dicts with user_id, model, daily_used, daily_limit, usage_ratio, threshold, and date.
+            达到告警阈值的用户模型用量列表。
+
+        Raises:
+            sqlite3.Error: 当用量或预算查询失败时由底层追踪器抛出。
         """
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         configs = self.list_alert_configs()
-        alerts = []
-        conn = _connect()
-        try:
-            for cfg in configs:
-                row = conn.execute(
-                    "SELECT COALESCE(SUM(tokens), 0) AS total FROM token_usage WHERE user_id=? AND model=? AND usage_date=?",
-                    (cfg["user_id"], cfg["model"], today),
-                ).fetchone()
-                daily_used = row["total"] if row else 0
-                limit_today = cfg["max_tokens_per_day"]
-                ratio = daily_used / limit_today if limit_today > 0 else 0
-                if ratio >= cfg["alert_threshold"]:
-                    alerts.append(
-                        {
-                            "user_id": cfg["user_id"],
-                            "model": cfg["model"],
-                            "daily_used": daily_used,
-                            "daily_limit": limit_today,
-                            "usage_ratio": round(ratio, 4),
-                            "threshold": cfg["alert_threshold"],
-                            "date": today,
-                        }
-                    )
-        finally:
-            conn.close()
-        return alerts
+        return super().get_alerts(configs)

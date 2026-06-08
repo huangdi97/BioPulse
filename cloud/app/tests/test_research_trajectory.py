@@ -13,7 +13,7 @@ class TestResearchTrajectory:
     def test_get_pi_trajectory_score_no_data(self):
         mock_db = MagicMock()
         mock_db.execute.return_value.fetchone.return_value = None
-        with patch("cloud.app.services.research_trajectory_service.get_research_db", return_value=mock_db):
+        with patch("cloud.app.services.research_trajectory_stats.get_research_db", return_value=mock_db):
             result = self.service.get_pi_trajectory_score(999)
         assert result["trajectory_score"] == 0
         assert "尚无预测数据" in result["recommendation"]
@@ -34,7 +34,7 @@ class TestResearchTrajectory:
             "area_transition": "{}",
         }
         mock_db.execute.return_value.fetchone.return_value = pred
-        with patch("cloud.app.services.research_trajectory_service.get_research_db", return_value=mock_db):
+        with patch("cloud.app.services.research_trajectory_stats.get_research_db", return_value=mock_db):
             result = self.service.get_pi_trajectory_score(1)
         assert 70 <= result["trajectory_score"] <= 100
         assert result["recommendation"] == "高潜力领域，建议重点跟进"
@@ -55,7 +55,7 @@ class TestResearchTrajectory:
             "area_transition": "{}",
         }
         mock_db.execute.return_value.fetchone.return_value = pred
-        with patch("cloud.app.services.research_trajectory_service.get_research_db", return_value=mock_db):
+        with patch("cloud.app.services.research_trajectory_stats.get_research_db", return_value=mock_db):
             result = self.service.get_pi_trajectory_score(2)
         assert 0 <= result["trajectory_score"] < 40
 

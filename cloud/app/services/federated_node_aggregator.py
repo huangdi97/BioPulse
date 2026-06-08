@@ -1,112 +1,36 @@
 """联邦节点聚合服务，提供联邦学习节点的数据汇总与分析。"""
 
-import csv
-import io
-from datetime import datetime, timedelta
 from typing import Optional
 
 from cloud.app.repositories import FederatedNodesRepository, FederatedRoundsRepository
 from cloud.app.repositories.audit_repository import AuditLogsRepository, FedAuditContributionsRepository
 from cloud.app.services.base import BaseService
-
-
-def _since_datetime(days: int) -> str:
-    """计算当前时间减去指定天数后的日期时间字符串。
-
-    Args:
-        days: 减去的天数。
-
-    Returns:
-        YYYY-MM-DD HH:MM:SS 格式的字符串。
-    """
-    return (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
-
-
-def _audit_log_to_dict(r) -> dict:
-    """将审计日志行对象转换为字典，仅保留指定字段。
-
-    Args:
-        r: 数据库行对象。
-
-    Returns:
-        包含 id, user_id, action, entity_type, entity_id, detail, source_end, ip_address, created_at 的字典。
-    """
-    return {
-        k: r[k]
-        for k in (
-            "id",
-            "user_id",
-            "action",
-            "entity_type",
-            "entity_id",
-            "detail",
-            "source_end",
-            "ip_address",
-            "created_at",
-        )
-    }
-
-
-def _contribution_to_dict(r) -> dict:
-    """将联邦审计贡献行对象转换为字典，仅保留指定字段。
-
-    Args:
-        r: 数据库行对象。
-
-    Returns:
-        包含 id, contributor_did, contribution_type, payload_hash, payload_summary, weight, verified, verified_by, audit_chain_hash, created_at 的字典。
-    """
-    return {
-        k: r[k]
-        for k in (
-            "id",
-            "contributor_did",
-            "contribution_type",
-            "payload_hash",
-            "payload_summary",
-            "weight",
-            "verified",
-            "verified_by",
-            "audit_chain_hash",
-            "created_at",
-        )
-    }
-
-
-def _to_csv(rows: list[dict], fieldnames: list[str]) -> str:
-    """将字典列表导出为 CSV 格式字符串。
-
-    Args:
-        rows: 行数据列表。
-        fieldnames: CSV 列名列表。
-
-    Returns:
-        CSV 格式字符串。
-    """
-    output = io.StringIO()
-    writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction="ignore")
-    writer.writeheader()
-    writer.writerows(rows)
-    return output.getvalue()
+from cloud.app.services.fed_weight_calculator import (
+    audit_log_to_dict,
+    contribution_to_dict,
+    is_node_compliant,
+    since_datetime,
+    to_csv,
+)
 
 
 class FedAggregator(BaseService):
-    """联邦节点聚合服务，提供仪表盘、审计日志、合规摘要与 CSV 导出。"""
-
     def get_dashboard(self, days: Optional[int] = None) -> dict:
-        """获取联邦学习仪表盘汇总。
+        """汇总联邦节点、轮次、审计与合规看板数据。
 
         Args:
-            days: 统计周期天数，None 为全部
+            days: 可选的最近天数窗口，用于过滤审计日志。
 
         Returns:
-            含节点统计、审计日志和贡献记录的字典
+            包含节点统计、轮次、审计日志、贡献记录和合规计数的字典。
+
+        Raises:
+            HTTPException: 当底层仓储查询失败时由调用栈抛出。
         """
         node_repo = FederatedNodesRepository(self.db)
         round_repo = FederatedRoundsRepository(self.db)
         audit_repo = AuditLogsRepository(self.db)
         contrib_repo = FedAuditContributionsRepository(self.db)
-
         all_nodes = node_repo.get_all()
         total = len(all_nodes)
         online = sum(1 for n in all_nodes if n["status"] == "online")
@@ -119,8 +43,7 @@ class FedAggregator(BaseService):
             status_dist[s] = status_dist.get(s, 0) + 1
             t = n["node_type"]
             type_dist[t] = type_dist.get(t, 0) + 1
-
-        since = _since_datetime(days) if days else None
+        since = since_datetime(days) if days else None
         if since:
             audit_cond = ["created_at>=?"]
             audit_params = [since]
@@ -128,14 +51,11 @@ class FedAggregator(BaseService):
             audit_cond = None
             audit_params = None
         recent_audit_logs = audit_repo.list_all(conditions=audit_cond, params=audit_params, order_by="created_at DESC")
-        recent_audit_logs = [_audit_log_to_dict(r) for r in recent_audit_logs[:20]]
-
+        recent_audit_logs = [audit_log_to_dict(r) for r in recent_audit_logs[:20]]
         contribs = contrib_repo.get_recent(limit=10)
-        contribs = [_contribution_to_dict(c) for c in contribs]
-
-        compliance_count = sum(1 for n in all_nodes if n["status"] == "online" and (n["reliability_score"] or 0) >= 0.8)
+        contribs = [contribution_to_dict(c) for c in contribs]
+        compliance_count = sum(1 for n in all_nodes if is_node_compliant(n["status"], n.get("reliability_score")))
         data_usage_count = sum(1 for c in contribs if c.get("verified") is True)
-
         recent_rounds = round_repo.list_all(order_by="created_at DESC", params=[])
         recent_rounds = [dict(r) for r in recent_rounds[:5]]
         return {
@@ -153,13 +73,16 @@ class FedAggregator(BaseService):
         }
 
     def export_dashboard_csv(self, days: Optional[int] = None) -> str:
-        """导出仪表盘数据为 CSV。
+        """导出联邦看板审计摘要CSV。
 
         Args:
-            days: 统计周期天数
+            days: 可选的最近天数窗口，用于过滤看板审计日志。
 
         Returns:
-            CSV 格式字符串
+            CSV文本，字段包含id、动作、实体、详情和创建时间。
+
+        Raises:
+            HTTPException: 当看板数据读取失败时由调用栈抛出。
         """
         data = self.get_dashboard(days=days)
         rows = []
@@ -176,20 +99,23 @@ class FedAggregator(BaseService):
             )
         if not rows:
             rows = [{"id": "", "action": "", "entity_type": "", "entity_id": "", "detail": "", "created_at": ""}]
-        return _to_csv(rows, ["id", "action", "entity_type", "entity_id", "detail", "created_at"])
+        return to_csv(rows, ["id", "action", "entity_type", "entity_id", "detail", "created_at"])
 
     def get_audit_log(self, days: Optional[int] = None) -> dict:
-        """获取审计日志与合规贡献记录。
+        """读取联邦操作日志和合规贡献记录。
 
         Args:
-            days: 统计周期天数
+            days: 可选的最近天数窗口，用于过滤操作日志。
 
         Returns:
-            含 operation_logs 和 compliance_checks 的字典
+            包含operation_logs和compliance_checks的字典。
+
+        Raises:
+            HTTPException: 当底层日志查询失败时由调用栈抛出。
         """
         audit_repo = AuditLogsRepository(self.db)
         contrib_repo = FedAuditContributionsRepository(self.db)
-        since = _since_datetime(days) if days else None
+        since = since_datetime(days) if days else None
         if since:
             audit_cond = ["created_at>=?"]
             audit_params = [since]
@@ -197,16 +123,22 @@ class FedAggregator(BaseService):
             audit_cond = None
             audit_params = None
         logs = audit_repo.list_all(conditions=audit_cond, params=audit_params, order_by="created_at DESC")
-        logs = [_audit_log_to_dict(r) for r in logs]
+        logs = [audit_log_to_dict(r) for r in logs]
         contribs = contrib_repo.list_all(order_by="created_at DESC")
-        contribs = [_contribution_to_dict(c) for c in contribs]
+        contribs = [contribution_to_dict(c) for c in contribs]
         return {"operation_logs": logs, "compliance_checks": contribs}
 
     def get_compliance_summary(self) -> list:
-        """获取所有节点的合规摘要。
+        """生成所有联邦节点的合规摘要。
+
+        Args:
+            None.
 
         Returns:
-            节点合规状态列表（含 compliant 标志）
+            每个节点的状态、可靠性、样本数和合规结果列表。
+
+        Raises:
+            HTTPException: 当节点查询失败时由调用栈抛出。
         """
         repo = FederatedNodesRepository(self.db)
         all_nodes = repo.get_all()
@@ -221,19 +153,22 @@ class FedAggregator(BaseService):
                     "is_active": n["is_active"],
                     "total_samples": n["total_samples"],
                     "last_heartbeat": n["last_heartbeat"],
-                    "compliant": n["status"] == "online" and (n["reliability_score"] or 0) >= 0.8,
+                    "compliant": is_node_compliant(n["status"], n.get("reliability_score")),
                 }
             )
         return result
 
     def export_audit_log_csv(self, days: Optional[int] = None) -> str:
-        """导出审计日志为 CSV。
+        """导出联邦审计日志和合规检查CSV。
 
         Args:
-            days: 统计周期天数
+            days: 可选的最近天数窗口，用于过滤操作日志。
 
         Returns:
-            CSV 格式字符串
+            CSV文本，合并操作日志与合规贡献记录。
+
+        Raises:
+            HTTPException: 当审计数据读取失败时由调用栈抛出。
         """
         data = self.get_audit_log(days=days)
         rows = []
@@ -276,4 +211,4 @@ class FedAggregator(BaseService):
                     "created_at": "",
                 }
             ]
-        return _to_csv(rows, ["type", "id", "user_id", "action", "entity_type", "entity_id", "detail", "created_at"])
+        return to_csv(rows, ["type", "id", "user_id", "action", "entity_type", "entity_id", "detail", "created_at"])

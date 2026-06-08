@@ -1,7 +1,5 @@
 """MDT辩论服务，负责多学科团队辩论会话的管理与AI辩论编排。"""
 
-import json
-import urllib.request
 from datetime import datetime
 
 from fastapi import HTTPException
@@ -14,65 +12,27 @@ from cloud.app.repositories import (
     MdtSessionsRepository,
 )
 from cloud.app.services.base import BaseService
+from cloud.app.services.mdt_debate_scorer import _call_ai, parse_ai_opinion, parse_consensus_json
 from shared.base import success
-from shared.config import settings as config_settings
 
 
 class MdtDebater(BaseService):
-    """MDT辩论服务，提供辩论会话的创建、管理、发言与AI辩论功能。"""
-
     @staticmethod
     def _now() -> str:
-        """返回当前时间字符串。"""
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    @staticmethod
-    def _call_ai(messages: list[dict], auth_header: str) -> dict:
-        """调用配置的 AI 对话接口并返回响应数据。
-
-        Args:
-            messages: 对话消息列表
-            auth_header: Authorization 头
-
-        Returns:
-            AI 响应的 data 字段字典
-        """
-        with urllib.request.urlopen(
-            urllib.request.Request(
-                f"{config_settings.ai_chat_url}",
-                data=json.dumps({"messages": messages, "temperature": 0.7, "max_tokens": 2048}).encode("utf-8"),
-                headers={"Content-Type": "application/json", "Authorization": auth_header},
-                method="POST",
-            ),
-            timeout=120,
-        ) as rp:
-            return json.loads(rp.read().decode("utf-8")).get("data", {})
-
-    @staticmethod
-    def _parse_json(raw: str, default=None):
-        """安全解析 JSON 字符串。
-
-        Args:
-            raw: JSON 字符串
-            default: 解析失败时的默认返回值
-
-        Returns:
-            解析后的对象或默认值
-        """
-        try:
-            return json.loads(raw)
-        except (json.JSONDecodeError, TypeError):
-            return default if default is not None else raw
-
     def create_session(self, body, uid: int) -> dict:
-        """创建辩论会话。
+        """创建一个MDT辩论会话并写入参与者。
 
         Args:
-            body: 请求体（含 title、question、context、participants）
-            uid: 创建者 ID
+            body: 包含标题、问题、上下文和参与者定义的请求体。
+            uid: 创建会话的用户ID。
 
         Returns:
-            会话基本信息
+            标准成功响应，包含新会话ID、标题和参与者数量。
+
+        Raises:
+            HTTPException: 当底层仓储写入失败时由调用栈抛出。
         """
         n = self._now()
         sessions_repo = MdtSessionsRepository(self.db)
@@ -109,15 +69,18 @@ class MdtDebater(BaseService):
         return success({"id": sid, "title": body.title, "participant_count": len(parts)})
 
     def list_sessions(self, status_filter, page: int, page_size: int) -> dict:
-        """分页查询辩论会话列表。
+        """分页列出MDT辩论会话。
 
         Args:
-            status_filter: 按状态筛选
-            page: 页码
-            page_size: 每页条数
+            status_filter: 可选的会话状态过滤条件。
+            page: 当前页码。
+            page_size: 每页数量。
 
         Returns:
-            分页会话列表
+            标准成功响应，包含会话列表和分页信息。
+
+        Raises:
+            HTTPException: 当数据库分页查询失败时由调用栈抛出。
         """
         sessions_repo = MdtSessionsRepository(self.db)
         conditions, params = [], []
@@ -134,13 +97,16 @@ class MdtDebater(BaseService):
         return success({"items": items, "total": total, "page": page, "page_size": page_size, "total_pages": total_pages})
 
     def get_session(self, session_id: int) -> dict:
-        """获取辩论会话详情（含参与者和观点）。
+        """读取单个MDT会话及其参与者和观点。
 
         Args:
-            session_id: 会话 ID
+            session_id: MDT会话ID。
 
         Returns:
-            含 session、participants 和 opinions 的详情
+            标准成功响应，包含会话、参与者和观点列表。
+
+        Raises:
+            HTTPException: 当会话不存在时抛出404。
         """
         sessions_repo = MdtSessionsRepository(self.db)
         participants_repo = MdtParticipantsRepository(self.db)
@@ -153,15 +119,18 @@ class MdtDebater(BaseService):
         return success({"session": s, "participants": parts, "opinions": opinions})
 
     def debate(self, session_id: int, max_rounds: int, auth_header: str) -> dict:
-        """执行多轮 AI 辩论，各参与者依次发言。
+        """运行指定轮数的MDT AI辩论。
 
         Args:
-            session_id: 会话 ID
-            max_rounds: 最大轮数
-            auth_header: Authorization 头
+            session_id: MDT会话ID。
+            max_rounds: 本次需要推进的最大辩论轮数。
+            auth_header: 透传给AI网关的认证头。
 
         Returns:
-            含 round 和 results 的辩论结果
+            标准成功响应，包含最新轮次和各参与者生成结果。
+
+        Raises:
+            HTTPException: 当会话不存在、已完成或没有参与者时抛出。
         """
         sessions_repo = MdtSessionsRepository(self.db)
         participants_repo = MdtParticipantsRepository(self.db)
@@ -190,31 +159,19 @@ class MdtDebater(BaseService):
                 if prev:
                     user_msg += f"\n\n上一轮各方观点摘要：\n{prev}"
                 try:
-                    ai = self._call_ai([{"role": "system", "content": sys_msg}, {"role": "user", "content": user_msg}], auth_header)
+                    ai = _call_ai([{"role": "system", "content": sys_msg}, {"role": "user", "content": user_msg}], auth_header)
                     reply = ai.get("reply", "")
-                    parsed = self._parse_json(reply, {})
-                    if isinstance(parsed, dict):
-                        opinion = parsed.get("opinion", reply)
-                        summary = parsed.get("summary", "")
-                        sentiment = parsed.get("sentiment", "neutral")
-                        confidence = float(parsed.get("confidence", 0.5))
-                        key_points = json.dumps(parsed.get("key_points", []), ensure_ascii=False)
-                    else:
-                        opinion = reply
-                        summary = ""
-                        sentiment = "neutral"
-                        confidence = 0.5
-                        key_points = "[]"
+                    parsed = parse_ai_opinion(reply)
                     opinions_repo.create_raw(
                         {
                             "session_id": session_id,
                             "participant_id": p["id"],
                             "round_number": current_round,
-                            "opinion": opinion,
-                            "summary": summary,
-                            "sentiment": sentiment,
-                            "confidence": confidence,
-                            "key_points": key_points,
+                            "opinion": parsed["opinion"],
+                            "summary": parsed["summary"],
+                            "sentiment": parsed["sentiment"],
+                            "confidence": parsed["confidence"],
+                            "key_points": parsed["key_points"],
                             "ai_response_raw": reply,
                             "tokens_used": ai.get("usage", {}).get("total_tokens", 0),
                             "created_at": self._now(),
@@ -224,8 +181,8 @@ class MdtDebater(BaseService):
                         {
                             "participant_id": p["id"],
                             "round": current_round,
-                            "sentiment": sentiment,
-                            "confidence": confidence,
+                            "sentiment": parsed["sentiment"],
+                            "confidence": parsed["confidence"],
                         }
                     )
                 except Exception:
@@ -234,14 +191,17 @@ class MdtDebater(BaseService):
         return success({"round": current_round, "results": results})
 
     def get_opinions(self, session_id: int, round_number: int | None = None) -> dict:
-        """获取辩论会话的观点列表。
+        """查询MDT会话的观点列表。
 
         Args:
-            session_id: 会话 ID
-            round_number: 按轮次筛选
+            session_id: MDT会话ID。
+            round_number: 可选的辩论轮次过滤条件。
 
         Returns:
-            观点列表
+            标准成功响应，包含观点及参与者信息。
+
+        Raises:
+            HTTPException: 当会话不存在时抛出404。
         """
         sessions_repo = MdtSessionsRepository(self.db)
         opinions_repo = MdtOpinionsRepository(self.db)
@@ -254,13 +214,16 @@ class MdtDebater(BaseService):
         return success(rows)
 
     def timeline(self, session_id: int) -> dict:
-        """获取辩论时间线（按轮次分组）。
+        """构建MDT会话按轮次组织的时间线。
 
         Args:
-            session_id: 会话 ID
+            session_id: MDT会话ID。
 
         Returns:
-            含 rounds 和 consensus 的时间线数据
+            标准成功响应，包含会话、轮次观点和完成后的共识信息。
+
+        Raises:
+            HTTPException: 当会话不存在时抛出404。
         """
         sessions_repo = MdtSessionsRepository(self.db)
         opinions_repo = MdtOpinionsRepository(self.db)
@@ -279,7 +242,7 @@ class MdtDebater(BaseService):
         if s["status"] == "completed" and s.get("consensus"):
             timeline_data["consensus"] = {
                 "text": s["consensus"],
-                "detail": self._parse_json(s.get("consensus_json"), {}),
+                "detail": parse_consensus_json(s.get("consensus_json")),
                 "updated_at": s["updated_at"],
             }
         return success(timeline_data)
