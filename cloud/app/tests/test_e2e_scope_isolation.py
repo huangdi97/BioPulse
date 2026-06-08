@@ -62,3 +62,52 @@ class TestScopeIsolation:
         rule_codes = [v["rule_code"] for v in data["violations"]]
         for code in rule_codes:
             assert code.startswith("RSR-"), f"Expected research rules (RSR-), got {code}"
+
+    def test_cross_mode_block(self, client):
+        visit_token = _get_token(client, "visit")
+        research_token = _get_token(client, "research")
+
+        resp = client.post(
+            "/api/research/pi",
+            json={
+                "name": "Dr. Test Block",
+                "institution": "Block University",
+                "department": "Block Dept",
+                "title": "Block Professor",
+                "research_areas": ["blockchain"],
+            },
+            headers={"Authorization": f"Bearer {visit_token}"},
+        )
+        assert resp.status_code == 403
+
+        resp = client.post(
+            "/visit",
+            json={
+                "hcp_id": 1,
+                "hcp_name": "Dr. Test",
+                "content": "学术交流",
+                "visit_type": "常规拜访",
+            },
+            headers={"Authorization": f"Bearer {research_token}"},
+        )
+        assert resp.status_code == 403
+
+        resp = client.post(
+            "/customers/",
+            json={
+                "name": "Dr. Test Cross",
+                "title": "Test Title",
+                "hospital": "Test Hospital",
+                "department": "Test Dept",
+                "specialty": "Test",
+            },
+            headers={"Authorization": f"Bearer {research_token}"},
+        )
+        assert resp.status_code == 403
+
+        resp = client.post(
+            "/api/research/compliance/enforce",
+            json={"visit_data": {"notes": "test"}},
+            headers={"Authorization": f"Bearer {visit_token}"},
+        )
+        assert resp.status_code == 403
