@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from cloud.app.agent_runtime.planner import Plan, PlanGenerator
-from cloud.app.services.compliance_enforcer import ComplianceEnforcer
+from cloud.app.services.compliance_enforcer_service import ComplianceEnforcer
 
 GOLDEN_DIR = Path(__file__).parent / "golden"
 

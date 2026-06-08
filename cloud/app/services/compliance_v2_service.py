@@ -6,8 +6,8 @@ from fastapi import Depends, Request
 
 from cloud.app.database import get_db
 from cloud.app.services.base import BaseService
-from cloud.app.services.compliance_v2_evaluator import RuleEvaluator
-from cloud.app.services.compliance_v2_report import ReportGenerator
+from cloud.app.services.report_generator import ReportGenerator
+from cloud.app.services.rule_evaluator import RuleEvaluator
 
 
 class ComplianceV2Service(BaseService):
