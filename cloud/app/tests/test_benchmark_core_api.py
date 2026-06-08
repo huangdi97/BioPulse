@@ -1,16 +1,71 @@
 import sqlite3
+import uuid
 
 import pytest
 
-from cloud.app.database import DB_PATH
-from cloud.app.repositories import PiRepository, ProductRepository
-from cloud.app.services.compliance_enforcer_service import ComplianceEnforcer
+from cloud.app import database as database_module
+from cloud.app.repositories import CustomersRepository, PiRepository, ProductRepository
+from cloud.app.services.auth_service import AuthService
+from cloud.app.services.enforcer_service import EnforcerService
+from cloud.app.services.hcp_sandbox_service import HcpSandboxService
+from cloud.app.services.opportunity_service import OpportunityService
 
 
 def _get_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(database_module.DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def _seed_benchmark_rows(db):
+    auth = AuthService(db)
+    username = f"bench_{uuid.uuid4().hex[:8]}"
+    password = "testpass123"
+    user = auth.register(username, password)
+    user_id = user["user_id"]
+
+    hcp_service = HcpSandboxService(db)
+    for idx in range(10):
+        hcp_service.create_profile(
+            name=f"Bench HCP {idx}",
+            title="主任医师",
+            hospital="Bench Hospital",
+            department="内科",
+            specialty="肿瘤科",
+            city="Shanghai",
+            tier="A",
+            traits={"index": idx},
+            prescription_volume=100 + idx,
+            influence_score=0.8,
+            digital_engagement=0.6,
+            user_id=user_id,
+        )
+
+    customers_repo = CustomersRepository(db)
+    customer_id = customers_repo.create(
+        {
+            "name": "Bench Customer",
+            "status": "active",
+            "created_by": user_id,
+        }
+    )
+
+    opp_service = OpportunityService(db)
+    for idx in range(10):
+        opp_service.create_opportunity(
+            customer_id=customer_id,
+            name=f"Bench Opportunity {idx}",
+            description="Benchmark opportunity",
+            stage="lead",
+            estimated_value=10000 + idx,
+            actual_value=0,
+            assigned_to=user_id,
+            close_date=None,
+            notes="",
+            user_id=user_id,
+        )
+
+    return auth, username, password, user_id
 
 
 class TestCoreAPIPerformance:
@@ -35,10 +90,61 @@ class TestCoreAPIPerformance:
     def test_compliance_enforce(self, benchmark):
         db = sqlite3.connect(":memory:")
         db.row_factory = sqlite3.Row
-        enforcer = ComplianceEnforcer(db)
+        enforcer = EnforcerService(db)
         visit = {"notes": "正常拜访", "expenses": 0}
         result = benchmark(enforcer.check_visit, visit)
-        assert isinstance(result, list)
+        assert isinstance(result, dict)
+
+    def test_compliance_enforce_benchmark(self, benchmark):
+        db = _get_db()
+        try:
+            service = EnforcerService(db)
+            visit = {
+                "rep_id": 1,
+                "notes": "医生透露了本月处方量数据",
+                "expenses": 0,
+                "rep_verified": True,
+                "location_type": "hospital",
+                "call_type": "常规拜访",
+            }
+            result = benchmark(service.check_visit, visit)
+            assert isinstance(result, dict)
+            assert "violations" in result
+        finally:
+            db.close()
+
+    def test_auth_login_benchmark(self, benchmark):
+        db = _get_db()
+        try:
+            auth, username, password, _user_id = _seed_benchmark_rows(db)
+            result = benchmark(auth.login, username, password, "visit")
+            assert "access_token" in result
+        finally:
+            db.close()
+
+    def test_hcp_list_benchmark(self, benchmark):
+        db = _get_db()
+        try:
+            _auth, _username, _password, user_id = _seed_benchmark_rows(db)
+            service = HcpSandboxService(db)
+            result = benchmark(service.list_profiles, page=1, page_size=10)
+            assert result.total >= 10
+            assert result.page == 1
+            assert result.page_size == 10
+        finally:
+            db.close()
+
+    def test_opportunity_list_benchmark(self, benchmark):
+        db = _get_db()
+        try:
+            _auth, _username, _password, user_id = _seed_benchmark_rows(db)
+            service = OpportunityService(db)
+            result = benchmark(service.list_opportunities, page=1, page_size=10)
+            assert result["total"] >= 10
+            assert result["page"] == 1
+            assert result["page_size"] == 10
+        finally:
+            db.close()
 
     def test_langgraph_execution(self, benchmark):
         try:
