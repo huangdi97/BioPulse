@@ -14,6 +14,7 @@ class NetworkCrudMixin:
     """网络CRUD混入类，提供智能体细胞的注册、自动发现与拓扑查询。"""
 
     def register_cell(self, agent_instance_key: str) -> dict:
+        """将在线 Agent 实例注册为细胞网络节点。"""
         cell_key = f"cell:{uuid.uuid4().hex}"
         existing = self.db.execute(
             "SELECT id FROM agent_registry WHERE agent_key=? AND status='online'",
@@ -41,6 +42,7 @@ class NetworkCrudMixin:
         return self._get_cell(cell_key)
 
     def auto_discover(self) -> dict:
+        """扫描所有在线 Agent 并自动注册为细胞网络节点。"""
         online_agents = self.db.execute("SELECT agent_key FROM agent_registry WHERE status='online'").fetchall()
 
         registered = 0
@@ -78,6 +80,7 @@ class NetworkCrudMixin:
         }
 
     def discover_cells(self, capability: str | None = None) -> list:
+        """按能力标签搜索活跃细胞节点。"""
         sql = "SELECT c.* FROM agent_cell_network c LEFT JOIN agent_registry r ON c.agent_instance_key = r.agent_key WHERE c.status='active'"
         params: list = []
         if capability:
@@ -88,6 +91,7 @@ class NetworkCrudMixin:
         return [self._row_to_dict(r) for r in rows]
 
     def get_network_topology(self) -> dict:
+        """返回细胞网络完整拓扑（节点列表 + 路由表）。"""
         cells = self.db.execute(
             "SELECT c.*, r.agent_name, r.agent_type, r.capabilities "
             "FROM agent_cell_network c "
@@ -107,6 +111,7 @@ class NetworkCrudMixin:
         }
 
     def get_topology_for_visualization(self) -> dict:
+        """返回适合前端可视化的节点-边拓扑数据。"""
         cells = self.db.execute(
             "SELECT c.*, r.agent_name, r.agent_type, r.capabilities "
             "FROM agent_cell_network c "
@@ -150,6 +155,7 @@ class NetworkCrudMixin:
         }
 
     def health_check(self) -> dict:
+        """检查细胞网络数据库连接及活跃节点数。"""
         try:
             self.db.execute("SELECT 1 FROM agent_cell_network LIMIT 1")
         except Exception:

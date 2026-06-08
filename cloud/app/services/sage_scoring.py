@@ -7,12 +7,14 @@ from cloud.app.repositories.world_tree_repository import WorldTreeNodesRepositor
 
 
 def normalize(value, min_val, max_val) -> float:
+    """将 value 归一化到 [0, 1] 区间。"""
     if max_val <= min_val:
         return 0.0
     return (value - min_val) / (max_val - min_val)
 
 
 def ts_to_epoch(ts_str):
+    """时间戳字符串转 epoch 秒数。"""
     try:
         return datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S").timestamp()
     except (ValueError, TypeError):
@@ -20,6 +22,7 @@ def ts_to_epoch(ts_str):
 
 
 def determine_tier(score):
+    """按分数阈值划分 hot / warm / cold 热度层级。"""
     if score >= 70:
         return "hot"
     if score >= 30:
@@ -28,6 +31,7 @@ def determine_tier(score):
 
 
 def score_episodic(repo, bms, tier_dist, comp):
+    """对情景记忆条目计算 recency + utility 综合评分并写入 repo。"""
     count = 0
     ep_res = bms.episodic_list(page=1, page_size=1000)
     items = ep_res.get("items", [])
@@ -64,6 +68,7 @@ def score_episodic(repo, bms, tier_dist, comp):
 
 
 def score_semantic(repo, bms, tier_dist, comp):
+    """对语义记忆条目计算访问频次 + recency + 重要性综合评分。"""
     count = 0
     sem_res = bms.semantic_search("", limit=1000)
     items = sem_res.get("items", [])
@@ -103,6 +108,7 @@ def score_semantic(repo, bms, tier_dist, comp):
 
 
 def score_procedural(repo, bms, tier_dist, comp):
+    """对过程记忆条目按成功率评分。"""
     count = 0
     proc_res = bms.procedural_recall("")
     items = proc_res.get("items", [])
@@ -129,6 +135,7 @@ def score_procedural(repo, bms, tier_dist, comp):
 
 
 def score_world_tree(repo, db, tier_dist, comp):
+    """对世界树节点按子节点数、链接数、深度计算评分。"""
     count = 0
     wt_repo = WorldTreeNodesRepository(db)
     nml_repo = NodeMemoryLinksRepository(db)

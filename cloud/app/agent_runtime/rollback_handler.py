@@ -1,3 +1,5 @@
+"""回滚处理器 — Agent 执行失败时回退到任意历史步骤的重试机制。"""
+
 import uuid
 
 from fastapi import HTTPException

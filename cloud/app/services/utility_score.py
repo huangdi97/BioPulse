@@ -40,6 +40,7 @@ class UtilityScoreMixin:
         }
 
     def score_memory(self, memory_id: int) -> dict:
+        """对单条记忆条目计算并写入效用评分。"""
         entry_repo = MemoryEntriesRepository(self.db)
         mus_repo = MemoryUtilityScoresRepository(self.db)
         link_repo = NodeMemoryLinksRepository(self.db)
@@ -67,6 +68,7 @@ class UtilityScoreMixin:
         return {"memory_id": memory_id, **u}
 
     def score_all(self) -> dict:
+        """批量计算所有活跃记忆条目的效用评分。"""
         entry_repo = MemoryEntriesRepository(self.db)
         mus_repo = MemoryUtilityScoresRepository(self.db)
         link_repo = NodeMemoryLinksRepository(self.db)
@@ -95,10 +97,12 @@ class UtilityScoreMixin:
         return {"processed_count": processed}
 
     def utility_rankings(self, min_utility: float = 0.0, limit: int = 20) -> list[dict]:
+        """按效用评分降序返回 TOP-N 记忆条目。"""
         mus_repo = MemoryUtilityScoresRepository(self.db)
         return mus_repo.list_ranked(min_utility=min_utility, limit=limit)
 
     def sleep_consolidate(self) -> dict:
+        """睡眠巩固：按效用阈值归档/合并/提升/标记待修剪记忆。"""
         entry_repo = MemoryEntriesRepository(self.db)
         log_repo = SleepConsolidationLogsRepository(self.db)
         link_repo = NodeMemoryLinksRepository(self.db)
@@ -188,6 +192,7 @@ class UtilityScoreMixin:
         }
 
     def sleep_history(self) -> list[dict]:
+        """返回最近 10 条睡眠巩固操作日志。"""
         log_repo = SleepConsolidationLogsRepository(self.db)
         return log_repo.list_recent(limit=10)
 

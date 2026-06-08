@@ -39,6 +39,7 @@ class SageLinkingService:
         self.repo = SageRepository(self.db)
 
     def auto_link(self) -> dict:
+        """自动执行情景→语义、语义→过程、世界树记忆链接三阶段关联。"""
         result = {
             "episodic_to_semantic_candidates": 0,
             "semantic_to_procedural_candidates": 0,
@@ -115,6 +116,7 @@ class SageLinkingService:
         return result
 
     def get_status(self) -> dict:
+        """返回各记忆组件计数、评分分布及最近一次评分/进化/链接时间。"""
         bms = BrainMemoryService(db=self.db)
         wt_repo = WorldTreeNodesRepository(self.db)
 

@@ -14,6 +14,7 @@ from cloud.app.repositories import (
 
 class UtilityOptMixin:
     def subtree_stats(self, node_id: int) -> dict:
+        """统计给定节点子树的总节点数、最大深度、记忆数及按层级分布。"""
         tree_repo = WorldTreeNodesRepository(self.db)
         link_repo = NodeMemoryLinksRepository(self.db)
 
@@ -50,6 +51,7 @@ class UtilityOptMixin:
         }
 
     def move_node(self, node_id: int, new_parent_id: Optional[int]) -> dict:
+        """移动节点到新父节点并刷新路径层级。"""
         tree_repo = WorldTreeNodesRepository(self.db)
         node = tree_repo.get_by_id(node_id)
         if not node:
@@ -89,6 +91,7 @@ class UtilityOptMixin:
             self._refresh_children(tree_repo, child["id"])
 
     def tree_heatmap(self) -> list[dict]:
+        """返回每个世界树节点的名称、层级及关联记忆数量。"""
         tree_repo = WorldTreeNodesRepository(self.db)
         link_repo = NodeMemoryLinksRepository(self.db)
 
@@ -100,6 +103,7 @@ class UtilityOptMixin:
         return result
 
     def tree_duplicates(self, node_id: int) -> list[dict]:
+        """检测子树内标题前缀重复的记忆条目。"""
         tree_repo = WorldTreeNodesRepository(self.db)
         link_repo = NodeMemoryLinksRepository(self.db)
 
@@ -117,6 +121,7 @@ class UtilityOptMixin:
         return dups
 
     def prune_node(self, node_id: int) -> dict:
+        """删除非活跃节点及其关联链接和快照。"""
         tree_repo = WorldTreeNodesRepository(self.db)
         link_repo = NodeMemoryLinksRepository(self.db)
         snap_repo = WorldTreeSnapshotsRepository(self.db)

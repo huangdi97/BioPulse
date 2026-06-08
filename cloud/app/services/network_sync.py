@@ -12,6 +12,7 @@ class NetworkSyncMixin:
     """细胞网络同步混入类，提供细胞间任务路由与路由表同步。"""
 
     def route_to_cell(self, source_key: str, target_key: str, task_data: dict) -> dict:
+        """将任务从源细胞路由到目标细胞，记录路由历史。"""
         source = self._get_cell(source_key)
         target = self._get_cell(target_key)
         if source["status"] != "active":
@@ -57,6 +58,7 @@ class NetworkSyncMixin:
         return entry
 
     def sync_routing_table(self, cell_key: str) -> dict:
+        """同步指定细胞的路由表，拉取所有活跃细胞地址。"""
         all_cells = self.db.execute(
             "SELECT cell_key, agent_instance_key, status FROM agent_cell_network WHERE status='active' ORDER BY created_at DESC"
         ).fetchall()

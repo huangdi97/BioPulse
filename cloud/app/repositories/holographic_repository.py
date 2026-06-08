@@ -1,3 +1,5 @@
+"""Holographic 记忆存储仓库 — 全息记忆数据的持久化CRUD操作。"""
+
 from cloud.shared.repository import BaseRepository
 from shared.columns.memory import TABLE_MEMORY_ASSOCIATIONS_COLS
 

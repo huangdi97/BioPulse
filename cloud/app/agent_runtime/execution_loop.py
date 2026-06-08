@@ -1,3 +1,5 @@
+"""Agent 执行循环 — 步骤级串行执行引擎，支持工具调用与结果收集。"""
+
 import json
 import logging
 import time

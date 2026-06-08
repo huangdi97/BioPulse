@@ -1,3 +1,5 @@
+"""合规审计日志服务 — 记录合规检查/拦截/违规事件的审计条目。"""
+
 import json
 import sqlite3
 

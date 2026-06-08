@@ -568,7 +568,7 @@ ATTACH DATABASE 'research.db' AS research;
 | Management | 13 py | 580 |
 | Shared | 52 py（`shared/`含`columns/`） | 3,278 |
 | Mobile App (Flutter) | 52 dart | 8,797 |
-| Frontend (React) | 93 tsx（`frontend/`）+ 34 tsx（`web/`） | 13,695 |
+| Frontend (React) | 93 tsx（`frontend/` CRM/销售管理）+ 34 tsx（`web/` 制药情报/合规） | 13,695 |
 | **Python总计** | **688 py** | **70,826** |
 | **主语言总计** | **867** | **93,318** |
 

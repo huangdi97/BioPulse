@@ -8,7 +8,7 @@ from typing import Generator
 from cloud.app.schema import SCHEMA_SQL
 from cloud.app.seeds import (
     seed_agent_data,
-    seed_brain_memory,  # seed_identity, seed_privacy,  # ❄️ 冻结
+    seed_brain_memory,
     seed_collaboration,
     seed_compliance_v2,
     seed_decision_intel,
@@ -161,8 +161,6 @@ def init_db() -> None:
         seed_soap_decision(conn)
         seed_memory_utility(conn)
         seed_brain_memory(conn)
-        # seed_identity(conn)  # ❄️ 冻结
-        # seed_privacy(conn)  # ❄️ 冻结
         seed_kg(conn)
         seed_recommend(conn)
         seed_collaboration(conn)

@@ -1,3 +1,5 @@
+"""拜访记录仓库 — HCP拜访数据的持久化存储与查询。"""
+
 import sqlite3
 from typing import Optional
 
