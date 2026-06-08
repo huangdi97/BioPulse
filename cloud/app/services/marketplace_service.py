@@ -94,6 +94,7 @@ class MarketplaceService(BaseService):
         n = len(sorted_vals)
 
         def _percentile(p):
+            """按线性插值计算单个百分位值。"""
             k = (p / 100.0) * (n - 1)
             f = int(k)
             c = k - f

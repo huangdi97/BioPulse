@@ -7,6 +7,7 @@ from cloud.app.services.base import BaseService
 
 
 def _now() -> str:
+    """返回数据库记录使用的当前时间字符串。"""
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 

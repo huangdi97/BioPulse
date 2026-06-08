@@ -13,7 +13,6 @@ def app():
     import pharma_intel.app.database as mod_db
 
     mod_db.DB_PATH = TEST_DB
-    mod_db.init_cache_db = lambda: None
 
     from pharma_intel.app.main import app as _app
 
