@@ -11,10 +11,26 @@ from cloud.app.services.base import BaseService
 
 
 def _since_datetime(days: int) -> str:
+    """计算当前时间减去指定天数后的日期时间字符串。
+
+    Args:
+        days: 减去的天数。
+
+    Returns:
+        YYYY-MM-DD HH:MM:SS 格式的字符串。
+    """
     return (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def _audit_log_to_dict(r) -> dict:
+    """将审计日志行对象转换为字典，仅保留指定字段。
+
+    Args:
+        r: 数据库行对象。
+
+    Returns:
+        包含 id, user_id, action, entity_type, entity_id, detail, source_end, ip_address, created_at 的字典。
+    """
     return {
         k: r[k]
         for k in (
@@ -32,6 +48,14 @@ def _audit_log_to_dict(r) -> dict:
 
 
 def _contribution_to_dict(r) -> dict:
+    """将联邦审计贡献行对象转换为字典，仅保留指定字段。
+
+    Args:
+        r: 数据库行对象。
+
+    Returns:
+        包含 id, contributor_did, contribution_type, payload_hash, payload_summary, weight, verified, verified_by, audit_chain_hash, created_at 的字典。
+    """
     return {
         k: r[k]
         for k in (
@@ -50,6 +74,15 @@ def _contribution_to_dict(r) -> dict:
 
 
 def _to_csv(rows: list[dict], fieldnames: list[str]) -> str:
+    """将字典列表导出为 CSV 格式字符串。
+
+    Args:
+        rows: 行数据列表。
+        fieldnames: CSV 列名列表。
+
+    Returns:
+        CSV 格式字符串。
+    """
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction="ignore")
     writer.writeheader()

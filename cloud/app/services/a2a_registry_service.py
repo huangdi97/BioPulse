@@ -193,6 +193,14 @@ class A2aRegistryService(BaseService):
         return [self._row_to_dict(r) for r in rows]
 
     def _row_to_dict(self, row):
+        """将数据库行对象转换为字典，自动解析 JSON 字段。
+
+        Args:
+            row: 数据库行对象。
+
+        Returns:
+            字典，其中 capabilities, metadata, input_data, output_data, detail 字段已从 JSON 解析。
+        """
         d = dict(row)
         for col in ("capabilities", "metadata", "input_data", "output_data", "detail"):
             if col in d and isinstance(d[col], str) and d[col]:
@@ -203,6 +211,13 @@ class A2aRegistryService(BaseService):
         return d
 
     def _event(self, etype, agent_key, detail=None):
+        """向 agent_network_events 表插入一条审计事件记录。
+
+        Args:
+            etype: 事件类型（如 register, heartbeat, routing）。
+            agent_key: 关联的 Agent 键。
+            detail: 可选的事件详情字典。
+        """
         detail_str = json.dumps(detail or {}, ensure_ascii=False)
         self.db.execute(
             "INSERT INTO agent_network_events (event_type, agent_key, detail) VALUES (?, ?, ?)",
@@ -210,6 +225,11 @@ class A2aRegistryService(BaseService):
         )
 
     def _task_id(self):
+        """生成一个唯一的 A2A 任务 ID。
+
+        Returns:
+            a2a: 前缀加 UUID 十六进制字符串。
+        """
         return f"a2a:{uuid.uuid4().hex}"
 
 

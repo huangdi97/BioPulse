@@ -206,6 +206,14 @@ class AgentFrameworkService(BaseService):
         return {"status": instance.get("status"), "last_active_at": row["last_active_at"]}
 
     def _row_to_dict(self, row):
+        """将数据库行对象转换为字典，自动解析 JSON 字段。
+
+        Args:
+            row: 数据库行对象。
+
+        Returns:
+            字典，其中 capabilities, default_config, triggers, endpoints, config_overrides, metrics 字段已从 JSON 解析。
+        """
         d = dict(row)
         for col in ("capabilities", "default_config", "triggers", "endpoints", "config_overrides", "metrics"):
             if col in d and isinstance(d[col], str) and d[col]:
@@ -216,6 +224,11 @@ class AgentFrameworkService(BaseService):
         return d
 
     def _a2a_service(self):
+        """返回 A2aRegistryService 实例，用于 Agent 自动注册与心跳同步。
+
+        Returns:
+            A2aRegistryService 实例。
+        """
         from cloud.app.services.a2a_registry_service import A2aRegistryService
 
         return A2aRegistryService(db=self.db)

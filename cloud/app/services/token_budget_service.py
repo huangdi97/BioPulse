@@ -31,6 +31,11 @@ class TokenBudgetConfig:
 
 
 def _load_rules() -> dict:
+    """从规则 JSON 文件中加载 token 预算规则配置。
+
+    Returns:
+        规则字典，含 default_alert_threshold, models, overrides。
+    """
     if not os.path.exists(_RULES_PATH):
         return {"default_alert_threshold": 0.8, "models": {}, "overrides": {}}
     with open(_RULES_PATH, encoding="utf-8") as f:
@@ -38,6 +43,11 @@ def _load_rules() -> dict:
 
 
 def _connect():
+    """创建并返回一个 SQLite 数据库连接，使用字典行工厂。
+
+    Returns:
+        sqlite3.Connection 对象。
+    """
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
@@ -50,6 +60,7 @@ class TokenBudgetService(TokenEstimatorMixin):
     }
 
     def __init__(self):
+        """初始化 TokenBudgetService，加载规则配置。"""
         self._rules = _load_rules()
 
     @classmethod
@@ -65,6 +76,14 @@ class TokenBudgetService(TokenEstimatorMixin):
         return cls.PRICING.get(model, {"input_per_million": 0.14, "output_per_million": 0.28})
 
     def _get_model_config(self, model: str) -> dict:
+        """获取指定模型的全局 token 预算配置。
+
+        Args:
+            model: 模型名称。
+
+        Returns:
+            含 max_tokens_per_day 和 max_tokens_per_request 的配置字典。
+        """
         models = self._rules.get("models", {})
         config = models.get(model, {})
         if not config:
@@ -75,6 +94,15 @@ class TokenBudgetService(TokenEstimatorMixin):
         return config
 
     def _get_override(self, user_id: int, model: str) -> Optional[dict]:
+        """获取指定用户和模型的自定义预算覆盖配置。
+
+        Args:
+            user_id: 用户 ID。
+            model: 模型名称。
+
+        Returns:
+            覆盖配置字典，若未配置则返回 None。
+        """
         overrides = self._rules.get("overrides", {})
         user_overrides = overrides.get(str(user_id), {})
         return user_overrides.get(model)

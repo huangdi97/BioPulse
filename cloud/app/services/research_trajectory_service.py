@@ -16,6 +16,7 @@ class ResearchTrajectoryService:
     """科研轨迹服务，提供 PI 轨迹记录、领域转移预测与评分、趋势分析。"""
 
     def _init_db_table(self):
+        """初始化 pi_trajectories 和 pi_predictions 数据库表（如不存在则创建）。"""
         db = get_research_db()
         try:
             db.execute(
@@ -144,6 +145,16 @@ class ResearchTrajectoryService:
             db.close()
 
     def _ai_predict_transition(self, pi_info: dict, features: dict, horizon_days: int) -> dict | None:
+        """调用 LLM 对 PI 进行领域转移预测。
+
+        Args:
+            pi_info: PI 信息字典。
+            features: 时间序列特征。
+            horizon_days: 预测天数。
+
+        Returns:
+            预测结果字典，若 LLM 未返回有效预测则返回 None。
+        """
         from cloud.app.services.research_trajectory_ai import build_prediction_prompt, call_llm_for_prediction
 
         prompt = build_prediction_prompt(pi_info, features, horizon_days)
