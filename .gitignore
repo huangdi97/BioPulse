@@ -128,6 +128,9 @@ audit*.md
 # 死代码/归档 — 本地参考不进仓库
 _archive/
 archive/
-clinical-ops/
-market-access/
-patient-engage/
+
+# 本地助手/规划文件
+.hermes/
+
+# 一次性代码质量报告（不上传）
+code_cleanup_report.md

@@ -12,14 +12,13 @@ exclude = '''
 [tool.ruff]
 line-length = 150
 target-version = "py312"
+exclude = ["_archive"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
 
 [tool.ruff.lint.per-file-ignores]
-"clinical-ops/**" = ["E402", "F401", "F403", "E501", "I001"]
-"market-access/**" = ["E402", "F401", "F403", "E501", "I001"]
-"patient-engage/**" = ["E402", "F401", "F403", "E501", "I001"]
+"archive/services/**" = ["E402", "F401", "F403", "E501", "I001"]
 "management/**" = ["E402", "F401", "F403", "E501"]
 "pharma-intel/**" = ["E402", "F401", "F403", "E501"]
 "pharma_intel/**" = ["E402", "F401", "F403", "E501"]
