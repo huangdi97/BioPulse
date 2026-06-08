@@ -1,6 +1,7 @@
 """MCP 工具管理服务。"""
 
 import json
+import logging
 import sqlite3
 from datetime import datetime
 
@@ -10,6 +11,8 @@ from starlette import status
 from cloud.app.database import DB_PATH
 from cloud.app.repositories import McpToolsRepository
 from cloud.app.services.mcp_guard_service import McpGuardService
+
+logger = logging.getLogger(__name__)
 
 
 class McpToolService:
@@ -29,7 +32,7 @@ class McpToolService:
                 try:
                     d[k] = json.loads(d[k])
                 except (json.JSONDecodeError, TypeError):
-                    pass
+                    logger.warning("Failed to parse MCP tool JSON field '%s'", k, exc_info=True)
         return d
 
     def register_tool(self, body, uid, role):

@@ -1,11 +1,14 @@
 """Agent 框架服务，管理角色模板与实例的生命周期（创建、启停、心跳）。"""
 
 import json
+import logging
 
 from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.services.base import BaseService
+
+logger = logging.getLogger(__name__)
 
 
 class AgentFrameworkService(BaseService):
@@ -203,7 +206,7 @@ class AgentFrameworkService(BaseService):
                 try:
                     d[col] = json.loads(d[col])
                 except (json.JSONDecodeError, TypeError):
-                    pass
+                    logger.warning("Failed to parse agent framework JSON field '%s'", col, exc_info=True)
         return d
 
     def _a2a_service(self):

@@ -1,11 +1,14 @@
 """统计服务模块，提供教练数据的聚合统计、趋势分析和多维对比。"""
 
 import json
+import logging
 from collections import defaultdict
 from typing import List
 
 from sales_coach.app.repositories import StatsRepository
 from sales_coach.app.services.base import BaseService
+
+logger = logging.getLogger(__name__)
 
 
 class StatsService(BaseService):
@@ -104,7 +107,7 @@ class StatsService(BaseService):
                         if k in aa:
                             dims[k].append(aa[k])
             except (json.JSONDecodeError, TypeError):
-                pass
+                logger.warning("Failed to parse coach session auto_assessment", exc_info=True)
         return {k: round(sum(v) / len(v), 1) if v else 0 for k, v in dims.items()}
 
     def get_category_performance(self, user_id: int) -> List[dict]:

@@ -1,4 +1,7 @@
+"""Manage holographic memory association workflows across memory entries."""
+
 import json
+import logging
 from datetime import datetime
 
 from fastapi import HTTPException
@@ -7,6 +10,8 @@ from starlette import status
 from cloud.app.repositories.holographic_repository import MemoryAssociationsRepository
 from cloud.app.repositories.memory_entry_repo import MemoryEntriesRepository
 from cloud.app.services.base import BaseService
+
+logger = logging.getLogger(__name__)
 
 
 def _now() -> str:
@@ -105,7 +110,7 @@ class HolographicService(BaseService):
             try:
                 new_assocs.extend(method(entry_id, entry) or [])
             except HTTPException:
-                pass
+                logger.warning("Failed to auto associate memory entry %s", entry_id, exc_info=True)
         return new_assocs
 
     def _associate_by_tags(self, entry_id: int, entry: dict) -> list:

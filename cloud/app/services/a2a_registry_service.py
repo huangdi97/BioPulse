@@ -1,12 +1,15 @@
 """A2A (Agent-to-Agent) 注册服务，管理 Agent 注册、心跳、任务路由与事件记录。"""
 
 import json
+import logging
 import uuid
 
 from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.services.base import BaseService
+
+logger = logging.getLogger(__name__)
 
 
 class A2aRegistryService(BaseService):
@@ -193,7 +196,7 @@ class A2aRegistryService(BaseService):
                 try:
                     d[col] = json.loads(d[col])
                 except (json.JSONDecodeError, TypeError):
-                    pass
+                    logger.warning("Failed to parse A2A registry JSON field '%s'", col, exc_info=True)
         return d
 
     def _event(self, etype, agent_key, detail=None):

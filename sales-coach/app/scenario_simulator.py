@@ -1,11 +1,14 @@
 """场景模拟器模块，基于知识图谱实体动态生成训练场景。"""
 
 import json
+import logging
 import sqlite3
 from datetime import datetime, timezone
 from typing import List
 
 from sales_coach.app.scenario_db import _read_kg_entities
+
+logger = logging.getLogger(__name__)
 
 
 class ScenarioSimulator:
@@ -25,7 +28,7 @@ class ScenarioSimulator:
             try:
                 props = json.loads(e["properties"] or "{}")
             except (json.JSONDecodeError, TypeError):
-                pass
+                logger.warning("Failed to parse knowledge graph entity properties", exc_info=True)
 
             if etype == "drug":
                 category = props.get("category", "药品知识")

@@ -1,6 +1,7 @@
 """培训脚本服务管理培训脚本的创建与执行。"""
 
 import json
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
@@ -10,6 +11,8 @@ from cloud.app.repositories import (
     TrainingScriptsRepository,
 )
 from cloud.app.services.base import BaseService
+
+logger = logging.getLogger(__name__)
 
 
 class TrainingScriptsService(BaseService):
@@ -45,7 +48,7 @@ class TrainingScriptsService(BaseService):
                             if idx < len(steps):
                                 steps[idx]["agent"] = agent
                 except (json.JSONDecodeError, TypeError):
-                    pass
+                    logger.warning("Failed to parse collaboration involved_agents", exc_info=True)
 
             script_id = f"ts:extract:{uuid.uuid4().hex[:8]}"
             script_name = f"协作剧本-{row['source_agent_role']}"

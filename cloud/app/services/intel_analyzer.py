@@ -1,6 +1,7 @@
 """情报分析模块，提供市场情报的查询、分析与状态管理。"""
 
 import json
+import logging
 import math
 import urllib.error
 import urllib.request
@@ -16,6 +17,8 @@ from cloud.app.repositories import (
 )
 from shared.base import PaginatedResponse
 from shared.config import settings as config_settings
+
+logger = logging.getLogger(__name__)
 
 
 def itd(row, parse_ai=False) -> dict:
@@ -40,7 +43,7 @@ def itd(row, parse_ai=False) -> dict:
         try:
             d["ai_analysis"] = json.loads(d["ai_analysis"])
         except (json.JSONDecodeError, TypeError):
-            pass
+            logger.warning("Failed to parse market intel ai_analysis", exc_info=True)
     return d
 
 

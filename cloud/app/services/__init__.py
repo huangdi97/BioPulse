@@ -1,3 +1,5 @@
+"""Export service-layer classes and compatibility aliases for the app."""
+
 from cloud.app.services.a2a_registry_service import A, A2ARegistryService, A2aRegistryService
 from cloud.app.services.agent_execution_service import AgentExecutionService
 from cloud.app.services.agent_framework_service import AgentFrameworkService

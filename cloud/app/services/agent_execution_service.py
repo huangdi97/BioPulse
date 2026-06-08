@@ -1,6 +1,7 @@
 """Agent 执行任务服务，管理自身数据库连接与仓库。"""
 
 import json
+import logging
 import os
 import sqlite3
 import uuid
@@ -12,6 +13,8 @@ from starlette import status
 from cloud.app.repositories import AgentExecutionTasksRepository, AgentSkillsRepository
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "cloud.db")
+
+logger = logging.getLogger(__name__)
 
 
 class AgentExecutionService:
@@ -31,7 +34,7 @@ class AgentExecutionService:
                 try:
                     d[k] = json.loads(d[k])
                 except (json.JSONDecodeError, TypeError):
-                    pass
+                    logger.warning("Failed to parse agent execution JSON field '%s'", k, exc_info=True)
         return d
 
     def _exec(self, fn):

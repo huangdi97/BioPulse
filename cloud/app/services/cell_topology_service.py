@@ -1,8 +1,11 @@
 """Cell 拓扑服务，分析 Agent 网络拓扑结构并生成优化建议。"""
 
 import json
+import logging
 
 from cloud.app.services.base import BaseService
+
+logger = logging.getLogger(__name__)
 
 
 class CellTopologyService(BaseService):
@@ -15,7 +18,7 @@ class CellTopologyService(BaseService):
                 try:
                     d[col] = json.loads(d[col])
                 except (json.JSONDecodeError, TypeError):
-                    pass
+                    logger.warning("Failed to parse cell topology JSON field '%s'", col, exc_info=True)
         return d
 
     def analyze_topology(self) -> dict:

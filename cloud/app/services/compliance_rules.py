@@ -1,9 +1,14 @@
+"""Manage compliance rule loading, evaluation, and violation reporting."""
+
+import logging
 import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from cloud.rules.loader import load_pharma_l2_rules, load_pharma_rules, load_research_l2_rules
+
+logger = logging.getLogger(__name__)
 
 
 def _now() -> str:
@@ -172,7 +177,7 @@ class EnforcerEngine:
                     if remaining is not None and remaining <= lead_days:
                         return self._l2_violation(rule, f"资质{remaining}天后到期，预警期{lead_days}天")
                 except (TypeError, ValueError):
-                    pass
+                    logger.warning("Failed to parse expiry date for L2 compliance rule", exc_info=True)
         if check_type == "discount_check":
             field = condition.get("field")
             value, expected = _float(data.get(field)), _float(threshold)

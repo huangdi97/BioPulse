@@ -1,6 +1,7 @@
 """合规管理服务，提供合规规则 CRUD、仪表盘统计与违规查询功能。"""
 
 import json
+import logging
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -10,6 +11,8 @@ from starlette import status
 
 from cloud.app.repositories import ComplianceRulesRepository
 from cloud.app.services.base import BaseService
+
+logger = logging.getLogger(__name__)
 
 
 class ComplianceService(BaseService):
@@ -83,7 +86,7 @@ class ComplianceService(BaseService):
                 if rep_id is not None:
                     rep_counter[rep_id] += 1
             except (json.JSONDecodeError, TypeError):
-                pass
+                logger.warning("Failed to parse enforcement visit_data_json for dashboard summary", exc_info=True)
 
         return {
             "total_violations_today": total_today,
@@ -115,7 +118,7 @@ class ComplianceService(BaseService):
                         }
                     )
             except (json.JSONDecodeError, TypeError):
-                pass
+                logger.warning("Failed to parse enforcement visit_data_json for rep violations", exc_info=True)
 
         return {"rep_id": rep_id, "violations": result}
 

@@ -1,6 +1,7 @@
 """编排服务，负责编排模板管理与多步骤协作流程的执行。"""
 
 import json
+import logging
 import uuid
 from datetime import datetime
 from typing import Optional
@@ -16,6 +17,8 @@ from cloud.app.repositories import (
 )
 from cloud.app.services.base import BaseService
 
+logger = logging.getLogger(__name__)
+
 
 def _row(r):
     if not r:
@@ -26,7 +29,7 @@ def _row(r):
             try:
                 d[k] = json.loads(d[k])
             except (json.JSONDecodeError, TypeError):
-                pass
+                logger.warning("Failed to parse orchestration template JSON field '%s'", k, exc_info=True)
     return d
 
 

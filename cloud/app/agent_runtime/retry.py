@@ -1,8 +1,11 @@
 """指数退避重试模块，支持 HTTP 错误重试及 429 限流处理。"""
 
+import logging
 import random
 import time
 from urllib.error import HTTPError, URLError
+
+logger = logging.getLogger(__name__)
 
 
 def retry_with_backoff(
@@ -40,7 +43,7 @@ def retry_with_backoff(
                     try:
                         delay = float(retry_after)
                     except ValueError:
-                        pass
+                        logger.warning("Failed to parse Retry-After header '%s'", retry_after, exc_info=True)
 
             delay = min(delay, max_delay)
             jitter = random.uniform(-0.2, 0.2)

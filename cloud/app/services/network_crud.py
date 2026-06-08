@@ -1,10 +1,13 @@
 """网络CRUD模块，负责智能体细胞网络的注册、发现与拓扑管理。"""
 
 import json
+import logging
 import uuid
 
 from fastapi import HTTPException
 from starlette import status
+
+logger = logging.getLogger(__name__)
 
 
 class NetworkCrudMixin:
@@ -181,5 +184,5 @@ class NetworkCrudMixin:
                 try:
                     d[col] = json.loads(d[col])
                 except (json.JSONDecodeError, TypeError):
-                    pass
+                    logger.warning("Failed to parse network cell JSON field '%s'", col, exc_info=True)
         return d
