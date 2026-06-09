@@ -53,7 +53,7 @@ class SessionUpdate(BaseModel):
     notes: Optional[str] = None
 
 
-@router.post("/coach/prompts", summary="创建提示", description="创建辅导话术提示")
+@router.post("/coach/prompts", summary="创建提示", description="创建辅导话术提示", tags=["情报"])
 def create_prompt(
     body: PromptCreate,
     service: CoachService = Depends(),
@@ -68,7 +68,7 @@ def create_prompt(
     )
 
 
-@router.get("/coach/prompts", summary="提示列表", description="获取辅导话术提示列表")
+@router.get("/coach/prompts", summary="提示列表", description="获取辅导话术提示列表", tags=["情报"])
 def list_prompts(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -91,7 +91,7 @@ def list_prompts(
     )
 
 
-@router.patch("/coach/prompts/{prompt_id}", summary="更新提示", description="更新指定辅导话术提示")
+@router.patch("/coach/prompts/{prompt_id}", summary="更新提示", description="更新指定辅导话术提示", tags=["情报"])
 def update_prompt(
     prompt_id: int,
     body: PromptUpdate,
@@ -103,7 +103,7 @@ def update_prompt(
     return success(data=row)
 
 
-@router.delete("/coach/prompts/{prompt_id}", summary="删除提示", description="删除指定辅导话术提示")
+@router.delete("/coach/prompts/{prompt_id}", summary="删除提示", description="删除指定辅导话术提示", tags=["情报"])
 def delete_prompt(
     prompt_id: int,
     service: CoachService = Depends(),
@@ -114,7 +114,7 @@ def delete_prompt(
     return success(message="deleted")
 
 
-@router.post("/coach/suggest", summary="AI建议", description="获取AI辅导建议")
+@router.post("/coach/suggest", summary="AI建议", description="获取AI辅导建议", tags=["情报"])
 def coach_suggest(
     body: SuggestRequest,
     service: CoachService = Depends(),
@@ -125,7 +125,7 @@ def coach_suggest(
     return success(data=result)
 
 
-@router.post("/coach/sessions", summary="创建会话", description="创建辅导会话")
+@router.post("/coach/sessions", summary="创建会话", description="创建辅导会话", tags=["情报"])
 def create_session(
     body: SessionCreate,
     service: CoachService = Depends(),
@@ -140,7 +140,7 @@ def create_session(
     )
 
 
-@router.get("/coach/sessions", summary="会话列表", description="获取辅导会话列表")
+@router.get("/coach/sessions", summary="会话列表", description="获取辅导会话列表", tags=["情报"])
 def list_sessions(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -161,7 +161,7 @@ def list_sessions(
     )
 
 
-@router.patch("/coach/sessions/{session_id}", summary="更新会话", description="更新指定辅导会话")
+@router.patch("/coach/sessions/{session_id}", summary="更新会话", description="更新指定辅导会话", tags=["情报"])
 def update_session(
     session_id: int,
     body: SessionUpdate,

@@ -8,7 +8,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, status
 
-router = APIRouter(prefix="/api/research/quotation", tags=["research-quotation"])
+router = APIRouter(prefix="/api/research/quotation")
 
 _QUOTATIONS: list[dict[str, Any]] = []
 _QUOTATION_LOCK = Lock()
@@ -30,7 +30,7 @@ def _find_index(quotation_id: int) -> int:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Quotation not found")
 
 
-@router.get("")
+@router.get("", tags=["科研PI"])
 def list_quotations() -> dict[str, Any]:
     """List all in-memory research quotations."""
     with _QUOTATION_LOCK:
@@ -38,7 +38,7 @@ def list_quotations() -> dict[str, Any]:
     return _success(quotations)
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED, tags=["科研PI"])
 def create_quotation(payload: dict[str, Any]) -> dict[str, Any]:
     """Create a research quotation in memory."""
     global _NEXT_ID
@@ -58,7 +58,7 @@ def create_quotation(payload: dict[str, Any]) -> dict[str, Any]:
     return _success(result)
 
 
-@router.get("/{id}")
+@router.get("/{id}", tags=["科研PI"])
 def get_quotation_detail(id: int) -> dict[str, Any]:
     """Return one research quotation by id."""
     with _QUOTATION_LOCK:
@@ -66,7 +66,7 @@ def get_quotation_detail(id: int) -> dict[str, Any]:
     return _success(quotation)
 
 
-@router.put("/{id}")
+@router.put("/{id}", tags=["科研PI"])
 def update_quotation(id: int, payload: dict[str, Any]) -> dict[str, Any]:
     """Update one research quotation by id."""
     with _QUOTATION_LOCK:
@@ -84,7 +84,7 @@ def update_quotation(id: int, payload: dict[str, Any]) -> dict[str, Any]:
     return _success(result)
 
 
-@router.delete("/{id}")
+@router.delete("/{id}", tags=["科研PI"])
 def delete_quotation(id: int) -> dict[str, Any]:
     """Delete one research quotation by id."""
     with _QUOTATION_LOCK:

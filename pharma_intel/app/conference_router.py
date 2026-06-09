@@ -10,10 +10,10 @@ from pharma_intel.app.services.conference_service import (
 )
 from shared.base import success
 
-router = APIRouter(prefix="/api/conference", tags=["学术会议追踪"])
+router = APIRouter(prefix="/api/conference")
 
 
-@router.get("/upcoming")
+@router.get("/upcoming", tags=["情报源"])
 async def upcoming_conferences(
     limit: int = Query(10, ge=1, le=50, description="返回会议数量上限"),
 ):
@@ -22,7 +22,7 @@ async def upcoming_conferences(
     return success(data=result)
 
 
-@router.get("/{conference_id}")
+@router.get("/{conference_id}", tags=["情报源"])
 async def conference_detail(
     conference_id: str,
 ):
@@ -36,7 +36,7 @@ async def conference_detail(
     return success(data=result)
 
 
-@router.get("/trends")
+@router.get("/trends", tags=["情报源"])
 async def conference_trends(
     months: int = Query(6, ge=1, le=24, description="分析窗口月数"),
 ):

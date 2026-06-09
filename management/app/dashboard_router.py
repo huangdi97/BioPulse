@@ -18,25 +18,25 @@ async def _fetch(path: str) -> dict:
             return {"_degraded": True, "_from_cache": True}
 
 
-@router.get("/api/management/dashboard")
+@router.get("/api/management/dashboard", tags=["看板"])
 async def dashboard():
     data = await _fetch("/api/demo/dashboard")
     return {"code": 0, "message": "ok", "data": data}
 
 
-@router.get("/api/management/dashboard/users")
+@router.get("/api/management/dashboard/users", tags=["看板"])
 async def dashboard_users():
     data = await _fetch("/api/demo/dashboard/users")
     return {"code": 0, "message": "ok", "data": data}
 
 
-@router.get("/api/management/dashboard/compliance")
+@router.get("/api/management/dashboard/compliance", tags=["看板"])
 async def dashboard_compliance():
     data = await _fetch("/api/demo/dashboard/compliance")
     return {"code": 0, "message": "ok", "data": data}
 
 
-@router.get("/api/management/dashboard/overview")
+@router.get("/api/management/dashboard/overview", tags=["看板"])
 async def dashboard_overview():
     async with httpx.AsyncClient() as client:
         try:

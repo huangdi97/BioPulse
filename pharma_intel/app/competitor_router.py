@@ -8,10 +8,10 @@ from pharma_intel.app.services.competitor_service import (
 )
 from shared.base import success
 
-router = APIRouter(prefix="/api/competitor", tags=["竞品情报"])
+router = APIRouter(prefix="/api/competitor")
 
 
-@router.get("/intel")
+@router.get("/intel", tags=["竞争格局"])
 async def competitor_intel(
     company: str = Query(..., description="公司名称"),
 ):
@@ -20,7 +20,7 @@ async def competitor_intel(
     return success(data=result)
 
 
-@router.get("/news")
+@router.get("/news", tags=["竞争格局"])
 async def market_news(
     limit: int = Query(10, ge=1, le=50),
 ):

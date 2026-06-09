@@ -40,7 +40,7 @@ class NoteOut(BaseModel):
     updated_at: Optional[str] = None
 
 
-@router.post("/schedule/{schedule_id}/notes", summary="创建笔记", description="创建拜访笔记")
+@router.post("/schedule/{schedule_id}/notes", summary="创建笔记", description="创建拜访笔记", tags=["拜访"])
 def create_note(
     schedule_id: int,
     body: NoteCreate,
@@ -56,7 +56,7 @@ def create_note(
     )
 
 
-@router.get("/schedule/{schedule_id}/notes", summary="笔记列表", description="获取拜访笔记列表")
+@router.get("/schedule/{schedule_id}/notes", summary="笔记列表", description="获取拜访笔记列表", tags=["拜访"])
 def list_notes(
     schedule_id: int,
     page: int = Query(1, ge=1),
@@ -78,13 +78,13 @@ def list_notes(
     )
 
 
-@router.get("/notes", summary="全部笔记", description="获取全部笔记")
+@router.get("/notes", summary="全部笔记", description="获取全部笔记", tags=["拜访"])
 def list_all_notes() -> list:
     """获取notes。"""
     return []
 
 
-@router.get("/notes/{note_id}", summary="笔记详情", description="获取指定笔记详情")
+@router.get("/notes/{note_id}", summary="笔记详情", description="获取指定笔记详情", tags=["拜访"])
 def get_note(
     note_id: int,
     service: NoteService = Depends(),
@@ -95,7 +95,7 @@ def get_note(
     return success(data=NoteOut(**row))
 
 
-@router.patch("/notes/{note_id}", summary="更新笔记", description="更新指定笔记")
+@router.patch("/notes/{note_id}", summary="更新笔记", description="更新指定笔记", tags=["拜访"])
 def update_note(
     note_id: int,
     body: NoteUpdate,
@@ -107,7 +107,7 @@ def update_note(
     return success(data=NoteOut(**row))
 
 
-@router.delete("/notes/{note_id}", summary="删除笔记", description="删除指定笔记")
+@router.delete("/notes/{note_id}", summary="删除笔记", description="删除指定笔记", tags=["拜访"])
 def delete_note(
     note_id: int,
     service: NoteService = Depends(),

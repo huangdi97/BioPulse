@@ -10,10 +10,10 @@ from .services.monitoring_service import (
     get_monitoring_report,
 )
 
-router = APIRouter(prefix="/api/monitoring", tags=["监察报告"])
+router = APIRouter(prefix="/api/monitoring")
 
 
-@router.get("/plan")
+@router.get("/plan", tags=["监查"])
 async def plan(
     trial_id: str = Query(..., description="临床试验编号"),
 ):
@@ -22,7 +22,7 @@ async def plan(
     return success(data=result)
 
 
-@router.get("/report")
+@router.get("/report", tags=["监查"])
 async def report(
     trial_id: str = Query(..., description="临床试验编号"),
     report_id: str = Query(..., description="监察报告编号"),
@@ -32,7 +32,7 @@ async def report(
     return success(data=result)
 
 
-@router.post("/generate")
+@router.post("/generate", tags=["监查"])
 async def generate(
     trial_id: str = Query(..., description="临床试验编号"),
 ):

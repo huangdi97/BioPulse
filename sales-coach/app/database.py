@@ -2,12 +2,9 @@
 
 import os
 import sqlite3
-from typing import Generator
-
-import psycopg2
 
 from shared.config import settings
-from shared.db import PGCompatConnection
+from shared.database import SQLiteDatabase
 
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DB_PATH = os.path.join(_BASE_DIR, "data", "sales_coach.db")
@@ -145,26 +142,6 @@ CREATE TABLE IF NOT EXISTS education_assessment (
 );
 """
 
-
-def get_db() -> Generator:
-    if DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://"):
-        conn = PGCompatConnection(psycopg2.connect(DATABASE_URL))
-        try:
-            yield conn
-        finally:
-            conn.close()
-    else:
-        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA foreign_keys=ON")
-        try:
-            yield conn
-        finally:
-            conn.close()
-
-
 _NEW_COACH_SESSION_COLS = [
     ("session_type", "TEXT DEFAULT 'roleplay'"),
     ("scenario_id", "INTEGER"),
@@ -176,23 +153,19 @@ _NEW_COACH_SESSION_COLS = [
 ]
 
 
-def _migrate_coach_session(conn: sqlite3.Connection) -> None:
-    existing = {row[1] for row in conn.execute("PRAGMA table_info(coach_session)").fetchall()}
-    for col_name, col_def in _NEW_COACH_SESSION_COLS:
-        if col_name not in existing:
-            conn.execute(f"ALTER TABLE coach_session ADD COLUMN {col_name} {col_def}")
+class SalesCoachDatabase(SQLiteDatabase):
+    def __init__(self):
+        super().__init__(
+            db_path=DB_PATH,
+            database_url=DATABASE_URL,
+            schema_sql=SCHEMA,
+            pg_schema_sql=PG_SCHEMA,
+        )
+
+    def _run_migrations(self, conn: sqlite3.Connection) -> None:
+        self._ensure_columns(conn, "coach_session", _NEW_COACH_SESSION_COLS)
 
 
-def init_db() -> None:
-    if DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://"):
-        conn = PGCompatConnection(psycopg2.connect(DATABASE_URL))
-        conn.executescript(PG_SCHEMA)
-        conn.commit()
-        conn.close()
-    else:
-        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-        conn = sqlite3.connect(DB_PATH)
-        conn.executescript(SCHEMA)
-        _migrate_coach_session(conn)
-        conn.commit()
-        conn.close()
+_db = SalesCoachDatabase()
+get_db = _db.get_db
+init_db = _db.init_db

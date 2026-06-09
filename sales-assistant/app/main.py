@@ -17,6 +17,10 @@ from sales_assistant.app.health_router import router as health_router
 from sales_assistant.app.note_router import router as note_router
 from sales_assistant.app.objection_router import router as objection_router
 from sales_assistant.app.precall_router import router as precall_router
+from sales_assistant.app.routers.academic_meeting_router import router as academic_meeting_router
+from sales_assistant.app.routers.competitor_quicklook_router import router as competitor_quicklook_router
+from sales_assistant.app.routers.schedule_optimizer_router import router as schedule_optimizer_router
+from sales_assistant.app.routers.voice_analysis_router import router as voice_analysis_router
 from sales_assistant.app.schedule_router import router as schedule_router
 from sales_assistant.app.strategy_router import router as strategy_router
 from sales_assistant.app.strategy_router import strategy_root_router
@@ -38,7 +42,19 @@ def _init_l1_cache(category: str) -> None:
     conn.close()
 
 
-app = FastAPI(title="Sales Assistant Service", version=settings.version)
+app = FastAPI(
+    title="Sales Assistant Service",
+    version=settings.version,
+    openapi_tags=[
+        {"name": "拜访", "description": "拜访计划、执行、记录、日程管理"},
+        {"name": "HCP", "description": "HCP信息管理、关系图谱"},
+        {"name": "科研PI", "description": "科研PI信息、询价报价、订单管理"},
+        {"name": "合规检查", "description": "异常检测、合规风险检查与告警"},
+        {"name": "任务", "description": "任务管理、异常跟进"},
+        {"name": "产品", "description": "产品信息、资料与HCP产品关联"},
+        {"name": "情报", "description": "预拜访策略、异议处理、漏斗分析"},
+    ],
+)
 
 setup_logging("sales_assistant")
 
@@ -78,3 +94,7 @@ app.include_router(anomaly_router)
 app.include_router(strategy_router)
 app.include_router(strategy_root_router)
 app.include_router(content_root_router)
+app.include_router(voice_analysis_router)
+app.include_router(schedule_optimizer_router)
+app.include_router(academic_meeting_router)
+app.include_router(competitor_quicklook_router)

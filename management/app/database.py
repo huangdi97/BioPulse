@@ -1,8 +1,8 @@
 """管理端数据库模块，管理配置、视图偏好与角色缓存。"""
 
 import os
-import sqlite3
-from typing import Generator
+
+from shared.database import SQLiteDatabase
 
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(os.path.dirname(_BASE_DIR), "data", "management.db")
@@ -30,21 +30,11 @@ CREATE TABLE IF NOT EXISTS role_cache (
 """
 
 
-def get_db() -> Generator:
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA foreign_keys=ON")
-    try:
-        yield conn
-    finally:
-        conn.close()
+class ManagementDatabase(SQLiteDatabase):
+    def __init__(self):
+        super().__init__(db_path=DB_PATH, schema_sql=SCHEMA)
 
 
-def init_db():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
-    conn.executescript(SCHEMA)
-    conn.commit()
-    conn.close()
+_db = ManagementDatabase()
+get_db = _db.get_db
+init_db = _db.init_db

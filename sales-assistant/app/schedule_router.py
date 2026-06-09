@@ -10,7 +10,7 @@ from sales_assistant.app.services.schedule_service import ScheduleService
 from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
-router = APIRouter(prefix="/schedule", tags=["schedule"])
+router = APIRouter(prefix="/schedule")
 
 
 class ScheduleCreate(BaseModel):
@@ -47,7 +47,7 @@ class ScheduleOut(BaseModel):
     updated_at: Optional[str] = None
 
 
-@router.post("", summary="创建日程", description="创建销售日程")
+@router.post("", summary="创建日程", description="创建销售日程", tags=["拜访"])
 def create_schedule(
     body: ScheduleCreate,
     service: ScheduleService = Depends(),
@@ -59,7 +59,7 @@ def create_schedule(
     return JSONResponse(content=success(data={"id": new_id}).model_dump(), status_code=201)
 
 
-@router.get("", summary="日程列表", description="获取销售日程列表")
+@router.get("", summary="日程列表", description="获取销售日程列表", tags=["拜访"])
 def list_schedules(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -89,7 +89,7 @@ def list_schedules(
     )
 
 
-@router.get("/{schedule_id}", summary="日程详情", description="获取指定日程详情")
+@router.get("/{schedule_id}", summary="日程详情", description="获取指定日程详情", tags=["拜访"])
 def get_schedule(
     schedule_id: int,
     service: ScheduleService = Depends(),
@@ -100,7 +100,7 @@ def get_schedule(
     return success(data=ScheduleOut(**row))
 
 
-@router.patch("/{schedule_id}", summary="更新日程", description="更新指定日程")
+@router.patch("/{schedule_id}", summary="更新日程", description="更新指定日程", tags=["拜访"])
 def update_schedule(
     schedule_id: int,
     body: ScheduleUpdate,
@@ -112,7 +112,7 @@ def update_schedule(
     return success(data=ScheduleOut(**row))
 
 
-@router.delete("/{schedule_id}", summary="删除日程", description="删除指定日程")
+@router.delete("/{schedule_id}", summary="删除日程", description="删除指定日程", tags=["拜访"])
 def delete_schedule(
     schedule_id: int,
     service: ScheduleService = Depends(),

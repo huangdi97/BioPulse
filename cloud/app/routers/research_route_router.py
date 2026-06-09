@@ -43,7 +43,7 @@ class EstimateRequest(BaseModel):
     to_lng: float
 
 
-@router.post("/optimize", summary="路线优化", description="对多个科研路线点进行路径优化排序")
+@router.post("/optimize", summary="路线优化", description="对多个科研路线点进行路径优化排序", tags=["Research"])
 def post_optimize(
     body: OptimizeRequest,
     current_user: dict = Depends(get_current_user),
@@ -53,7 +53,7 @@ def post_optimize(
     return {"code": 0, "data": result, "message": "success"}
 
 
-@router.post("/estimate", summary="距离时间估算", description="估算两点之间的直线距离和预计行程时间")
+@router.post("/estimate", summary="距离时间估算", description="估算两点之间的直线距离和预计行程时间", tags=["Research"])
 def post_estimate(
     body: EstimateRequest,
     current_user: dict = Depends(get_current_user),

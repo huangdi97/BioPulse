@@ -10,10 +10,10 @@ from .services.bidding_service import (
     get_province_prices,
 )
 
-router = APIRouter(prefix="/api/bidding", tags=["招标监控"])
+router = APIRouter(prefix="/api/bidding")
 
 
-@router.get("/price")
+@router.get("/price", tags=["招标"])
 async def bidding_price(
     drug_name: str = Query(..., description="药品名称"),
 ):
@@ -22,7 +22,7 @@ async def bidding_price(
     return success(data=result)
 
 
-@router.get("/trend")
+@router.get("/trend", tags=["招标"])
 async def price_trend(
     drug_name: str = Query(..., description="药品名称"),
 ):
@@ -31,7 +31,7 @@ async def price_trend(
     return success(data=result)
 
 
-@router.get("/provinces")
+@router.get("/provinces", tags=["招标"])
 async def province_prices(
     drug_name: str = Query(..., description="药品名称"),
 ):

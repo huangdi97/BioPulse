@@ -14,7 +14,7 @@ class TestRequest(BaseModel):
     input_message: str = ""
 
 
-@router.post("/test")
+@router.post("/test", tags=["langgraph"])
 def run_test_graph(body: TestRequest):
     from cloud.langgraph.graph import get_test_graph
 

@@ -10,10 +10,10 @@ from .services.education_service import (
     push_content,
 )
 
-router = APIRouter(prefix="/api/education", tags=["患者教育"])
+router = APIRouter(prefix="/api/education")
 
 
-@router.get("/content")
+@router.get("/content", tags=["患者"])
 async def content(
     disease: str = Query(..., description="疾病名称"),
 ):
@@ -22,7 +22,7 @@ async def content(
     return success(data=result)
 
 
-@router.get("/recommended")
+@router.get("/recommended", tags=["患者"])
 async def recommended(
     patient_id: str = Query(..., description="患者标识"),
 ):
@@ -31,7 +31,7 @@ async def recommended(
     return success(data=result)
 
 
-@router.post("/push")
+@router.post("/push", tags=["患者"])
 async def push(body: dict):
     """推送内容。将教育内容推送给指定患者群体。"""
     result = await push_content(

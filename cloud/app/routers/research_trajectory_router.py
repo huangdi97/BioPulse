@@ -21,7 +21,7 @@ class PredictRequest(BaseModel):
     horizon_days: int = 90
 
 
-@router.get("/pi/{pi_id}/trajectory", summary="Get Pi Trajectory by ID", description="根据PI ID获取科研轨迹")
+@router.get("/pi/{pi_id}/trajectory", summary="Get Pi Trajectory by ID", description="根据PI ID获取科研轨迹", tags=["Research Trajectory"])
 def get_pi_trajectory(
     pi_id: int,
     current_user: dict = Depends(get_current_user),
@@ -37,7 +37,7 @@ def get_pi_trajectory(
     return success(data)
 
 
-@router.post("/pi/{pi_id}/predict", summary="Predict Pi Trajectory", description="预测PI未来指定天数的科研轨迹")
+@router.post("/pi/{pi_id}/predict", summary="Predict Pi Trajectory", description="预测PI未来指定天数的科研轨迹", tags=["Research Trajectory"])
 def predict_pi_trajectory(
     pi_id: int,
     body: PredictRequest = None,
@@ -55,7 +55,7 @@ def predict_pi_trajectory(
     return success(data)
 
 
-@router.get("/trends", summary="Get Trends by ID", description="获取科研趋势数据")
+@router.get("/trends", summary="Get Trends by ID", description="获取科研趋势数据", tags=["Research Trajectory"])
 def get_trends(
     days: int = Query(90, description="天数范围"),
     current_user: dict = Depends(get_current_user),

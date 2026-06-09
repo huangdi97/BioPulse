@@ -29,7 +29,7 @@ class GenerateQuotationRequest(BaseModel):
     customer_info: Optional[dict] = None
 
 
-@router.get("/templates")
+@router.get("/templates", tags=["Research Quotation"])
 def list_templates(
     current_user: dict = Depends(get_current_user),
 ):
@@ -40,7 +40,7 @@ def list_templates(
     }
 
 
-@router.post("/generate")
+@router.post("/generate", tags=["Research Quotation"])
 def create_quotation(
     body: GenerateQuotationRequest,
     current_user: dict = Depends(get_current_user),

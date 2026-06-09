@@ -11,7 +11,7 @@ from assistant.app.services.visit_service import VisitService
 from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
-router = APIRouter(prefix="/visits", tags=["visits"])
+router = APIRouter(prefix="/visits")
 
 
 class VisitCreate(BaseModel):
@@ -60,7 +60,7 @@ class VisitOut(BaseModel):
     created_at: Optional[str] = None
 
 
-@router.post("", summary="创建拜访", description="创建新的拜访记录。")
+@router.post("", summary="创建拜访", description="创建新的拜访记录。", tags=["手术记录"])
 def create_visit(
     body: VisitCreate,
     current_user: dict = Depends(require_scope("visit")),
@@ -75,7 +75,7 @@ def create_visit(
     )
 
 
-@router.get("", summary="查询拜访列表", description="分页查询拜访记录，支持按HCP和类型筛选。")
+@router.get("", summary="查询拜访列表", description="分页查询拜访记录，支持按HCP和类型筛选。", tags=["手术记录"])
 def list_visits(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -103,7 +103,7 @@ def list_visits(
     )
 
 
-@router.get("/{visit_id}", summary="获取拜访详情", description="根据ID获取单个拜访记录的详细信息。")
+@router.get("/{visit_id}", summary="获取拜访详情", description="根据ID获取单个拜访记录的详细信息。", tags=["手术记录"])
 def get_visit(
     visit_id: int,
     current_user: dict = Depends(require_scope("visit")),
@@ -114,7 +114,7 @@ def get_visit(
     return success(data=VisitOut(**dict(row)))
 
 
-@router.patch("/{visit_id}", summary="更新拜访", description="更新指定拜访记录的部分字段信息。")
+@router.patch("/{visit_id}", summary="更新拜访", description="更新指定拜访记录的部分字段信息。", tags=["手术记录"])
 def update_visit(
     visit_id: int,
     body: VisitUpdate,
@@ -126,7 +126,7 @@ def update_visit(
     return success(data=VisitOut(**row))
 
 
-@router.delete("/{visit_id}", summary="删除拜访", description="删除指定的拜访记录。")
+@router.delete("/{visit_id}", summary="删除拜访", description="删除指定的拜访记录。", tags=["手术记录"])
 def delete_visit(
     visit_id: int,
     current_user: dict = Depends(require_scope("visit")),
@@ -137,7 +137,7 @@ def delete_visit(
     return success(message="deleted")
 
 
-visit_alias_router = APIRouter(prefix="/visit", tags=["visit-alias"])
+visit_alias_router = APIRouter(prefix="/visit")
 
 
 @visit_alias_router.post("", summary="创建拜访(别名)", description="通过别名路径创建拜访记录。")

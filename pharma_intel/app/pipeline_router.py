@@ -8,10 +8,10 @@ from pharma_intel.app.services.pipeline_service import (
 )
 from shared.base import success
 
-router = APIRouter(prefix="/api/pipeline", tags=["管线竞争分析"])
+router = APIRouter(prefix="/api/pipeline")
 
 
-@router.get("/by-company")
+@router.get("/by-company", tags=["管线"])
 async def pipeline_by_company(
     company: str = Query(..., description="公司名称"),
     therapeutic_area: str = Query("", description="治疗领域"),
@@ -21,7 +21,7 @@ async def pipeline_by_company(
     return success(data=result)
 
 
-@router.get("/by-indication")
+@router.get("/by-indication", tags=["管线"])
 async def pipeline_by_indication(
     indication: str = Query(..., description="适应症名称"),
 ):
@@ -30,7 +30,7 @@ async def pipeline_by_indication(
     return success(data=result)
 
 
-@router.get("/trending")
+@router.get("/trending", tags=["管线"])
 async def trending_pipelines(
     limit: int = Query(10, ge=1, le=50),
 ):

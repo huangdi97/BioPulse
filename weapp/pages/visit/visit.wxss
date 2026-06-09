@@ -1,0 +1,21 @@
+.label {
+  font-size: 26rpx;
+  color: #475569;
+  margin: 12rpx 0;
+}
+
+.picker-field {
+  line-height: 84rpx;
+  box-sizing: border-box;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 220rpx;
+  box-sizing: border-box;
+  border: 1rpx solid #cbd5e1;
+  border-radius: 8rpx;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+  background: #ffffff;
+}

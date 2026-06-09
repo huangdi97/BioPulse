@@ -10,10 +10,10 @@ from .services.strategy_service import (
     get_policy_news,
 )
 
-router = APIRouter(prefix="/api/strategy", tags=["准入策略"])
+router = APIRouter(prefix="/api/strategy")
 
 
-@router.get("/access")
+@router.get("/access", tags=["集采"])
 async def access_strategy(
     drug_name: str = Query(..., description="药品名称"),
     target_province: str = Query(..., description="目标省份"),
@@ -23,7 +23,7 @@ async def access_strategy(
     return success(data=result)
 
 
-@router.get("/landscape")
+@router.get("/landscape", tags=["集采"])
 async def competitor_landscape(
     drug_name: str = Query(..., description="药品名称"),
 ):
@@ -32,7 +32,7 @@ async def competitor_landscape(
     return success(data=result)
 
 
-@router.get("/policy-news")
+@router.get("/policy-news", tags=["集采"])
 async def policy_news():
     """获取医药政策动态。返回最新政策新闻列表。"""
     result = await get_policy_news()

@@ -16,7 +16,7 @@ router = APIRouter(
 )
 
 
-@router.get("/pi")
+@router.get("/pi", tags=["Research Export"])
 def export_pi(
     format: str = Query("csv", description="Export format"),
     current_user: dict = Depends(get_current_user),
@@ -38,7 +38,7 @@ def export_pi(
     )
 
 
-@router.get("/quotation/{quotation_id}")
+@router.get("/quotation/{quotation_id}", tags=["Research Export"])
 def export_quotation_endpoint(
     quotation_id: int,
     current_user: dict = Depends(get_current_user),

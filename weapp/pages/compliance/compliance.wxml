@@ -1,0 +1,13 @@
+<view class="page">
+  <view class="title">合规自检</view>
+  <view class="panel">
+    <view class="result {{result === '通过' ? 'pass' : 'pending'}}">{{result}}</view>
+    <checkbox-group>
+      <label class="check-row" wx:for="{{items}}" wx:key="id" data-id="{{item.id}}" bindtap="toggleItem">
+        <checkbox checked="{{item.checked}}" color="#0f766e" />
+        <text>{{item.text}}</text>
+      </label>
+    </checkbox-group>
+    <button class="button-secondary" bindtap="reset">重置清单</button>
+  </view>
+</view>

@@ -3,14 +3,13 @@
 import time
 
 from fastapi import APIRouter
-
 from sales_coach.app.database import DB_PATH
 
 router = APIRouter(tags=["health"])
 _start_time = time.time()
 
 
-@router.get("/health", summary="健康检查", description="检查服务运行状态和数据库连接")
+@router.get("/health", summary="健康检查", description="检查服务运行状态和数据库连接", tags=["场景"])
 def health():
     db_status = "disconnected"
     try:

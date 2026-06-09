@@ -167,6 +167,33 @@ CREATE TABLE IF NOT EXISTS anomaly_alert (
     resolved_by INTEGER,
     created_at TEXT
 );
+
+CREATE TABLE IF NOT EXISTS voice_analysis (
+    id {pk},
+    visit_id TEXT NOT NULL UNIQUE,
+    hcp_id TEXT,
+    file_path TEXT NOT NULL,
+    transcript TEXT,
+    summary TEXT,
+    key_points TEXT,
+    concerns TEXT,
+    commitments TEXT,
+    next_steps TEXT,
+    sentiment TEXT,
+    created_at TEXT,
+    updated_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS schedule_optimization (
+    id {pk},
+    rep_id TEXT NOT NULL,
+    schedule_date TEXT NOT NULL,
+    request_json TEXT,
+    result_json TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    UNIQUE(rep_id, schedule_date)
+);
 """
 
 SCHEMA_SQL = _BASE_SCHEMA.replace("{pk}", "INTEGER PRIMARY KEY AUTOINCREMENT")

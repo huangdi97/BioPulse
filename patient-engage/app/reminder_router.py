@@ -10,10 +10,10 @@ from .services.reminder_service import (
     get_reminder_status,
 )
 
-router = APIRouter(prefix="/api/reminder", tags=["用药提醒"])
+router = APIRouter(prefix="/api/reminder")
 
 
-@router.post("/create")
+@router.post("/create", tags=["用药提醒"])
 async def create(body: dict):
     """创建提醒计划。配置用药提醒的时间、频率和药品信息。"""
     result = await create_reminder(
@@ -24,7 +24,7 @@ async def create(body: dict):
     return success(data=result)
 
 
-@router.get("/status")
+@router.get("/status", tags=["用药提醒"])
 async def status(
     patient_id: str = Query(..., description="患者标识"),
 ):
@@ -33,7 +33,7 @@ async def status(
     return success(data=result)
 
 
-@router.get("/adherence")
+@router.get("/adherence", tags=["用药提醒"])
 async def adherence(
     patient_id: str = Query(..., description="患者标识"),
     days: int = Query(30, description="报告天数"),

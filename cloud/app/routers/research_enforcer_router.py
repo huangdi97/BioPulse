@@ -21,7 +21,7 @@ class ResearchVisitCheckRequest(BaseModel):
     visit_data: dict
 
 
-@router.post("/enforce")
+@router.post("/enforce", tags=["Research Enforcer"])
 def enforce_research_visit(
     body: ResearchVisitCheckRequest,
     current_user: dict = Depends(get_current_user),
@@ -47,7 +47,7 @@ def enforce_research_visit(
         db.close()
 
 
-@router.get("/enforce/rules")
+@router.get("/enforce/rules", tags=["Research Enforcer"])
 def list_research_rules(
     current_user: dict = Depends(get_current_user),
 ):

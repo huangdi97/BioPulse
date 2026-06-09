@@ -9,10 +9,10 @@ from .services.formulary_service import (
     get_reimbursement_info,
 )
 
-router = APIRouter(prefix="/api/formulary", tags=["医保目录"])
+router = APIRouter(prefix="/api/formulary")
 
 
-@router.get("/search")
+@router.get("/search", tags=["集采"])
 async def formulary_search(
     drug_name: str = Query(..., description="药品名称"),
 ):
@@ -21,7 +21,7 @@ async def formulary_search(
     return success(data=result)
 
 
-@router.get("/reimbursement")
+@router.get("/reimbursement", tags=["集采"])
 async def reimbursement_info(
     drug_name: str = Query(..., description="药品名称"),
 ):

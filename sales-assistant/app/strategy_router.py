@@ -11,7 +11,7 @@ from sales_assistant.app.services.strategy_service import StrategyService
 from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
-router = APIRouter(prefix="/strategies", tags=["strategies"])
+router = APIRouter(prefix="/strategies")
 
 
 class StrategyCreate(BaseModel):
@@ -68,7 +68,7 @@ class StrategySimulateRequest(BaseModel):
     product_name: Optional[str] = None
 
 
-@router.post("", summary="创建策略", description="创建销售策略")
+@router.post("", summary="创建策略", description="创建销售策略", tags=["情报"])
 def create_strategy(
     body: StrategyCreate,
     service: StrategyService = Depends(),
@@ -83,7 +83,7 @@ def create_strategy(
     )
 
 
-@router.get("", summary="策略列表", description="获取销售策略列表")
+@router.get("", summary="策略列表", description="获取销售策略列表", tags=["情报"])
 def list_strategies(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -113,7 +113,7 @@ def list_strategies(
     )
 
 
-@router.get("/{strategy_id}", summary="策略详情", description="获取指定策略详情")
+@router.get("/{strategy_id}", summary="策略详情", description="获取指定策略详情", tags=["情报"])
 def get_strategy(
     strategy_id: int,
     service: StrategyService = Depends(),
@@ -124,7 +124,7 @@ def get_strategy(
     return success(data=StrategyOut(**row))
 
 
-@router.patch("/{strategy_id}", summary="更新策略", description="更新指定策略")
+@router.patch("/{strategy_id}", summary="更新策略", description="更新指定策略", tags=["情报"])
 def update_strategy(
     strategy_id: int,
     body: StrategyUpdate,
@@ -136,7 +136,7 @@ def update_strategy(
     return success(data=StrategyOut(**row))
 
 
-@router.delete("/{strategy_id}", summary="删除策略", description="删除指定策略")
+@router.delete("/{strategy_id}", summary="删除策略", description="删除指定策略", tags=["情报"])
 def delete_strategy(
     strategy_id: int,
     service: StrategyService = Depends(),
@@ -147,7 +147,7 @@ def delete_strategy(
     return success(message="deleted")
 
 
-@router.post("/generate", summary="生成策略", description="AI生成销售策略")
+@router.post("/generate", summary="生成策略", description="AI生成销售策略", tags=["情报"])
 def generate_strategy(
     body: StrategyGenerateRequest,
     service: StrategyService = Depends(),
@@ -162,7 +162,7 @@ def generate_strategy(
     )
 
 
-@router.get("/compare", summary="策略对比", description="对比多个销售策略")
+@router.get("/compare", summary="策略对比", description="对比多个销售策略", tags=["情报"])
 def compare_strategies(
     ids: str = Query(...),
     service: StrategyService = Depends(),
@@ -186,7 +186,7 @@ def compare_strategies(
     )
 
 
-@router.post("/simulate", summary="模拟策略", description="模拟销售策略执行效果")
+@router.post("/simulate", summary="模拟策略", description="模拟销售策略执行效果", tags=["情报"])
 def simulate_strategy(
     body: StrategySimulateRequest,
     service: StrategyService = Depends(),

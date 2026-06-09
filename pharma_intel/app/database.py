@@ -5,11 +5,15 @@ import os
 import sqlite3
 import time
 
+from shared.database import SQLiteCache
+
 DB_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
     "data",
     "pharma_intel_cache.db",
 )
+
+_cache = SQLiteCache(DB_PATH, default_ttl=1800)
 
 
 def init_cache_db():
@@ -35,20 +39,8 @@ def init_cache_db():
 
 
 def get_cache(key: str) -> dict | None:
-    conn = sqlite3.connect(DB_PATH)
-    row = conn.execute("SELECT response, cached_at, ttl FROM api_cache WHERE cache_key=?", (key,)).fetchone()
-    conn.close()
-    if row:
-        if time.time() - row[1] < row[2]:
-            return json.loads(row[0])
-    return None
+    return _cache.get_cache(key)
 
 
 def set_cache(key: str, data: dict, ttl: int = 1800):
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute(
-        "INSERT OR REPLACE INTO api_cache (cache_key, response, cached_at, ttl) VALUES (?, ?, ?, ?)",
-        (key, json.dumps(data), time.time(), ttl),
-    )
-    conn.commit()
-    conn.close()
+    _cache.set_cache(key, data, ttl)

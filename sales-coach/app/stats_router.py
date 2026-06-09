@@ -4,12 +4,12 @@ from typing import List
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
-
 from sales_coach.app.services.stats_service import StatsService
+
 from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
-router = APIRouter(prefix="/coach", tags=["stats"])
+router = APIRouter(prefix="/coach")
 
 
 class ModuleDistItem(BaseModel):
@@ -33,7 +33,7 @@ class StatsOut(BaseModel):
     score_distribution: dict
 
 
-@router.get("/stats", summary="教练统计", description="教练模块的聚合统计数据")
+@router.get("/stats", summary="教练统计", description="教练模块的聚合统计数据", tags=["评估"])
 def get_stats(
     service: StatsService = Depends(),
     current_user: dict = Depends(require_scope("visit")),
@@ -66,7 +66,7 @@ def get_stats(
     )
 
 
-@router.get("/trend/{user_id}", summary="个人趋势", description="获取个人评分月度趋势数据")
+@router.get("/trend/{user_id}", summary="个人趋势", description="获取个人评分月度趋势数据", tags=["评估"])
 def get_user_trend(
     user_id: int,
     months: int = Query(6, ge=1, le=24),
@@ -78,7 +78,7 @@ def get_user_trend(
     return success(data={"user_id": user_id, "trend": trend})
 
 
-@router.get("/team-comparison/{team_id}", summary="团队对比", description="获取指定团队的评分对比数据")
+@router.get("/team-comparison/{team_id}", summary="团队对比", description="获取指定团队的评分对比数据", tags=["评估"])
 def get_team_comparison(
     team_id: int,
     service: StatsService = Depends(),
@@ -89,7 +89,7 @@ def get_team_comparison(
     return success(data={"team_id": team_id, **data})
 
 
-@router.get("/radar/{user_id}", summary="雷达图", description="获取各维度评分的雷达图数据")
+@router.get("/radar/{user_id}", summary="雷达图", description="获取各维度评分的雷达图数据", tags=["评估"])
 def get_radar(
     user_id: int,
     service: StatsService = Depends(),
@@ -100,7 +100,7 @@ def get_radar(
     return success(data={"user_id": user_id, "dimensions": data})
 
 
-@router.get("/category-performance/{user_id}", summary="分类表现", description="获取各类场景下的表现对比数据")
+@router.get("/category-performance/{user_id}", summary="分类表现", description="获取各类场景下的表现对比数据", tags=["评估"])
 def get_category_performance(
     user_id: int,
     service: StatsService = Depends(),

@@ -23,25 +23,29 @@ class ScenarioService(BaseCrudService):
         Returns:
             包含新创建场景ID的字典。
         """
-        repo = ScenarioRepository(self.db)
-        now = datetime.now(timezone.utc).isoformat()
-        scenario_id = repo.create(
-            data={
-                "title": body.title,
-                "role_setting": body.role_setting,
-                "goal": body.goal,
-                "difficulty": body.difficulty,
-                "category": body.category,
-                "content": body.content,
-                "tips": body.tips,
-            },
-            extra={
-                "created_by": user_id,
-                "created_at": now,
-                "updated_at": now,
-            },
-        )
-        return {"id": scenario_id}
+        conn = self._connection()
+        try:
+            repo = ScenarioRepository(conn)
+            now = datetime.now(timezone.utc).isoformat()
+            scenario_id = repo.create(
+                data={
+                    "title": body.title,
+                    "role_setting": body.role_setting,
+                    "goal": body.goal,
+                    "difficulty": body.difficulty,
+                    "category": body.category,
+                    "content": body.content,
+                    "tips": body.tips,
+                },
+                extra={
+                    "created_by": user_id,
+                    "created_at": now,
+                    "updated_at": now,
+                },
+            )
+            return {"id": scenario_id}
+        finally:
+            self._close_connection(conn)
 
     def list(
         self,
@@ -61,24 +65,28 @@ class ScenarioService(BaseCrudService):
         Returns:
             (记录列表, 总条数) 元组。
         """
-        repo = ScenarioRepository(self.db)
-        conditions = []
-        params: list = []
+        conn = self._connection()
+        try:
+            repo = ScenarioRepository(conn)
+            conditions = []
+            params: list = []
 
-        if category:
-            conditions.append("category = ?")
-            params.append(category)
-        if difficulty:
-            conditions.append("difficulty = ?")
-            params.append(difficulty)
+            if category:
+                conditions.append("category = ?")
+                params.append(category)
+            if difficulty:
+                conditions.append("difficulty = ?")
+                params.append(difficulty)
 
-        return repo.paginate_active(
-            page=page,
-            page_size=page_size,
-            conditions=conditions,
-            params=params,
-            order_by="id DESC",
-        )
+            return repo.paginate_active(
+                page=page,
+                page_size=page_size,
+                conditions=conditions,
+                params=params,
+                order_by="id DESC",
+            )
+        finally:
+            self._close_connection(conn)
 
     def get(self, scenario_id: int) -> dict:
         """获取单个场景详情。
@@ -89,8 +97,12 @@ class ScenarioService(BaseCrudService):
         Returns:
             场景详情字典，不存在或已删除则抛404。
         """
-        repo = ScenarioRepository(self.db)
-        return dict(repo.get_active_or_404(scenario_id))
+        conn = self._connection()
+        try:
+            repo = ScenarioRepository(conn)
+            return dict(repo.get_active_or_404(scenario_id))
+        finally:
+            self._close_connection(conn)
 
     def update(self, scenario_id: int, body) -> dict:
         """更新场景。
@@ -102,14 +114,18 @@ class ScenarioService(BaseCrudService):
         Returns:
             更新后的场景详情。
         """
-        repo = ScenarioRepository(self.db)
-        repo.get_active_or_404(scenario_id)
-        updates = body.model_dump(exclude_unset=True)
-        if not updates:
+        conn = self._connection()
+        try:
+            repo = ScenarioRepository(conn)
+            repo.get_active_or_404(scenario_id)
+            updates = body.model_dump(exclude_unset=True, exclude={"difficulty_level", "prerequisites"})
+            if not updates:
+                return dict(repo.get_by_id(scenario_id))
+            updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+            repo.update(scenario_id, updates)
             return dict(repo.get_by_id(scenario_id))
-        updates["updated_at"] = datetime.now(timezone.utc).isoformat()
-        repo.update(scenario_id, updates)
-        return dict(repo.get_by_id(scenario_id))
+        finally:
+            self._close_connection(conn)
 
     def delete(self, scenario_id: int) -> None:
         """软删除场景。
@@ -117,6 +133,10 @@ class ScenarioService(BaseCrudService):
         Args:
             scenario_id: 场景ID。
         """
-        repo = ScenarioRepository(self.db)
-        repo.get_active_or_404(scenario_id)
-        repo.soft_delete(scenario_id)
+        conn = self._connection()
+        try:
+            repo = ScenarioRepository(conn)
+            repo.get_active_or_404(scenario_id)
+            repo.soft_delete(scenario_id)
+        finally:
+            self._close_connection(conn)

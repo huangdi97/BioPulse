@@ -10,31 +10,31 @@ from management.app.services.president_service import (
 )
 from shared.base import success
 
-router = APIRouter(prefix="/api/president", tags=["总裁视图"])
+router = APIRouter(prefix="/api/president")
 
 
-@router.get("/summary", summary="全局概览", description="获取全局仪表盘分析、团队列表和合规统计数据")
+@router.get("/summary", summary="全局概览", description="获取全局仪表盘分析、团队列表和合规统计数据", tags=["看板"])
 async def summary():
     """全局概览：仪表盘分析 + 团队列表 + 合规统计。"""
     data = await get_summary()
     return success(data=data)
 
 
-@router.get("/compliance-overview", summary="合规总览", description="获取全局合规执行统计概览数据")
+@router.get("/compliance-overview", summary="合规总览", description="获取全局合规执行统计概览数据", tags=["看板"])
 async def compliance_overview():
     """合规概览：合规执行统计。"""
     data = await get_compliance_overview()
     return success(data=data)
 
 
-@router.get("/team-rankings", summary="团队排名", description="获取基于业绩指标的团队排行数据")
+@router.get("/team-rankings", summary="团队排名", description="获取基于业绩指标的团队排行数据", tags=["看板"])
 async def team_rankings():
     """团队排名：基于业绩指标的团队排行。"""
     data = await get_team_rankings()
     return success(data=data)
 
 
-@router.get("/trend-report", summary="趋势报告", description="获取全局分析趋势报告数据")
+@router.get("/trend-report", summary="趋势报告", description="获取全局分析趋势报告数据", tags=["看板"])
 async def trend_report():
     """趋势报告：全局分析趋势数据。"""
     data = await get_trend_report()

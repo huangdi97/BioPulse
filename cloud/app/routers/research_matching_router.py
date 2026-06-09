@@ -34,7 +34,7 @@ class MethodMatchRequest(BaseModel):
     method_description: str
 
 
-@router.post("/for-pi")
+@router.post("/for-pi", tags=["Research Matching"])
 def match_for_pi(
     body: PiMatchRequest,
     current_user: dict = Depends(get_current_user),
@@ -51,7 +51,7 @@ def match_for_pi(
     return {"code": 0, "data": results, "message": "success"}
 
 
-@router.post("/by-method")
+@router.post("/by-method", tags=["Research Matching"])
 def match_by_method(
     body: MethodMatchRequest,
     current_user: dict = Depends(get_current_user),

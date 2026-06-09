@@ -8,10 +8,10 @@ from pharma_intel.app.services.target_service import (
 )
 from shared.base import success
 
-router = APIRouter(prefix="/api/target", tags=["靶点研究监控"])
+router = APIRouter(prefix="/api/target")
 
 
-@router.get("/analyze")
+@router.get("/analyze", tags=["靶点"])
 async def target_analyze(
     target: str = Query(..., description="靶点名称，如 PD-1、EGFR"),
 ):
@@ -20,7 +20,7 @@ async def target_analyze(
     return success(data=result)
 
 
-@router.get("/trending")
+@router.get("/trending", tags=["靶点"])
 async def trending_targets_endpoint(
     limit: int = Query(10, ge=1, le=30),
 ):

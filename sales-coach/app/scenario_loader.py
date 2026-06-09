@@ -1,6 +1,6 @@
 from typing import List
 
-from .scenario_fetcher import FIXED_SCENARIOS
+from .scenario_template import FIXED_SCENARIOS_PART1
 from .scenario_weights import _S14, _S15, _S16, _S17, _S18, _S19, _S20, _S21
 
 
@@ -110,3 +110,5 @@ FIXED_SCENARIOS_PART2 = [
         ],
     ),
 ]
+
+FIXED_SCENARIOS = FIXED_SCENARIOS_PART1 + FIXED_SCENARIOS_PART2

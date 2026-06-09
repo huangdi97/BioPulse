@@ -39,7 +39,7 @@ class PiUpdate(BaseModel):
     h_index: Optional[int] = None
 
 
-@router.get("/search", summary="搜索PI", description="根据关键词搜索研究者信息")
+@router.get("/search", summary="搜索PI", description="根据关键词搜索研究者信息", tags=["pi"])
 def search_pi(
     q: str = Query("", description="Search keyword"),
     current_user: dict = Depends(get_current_user),
@@ -49,7 +49,7 @@ def search_pi(
     return {"code": 0, "data": results, "message": "success"}
 
 
-@router.get("/{pi_id}", summary="PI详情", description="获取指定研究者的详细信息")
+@router.get("/{pi_id}", summary="PI详情", description="获取指定研究者的详细信息", tags=["pi"])
 def get_pi(
     pi_id: int,
     current_user: dict = Depends(get_current_user),
@@ -59,7 +59,7 @@ def get_pi(
     return {"code": 0, "data": pi, "message": "success"}
 
 
-@router.post("", status_code=201, summary="创建PI", description="创建新的研究者信息")
+@router.post("", status_code=201, summary="创建PI", description="创建新的研究者信息", tags=["pi"])
 def create_pi(
     body: PiCreate,
     current_user: dict = Depends(get_current_user),
@@ -79,7 +79,7 @@ def create_pi(
     return {"code": 0, "data": pi, "message": "success"}
 
 
-@router.put("/{pi_id}", summary="更新PI", description="更新指定研究者的信息")
+@router.put("/{pi_id}", summary="更新PI", description="更新指定研究者的信息", tags=["pi"])
 def update_pi(
     pi_id: int,
     body: PiUpdate,

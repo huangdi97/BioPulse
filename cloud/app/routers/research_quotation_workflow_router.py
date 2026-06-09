@@ -24,7 +24,7 @@ class RejectRequest(BaseModel):
     reason: str
 
 
-@router.post("/{id}/submit")
+@router.post("/{id}/submit", tags=["Research Quotation Workflow"])
 def submit_quotation(id: int, current_user: dict = Depends(get_current_user)):
     try:
         submit_for_approval(id, current_user.get("username", "unknown"))
@@ -33,7 +33,7 @@ def submit_quotation(id: int, current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/{id}/approve")
+@router.post("/{id}/approve", tags=["Research Quotation Workflow"])
 def approve_quotation(id: int, current_user: dict = Depends(get_current_user)):
     try:
         approve(id, current_user.get("username", "unknown"))
@@ -42,7 +42,7 @@ def approve_quotation(id: int, current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.post("/{id}/reject")
+@router.post("/{id}/reject", tags=["Research Quotation Workflow"])
 def reject_quotation(id: int, body: RejectRequest, current_user: dict = Depends(get_current_user)):
     try:
         reject(id, current_user.get("username", "unknown"), body.reason)

@@ -16,7 +16,7 @@ router.post("/templates", status_code=201)(create_template)
 router.get("/templates")(list_templates)
 
 
-@router.post("/decisions", status_code=201)
+@router.post("/decisions", status_code=201, tags=["SOAP Decision"])
 def create_decision(
     body: DecisionCreate,
     cu=Depends(require_scope("visit")),
@@ -37,7 +37,7 @@ def create_decision(
     )
 
 
-@router.get("/decisions")
+@router.get("/decisions", tags=["SOAP Decision"])
 def list_decisions(
     status: Optional[str] = None,
     priority: Optional[str] = None,
@@ -50,7 +50,7 @@ def list_decisions(
     return success(data=service.list_decisions(status=status, priority=priority, tag=tag, page=page, page_size=page_size))
 
 
-@router.get("/decisions/{decision_id}")
+@router.get("/decisions/{decision_id}", tags=["SOAP Decision"])
 def get_decision(
     decision_id: int,
     cu=Depends(require_scope("visit")),
@@ -59,7 +59,7 @@ def get_decision(
     return success(service.get_decision(decision_id))
 
 
-@router.patch("/decisions/{decision_id}")
+@router.patch("/decisions/{decision_id}", tags=["SOAP Decision"])
 def update_decision(
     decision_id: int,
     body: DecisionUpdate,
@@ -79,7 +79,7 @@ def update_decision(
     )
 
 
-@router.post("/decisions/{decision_id}/submit")
+@router.post("/decisions/{decision_id}/submit", tags=["SOAP Decision"])
 def submit_decision(
     decision_id: int,
     cu=Depends(require_scope("visit")),
@@ -88,7 +88,7 @@ def submit_decision(
     return success(service.submit_decision(decision_id))
 
 
-@router.post("/decisions/{decision_id}/opinions")
+@router.post("/decisions/{decision_id}/opinions", tags=["SOAP Decision"])
 def add_opinion(
     decision_id: int,
     body: OpinionCreate,
@@ -109,7 +109,7 @@ def add_opinion(
     )
 
 
-@router.get("/decisions/{decision_id}/opinions")
+@router.get("/decisions/{decision_id}/opinions", tags=["SOAP Decision"])
 def list_opinions(
     decision_id: int,
     cu=Depends(require_scope("visit")),
@@ -118,7 +118,7 @@ def list_opinions(
     return success(service.list_opinions(decision_id))
 
 
-@router.post("/decisions/{decision_id}/finalize")
+@router.post("/decisions/{decision_id}/finalize", tags=["SOAP Decision"])
 def finalize_decision(
     decision_id: int,
     body: FinalizeRequest,
@@ -134,6 +134,6 @@ def finalize_decision(
     )
 
 
-@router.get("/dashboard")
+@router.get("/dashboard", tags=["SOAP Decision"])
 def dashboard(cu=Depends(require_scope("visit")), service: SoapDecisionService = Depends()):
     return success(service.dashboard())

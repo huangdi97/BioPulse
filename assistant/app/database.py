@@ -2,12 +2,9 @@
 
 import os
 import sqlite3
-from typing import Generator
-
-import psycopg2
 
 from shared.config import settings
-from shared.db import PGCompatConnection
+from shared.database import SQLiteDatabase
 
 from .schema_sql import PG_SCHEMA_SQL, SCHEMA_SQL
 
@@ -16,50 +13,26 @@ DB_PATH = os.path.join(_BASE_DIR, "data", "assistant.db")
 DATABASE_URL = settings.assistant_database_url
 
 
-def get_db() -> Generator:
-    if DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://"):
-        conn = PGCompatConnection(psycopg2.connect(DATABASE_URL))
-        try:
-            yield conn
-        finally:
-            conn.close()
-    else:
-        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA foreign_keys=ON")
-        try:
-            yield conn
-        finally:
-            conn.close()
+class AssistantDatabase(SQLiteDatabase):
+    def __init__(self):
+        super().__init__(
+            db_path=DB_PATH,
+            database_url=DATABASE_URL,
+            schema_sql=SCHEMA_SQL,
+            pg_schema_sql=PG_SCHEMA_SQL,
+        )
+
+    def _run_migrations(self, conn: sqlite3.Connection) -> None:
+        for col_def in (
+            "last_notified_at TEXT",
+            "notification_status TEXT DEFAULT 'pending'",
+        ):
+            col_name = col_def.split()[0]
+            existing = {row[1] for row in conn.execute("PRAGMA table_info(surgery_reminder)").fetchall()}
+            if col_name not in existing:
+                conn.execute(f"ALTER TABLE surgery_reminder ADD COLUMN {col_def}")
 
 
-def migrate_db() -> None:
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    for col in (
-        "last_notified_at TEXT",
-        "notification_status TEXT DEFAULT 'pending'",
-    ):
-        try:
-            c.execute(f"ALTER TABLE surgery_reminder ADD COLUMN {col}")
-        except sqlite3.OperationalError:
-            pass  # 兼容操作：列已存在时跳过
-    conn.commit()
-    conn.close()
-
-
-def init_db() -> None:
-    if DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://"):
-        conn = PGCompatConnection(psycopg2.connect(DATABASE_URL))
-        conn.executescript(PG_SCHEMA_SQL)
-        conn.commit()
-        conn.close()
-    else:
-        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-        conn = sqlite3.connect(DB_PATH)
-        conn.executescript(SCHEMA_SQL)
-        conn.commit()
-        conn.close()
-        migrate_db()
+_db = AssistantDatabase()
+get_db = _db.get_db
+init_db = _db.init_db

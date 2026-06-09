@@ -1,0 +1,32 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/visit/visit",
+    "pages/compliance/compliance"
+  ],
+  "window": {
+    "navigationBarTitleText": "一云四端",
+    "navigationBarBackgroundColor": "#0f766e",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f6f8fb"
+  },
+  "tabBar": {
+    "color": "#64748b",
+    "selectedColor": "#0f766e",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "HCP"
+      },
+      {
+        "pagePath": "pages/visit/visit",
+        "text": "拜访"
+      },
+      {
+        "pagePath": "pages/compliance/compliance",
+        "text": "合规"
+      }
+    ]
+  }
+}

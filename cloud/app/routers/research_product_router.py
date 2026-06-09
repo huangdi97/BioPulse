@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 
-@router.get("/search")
+@router.get("/search", tags=["Research Product"])
 def search_products(
     q: str = Query("", description="Search keyword"),
     category: str = Query("", description="Filter by category"),
@@ -24,7 +24,7 @@ def search_products(
     return {"code": 0, "data": results, "message": "success"}
 
 
-@router.get("/{product_id}")
+@router.get("/{product_id}", tags=["Research Product"])
 def get_product(
     product_id: int,
     current_user: dict = Depends(get_current_user),

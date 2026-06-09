@@ -5,13 +5,13 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+from sales_coach.app.services.module_service import ModuleService
 from starlette import status
 
-from sales_coach.app.services.module_service import ModuleService
 from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
-router = APIRouter(prefix="/modules", tags=["modules"])
+router = APIRouter(prefix="/modules")
 
 
 class ModuleCreate(BaseModel):
@@ -50,7 +50,7 @@ class ModuleOut(BaseModel):
     updated_at: Optional[str] = None
 
 
-@router.post("", summary="创建模块", description="创建新的培训模块")
+@router.post("", summary="创建模块", description="创建新的培训模块", tags=["场景"])
 def create_module(
     body: ModuleCreate,
     service: ModuleService = Depends(),
@@ -65,7 +65,7 @@ def create_module(
     )
 
 
-@router.get("", summary="模块列表", description="分页查询培训模块，支持分类和难度筛选")
+@router.get("", summary="模块列表", description="分页查询培训模块，支持分类和难度筛选", tags=["场景"])
 def list_modules(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -88,7 +88,7 @@ def list_modules(
     )
 
 
-@router.get("/{module_id}", summary="模块详情", description="根据ID获取培训模块详情")
+@router.get("/{module_id}", summary="模块详情", description="根据ID获取培训模块详情", tags=["场景"])
 def get_module(
     module_id: int,
     service: ModuleService = Depends(),
@@ -99,7 +99,7 @@ def get_module(
     return success(data=ModuleOut(**row))
 
 
-@router.patch("/{module_id}", summary="更新模块", description="更新指定的培训模块信息")
+@router.patch("/{module_id}", summary="更新模块", description="更新指定的培训模块信息", tags=["场景"])
 def update_module(
     module_id: int,
     body: ModuleUpdate,
@@ -111,7 +111,7 @@ def update_module(
     return success(data=ModuleOut(**updated))
 
 
-@router.delete("/{module_id}", summary="删除模块", description="软删除指定的培训模块")
+@router.delete("/{module_id}", summary="删除模块", description="软删除指定的培训模块", tags=["场景"])
 def delete_module(
     module_id: int,
     service: ModuleService = Depends(),

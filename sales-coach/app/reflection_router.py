@@ -3,17 +3,17 @@
 import json
 
 from fastapi import APIRouter, Depends, HTTPException
-from starlette import status
-
 from sales_coach.app.services.reflection_service import generate_reflection_report, get_scenario
 from sales_coach.app.services.session_service import SessionService
+from starlette import status
+
 from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
-router = APIRouter(prefix="/reflections", tags=["反思 Agent"])
+router = APIRouter(prefix="/reflections")
 
 
-@router.get("", summary="反思列表", description="获取所有反思报告列表")
+@router.get("", summary="反思列表", description="获取所有反思报告列表", tags=["合规培训"])
 def list_reflections(
     current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
@@ -21,7 +21,7 @@ def list_reflections(
     return success(data=[])
 
 
-@router.post("/{session_id}", summary="创建反思", description="读取会话日志并生成反思报告")
+@router.post("/{session_id}", summary="创建反思", description="读取会话日志并生成反思报告", tags=["合规培训"])
 def create_reflection(
     session_id: int,
     session_service: SessionService = Depends(),
@@ -46,7 +46,7 @@ def create_reflection(
     return success(data=report)
 
 
-@router.get("/{session_id}", summary="反思详情", description="获取已生成的反思报告详情")
+@router.get("/{session_id}", summary="反思详情", description="获取已生成的反思报告详情", tags=["合规培训"])
 def get_reflection(
     session_id: int,
     session_service: SessionService = Depends(),
@@ -63,7 +63,7 @@ def get_reflection(
     return success(data=report)
 
 
-@router.get("/{session_id}/summary", summary="反思摘要", description="获取反思报告简短摘要用于列表展示")
+@router.get("/{session_id}/summary", summary="反思摘要", description="获取反思报告简短摘要用于列表展示", tags=["合规培训"])
 def get_reflection_summary(
     session_id: int,
     session_service: SessionService = Depends(),

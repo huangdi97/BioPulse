@@ -17,6 +17,8 @@ from assistant.app.media_router import router as media_router
 from assistant.app.offline_router import router as offline_router
 from assistant.app.qa_router import router as qa_router
 from assistant.app.reminder_scheduler import start_scheduler
+from assistant.app.routers.inventory_warning_router import router as inventory_warning_router
+from assistant.app.routers.route_optimization_router import router as route_optimization_router
 from assistant.app.surgery_router import router as surgery_router
 from assistant.app.sync_router import router as sync_router
 from assistant.app.task_router import router as task_router
@@ -42,7 +44,17 @@ def _init_l1_cache(category: str) -> None:
     conn.close()
 
 
-app = FastAPI(title="Assistant Service", version=settings.version)
+app = FastAPI(
+    title="Assistant Service",
+    version=settings.version,
+    openapi_tags=[
+        {"name": "设备", "description": "设备信息查询与管理"},
+        {"name": "库存", "description": "库存查询、知识库管理"},
+        {"name": "手术记录", "description": "手术提醒、手术记录管理"},
+        {"name": "路径优化", "description": "位置服务、路径规划"},
+        {"name": "离线同步", "description": "离线数据同步、WebSocket实时通信"},
+    ],
+)
 
 setup_logging("assistant")
 
@@ -83,3 +95,5 @@ app.include_router(media_router)
 app.include_router(offline_router)
 app.include_router(visit_alias_router)
 app.include_router(hcp_alias_router)
+app.include_router(inventory_warning_router)
+app.include_router(route_optimization_router)

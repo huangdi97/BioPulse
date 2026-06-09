@@ -9,7 +9,7 @@ from assistant.app.services.qa_service import QaService
 from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
-router = APIRouter(prefix="", tags=["Medical Q&A"])
+router = APIRouter(prefix="")
 
 
 class QaRequest(BaseModel):
@@ -27,7 +27,7 @@ class QaData(BaseModel):
     sources: list[str]
 
 
-@router.post("/qa", response_model=ApiResponse[QaData], summary="AI问答", description="使用AI临床药师回答医学相关问题。")
+@router.post("/qa", response_model=ApiResponse[QaData], summary="AI问答", description="使用AI临床药师回答医学相关问题。", tags=["设备"])
 def qa(
     request: Request,
     body: QaRequest,

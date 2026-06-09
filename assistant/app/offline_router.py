@@ -9,7 +9,7 @@ from assistant.app.services.offline_service import OfflineService
 from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
-router = APIRouter(prefix="/offline", tags=["离线模式"])
+router = APIRouter(prefix="/offline")
 
 
 class QueueChangeRequest(BaseModel):
@@ -21,7 +21,7 @@ class QueueChangeRequest(BaseModel):
     payload: Dict[str, Any] = {}
 
 
-@router.get("/status", summary="获取离线状态", description="获取当前离线模式的状态信息。")
+@router.get("/status", summary="获取离线状态", description="获取当前离线模式的状态信息。", tags=["离线同步"])
 def get_status(
     service: OfflineService = Depends(),
     current_user: dict = Depends(require_scope("visit")),
@@ -39,7 +39,7 @@ def get_status(
     return success(data=data)
 
 
-@router.post("/sync", summary="触发同步", description="触发离线数据同步到服务器。")
+@router.post("/sync", summary="触发同步", description="触发离线数据同步到服务器。", tags=["离线同步"])
 def trigger_sync(
     limit: int = Query(50, ge=1, le=500),
     service: OfflineService = Depends(),
@@ -59,7 +59,7 @@ def trigger_sync(
     return success(data=data)
 
 
-@router.post("/enable", summary="开启离线模式", description="开启客户端的离线模式功能。")
+@router.post("/enable", summary="开启离线模式", description="开启客户端的离线模式功能。", tags=["离线同步"])
 def enable_offline(
     service: OfflineService = Depends(),
     current_user: dict = Depends(require_scope("visit")),
@@ -77,7 +77,7 @@ def enable_offline(
     return success(data=data)
 
 
-@router.post("/disable", summary="关闭离线模式", description="关闭离线模式并恢复在线模式。")
+@router.post("/disable", summary="关闭离线模式", description="关闭离线模式并恢复在线模式。", tags=["离线同步"])
 def disable_offline(
     service: OfflineService = Depends(),
     current_user: dict = Depends(require_scope("visit")),
@@ -95,7 +95,7 @@ def disable_offline(
     return success(data=data)
 
 
-@router.post("/queue", summary="入队变更", description="将数据变更操作加入离线同步队列。")
+@router.post("/queue", summary="入队变更", description="将数据变更操作加入离线同步队列。", tags=["离线同步"])
 def queue_change(
     body: QueueChangeRequest,
     service: OfflineService = Depends(),

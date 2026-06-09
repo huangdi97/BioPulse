@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Query
 from pharma_intel.app.seed_data import papers, pi_profiles, targets
 from shared.base import ErrorCode
 
-router = APIRouter(prefix="/api/intel", tags=["制药情报"])
+router = APIRouter(prefix="/api/intel")
 
 
 def _ok(data, message: str = "ok") -> dict:
@@ -22,7 +22,7 @@ def _not_found(entity: str, id: int):
 # ── Papers ──
 
 
-@router.get("/papers")
+@router.get("/papers", tags=["靶点"])
 def search_papers(
     q: str = Query("", description="搜索关键词"),
     page: int = Query(1, ge=1),
@@ -42,7 +42,7 @@ def search_papers(
     return _ok({"items": items, "total": total, "page": page})
 
 
-@router.get("/papers/{id}")
+@router.get("/papers/{id}", tags=["靶点"])
 def get_paper(id: int):
     for p in papers:
         if p["id"] == id:
@@ -53,7 +53,7 @@ def get_paper(id: int):
 # ── PI Profiles ──
 
 
-@router.get("/pi")
+@router.get("/pi", tags=["靶点"])
 def search_pi(
     q: str = Query("", description="搜索关键词"),
     page: int = Query(1, ge=1),
@@ -75,7 +75,7 @@ def search_pi(
     return _ok({"items": items, "total": total, "page": page})
 
 
-@router.get("/pi/{id}")
+@router.get("/pi/{id}", tags=["靶点"])
 def get_pi(id: int):
     for pi in pi_profiles:
         if pi["id"] == id:
@@ -86,13 +86,13 @@ def get_pi(id: int):
 # ── Targets ──
 
 
-@router.get("/targets/categories")
+@router.get("/targets/categories", tags=["靶点"])
 def list_categories():
     cats = sorted({t["category"] for t in targets})
     return _ok(cats)
 
 
-@router.get("/targets")
+@router.get("/targets", tags=["靶点"])
 def list_targets(
     category: str = Query("", description="分类过滤"),
     sort_by: str = Query("paper_count", description="排序字段"),
@@ -107,7 +107,7 @@ def list_targets(
     return _ok(filtered)
 
 
-@router.get("/targets/{id}")
+@router.get("/targets/{id}", tags=["靶点"])
 def get_target(id: int):
     for t in targets:
         if t["id"] == id:

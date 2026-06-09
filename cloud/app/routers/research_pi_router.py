@@ -31,7 +31,7 @@ class PiCreate(BaseModel):
     h_index: int = 0
 
 
-@router.get("/search")
+@router.get("/search", tags=["Research Pi"])
 def search_pi(
     q: str = Query("", description="Search keyword"),
     current_user: dict = Depends(get_current_user),
@@ -41,7 +41,7 @@ def search_pi(
     return {"code": 0, "data": results, "message": "success"}
 
 
-@router.get("/{pi_id}")
+@router.get("/{pi_id}", tags=["Research Pi"])
 def get_pi(
     pi_id: int,
     current_user: dict = Depends(get_current_user),
@@ -51,7 +51,7 @@ def get_pi(
     return {"code": 0, "data": pi, "message": "success"}
 
 
-@router.post("", status_code=201)
+@router.post("", status_code=201, tags=["Research Pi"])
 def create_pi(
     body: PiCreate,
     current_user: dict = Depends(get_current_user),

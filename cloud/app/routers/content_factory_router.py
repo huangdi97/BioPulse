@@ -30,7 +30,7 @@ class RenderRequest(BaseModel):
     variables: dict = {}
 
 
-@router.post("", summary="创建模板", description="创建新的内容模板")
+@router.post("", summary="创建模板", description="创建新的内容模板", tags=["内容工厂"])
 def create_template(
     body: CreateTemplateRequest,
     current_user: dict = Depends(require_scope("visit")),
@@ -48,7 +48,7 @@ def create_template(
     return success(data=result)
 
 
-@router.post("/render", summary="渲染模板", description="渲染内容模板并执行合规检查")
+@router.post("/render", summary="渲染模板", description="渲染内容模板并执行合规检查", tags=["内容工厂"])
 def render_template(
     body: RenderRequest,
     current_user: dict = Depends(require_scope("visit")),
@@ -62,7 +62,7 @@ def render_template(
     return success(data=result)
 
 
-@router.get("", summary="模板列表", description="列出所有可用的内容模板")
+@router.get("", summary="模板列表", description="列出所有可用的内容模板", tags=["内容工厂"])
 def list_templates(
     current_user: dict = Depends(require_scope("visit")),
     service: ContentFactoryService = Depends(),

@@ -14,7 +14,17 @@ from shared.structured_logging import setup_logging
 
 setup_logging("management")
 
-app = FastAPI(title="管理端 · Management Portal", version=settings.version)
+app = FastAPI(
+    title="管理端 · Management Portal",
+    version=settings.version,
+    openapi_tags=[
+        {"name": "看板", "description": "总裁/经理/员工三级看板数据"},
+        {"name": "团队", "description": "员工管理、团队统计"},
+        {"name": "合规", "description": "合规检测、审计管理"},
+        {"name": "审计", "description": "操作审计、合规审计与追踪"},
+        {"name": "配置", "description": "系统配置、个性化设置"},
+    ],
+)
 
 app.add_middleware(RequestIDMiddleware)
 register_exception_handlers(app)
@@ -39,12 +49,18 @@ from management.app.employee_router import router as employee_router
 from management.app.health_router import router as health_router
 from management.app.manager_router import router as manager_router
 from management.app.president_router import router as president_router
+from management.app.routers.competitor_dashboard_router import router as competitor_dashboard_router
+from management.app.routers.kpi_comparison_router import router as kpi_comparison_router
+from management.app.routers.trend_analysis_router import router as trend_analysis_router
 
 app.include_router(health_router)
 app.include_router(dashboard_router)
 app.include_router(employee_router)
 app.include_router(manager_router)
 app.include_router(president_router)
+app.include_router(competitor_dashboard_router)
+app.include_router(kpi_comparison_router)
+app.include_router(trend_analysis_router)
 
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 if os.path.isdir(STATIC_DIR):

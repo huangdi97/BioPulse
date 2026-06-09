@@ -109,10 +109,22 @@ def _ensure_agent_runtime_snapshot_table(conn) -> None:
     conn.commit()
 
 
+def _ensure_effect_metrics_source_sub(conn) -> None:
+    """Backfill source_sub before SCHEMA_SQL creates its index on older databases."""
+    exists = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='effect_metrics'").fetchone()
+    if not exists:
+        return
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(effect_metrics)").fetchall()}
+    if "source_sub" not in columns:
+        conn.execute("ALTER TABLE effect_metrics ADD COLUMN source_sub TEXT DEFAULT ''")
+        conn.commit()
+
+
 def init_db() -> None:
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
+        _ensure_effect_metrics_source_sub(conn)
         conn.executescript(SCHEMA_SQL)
         conn.execute(
             "CREATE TABLE IF NOT EXISTS federated_nodes ("
@@ -192,13 +204,7 @@ def init_db() -> None:
         )
         seed_model_compression(conn)
         seed_products(conn)
-        for col in [
-            "source_sub TEXT DEFAULT ''",
-        ]:
-            try:
-                conn.execute(f"ALTER TABLE effect_metrics ADD COLUMN {col}")
-            except Exception:
-                logger.warning("ALTER TABLE effect_metrics ADD COLUMN %s 失败", col)
+        _ensure_effect_metrics_source_sub(conn)
         try:
             conn.execute("CREATE INDEX IF NOT EXISTS idx_em_source_sub ON effect_metrics(source_sub)")
         except Exception:

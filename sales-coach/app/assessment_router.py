@@ -6,18 +6,21 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from starlette import status
-
+from sales_coach.app.schemas.assessment import RadarChartData
 from sales_coach.app.services.assessment_service import (
     DEFAULT_WEIGHTS,
     AssessmentService,
 )
+from sales_coach.app.services.five_dimension_scoring import evaluate_dimensions
 from sales_coach.app.services.reflection_service import generate_reflection_report
 from sales_coach.app.services.session_service import SessionService
+from starlette import status
+
 from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
-router = APIRouter(prefix="/assessments", tags=["assessments"])
+router = APIRouter(prefix="/assessments")
+api_router = APIRouter(prefix="/api/assessment", tags=["评估"])
 
 
 class AssessmentCreate(BaseModel):
@@ -67,7 +70,13 @@ class AssessmentOut(BaseModel):
     updated_at: Optional[str] = None
 
 
-@router.post("", summary="创建评估", description="创建新的学员评估记录")
+@api_router.get("/dimensions", summary="五维评估", description="获取对话五维评估雷达图数据")
+def get_five_dimension_scores(conversation_id: str = Query(...)) -> ApiResponse[RadarChartData]:
+    """获取指定对话的五维评分。"""
+    return success(data=evaluate_dimensions(conversation_id))
+
+
+@router.post("", summary="创建评估", description="创建新的学员评估记录", tags=["评估"])
 def create_assessment(
     body: AssessmentCreate,
     service: AssessmentService = Depends(),
@@ -82,7 +91,7 @@ def create_assessment(
     )
 
 
-@router.get("", summary="评估列表", description="分页查询评估记录，支持按学员和等级筛选")
+@router.get("", summary="评估列表", description="分页查询评估记录，支持按学员和等级筛选", tags=["评估"])
 def list_assessments(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -112,7 +121,7 @@ def list_assessments(
     )
 
 
-@router.get("/stats", summary="评估统计", description="获取评估数据的聚合统计信息")
+@router.get("/stats", summary="评估统计", description="获取评估数据的聚合统计信息", tags=["评估"])
 def get_assessment_stats(
     service: AssessmentService = Depends(),
     current_user: dict = Depends(require_scope("visit")),
@@ -122,7 +131,7 @@ def get_assessment_stats(
     return success(data=data)
 
 
-@router.get("/{assessment_id}", summary="评估详情", description="根据ID获取单个评估记录")
+@router.get("/{assessment_id}", summary="评估详情", description="根据ID获取单个评估记录", tags=["评估"])
 def get_assessment(
     assessment_id: int,
     service: AssessmentService = Depends(),
@@ -133,7 +142,7 @@ def get_assessment(
     return success(data=AssessmentOut(**row))
 
 
-@router.patch("/{assessment_id}", summary="更新评估", description="更新指定的评估记录信息")
+@router.patch("/{assessment_id}", summary="更新评估", description="更新指定的评估记录信息", tags=["评估"])
 def update_assessment(
     assessment_id: int,
     body: AssessmentUpdate,
@@ -145,7 +154,7 @@ def update_assessment(
     return success(data=AssessmentOut(**updated))
 
 
-@router.delete("/{assessment_id}", summary="删除评估", description="软删除指定的评估记录")
+@router.delete("/{assessment_id}", summary="删除评估", description="软删除指定的评估记录", tags=["评估"])
 def delete_assessment(
     assessment_id: int,
     service: AssessmentService = Depends(),
@@ -156,7 +165,7 @@ def delete_assessment(
     return success(message="deleted")
 
 
-@router.post("/{assessment_id}/reflect", summary="生成反思", description="对评估生成反思报告并关联评分记录")
+@router.post("/{assessment_id}/reflect", summary="生成反思", description="对评估生成反思报告并关联评分记录", tags=["评估"])
 def reflect_on_assessment(
     assessment_id: int,
     service: AssessmentService = Depends(),
@@ -181,7 +190,7 @@ def reflect_on_assessment(
     return success(data={"assessment": updated, "reflection": reflection})
 
 
-@router.get("/trend/{user_id}", summary="评分趋势", description="获取指定用户的评分趋势数据")
+@router.get("/trend/{user_id}", summary="评分趋势", description="获取指定用户的评分趋势数据", tags=["评估"])
 def get_assessment_trend(
     user_id: int,
     limit: int = Query(10, ge=1, le=100),
@@ -193,7 +202,7 @@ def get_assessment_trend(
     return success(data={"user_id": user_id, "trend": trend})
 
 
-@router.get("/weights", summary="权重配置", description="获取当前评分权重配置")
+@router.get("/weights", summary="权重配置", description="获取当前评分权重配置", tags=["评估"])
 def get_weights(
     current_user: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
@@ -201,7 +210,7 @@ def get_weights(
     return success(data=DEFAULT_WEIGHTS)
 
 
-@router.put("/weights", summary="更新权重", description="更新评分权重配置，各维度之和须为1")
+@router.put("/weights", summary="更新权重", description="更新评分权重配置，各维度之和须为1", tags=["评估"])
 def update_weights(
     body: WeightConfig,
     current_user: dict = Depends(require_scope("visit")),

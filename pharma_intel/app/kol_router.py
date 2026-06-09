@@ -5,10 +5,10 @@ from fastapi import APIRouter, Query
 from pharma_intel.app.services.kol_service import search_kol
 from shared.base import success
 
-router = APIRouter(prefix="/api/kol", tags=["KOL学术影响力"])
+router = APIRouter(prefix="/api/kol")
 
 
-@router.get("/search")
+@router.get("/search", tags=["竞争格局"])
 async def search_kol_endpoint(
     name: str = Query(..., description="KOL 姓名"),
     institution: str = Query("", description="所属机构"),
@@ -18,7 +18,7 @@ async def search_kol_endpoint(
     return success(data=result)
 
 
-@router.get("/trending")
+@router.get("/trending", tags=["竞争格局"])
 async def trending_kols(
     limit: int = Query(10, ge=1, le=50),
 ):

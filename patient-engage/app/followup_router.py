@@ -10,10 +10,10 @@ from .services.followup_service import (
     get_pending_followups,
 )
 
-router = APIRouter(prefix="/api/followup", tags=["随访管理"])
+router = APIRouter(prefix="/api/followup")
 
 
-@router.post("/plan")
+@router.post("/plan", tags=["依从性"])
 async def plan(body: dict):
     """创建随访计划。为患者制定随访频率和项目。"""
     result = await create_followup_plan(
@@ -23,7 +23,7 @@ async def plan(body: dict):
     return success(data=result)
 
 
-@router.get("/status")
+@router.get("/status", tags=["依从性"])
 async def status(
     patient_id: str = Query(..., description="患者标识"),
 ):
@@ -32,7 +32,7 @@ async def status(
     return success(data=result)
 
 
-@router.get("/pending")
+@router.get("/pending", tags=["依从性"])
 async def pending():
     """待随访列表。获取所有待完成的随访任务。"""
     result = await get_pending_followups()

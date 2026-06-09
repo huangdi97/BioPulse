@@ -8,7 +8,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, status
 
-router = APIRouter(prefix="/api/research/order", tags=["research-order"])
+router = APIRouter(prefix="/api/research/order")
 
 _ORDERS: list[dict[str, Any]] = []
 _ORDER_LOCK = Lock()
@@ -30,7 +30,7 @@ def _find_index(order_id: int) -> int:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
 
 
-@router.get("")
+@router.get("", tags=["科研PI"])
 def list_orders() -> dict[str, Any]:
     """List all in-memory research orders."""
     with _ORDER_LOCK:
@@ -38,7 +38,7 @@ def list_orders() -> dict[str, Any]:
     return _success(orders)
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED, tags=["科研PI"])
 def create_order(payload: dict[str, Any]) -> dict[str, Any]:
     """Create a research order in memory."""
     global _NEXT_ID
@@ -59,7 +59,7 @@ def create_order(payload: dict[str, Any]) -> dict[str, Any]:
     return _success(result)
 
 
-@router.get("/{id}")
+@router.get("/{id}", tags=["科研PI"])
 def get_order_detail(id: int) -> dict[str, Any]:
     """Return one research order by id."""
     with _ORDER_LOCK:
@@ -67,7 +67,7 @@ def get_order_detail(id: int) -> dict[str, Any]:
     return _success(order)
 
 
-@router.put("/{id}")
+@router.put("/{id}", tags=["科研PI"])
 def update_order_status(id: int, payload: dict[str, Any]) -> dict[str, Any]:
     """Update one research order status by id."""
     if "status" not in payload:

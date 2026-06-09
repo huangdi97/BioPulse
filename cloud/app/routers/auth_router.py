@@ -1,0 +1,82 @@
+"""用户认证与注册路由。"""
+
+from typing import Any, Optional
+
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel, Field
+from starlette import status
+
+from cloud.app.services.auth_service import AuthService
+from shared.base import success
+
+router = APIRouter(prefix="/auth", tags=["认证"])
+
+
+class RegisterRequest(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=6, max_length=128)
+
+
+class LoginRequest(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=6, max_length=128)
+    scope: Optional[str] = "visit"
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
+class ChangePasswordRequest(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    old_password: str = Field(..., min_length=6, max_length=128)
+    new_password: str = Field(..., min_length=6, max_length=128)
+
+
+@router.post(
+    "/register",
+    tags=["auth"],
+    status_code=status.HTTP_201_CREATED,
+    summary="Register a new user account",
+    description="Creates a new user with username and password. Returns user_id on success.",
+)
+def register(body: RegisterRequest, service: AuthService = Depends()) -> Any:
+    """注册新用户。Args: body (RegisterRequest) 注册请求体; service (AuthService) 认证服务。Returns: Any 成功响应"""
+    result = service.register(body.username, body.password)
+    return success(data=result)
+
+
+@router.post(
+    "/login",
+    tags=["auth"],
+    summary="Authenticate user and get tokens",
+    description="Validates credentials and returns access_token and refresh_token.",
+)
+def login(body: LoginRequest, service: AuthService = Depends()) -> Any:
+    """用户登录并返回令牌。Args: body (LoginRequest) 登录请求体; service (AuthService) 认证服务。Returns: Any 成功响应"""
+    result = service.login(body.username, body.password, body.scope)
+    return success(data=result)
+
+
+@router.post(
+    "/refresh",
+    tags=["auth"],
+    summary="Refresh access token",
+    description="Exchange a valid refresh_token for a new access_token.",
+)
+def refresh(body: RefreshRequest, service: AuthService = Depends()) -> Any:
+    """刷新访问令牌。Args: body (RefreshRequest) 刷新请求体; service (AuthService) 认证服务。Returns: Any 成功响应"""
+    result = service.refresh(body.refresh_token)
+    return success(data=result)
+
+
+@router.post(
+    "/change-password",
+    tags=["auth"],
+    summary="Change user password",
+    description="Authenticates user with old password and updates to new password.",
+)
+def change_password(body: ChangePasswordRequest, service: AuthService = Depends()) -> Any:
+    """修改用户密码。Args: body (ChangePasswordRequest) 修改密码请求体; service (AuthService) 认证服务。Returns: Any 成功响应"""
+    service.change_password(body.username, body.old_password, body.new_password)
+    return success(message="Password changed successfully")

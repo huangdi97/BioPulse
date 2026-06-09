@@ -12,9 +12,10 @@ from pydantic import BaseModel, ConfigDict, Field
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 
+from sales_assistant.app.services.research_hcp_service import enrich_research_profile, get_grants, get_papers
 from shared.app_settings import settings
 
-router = APIRouter(prefix="/api/research/hcp", tags=["research-hcp"])
+router = APIRouter(prefix="/api/research/hcp")
 
 TIMEOUT_SECONDS = 30.0
 
@@ -93,6 +94,37 @@ def _find_pi(pi_id: int) -> dict[str, Any]:
     raise HTTPException(status_code=404, detail="PI not found")
 
 
+def _find_research_hcp(id: str) -> dict[str, Any]:
+    if id.isdigit():
+        return _find_pi(int(id))
+    if id == "hcp-001":
+        return {
+            "id": id,
+            "hcp_id": id,
+            "name": "张主任",
+            "institution": "上海瑞金医院",
+            "hospital": "上海瑞金医院",
+            "department": "肿瘤科",
+            "title": "Principal Investigator",
+            "specialty": "肺癌免疫治疗",
+            "city": "Shanghai",
+            "research_areas": ["NSCLC", "immunotherapy", "biomarkers"],
+            "total_papers": 3,
+            "total_grants": 2,
+        }
+    raise HTTPException(status_code=404, detail="PI not found")
+
+
+def _with_research_profile(pi: dict[str, Any], hcp_id: str) -> dict[str, Any]:
+    profile = enrich_research_profile(hcp_id)
+    profile_data = profile.model_dump()
+    return {
+        **pi,
+        **profile_data,
+        "research_profile": profile_data,
+    }
+
+
 def _cloud_url(path: str) -> str:
     return f"{settings.cloud_api_base.rstrip('/')}{path}"
 
@@ -112,7 +144,7 @@ def _read_cloud_response(response: httpx.Response) -> dict[str, Any]:
     return data
 
 
-@router.get("")
+@router.get("", tags=["科研PI"])
 def list_pi(q: str = "") -> dict[str, Any]:
     """List in-memory PI profiles, optionally filtered by keyword."""
     keyword = q.strip().lower()
@@ -130,7 +162,7 @@ def list_pi(q: str = "") -> dict[str, Any]:
     return {"code": 0, "data": items, "message": "success"}
 
 
-@router.post("", status_code=201)
+@router.post("", status_code=201, tags=["科研PI"])
 def create_pi(body: PiCreate) -> dict[str, Any]:
     """Create an in-memory PI profile."""
     global _NEXT_ID
@@ -157,13 +189,31 @@ def create_pi(body: PiCreate) -> dict[str, Any]:
     return {"code": 0, "data": payload, "message": "success"}
 
 
-@router.get("/{id}")
-def get_pi_detail(id: int) -> dict[str, Any]:
+@router.get("/{id}", tags=["科研PI"])
+def get_pi_detail(id: str) -> dict[str, Any]:
     """Return a PI profile by id."""
-    return {"code": 0, "data": _find_pi(id), "message": "success"}
+    pi = _find_research_hcp(id)
+    hcp_id = id if not id.isdigit() else f"pi-{id}"
+    return {"code": 0, "data": _with_research_profile(pi, hcp_id), "message": "success"}
 
 
-@router.post("/{id}/match")
+@router.get("/{id}/papers", tags=["科研PI"])
+def get_pi_papers(id: str) -> dict[str, Any]:
+    """Return PI paper details."""
+    _find_research_hcp(id)
+    hcp_id = id if not id.isdigit() else f"pi-{id}"
+    return {"code": 0, "data": [paper.model_dump() for paper in get_papers(hcp_id)], "message": "success"}
+
+
+@router.get("/{id}/grants", tags=["科研PI"])
+def get_pi_grants(id: str) -> dict[str, Any]:
+    """Return PI grant details."""
+    _find_research_hcp(id)
+    hcp_id = id if not id.isdigit() else f"pi-{id}"
+    return {"code": 0, "data": [grant.model_dump() for grant in get_grants(hcp_id)], "message": "success"}
+
+
+@router.post("/{id}/match", tags=["科研PI"])
 def match_products(id: int, request: Request, body: MatchRequest | None = None) -> dict[str, Any]:
     """Proxy PI product matching to the cloud research matching API."""
     _find_pi(id)
@@ -182,7 +232,7 @@ def match_products(id: int, request: Request, body: MatchRequest | None = None) 
     return _read_cloud_response(response)
 
 
-@router.get("/{id}/trajectory")
+@router.get("/{id}/trajectory", tags=["科研PI"])
 def get_research_trajectory(id: int, request: Request) -> dict[str, Any]:
     """Proxy PI research trajectory lookup to the cloud trajectory API."""
     _find_pi(id)

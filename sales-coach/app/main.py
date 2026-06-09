@@ -2,24 +2,37 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from sales_coach.app.assessment_router import api_router as assessment_api_router
 from sales_coach.app.assessment_router import router as assessment_router
 from sales_coach.app.database import init_db
 from sales_coach.app.digital_human_router import router as digital_human_router
 from sales_coach.app.health_router import router as health_router
 from sales_coach.app.module_router import router as module_router
 from sales_coach.app.reflection_router import router as reflection_router
+from sales_coach.app.routers.compliance_training_router import router as compliance_training_router
+from sales_coach.app.routers.recording_analysis_router import router as recording_analysis_router
+from sales_coach.app.scenario_router import api_router as scenario_api_router
 from sales_coach.app.scenario_router import router as scenario_router
 from sales_coach.app.session_router import router as session_router
 from sales_coach.app.stats_router import router as stats_router
 from sales_coach.app.stats_router import stats_root_router
+
 from shared.app_settings import settings
 from shared.exception_handlers import register_exception_handlers
 from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
 from shared.structured_logging import setup_logging
 
-app = FastAPI(title="Sales Coach Service", version=settings.version)
+app = FastAPI(
+    title="Sales Coach Service",
+    version=settings.version,
+    openapi_tags=[
+        {"name": "场景", "description": "教练场景创建、分类、难度管理"},
+        {"name": "评估", "description": "学员能力评估、统计分析"},
+        {"name": "陪练", "description": "数字人陪练、会话管理"},
+        {"name": "合规培训", "description": "合规培训模块、反思记录"},
+    ],
+)
 
 setup_logging("sales_coach")
 
@@ -45,8 +58,12 @@ app.include_router(health_router)
 app.include_router(module_router)
 app.include_router(session_router)
 app.include_router(scenario_router)
+app.include_router(scenario_api_router)
 app.include_router(stats_router)
 app.include_router(stats_root_router)
 app.include_router(assessment_router)
+app.include_router(assessment_api_router)
 app.include_router(reflection_router)
 app.include_router(digital_human_router)
+app.include_router(recording_analysis_router)
+app.include_router(compliance_training_router)

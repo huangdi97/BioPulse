@@ -9,10 +9,10 @@ from .services.recruitment_service import (
     get_recruitment_status,
 )
 
-router = APIRouter(prefix="/api/recruitment", tags=["患者招募"])
+router = APIRouter(prefix="/api/recruitment")
 
 
-@router.get("/status")
+@router.get("/status", tags=["里程碑"])
 async def status(
     trial_id: str = Query(..., description="临床试验编号"),
 ):
@@ -21,7 +21,7 @@ async def status(
     return success(data=result)
 
 
-@router.get("/pipeline")
+@router.get("/pipeline", tags=["里程碑"])
 async def pipeline():
     """获取患者招募管线总览。汇总所有在研试验的招募进度和阶段分布。"""
     result = await get_pipeline()

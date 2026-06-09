@@ -1,0 +1,20 @@
+<view class="page">
+  <view class="title">新建拜访</view>
+  <view class="panel">
+    <view class="label">HCP</view>
+    <input class="field" placeholder="请从 HCP 列表选择或手动填写" value="{{hcpName}}" bindinput="onHcpInput" />
+
+    <view class="label">拜访类型</view>
+    <picker range="{{visitTypes}}" bindchange="bindTypeChange">
+      <view class="field picker-field">{{visitType}}</view>
+    </picker>
+
+    <view class="label">拜访时间</view>
+    <input class="field" placeholder="YYYY-MM-DD HH:mm" value="{{visitTime}}" bindinput="onTimeInput" />
+
+    <view class="label">拜访内容</view>
+    <textarea class="textarea" placeholder="记录沟通重点、异议和下一步动作" value="{{content}}" bindinput="onContentInput" />
+
+    <button class="button-primary" loading="{{submitting}}" bindtap="submitVisit">保存拜访</button>
+  </view>
+</view>

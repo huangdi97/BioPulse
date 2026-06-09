@@ -11,7 +11,7 @@ from assistant.app.services.knowledge_service import KnowledgeService
 from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 
-router = APIRouter(prefix="/knowledge", tags=["knowledge"])
+router = APIRouter(prefix="/knowledge")
 
 
 class KnowledgeCreate(BaseModel):
@@ -46,7 +46,7 @@ class KnowledgeOut(BaseModel):
     updated_at: Optional[str] = None
 
 
-@router.post("", summary="创建知识条目", description="创建新的知识库条目。")
+@router.post("", summary="创建知识条目", description="创建新的知识库条目。", tags=["库存"])
 def create_knowledge(
     body: KnowledgeCreate,
     service: KnowledgeService = Depends(),
@@ -70,7 +70,7 @@ def create_knowledge(
     )
 
 
-@router.get("", summary="查询知识列表", description="分页查询知识条目，支持按分类和难度筛选。")
+@router.get("", summary="查询知识列表", description="分页查询知识条目，支持按分类和难度筛选。", tags=["库存"])
 def list_knowledge(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -105,7 +105,7 @@ def list_knowledge(
     )
 
 
-@router.get("/categories", summary="获取知识分类", description="获取知识库中所有可用的分类列表。")
+@router.get("/categories", summary="获取知识分类", description="获取知识库中所有可用的分类列表。", tags=["库存"])
 def list_categories(
     service: KnowledgeService = Depends(),
     current_user: dict = Depends(require_scope("visit")),
@@ -123,7 +123,7 @@ def list_categories(
     return success(data=categories)
 
 
-@router.get("/search", summary="搜索知识条目", description="全文搜索知识库中的条目内容。")
+@router.get("/search", summary="搜索知识条目", description="全文搜索知识库中的条目内容。", tags=["库存"])
 def search_knowledge(
     q: str = Query(..., min_length=1),
     page: int = Query(1, ge=1),
@@ -156,7 +156,7 @@ def search_knowledge(
     )
 
 
-@router.get("/{knowledge_id}", summary="获取知识详情", description="根据ID获取知识条目的详细信息。")
+@router.get("/{knowledge_id}", summary="获取知识详情", description="根据ID获取知识条目的详细信息。", tags=["库存"])
 def get_knowledge(
     knowledge_id: int,
     service: KnowledgeService = Depends(),
@@ -176,7 +176,7 @@ def get_knowledge(
     return success(data=KnowledgeOut(**row))
 
 
-@router.patch("/{knowledge_id}", summary="更新知识条目", description="更新指定知识条目的部分字段信息。")
+@router.patch("/{knowledge_id}", summary="更新知识条目", description="更新指定知识条目的部分字段信息。", tags=["库存"])
 def update_knowledge(
     knowledge_id: int,
     body: KnowledgeUpdate,
@@ -198,7 +198,7 @@ def update_knowledge(
     return success(data=KnowledgeOut(**updated))
 
 
-@router.delete("/{knowledge_id}", summary="删除知识条目", description="删除指定的知识库条目。")
+@router.delete("/{knowledge_id}", summary="删除知识条目", description="删除指定的知识库条目。", tags=["库存"])
 def delete_knowledge(
     knowledge_id: int,
     service: KnowledgeService = Depends(),

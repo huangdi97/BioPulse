@@ -15,7 +15,7 @@ class VisitCheckRequest(BaseModel):
     visit_data: dict
 
 
-@router.post("", summary="拜访合规检查", description="对拜访数据进行合规检查")
+@router.post("", summary="拜访合规检查", description="对拜访数据进行合规检查", tags=["合规"])
 def enforce_visit(
     body: VisitCheckRequest,
     current_user: dict = Depends(get_current_user),
@@ -24,7 +24,7 @@ def enforce_visit(
     return service.check_visit(body.visit_data)
 
 
-@router.get("/rules", summary="规则列表", description="获取所有合规规则列表")
+@router.get("/rules", summary="规则列表", description="获取所有合规规则列表", tags=["合规"])
 def list_rules(
     current_user: dict = Depends(get_current_user),
     service: EnforcerService = Depends(),

@@ -21,7 +21,7 @@ from shared.base import success
 router = APIRouter(tags=["voice"])
 
 
-@router.post("/voice/upload", summary="上传音频", description="上传音频文件到语音服务存储。")
+@router.post("/voice/upload", summary="上传音频", description="上传音频文件到语音服务存储。", tags=["设备"])
 async def upload_audio(
     file: UploadFile = File(...),
     service: VoiceService = Depends(),
@@ -42,7 +42,7 @@ async def upload_audio(
     return success(data=data)
 
 
-@router.post("/voice/chat", summary="语音对话", description="上传音频并获取AI语音回复进行对话。")
+@router.post("/voice/chat", summary="语音对话", description="上传音频并获取AI语音回复进行对话。", tags=["设备"])
 async def voice_chat(
     file: UploadFile = File(...),
     context: Optional[str] = Form(None),
@@ -68,7 +68,7 @@ async def voice_chat(
     return success(data=data)
 
 
-@router.get("/voice/synthesize", summary="语音合成", description="将文本合成为语音并返回音频文件。")
+@router.get("/voice/synthesize", summary="语音合成", description="将文本合成为语音并返回音频文件。", tags=["设备"])
 async def synthesize(
     text: str = Query(..., min_length=1),
     voice: str = Query("zh-CN-XiaoxiaoNeural"),
@@ -90,7 +90,7 @@ async def synthesize(
     return FileResponse(tts_path, media_type="audio/mpeg")
 
 
-@router.get("/media/audio/{file_id}", summary="下载音频", description="根据文件ID下载指定的音频文件。")
+@router.get("/media/audio/{file_id}", summary="下载音频", description="根据文件ID下载指定的音频文件。", tags=["设备"])
 async def download_audio(
     file_id: int,
     service: VoiceService = Depends(),
