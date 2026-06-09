@@ -1,4 +1,4 @@
-"""情景记忆写入与巩固逻辑。"""
+"""情景记忆写入、AI 驱动的记忆抽象与长期记忆巩固，及自动关联触发。"""
 
 import json
 from collections.abc import Callable

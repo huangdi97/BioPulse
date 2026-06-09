@@ -1,4 +1,4 @@
-"""Redis Streams backend for event bus delivery."""
+"""基于 Redis Streams 的事件总线后端实现，支持事件投递、消费确认及投递日志记录。"""
 
 from datetime import datetime
 

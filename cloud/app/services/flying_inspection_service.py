@@ -1,4 +1,4 @@
-"""飞检准备度仪表盘服务。"""
+"""飞检（飞行检查）准备度仪表盘服务，提供检查清单管理、任务分派、状态追踪与合规预警。"""
 
 from datetime import date, datetime
 from typing import Optional
