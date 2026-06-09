@@ -38,6 +38,7 @@ class ContentService(BaseService):
     """内容服务，提供内容的增删改查与合规评分功能。"""
 
     def create_content(self, title: str, body: str, category: str, tags: List[str], user_id: int) -> dict:
+        """创建内容并执行合规检查。"""
         repo = ContentsRepository(self.db)
         tags_str = json.dumps(tags, ensure_ascii=False)
 
@@ -75,6 +76,7 @@ class ContentService(BaseService):
         return row
 
     def get_content(self, content_id: int) -> dict:
+        """获取指定内容详情。"""
         repo = ContentsRepository(self.db)
         row = repo.get_by_id(content_id)
         if not row:
@@ -88,6 +90,7 @@ class ContentService(BaseService):
         page: int = 1,
         page_size: int = 20,
     ) -> dict:
+        """按状态和分类分页查询内容。"""
         repo = ContentsRepository(self.db)
         conditions: List[str] = []
         params: list = []
@@ -122,6 +125,7 @@ class ContentService(BaseService):
         tags: Optional[List[str]],
         status_field: Optional[str],
     ) -> dict:
+        """更新内容字段并重新检查合规性。"""
         repo = ContentsRepository(self.db)
         row = repo.get_by_id(content_id)
         if not row:
@@ -155,6 +159,7 @@ class ContentService(BaseService):
         return row
 
     def delete_content(self, content_id: int) -> None:
+        """归档指定内容（已审批内容不可归档）。"""
         repo = ContentsRepository(self.db)
         row = repo.get_by_id(content_id)
         if not row:

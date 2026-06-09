@@ -46,6 +46,7 @@ class CoachAbility(CoachSuggestionMixin):
 
     @staticmethod
     def _rd(row, cols):
+        """将行数据做JSON字段反序列化。"""
         if row is None:
             return None
         d = dict(row) if not isinstance(row, dict) else row
@@ -56,6 +57,7 @@ class CoachAbility(CoachSuggestionMixin):
 
     @staticmethod
     def _calc_next_difficulty(score: float, current: str) -> str:
+        """根据得分计算下一难度等级。"""
         idx = DIFFICULTY_LEVELS.index(current) if current in DIFFICULTY_LEVELS else 1
         if score >= 0.9 and idx < len(DIFFICULTY_LEVELS) - 1:
             return DIFFICULTY_LEVELS[idx + 1]
@@ -74,6 +76,7 @@ class CoachAbility(CoachSuggestionMixin):
         estimated_minutes: int,
         created_by: int,
     ) -> dict:
+        """创建培训模块。"""
         modules_repo = TrainingModulesRepository(self.db)
         module_id = modules_repo.create(
             {
@@ -91,6 +94,7 @@ class CoachAbility(CoachSuggestionMixin):
         return self._rd(row, MODULE_COLS)
 
     def list_modules(self, category: Optional[str] = None, difficulty: Optional[str] = None) -> list:
+        """按分类和难度列出培训模块。"""
         modules_repo = TrainingModulesRepository(self.db)
         conditions = ["is_active=1"]
         params = []
@@ -114,6 +118,7 @@ class CoachAbility(CoachSuggestionMixin):
         feedback: str,
         difficulty_used: str,
     ) -> dict:
+        """创建培训记录并计算下一难度。"""
         modules_repo = TrainingModulesRepository(self.db)
         sessions_repo = TrainingSessionsRepository(self.db)
 
@@ -144,6 +149,7 @@ class CoachAbility(CoachSuggestionMixin):
         page: int = 1,
         page_size: int = 20,
     ) -> dict:
+        """分页查询培训记录。"""
         sessions_repo = TrainingSessionsRepository(self.db)
         conditions = []
         params = []
@@ -169,6 +175,7 @@ class CoachAbility(CoachSuggestionMixin):
         }
 
     def get_session(self, session_id: int) -> dict:
+        """获取培训记录详情。"""
         sessions_repo = TrainingSessionsRepository(self.db)
         row = sessions_repo.get_by_id(session_id)
         if not row:

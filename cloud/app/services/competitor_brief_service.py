@@ -15,6 +15,7 @@ class CompetitorBriefService:
     """Generate weekly competitor briefs from sentiment, price and approval signals."""
 
     def __init__(self, db: Any | None = None, storage: Any | None = None) -> None:
+        """初始化竞品简报服务及分析器。"""
         self.db = db
         self.storage = storage
         self.trend_detector = TrendDetector(storage=storage)
@@ -23,6 +24,7 @@ class CompetitorBriefService:
         self.sentiment_analyzer = SentimentAnalyzer(storage=storage)
 
     def generate_weekly_brief(self, week_start: date | datetime | str | None = None) -> dict[str, Any]:
+        """生成竞品情报周报。"""
         start = self._resolve_week_start(week_start)
         end = start + timedelta(days=6)
         product_ids = self._load_product_ids()
@@ -89,6 +91,7 @@ class CompetitorBriefService:
         }
 
     def deliver_brief(self, team_ids: list[int | str], brief: dict[str, Any]) -> dict[str, Any]:
+        """向指定团队推送竞品简报。"""
         deliveries = []
         for team_id in team_ids:
             for channel in ("管理端", "销售助手"):
@@ -101,6 +104,7 @@ class CompetitorBriefService:
         }
 
     def _deliver_one(self, team_id: int | str, channel: str, brief: dict[str, Any]) -> dict[str, Any]:
+        """向单个团队单渠道推送简报。"""
         if self.db is None:
             return {"team_id": team_id, "channel": channel, "status": "simulated"}
         try:
@@ -121,6 +125,7 @@ class CompetitorBriefService:
             return {"team_id": team_id, "channel": channel, "status": "failed", "error": str(exc)}
 
     def _resolve_week_start(self, value: date | datetime | str | None) -> date:
+        """解析周起始日期。"""
         if value is None:
             today = date.today()
             return today - timedelta(days=today.weekday())
@@ -131,6 +136,7 @@ class CompetitorBriefService:
         return datetime.strptime(str(value), "%Y-%m-%d").date()
 
     def _load_product_ids(self) -> list[int]:
+        """加载被追踪的竞品ID列表。"""
         try:
             from cloud.app.crawler.storage import get_storage
 
@@ -148,6 +154,7 @@ class CompetitorBriefService:
         return [1, 2]
 
     def _load_new_product_launches(self, start: date, end: date) -> list[dict[str, Any]]:
+        """查询指定时间窗口内的新品获批信息。"""
         rows = self._query_market_items(["获批", "上市", "批准"], start, end)
         if rows:
             return rows
@@ -161,6 +168,7 @@ class CompetitorBriefService:
         ]
 
     def _load_marketing_activities(self, start: date, end: date) -> list[dict[str, Any]]:
+        """查询指定时间窗口内的营销活动。"""
         rows = self._query_market_items(["营销", "推广", "销售", "会议"], start, end)
         if rows:
             return rows
@@ -174,6 +182,7 @@ class CompetitorBriefService:
         ]
 
     def _query_market_items(self, keywords: list[str], start: date, end: date) -> list[dict[str, Any]]:
+        """按关键词和时间窗口查询市场情报。"""
         if self.db is None:
             return []
         try:
@@ -199,6 +208,7 @@ class CompetitorBriefService:
         negative_events: list[dict[str, Any]],
         sentiment: dict[str, Any],
     ) -> list[str]:
+        """生成竞品情报行动建议。"""
         recommendations = []
         if price_adjustments:
             recommendations.append("复核重点省份竞品报价，更新销售助手中的价格异动提示。")
@@ -209,6 +219,7 @@ class CompetitorBriefService:
         return recommendations or ["本周未发现显著竞品风险，保持常规监测频率。"]
 
     def _brief_body(self, brief: dict[str, Any]) -> str:
+        """生成简报推送正文摘要。"""
         summary = brief.get("summary", {})
         return (
             f"新品上市 {summary.get('new_product_launches', 0)} 条，"
@@ -219,10 +230,12 @@ class CompetitorBriefService:
 
 
 def generate_weekly_brief(week_start: date | datetime | str | None = None) -> dict[str, Any]:
+    """快捷生成竞品情报周报。"""
     return CompetitorBriefService().generate_weekly_brief(week_start)
 
 
 def deliver_brief(team_ids: list[int | str], brief: dict[str, Any]) -> dict[str, Any]:
+    """快捷向指定团队推送竞品简报。"""
     return CompetitorBriefService().deliver_brief(team_ids, brief)
 
 

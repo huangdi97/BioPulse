@@ -26,6 +26,7 @@ class ComplianceService(BaseService):
         max_value: Optional[float],
         created_by: int,
     ) -> dict:
+        """创建合规规则。"""
         repo = ComplianceRulesRepository(self.db)
         row_id = repo.create(
             {
@@ -45,6 +46,7 @@ class ComplianceService(BaseService):
         }
 
     def list_rules(self) -> list:
+        """列出所有合规规则。"""
         repo = ComplianceRulesRepository(self.db)
         return [
             {
@@ -58,6 +60,7 @@ class ComplianceService(BaseService):
         ]
 
     def delete_rule(self, rule_id: int) -> None:
+        """删除指定合规规则。"""
         repo = ComplianceRulesRepository(self.db)
         row = repo.get_by_id(rule_id)
         if not row:
@@ -65,6 +68,7 @@ class ComplianceService(BaseService):
         repo.delete(rule_id)
 
     def dashboard_summary(self) -> dict:
+        """获取今日违规统计概览。"""
         db = self.db
         today = datetime.now(timezone.utc).strftime("%Y-%m-%dT00:00:00")
         rows = db.execute(
@@ -96,6 +100,7 @@ class ComplianceService(BaseService):
         }
 
     def rep_violations(self, rep_id: int) -> dict:
+        """获取指定医药代表的违规记录。"""
         db = self.db
         rows = db.execute(
             "SELECT id, rule_code, rule_name, severity, action, visit_data_json, created_at FROM enforcement_log ORDER BY id"
@@ -123,6 +128,7 @@ class ComplianceService(BaseService):
         return {"rep_id": rep_id, "violations": result}
 
     def dashboard(self) -> dict:
+        """获取合规仪表盘统计数据。"""
         db = self.db
         today = datetime.now().strftime("%Y-%m-%d")
         w7 = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")

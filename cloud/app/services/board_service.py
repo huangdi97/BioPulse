@@ -13,6 +13,7 @@ from shared.columns import TABLE_TASK_BOARDS_COLS
 
 
 def _board_to_dict(row) -> dict:
+    """将数据库行转换为看板字典。"""
     return {
         "id": row["id"],
         "name": row["name"],
@@ -25,6 +26,7 @@ def _board_to_dict(row) -> dict:
 
 
 def _task_to_dict(row) -> dict:
+    """将数据库行转换为任务卡片字典。"""
     return {
         "id": row["id"],
         "board_id": row["board_id"],
@@ -46,6 +48,7 @@ class BoardService(BaseService):
     """看板服务，提供看板 CRUD 及 Kanban 列视图。"""
 
     def _get_board_or_404(self, board_id: int):
+        """按ID查找看板，不存在则返回404。"""
         boards_repo = TaskBoardsRepository(self.db)
         rows = boards_repo.list_all(conditions=["id=?", "is_active=1"], params=[board_id])
         if not rows:
@@ -53,6 +56,7 @@ class BoardService(BaseService):
         return rows[0]
 
     def create_board(self, name: str, description: str, owner_id: int) -> dict:
+        """创建新看板。"""
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         boards_repo = TaskBoardsRepository(self.db)
         board_id = boards_repo.create(
@@ -68,6 +72,7 @@ class BoardService(BaseService):
         return _board_to_dict(row)
 
     def list_boards(self) -> list:
+        """获取所有活跃看板列表。"""
         boards_repo = TaskBoardsRepository(self.db)
         rows = boards_repo.list_all(
             conditions=["is_active=1"],
@@ -76,6 +81,7 @@ class BoardService(BaseService):
         return [_board_to_dict(r) for r in rows]
 
     def get_board(self, board_id: int) -> dict:
+        """获取指定看板详情。"""
         row = self._get_board_or_404(board_id)
         return _board_to_dict(row)
 
@@ -85,6 +91,7 @@ class BoardService(BaseService):
         name: Optional[str] = None,
         description: Optional[str] = None,
     ) -> dict:
+        """更新看板名称或描述。"""
         self._get_board_or_404(board_id)
         boards_repo = TaskBoardsRepository(self.db)
         updates = {}
@@ -100,11 +107,13 @@ class BoardService(BaseService):
         return _board_to_dict(row)
 
     def delete_board(self, board_id: int) -> None:
+        """软删除指定看板。"""
         self._get_board_or_404(board_id)
         boards_repo = TaskBoardsRepository(self.db)
         boards_repo.soft_delete(board_id)
 
     def kanban_view(self, board_id: int) -> dict:
+        """获取看板的Kanban列视图。"""
         board_row = self._get_board_or_404(board_id)
         tasks_repo = BoardTasksRepository(self.db)
         rows = tasks_repo.list_all(

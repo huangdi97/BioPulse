@@ -16,6 +16,7 @@ from cloud.app.repositories import (
 
 
 def _round_to_dict(row) -> dict:
+    """将联邦学习轮次行转换为字典。"""
     return {
         "id": row["id"],
         "round_id": row["round_id"],
@@ -34,6 +35,7 @@ class ComputeSchedulerMixin:
     """计算调度混入类，提供联邦学习与贡献审计功能。"""
 
     def init_federated(self, model_name: str, num_rounds: int, aggregation_method: str) -> list:
+        """初始化多轮联邦学习任务。"""
         repo = FederatedRoundsRepository(self.db)
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         for rn in range(1, num_rounds + 1):
@@ -56,6 +58,7 @@ class ComputeSchedulerMixin:
         return [_round_to_dict(r) for r in rows]
 
     def submit_federated(self, round_id: str, participant_id: str, metrics: dict, update_summary: str) -> dict:
+        """提交联邦学习参与方更新。"""
         repo = FederatedRoundsRepository(self.db)
         rows = repo.list_all(conditions=["round_id=?"], params=[round_id])
         if not rows:
@@ -80,6 +83,7 @@ class ComputeSchedulerMixin:
         return _round_to_dict(updated[0])
 
     def list_federated_rounds(self, model_name=None, status_filter=None) -> list:
+        """查询联邦学习轮次列表。"""
         repo = FederatedRoundsRepository(self.db)
         conditions, params = [], []
         if model_name:
@@ -96,6 +100,7 @@ class ComputeSchedulerMixin:
         return [_round_to_dict(r) for r in rows]
 
     def prove_contribution(self, contribution_id: int, prover_sub: str) -> dict:
+        """证明贡献记录的真实性。"""
         repo = FedAuditContributionsRepository(self.db)
         row = repo.get_by_id(contribution_id)
         if not row:
@@ -117,6 +122,7 @@ class ComputeSchedulerMixin:
         }
 
     def verify_contribution(self, contribution_id: int) -> dict:
+        """验证贡献记录是否存在及可信。"""
         repo = FedAuditContributionsRepository(self.db)
         row = repo.get_by_id(contribution_id)
         if not row:
