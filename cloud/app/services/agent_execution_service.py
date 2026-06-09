@@ -45,6 +45,8 @@ class AgentExecutionService:
             conn.close()
 
     def submit_task(self, body, uid=None):
+        """提交一个新的 Agent 执行任务。"""
+
         def _do(conn):
             repo = AgentExecutionTasksRepository(conn)
             task_id = f"aet:{uuid.uuid4()}"
@@ -68,6 +70,8 @@ class AgentExecutionService:
         return self._exec(_do)
 
     def list_tasks(self, status_filter=None, agent_role=None):
+        """按状态或角色筛选 Agent 任务列表。"""
+
         def _do(conn):
             repo = AgentExecutionTasksRepository(conn)
             conds, pars = [], []
@@ -82,6 +86,8 @@ class AgentExecutionService:
         return self._exec(_do)
 
     def get_task(self, task_id):
+        """根据 task_id 获取单个任务详情。"""
+
         def _do(conn):
             repo = AgentExecutionTasksRepository(conn)
             row = repo.get_by_task_id(task_id)
@@ -92,6 +98,8 @@ class AgentExecutionService:
         return self._exec(_do)
 
     def retry_task(self, task_id):
+        """重试指定任务，重置状态为 pending。"""
+
         def _do(conn):
             repo = AgentExecutionTasksRepository(conn)
             row = repo.get_by_task_id(task_id)
@@ -103,6 +111,8 @@ class AgentExecutionService:
         return self._exec(_do)
 
     def approve_task(self, task_id):
+        """审批通过任务，标记为 completed 状态。"""
+
         def _do(conn):
             repo = AgentExecutionTasksRepository(conn)
             row = repo.get_by_task_id(task_id)
@@ -115,6 +125,8 @@ class AgentExecutionService:
         return self._exec(_do)
 
     def a2a_card(self):
+        """返回 Agent A2A 能力卡片，注册可用技能列表。"""
+
         def _do(conn):
             rows = AgentSkillsRepository(conn).list_all(conditions=["enabled=1"], order_by="priority ASC")
             return {"name": "Cloud Agent", "skills": [s["skill_name"] for s in rows]}
@@ -122,6 +134,8 @@ class AgentExecutionService:
         return self._exec(_do)
 
     def a2a_task(self, body):
+        """通过 A2A 协议接收外部 Agent 任务并创建记录。"""
+
         def _do(conn):
             repo = AgentExecutionTasksRepository(conn)
             task_id = body.task_id or f"aet:{uuid.uuid4()}"

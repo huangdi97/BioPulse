@@ -11,24 +11,29 @@ from cloud.rules.loader import load_pharma_l2_rules, load_pharma_rules, load_res
 
 class ComplianceEngine:
     def __init__(self, db: sqlite3.Connection):
+        """初始化合规引擎，绑定数据库连接与审计日志器。"""
         self.db = db
         self._engine = EnforcerEngine(db)
         self._audit = EnforcerAudit(db)
         self._audit.ensure_tables()
 
     def check_visit(self, visit_data: dict) -> list[Violation]:
+        """对拜访数据执行 L1 硬阻断合规检查。"""
         violations = self._engine.check_visit(visit_data)
         for violation in violations:
             self._audit._log_violation(violation, visit_data)
         return violations
 
     def get_l1_rules(self) -> list:
+        """获取当前 L1 硬阻断规则列表。"""
         return self._engine.get_l1_rules()
 
     def get_l2_rules(self) -> list:
+        """获取当前 L2 软告警规则列表。"""
         return self._engine.get_l2_rules()
 
     def check_all_levels(self, visit_data: dict) -> dict:
+        """执行三级合规检查（L1 阻断 → L2 告警 → L3 审计），返回分级结果。"""
         data = visit_data or {}
         l1 = self.check_visit(data)
         if l1:
@@ -41,6 +46,7 @@ class ComplianceEngine:
         return {"level": "L3", "action": "log", "violations": []}
 
     def check_visit_l2(self, visit_data: dict) -> list:
+        """对拜访数据执行 L2 软告警合规检查。"""
         return self._engine.check_visit_l2(visit_data)
 
 
@@ -49,6 +55,7 @@ ComplianceEnforcer = ComplianceEngine
 
 class ResearchComplianceEnforcer:
     def __init__(self, db: sqlite3.Connection):
+        """初始化科研模式合规执行器，加载科研规则并创建日志表。"""
         self.db = db
         self._rules = load_research_rules()
         self.db.execute(
@@ -57,6 +64,7 @@ class ResearchComplianceEnforcer:
         self.db.commit()
 
     def check_research_visit(self, visit_data: dict) -> list[Violation]:
+        """对科研拜访数据执行 L1 规则检查并记录违规日志。"""
         violations = []
         for rule in self._rules:
             if rule.get("level") != "L1":
@@ -77,11 +85,13 @@ class ResearchComplianceEnforcer:
         return violations
 
     def get_l1_rules(self) -> list:
+        """获取科研模式的 L1 硬阻断规则。"""
         return [rule for rule in self._rules if rule.get("level") == "L1"]
 
 
 class ComplianceStrategyService:
     def __init__(self, db):
+        """初始化合规策略服务，加载 L1 和 L2 规则集。"""
         self.db = db
         self.enforcer = ComplianceEnforcer(db) if db else None
         self._all_l2_rules = load_pharma_l2_rules() + load_research_l2_rules()
@@ -89,6 +99,7 @@ class ComplianceStrategyService:
             EnforcerAudit(db)._ensure_l2_tables()
 
     def evaluate_visit(self, visit_data: dict) -> dict:
+        """评估一次拜访数据的全量合规风险（三级联动）。"""
         if self.enforcer:
             return self.enforcer.check_all_levels(visit_data)
         return {"level": "L3", "action": "log", "violations": []}
@@ -106,6 +117,7 @@ class ComplianceStrategyService:
         EnforcerAudit(self.db)._log_l3(visit_data)
 
     def get_strategy(self, rule_id: str) -> Optional[dict]:
+        """根据规则 ID 获取合规策略详情与处理建议。"""
         for rules in (load_pharma_rules(), load_research_rules()):
             for rule in rules:
                 if rule.get("code") == rule_id:
@@ -117,4 +129,5 @@ class ComplianceStrategyService:
         return None
 
     def get_l2_rules(self) -> list:
+        """获取全部 L2 软告警规则列表。"""
         return self._all_l2_rules

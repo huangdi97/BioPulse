@@ -52,6 +52,7 @@ class DetectionRule:
 
 class EnforcerEngine:
     def __init__(self, db: sqlite3.Connection):
+        """初始化合规规则引擎，加载 L1 和 L2 规则集。"""
         self.db = db
         self._rules = load_pharma_rules()
         self._parsed_rules = [self._parse_rule(rule) for rule in self._rules]
@@ -74,6 +75,7 @@ class EnforcerEngine:
         )
 
     def check_visit(self, visit_data: dict) -> list[Violation]:
+        """对拜访数据执行所有 L1 硬阻断规则匹配，返回违规列表。"""
         data = visit_data or {}
         data["notes"] = (data.get("notes") or "")[:5000]
         data["expenses"] = max(0, data.get("expenses") or 0)
@@ -110,15 +112,19 @@ class EnforcerEngine:
         return Violation(rule.code, rule.name, rule.severity, rule.action, f"Rule '{rule.code}' triggered: {rule.name}")
 
     def get_l1_rules(self) -> list:
+        """获取当前已解析的 L1 硬阻断规则列表。"""
         return [rule for rule in self._parsed_rules if rule.level == "L1"]
 
     def get_l2_rules(self) -> list:
+        """获取当前 L2 软告警规则列表。"""
         return self._l2_rules
 
     def check_visit_l2(self, visit_data: dict) -> list:
+        """对拜访数据执行所有 L2 软告警规则匹配。"""
         return self.check_l2_rules(self._l2_rules, visit_data or {})
 
     def check_l2_rules(self, rules: list, visit_data: dict) -> list:
+        """对拜访数据执行自定义 L2 规则列表匹配，返回违规详情。"""
         return [v for rule in rules for v in [self._match_l2(rule, visit_data or {})] if v]
 
     def _match_l2(self, rule: dict, data: dict) -> Optional[dict]:
