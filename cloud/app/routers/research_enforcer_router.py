@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from cloud.app.services.compliance_enforcer_service import ResearchComplianceEnforcer
+from cloud.app.services.compliance_engine import ResearchComplianceEnforcer
 from cloud.app.services.research_service import ResearchService
 from shared.auth import get_current_user
 from shared.auth_scope import require_scope

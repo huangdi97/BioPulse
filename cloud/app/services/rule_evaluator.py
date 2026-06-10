@@ -13,7 +13,7 @@ from cloud.app.repositories import (
     ComplianceRulesRepository,
 )
 from cloud.app.services.base import BaseService
-from cloud.app.services.compliance_strategy_service import ComplianceStrategyService
+from cloud.app.services.compliance_engine import ComplianceStrategyService
 from cloud.app.services.rule_aggregator import RuleAggregatorMixin, _parse_json
 from shared.base import success
 from shared.compliance import check_content
