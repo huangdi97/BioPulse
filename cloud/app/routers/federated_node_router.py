@@ -5,6 +5,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from starlette import status
 
 from cloud.app.services.federated_node_service import FederatedNodeService
 from shared.auth_scope import require_scope
@@ -40,6 +41,7 @@ class UpdateStatusBody(BaseModel):
 
 @router.post(
     "/nodes/register",
+    status_code=status.HTTP_201_CREATED,
     summary="Register Node",
     description="向联邦学习网络注册一个新的节点，包含节点标识、类型、组织和公钥等信息。",
     tags=["联邦学习"],

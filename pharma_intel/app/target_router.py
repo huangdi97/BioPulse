@@ -8,7 +8,7 @@ from pharma_intel.app.services.target_service import (
 )
 from shared.base import success
 
-router = APIRouter(prefix="/api/target")
+router = APIRouter(prefix="/target")
 
 
 @router.get("/analyze", tags=["靶点"])

@@ -158,7 +158,8 @@ class NetworkCrudMixin:
         """检查细胞网络数据库连接及活跃节点数。"""
         try:
             self.db.execute("SELECT 1 FROM agent_cell_network LIMIT 1")
-        except Exception:
+        except Exception:  # noqa: BLE001  # DB health check can fail for transient connection reasons
+            logger.exception("Database health check failed")
             return {
                 "status": "unhealthy",
                 "db_connected": False,

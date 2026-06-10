@@ -1,7 +1,7 @@
 """销售漏斗服务：日程完成率、笔记覆盖率等漏斗分析。"""
 
 from sales_assistant.app.repositories import NoteRepository, ScheduleRepository
-from sales_assistant.app.services.base import BaseService
+from shared.base_service import BaseService
 
 
 class FunnelService(BaseService):

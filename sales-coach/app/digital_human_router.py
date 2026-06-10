@@ -5,11 +5,11 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Path, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from starlette import status
+
 from sales_coach.app.services.digital_human_difficulty_service import DigitalHumanDifficultyService
 from sales_coach.app.services.digital_human_memory_service import DigitalHumanMemoryService
 from sales_coach.app.services.digital_human_service import DigitalHumanService
-from starlette import status
-
 from shared.app_settings import settings as app_settings
 from shared.auth_scope import require_scope
 from shared.base import success

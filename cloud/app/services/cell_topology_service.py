@@ -3,7 +3,7 @@
 import json
 import logging
 
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 logger = logging.getLogger(__name__)
 

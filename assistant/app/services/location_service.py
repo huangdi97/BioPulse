@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from assistant.app.repositories import HcpLocationRepository
-from assistant.app.services.base import BaseCrudService
+from shared.base_service import BaseCrudService
 
 
 def haversine(lat1: float, lng1: float, lat2: float, lng2: float) -> float:

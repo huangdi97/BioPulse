@@ -5,15 +5,13 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from sales_assistant.app import research_hcp_router, research_order_router, research_quotation_router
+from sales_assistant.app import research_hcp_router, research_order_router, sales_assistant_research_quotation_router
 from sales_assistant.app.anomaly_router import router as anomaly_router
 from sales_assistant.app.coach_router import router as coach_router
 from sales_assistant.app.content_router import content_root_router
 from sales_assistant.app.content_router import router as content_router
 from sales_assistant.app.database import init_db
 from sales_assistant.app.funnel_router import router as funnel_router
-from sales_assistant.app.hcp_router import router as hcp_router
-from sales_assistant.app.health_router import router as health_router
 from sales_assistant.app.note_router import router as note_router
 from sales_assistant.app.objection_router import router as objection_router
 from sales_assistant.app.precall_router import router as precall_router
@@ -21,11 +19,13 @@ from sales_assistant.app.routers.academic_meeting_router import router as academ
 from sales_assistant.app.routers.competitor_quicklook_router import router as competitor_quicklook_router
 from sales_assistant.app.routers.schedule_optimizer_router import router as schedule_optimizer_router
 from sales_assistant.app.routers.voice_analysis_router import router as voice_analysis_router
+from sales_assistant.app.sales_assistant_hcp_router import router as hcp_router
+from sales_assistant.app.sales_assistant_strategy_router import router as strategy_router
+from sales_assistant.app.sales_assistant_strategy_router import strategy_root_router
 from sales_assistant.app.schedule_router import router as schedule_router
-from sales_assistant.app.strategy_router import router as strategy_router
-from sales_assistant.app.strategy_router import strategy_root_router
 from shared.app_settings import settings
 from shared.exception_handlers import register_exception_handlers
+from shared.health import router as health_router
 from shared.l1_cache import cache_rules, init_l1_cache, load_l1_rules
 from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
@@ -58,10 +58,11 @@ app = FastAPI(
 
 setup_logging("sales_assistant")
 
+_cors_origins = settings.cors_origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    allow_credentials=_cors_origins != ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -83,7 +84,7 @@ app.include_router(schedule_router)
 app.include_router(note_router)
 app.include_router(hcp_router, tags=["hcp", "products"])
 app.include_router(research_hcp_router.router)
-app.include_router(research_quotation_router.router)
+app.include_router(sales_assistant_research_quotation_router.router)
 app.include_router(research_order_router.router)
 app.include_router(precall_router)
 app.include_router(objection_router)

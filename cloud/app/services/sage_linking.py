@@ -2,6 +2,7 @@
 
 import json
 import logging
+from typing import Any
 
 from cloud.app.repositories.sage_repository import SageRepository
 from cloud.app.repositories.world_tree_repository import WorldTreeNodesRepository
@@ -40,7 +41,7 @@ class SageLinkingService:
 
     def auto_link(self) -> dict:
         """自动执行情景→语义、语义→过程、世界树记忆链接三阶段关联。"""
-        result = {
+        result: dict[str, Any] = {
             "episodic_to_semantic_candidates": 0,
             "semantic_to_procedural_candidates": 0,
             "world_tree_links_created": 0,
@@ -54,7 +55,7 @@ class SageLinkingService:
         bms = BrainMemoryService(db=self.db)
 
         try:
-            scores = self.repo.get_all_scores()
+            scores: list[dict[str, Any]] = self.repo.get_all_scores()
             ep_ids = {s["memory_id"] for s in scores if s["memory_type"] == "episodic" and s["tier"] in ("hot", "warm")}
             if ep_ids:
                 ep_res = bms.episodic_list(page=1, page_size=1000)

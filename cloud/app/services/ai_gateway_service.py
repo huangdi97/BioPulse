@@ -1,15 +1,18 @@
 """AI 网关服务，统一封装对大语言模型（DeepSeek）的调用。"""
 
 import json
+import logging
 import math
 import urllib.error
 import urllib.request
 
+logger = logging.getLogger(__name__)
+
 from fastapi import HTTPException
 from starlette import status
 
-from cloud.app.services.base import BaseService
 from cloud.app.services.token_budget_service import TokenBudgetService
+from shared.base_service import BaseService
 from shared.config import settings
 
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
@@ -120,5 +123,6 @@ def get_embedding(text: str) -> list[float] | None:
         if norm > 0:
             vec = [v / norm for v in vec]
         return vec
-    except Exception:
+    except Exception:  # noqa: BLE001  # trigram hash / math operations have multiple failure modes
+        logger.exception("get_embedding failed")
         return None

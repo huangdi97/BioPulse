@@ -9,8 +9,8 @@ from cloud.app.repositories import (
     EpisodicMemoryRepository,
     KgEntitiesRepository,
 )
-from cloud.app.services.base import BaseService
 from cloud.app.services.causal_graph import CausalGraphMixin
+from shared.base_service import BaseService
 
 
 class CausalService(CausalGraphMixin, BaseService):

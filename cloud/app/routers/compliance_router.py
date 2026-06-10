@@ -4,6 +4,7 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+from starlette import status
 
 from cloud.app.services.compliance_service import ComplianceService
 from shared.auth_scope import require_scope
@@ -46,7 +47,7 @@ def check(request: CheckRequest) -> Any:
     return success(data=result.model_dump())
 
 
-@router.post("/rules", summary="创建合规规则", description="创建一条新的合规检查规则", tags=["compliance"])
+@router.post("/rules", status_code=status.HTTP_201_CREATED, summary="创建合规规则", description="创建一条新的合规检查规则", tags=["compliance"])
 def create_rule(
     body: RuleCreate,
     current_user: dict = Depends(require_scope("visit")),

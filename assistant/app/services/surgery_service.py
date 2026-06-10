@@ -1,13 +1,16 @@
 """跟台手术服务模块。"""
 
 import asyncio
+import logging
 from datetime import date, datetime, timezone
 from typing import Optional
 
 from assistant.app.reminder_scheduler import check_reminders
 from assistant.app.repositories import SurgeryReminderRepository
-from assistant.app.services.base import BaseCrudService
 from assistant.app.ws_manager import connection_manager
+from shared.base_service import BaseCrudService
+
+logger = logging.getLogger(__name__)
 
 VALID_STATUSES = {"scheduled", "in_progress", "completed", "cancelled"}
 
@@ -56,19 +59,22 @@ class SurgeryService(BaseCrudService):
                 "updated_at": now,
             },
         )
-        asyncio.create_task(
-            connection_manager.send_to_user(
-                user_id,
-                {
-                    "type": "surgery_reminder",
-                    "title": "新手术提醒",
-                    "body": f"{body.patient_name} · {body.surgery_type or '手术'} · {body.hospital or ''}",
-                    "surgery_id": row_id,
-                    "surgery_date": body.surgery_date or "",
-                    "timestamp": now,
-                },
-            )
-        )
+        async def _safe_send():
+            try:
+                await connection_manager.send_to_user(
+                    user_id,
+                    {
+                        "type": "surgery_reminder",
+                        "title": "新手术提醒",
+                        "body": f"{body.patient_name} · {body.surgery_type or '手术'} · {body.hospital or ''}",
+                        "surgery_id": row_id,
+                        "surgery_date": body.surgery_date or "",
+                        "timestamp": now,
+                    },
+                )
+            except Exception:
+                logger.exception("Failed to send WebSocket notification for surgery %s", row_id)
+        asyncio.create_task(_safe_send())
         return {"id": row_id}
 
     def today(self) -> list:

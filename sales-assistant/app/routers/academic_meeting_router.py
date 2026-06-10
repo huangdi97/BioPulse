@@ -1,7 +1,9 @@
 """Academic meeting integration APIs."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from starlette import status
+
+from shared.auth_scope import require_scope
 
 from sales_assistant.app.schemas.academic_meeting import (
     Meeting,
@@ -34,32 +36,32 @@ def get_meetings() -> list[Meeting]:
 
 
 @router.post("", response_model=Meeting, status_code=status.HTTP_201_CREATED, tags=["学术会议"])
-def post_meeting(body: MeetingCreate) -> Meeting:
+def post_meeting(body: MeetingCreate, _: dict = Depends(require_scope("visit"))) -> Meeting:
     return create_meeting(body)
 
 
 @router.put("/{id}", response_model=Meeting, tags=["学术会议"])
-def put_meeting(id: str, body: MeetingCreate) -> Meeting:
+def put_meeting(id: str, body: MeetingCreate, _: dict = Depends(require_scope("visit"))) -> Meeting:
     return update_meeting(id, body)
 
 
 @router.delete("/{id}", tags=["学术会议"])
-def remove_meeting(id: str) -> dict[str, str]:
+def remove_meeting(id: str, _: dict = Depends(require_scope("visit"))) -> dict[str, str]:
     return delete_meeting(id)
 
 
 @router.post("/{id}/invite", response_model=MeetingInvitation, tags=["学术会议"])
-def invite(id: str, body: MeetingInviteCreate) -> MeetingInvitation:
+def invite(id: str, body: MeetingInviteCreate, _: dict = Depends(require_scope("visit"))) -> MeetingInvitation:
     return invite_hcp(id, body)
 
 
 @router.post("/{id}/checkin", response_model=MeetingCheckIn, tags=["学术会议"])
-def checkin(id: str, body: MeetingCheckInCreate) -> MeetingCheckIn:
+def checkin(id: str, body: MeetingCheckInCreate, _: dict = Depends(require_scope("visit"))) -> MeetingCheckIn:
     return checkin_hcp(id, body)
 
 
 @router.post("/{id}/content", response_model=MeetingContent, tags=["学术会议"])
-def content(id: str, body: MeetingContentCreate) -> MeetingContent:
+def content(id: str, body: MeetingContentCreate, _: dict = Depends(require_scope("visit"))) -> MeetingContent:
     return push_content(id, body)
 
 

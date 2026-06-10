@@ -13,7 +13,9 @@ export default function ComplianceOverview() {
   const [data, setData] = useState<ComplianceData | null>(null)
 
   useEffect(() => {
-    fetchPresidentCompliance().then(setData)
+    let cancelled = false
+    fetchPresidentCompliance().then((data) => { if (!cancelled) setData(data) })
+    return () => { cancelled = true }
   }, [])
 
   if (!data) return <div className="p-4 text-muted-foreground">加载中...</div>

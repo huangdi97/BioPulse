@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import date, datetime, timedelta
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from cloud.app.crawler.analysis.anomaly_detector import AnomalyDetector
 from cloud.app.crawler.analysis.sentiment_analyzer import SentimentAnalyzer
@@ -149,7 +152,8 @@ class CompetitorBriefService:
                 product_ids = [int(row["id"]) for row in rows]
                 if product_ids:
                     return product_ids
-        except Exception:
+        except Exception:  # noqa: BLE001  # storage/DB connection may be unavailable
+            logger.exception("Failed to query price_records for competitor brief")
             pass
         return [1, 2]
 
@@ -199,7 +203,8 @@ class CompetitorBriefService:
                 params,
             ).fetchall()
             return [dict(row) for row in rows]
-        except Exception:
+        except Exception:  # noqa: BLE001  # DB query may fail on missing tables/columns
+            logger.exception("Failed to query market_intel_items")
             return []
 
     def _recommend(

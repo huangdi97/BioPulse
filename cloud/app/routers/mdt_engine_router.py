@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from cloud.app.services.mdt_engine_service import MdtEngineService
 from shared.auth_scope import require_scope
+from shared.base import success
 
 router = APIRouter(prefix="/mdt", tags=["MDT会诊"])
 
@@ -41,7 +42,7 @@ def create_session(
 ):
     """创建新的 MDT 会诊会话。"""
     uid = int(current_user["sub"])
-    return service.create_session(body, uid)
+    return success(data=service.create_session(body, uid))
 
 
 @router.get("/sessions", tags=["MDT会诊"])
@@ -53,7 +54,7 @@ def list_sessions(
     service: MdtEngineService = Depends(),
 ):
     """分页查询会诊会话列表。"""
-    return service.list_sessions(status_filter, page, page_size)
+    return success(data=service.list_sessions(status_filter, page, page_size))
 
 
 @router.get("/sessions/{session_id}", tags=["MDT会诊"])
@@ -63,7 +64,7 @@ def get_session(
     service: MdtEngineService = Depends(),
 ):
     """获取会诊会话详情，含参与者和意见。"""
-    return service.get_session(session_id)
+    return success(data=service.get_session(session_id))
 
 
 @router.post("/sessions/{session_id}/debate", tags=["MDT会诊"])
@@ -76,7 +77,7 @@ def debate(
 ):
     """在会话中执行多轮 Multi-Disciplinary 辩论。"""
     auth = request.headers.get("Authorization", "")
-    return service.debate(session_id, body.max_rounds, auth)
+    return success(data=service.debate(session_id, body.max_rounds, auth))
 
 
 @router.post("/sessions/{session_id}/consensus", tags=["MDT会诊"])
@@ -88,7 +89,7 @@ def consensus(
 ):
     """基于各方辩论意见生成综合共识报告。"""
     auth = request.headers.get("Authorization", "")
-    return service.consensus(session_id, auth)
+    return success(data=service.consensus(session_id, auth))
 
 
 @router.get("/sessions/{session_id}/opinions", tags=["MDT会诊"])
@@ -99,7 +100,7 @@ def get_opinions(
     service: MdtEngineService = Depends(),
 ):
     """获取会诊会话中的意见列表。"""
-    return service.get_opinions(session_id, round_number)
+    return success(data=service.get_opinions(session_id, round_number))
 
 
 @router.get("/sessions/{session_id}/timeline", tags=["MDT会诊"])
@@ -109,7 +110,7 @@ def timeline(
     service: MdtEngineService = Depends(),
 ):
     """获取会诊的时间线视图，按轮次组织。"""
-    return service.timeline(session_id)
+    return success(data=service.timeline(session_id))
 
 
 @router.get("/dashboard", tags=["MDT会诊"])
@@ -118,4 +119,4 @@ def dashboard(
     service: MdtEngineService = Depends(),
 ):
     """获取 MDT 会诊仪表盘统计。"""
-    return service.dashboard()
+    return success(data=service.dashboard())

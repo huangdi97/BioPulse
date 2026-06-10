@@ -6,8 +6,8 @@ from fastapi import HTTPException
 from starlette import status
 
 from opportunity.app.repositories import BiddingAgentConfigRepository
-from opportunity.app.services.base import BaseCrudService
 from opportunity.app.services.bidding_agent_llm import BiddingAgentLLM
+from shared.base_service import BaseCrudService
 
 
 class BiddingAgentService(BiddingAgentLLM, BaseCrudService):

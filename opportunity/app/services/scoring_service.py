@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from opportunity.app.repositories import OpportunityRepository
-from opportunity.app.services.base import BaseService
+from shared.base_service import BaseService
 
 STAGE_SCORES = {
     "lead": 10,

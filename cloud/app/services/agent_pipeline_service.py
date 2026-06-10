@@ -8,13 +8,12 @@ from starlette import status
 
 from cloud.app.repositories import (
     AgentPipelinesRepository,
-    PipelineRunsRepository,
     PipelineStepsRepository,
 )
 from cloud.app.services.agent_pipeline_exec import PipelineRunQueryMixin
-from cloud.app.services.base import BaseService
 from cloud.app.services.pipeline_executor import PipelineExecutorMixin
-from shared.base import success
+from shared.base import ApiResponse, success
+from shared.base_service import BaseService
 
 
 class AgentPipelineService(PipelineRunQueryMixin, PipelineExecutorMixin, BaseService):
@@ -78,7 +77,7 @@ class AgentPipelineService(PipelineRunQueryMixin, PipelineExecutorMixin, BaseSer
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Pipeline not found")
         return row
 
-    def create_pipeline(self, body, uid: int) -> dict:
+    def create_pipeline(self, body, uid: int) -> ApiResponse:
         """创建流水线及其步骤。
 
         Args:
@@ -112,22 +111,27 @@ class AgentPipelineService(PipelineRunQueryMixin, PipelineExecutorMixin, BaseSer
             )
         return success(data=self._pd(pipelines_repo.get_by_id(pid)))
 
-    def list_pipelines(self) -> dict:
+    def list_pipelines(self) -> ApiResponse:
         """列出所有流水线（含步骤数）。
 
         Returns:
             流水线列表
         """
         pipelines_repo = AgentPipelinesRepository(self.db)
-        steps_repo = PipelineStepsRepository(self.db)
         rows = pipelines_repo.list_all(order_by="created_at DESC")
-        result = []
-        for r in rows:
-            step_count = steps_repo.count(conditions=["pipeline_id=?"], params=[r["id"]])
-            result.append({**self._pd(r), "step_count": step_count})
+        pipeline_ids = [r["id"] for r in rows]
+        step_counts = {}
+        if pipeline_ids:
+            placeholders = ",".join("?" * len(pipeline_ids))
+            count_rows = self.db.execute(
+                f"SELECT pipeline_id, COUNT(*) AS cnt FROM pipeline_steps WHERE pipeline_id IN ({placeholders}) GROUP BY pipeline_id",
+                pipeline_ids,
+            ).fetchall()
+            step_counts = {r["pipeline_id"]: r["cnt"] for r in count_rows}
+        result = [{**self._pd(r), "step_count": step_counts.get(r["id"], 0)} for r in rows]
         return success(data=result)
 
-    def get_pipeline(self, pipeline_id: int) -> dict:
+    def get_pipeline(self, pipeline_id: int) -> ApiResponse:
         """获取流水线详情（含步骤列表）。
 
         Args:
@@ -141,7 +145,7 @@ class AgentPipelineService(PipelineRunQueryMixin, PipelineExecutorMixin, BaseSer
         steps = steps_repo.list_all(conditions=["pipeline_id=?"], params=[pipeline_id], order_by="step_order ASC")
         return success(data={**self._pd(row), "steps": [self._sd(s) for s in steps]})
 
-    def delete_pipeline(self, pipeline_id: int) -> dict:
+    def delete_pipeline(self, pipeline_id: int) -> ApiResponse:
         """删除流水线及其关联的步骤和运行记录。
 
         Args:
@@ -151,12 +155,8 @@ class AgentPipelineService(PipelineRunQueryMixin, PipelineExecutorMixin, BaseSer
             成功响应
         """
         pipelines_repo = AgentPipelinesRepository(self.db)
-        steps_repo = PipelineStepsRepository(self.db)
-        runs_repo = PipelineRunsRepository(self.db)
         self._p404(pipeline_id)
-        for step in steps_repo.list_all(conditions=["pipeline_id=?"], params=[pipeline_id]):
-            steps_repo.delete(step["id"])
-        for run in runs_repo.list_all(conditions=["pipeline_id=?"], params=[pipeline_id]):
-            runs_repo.delete(run["id"])
+        self.db.execute("DELETE FROM pipeline_steps WHERE pipeline_id=?", (pipeline_id,))
+        self.db.execute("DELETE FROM pipeline_runs WHERE pipeline_id=?", (pipeline_id,))
         pipelines_repo.delete(pipeline_id)
         return success()

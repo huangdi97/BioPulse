@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sales_coach.app.repositories import AssessmentRepository, SessionRepository
-from sales_coach.app.services.base import BaseCrudService
+from shared.base_service import BaseCrudService
 
 DEFAULT_WEIGHTS = {
     "product_knowledge": 0.3,

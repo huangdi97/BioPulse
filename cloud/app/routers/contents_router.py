@@ -4,6 +4,7 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
+from starlette import status
 
 from cloud.app.services.content_service import ContentService
 from shared.auth_scope import require_scope
@@ -47,7 +48,7 @@ class PaginatedContents(BaseModel):
     page_size: int
 
 
-@router.post("/", summary="创建内容", description="创建一个新的内容条目，包含标题、正文、分类和标签。", tags=["contents"])
+@router.post("/", status_code=status.HTTP_201_CREATED, summary="创建内容", description="创建一个新的内容条目，包含标题、正文、分类和标签。", tags=["contents"])
 def create_content(
     body: ContentCreate,
     current_user: dict = Depends(require_scope("visit")),

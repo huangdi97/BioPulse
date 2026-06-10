@@ -4,6 +4,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
+from starlette import status
 
 from cloud.app.services.recommend_service import RecommendService
 from shared.auth_scope import require_scope
@@ -45,7 +46,7 @@ class RecGenerate(BaseModel):
     limit: int = 5
 
 
-@router.post("/profile/create", tags=["Recommendation Engine"])
+@router.post("/profile/create", status_code=status.HTTP_201_CREATED, tags=["Recommendation Engine"])
 def create_profile(
     body: ProfileCreate,
     current_user: dict = Depends(require_scope("visit")),
@@ -98,7 +99,7 @@ def update_profile(
     return success(data=row)
 
 
-@router.post("/behavior/log", tags=["Recommendation Engine"])
+@router.post("/behavior/log", status_code=status.HTTP_201_CREATED, tags=["Recommendation Engine"])
 def log_behavior(
     body: BehaviorLog,
     current_user: dict = Depends(require_scope("visit")),
@@ -143,7 +144,7 @@ def behavior_history(
     )
 
 
-@router.post("/generate", tags=["Recommendation Engine"])
+@router.post("/generate", status_code=status.HTTP_201_CREATED, tags=["Recommendation Engine"])
 def generate_recommendations(
     body: RecGenerate,
     current_user: dict = Depends(require_scope("visit")),

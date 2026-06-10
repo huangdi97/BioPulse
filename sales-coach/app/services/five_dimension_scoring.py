@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Any, Optional
 
 from sales_coach.app.schemas.assessment import FiveDimensionScore, RadarChartData
-from sales_coach.app.services.base import BaseService
+from shared.base_service import BaseService
 
 DIMENSIONS = ("empathy", "data_citation", "closing", "objection_handling", "compliance")
 

@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from opportunity.app.repositories import UserBookmarkRepository
-from opportunity.app.services.base import BaseCrudService
+from shared.base_service import BaseCrudService
 
 """收藏管理服务，提供用户收藏的创建、查询与删除。"""
 

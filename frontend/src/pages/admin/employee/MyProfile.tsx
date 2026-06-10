@@ -16,7 +16,9 @@ export default function MyProfile() {
   } | null>(null)
 
   useEffect(() => {
-    fetchEmployeeProfile().then(setProfileData)
+    let cancelled = false
+    fetchEmployeeProfile().then((data) => { if (!cancelled) setProfileData(data) })
+    return () => { cancelled = true }
   }, [])
 
   if (!profileData) {

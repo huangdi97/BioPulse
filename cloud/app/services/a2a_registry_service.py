@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.services.a2a_discovery import A2aDiscoveryMixin, _row_to_dict
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 
 class A2aRegistryService(A2aDiscoveryMixin, BaseService):

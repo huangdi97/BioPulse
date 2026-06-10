@@ -5,6 +5,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 
 from sales_assistant.app.services.voice_analysis_service import VoiceAnalysisService
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
 router = APIRouter(prefix="/api/voice", tags=["拜访"])
@@ -16,6 +17,7 @@ def upload_voice(
     visit_id: str = Form(...),
     hcp_id: Optional[str] = Form(None),
     service: VoiceAnalysisService = Depends(),
+    _: dict = Depends(require_scope("visit")),
 ) -> ApiResponse:
     file_path = service.save_upload(file, visit_id)
     result = service.process_audio(file_path, visit_id, hcp_id)

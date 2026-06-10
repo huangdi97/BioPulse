@@ -7,13 +7,14 @@ from threading import Lock
 from typing import Any
 
 import httpx
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 
 from sales_assistant.app.services.research_hcp_service import enrich_research_profile, get_grants, get_papers
 from shared.app_settings import settings
+from shared.auth_scope import require_scope
 
 router = APIRouter(prefix="/api/research/hcp")
 
@@ -163,7 +164,7 @@ def list_pi(q: str = "") -> dict[str, Any]:
 
 
 @router.post("", status_code=201, tags=["科研PI"])
-def create_pi(body: PiCreate) -> dict[str, Any]:
+def create_pi(body: PiCreate, _: dict = Depends(require_scope("research"))) -> dict[str, Any]:
     """Create an in-memory PI profile."""
     global _NEXT_ID
 
@@ -214,7 +215,7 @@ def get_pi_grants(id: str) -> dict[str, Any]:
 
 
 @router.post("/{id}/match", tags=["科研PI"])
-def match_products(id: int, request: Request, body: MatchRequest | None = None) -> dict[str, Any]:
+def match_products(id: int, request: Request, body: MatchRequest | None = None, _: dict = Depends(require_scope("research"))) -> dict[str, Any]:
     """Proxy PI product matching to the cloud research matching API."""
     _find_pi(id)
     if body and body.method_description:

@@ -1,4 +1,4 @@
-import client from './client'
+import client, { withFallback } from './client'
 import {
   getMockTeamStats,
   getMockTeamWeeklyData,
@@ -13,49 +13,53 @@ import {
 export type { MemberPerf, Member }
 
 export async function fetchManagerStats() {
-  try {
-    const res = await client.get('/api/admin/manager/stats')
-    return res.data as {
-      stats: ReturnType<typeof getMockTeamStats>
-      weeklyData: ReturnType<typeof getMockTeamWeeklyData>
-    }
-  } catch {
-    return {
+  return withFallback(
+    async () => {
+      const res = await client.get('/api/admin/manager/stats')
+      return res.data as {
+        stats: ReturnType<typeof getMockTeamStats>
+        weeklyData: ReturnType<typeof getMockTeamWeeklyData>
+      }
+    },
+    () => ({
       stats: getMockTeamStats(),
       weeklyData: getMockTeamWeeklyData(),
-    }
-  }
+    })
+  )
 }
 
 export async function fetchManagerPerformance() {
-  try {
-    const res = await client.get<MemberPerf[]>('/api/admin/manager/performance')
-    return res.data
-  } catch {
-    return getMockTeamPerfData()
-  }
+  return withFallback(
+    async () => {
+      const res = await client.get<MemberPerf[]>('/api/admin/manager/performance')
+      return res.data
+    },
+    () => getMockTeamPerfData()
+  )
 }
 
 export async function fetchManagerCompliance() {
-  try {
-    const res = await client.get('/api/admin/manager/compliance')
-    return res.data as {
-      statusData: ReturnType<typeof getMockTeamStatusData>
-      memberData: ReturnType<typeof getMockTeamMemberData>
-    }
-  } catch {
-    return {
+  return withFallback(
+    async () => {
+      const res = await client.get('/api/admin/manager/compliance')
+      return res.data as {
+        statusData: ReturnType<typeof getMockTeamStatusData>
+        memberData: ReturnType<typeof getMockTeamMemberData>
+      }
+    },
+    () => ({
       statusData: getMockTeamStatusData(),
       memberData: getMockTeamMemberData(),
-    }
-  }
+    })
+  )
 }
 
 export async function fetchManagerMembers() {
-  try {
-    const res = await client.get<Member[]>('/api/admin/manager/members')
-    return res.data
-  } catch {
-    return getMockTeamMembers()
-  }
+  return withFallback(
+    async () => {
+      const res = await client.get<Member[]>('/api/admin/manager/members')
+      return res.data
+    },
+    () => getMockTeamMembers()
+  )
 }

@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from cloud.app.services.product_service import ProductService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
+from shared.base import success
 
 router = APIRouter(prefix="/api/products", tags=["products"])
 
@@ -27,27 +28,27 @@ class ProductCreate(BaseModel):
 def search_products(
     q: str = Query("", description="Search keyword"),
     category: str = Query("", description="Category filter"),
-    current_user: dict = Depends(get_current_user),
+    _: dict = Depends(require_scope("research")),
     service: ProductService = Depends(),
 ):
     results = service.search(q=q, category=category)
-    return {"code": 0, "data": results, "message": "success"}
+    return success(data=results)
 
 
 @router.get("/{product_id}", summary="产品详情", description="获取指定产品的详细信息", tags=["products"])
 def get_product(
     product_id: int,
-    current_user: dict = Depends(get_current_user),
+    _: dict = Depends(require_scope("research")),
     service: ProductService = Depends(),
 ):
     product = service.get_by_id(product_id)
-    return {"code": 0, "data": product, "message": "success"}
+    return success(data=product)
 
 
 @router.post("", status_code=201, summary="创建产品", description="创建新的科研产品信息", tags=["products"])
 def create_product(
     body: ProductCreate,
-    current_user: dict = Depends(get_current_user),
+    _: dict = Depends(require_scope("research")),
     service: ProductService = Depends(),
 ):
     product = service.create(
@@ -61,4 +62,4 @@ def create_product(
         tech_params=body.tech_params,
         cert_status=body.cert_status,
     )
-    return {"code": 0, "data": product, "message": "success"}
+    return success(data=product)

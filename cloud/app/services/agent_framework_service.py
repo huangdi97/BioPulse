@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.services.agent_execution import AgentExecutionMixin
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 logger = logging.getLogger(__name__)
 

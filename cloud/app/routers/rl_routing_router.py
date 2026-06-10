@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
+from starlette import status
 
 from cloud.app.services.rl_routing_service import RLRoutingService
 from shared.auth_scope import require_scope
@@ -86,7 +87,7 @@ def pareto_route(
     return success(data=result)
 
 
-@router.post("/log", summary="Log Result", tags=["RL路由"])
+@router.post("/log", status_code=status.HTTP_201_CREATED, summary="Log Result", tags=["RL路由"])
 def log_result(
     body: LogRequest,
     current_user: dict = Depends(require_scope("visit")),

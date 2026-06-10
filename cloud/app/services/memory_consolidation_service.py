@@ -9,7 +9,7 @@ from cloud.app.repositories import (
     KgEntitiesRepository,
     MemoryConsolidationLogRepository,
 )
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 
 def _calc_utility(valence: float, intensity: float) -> float:

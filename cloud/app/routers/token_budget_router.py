@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from cloud.app.services.token_budget_service import TokenBudgetService
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/admin/tokens", tags=["Token 管理"])
@@ -36,6 +37,7 @@ def get_budget(
 def update_budget(
     user_id: int,
     body: UpdateBudgetRequest,
+    _: dict = Depends(require_scope("visit")),
     service: TokenBudgetService = Depends(),
 ) -> Any:
     """更新指定用户和模型的预算配置。"""

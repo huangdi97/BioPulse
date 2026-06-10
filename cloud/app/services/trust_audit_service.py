@@ -11,7 +11,7 @@ from cloud.app.repositories import (
     AuditChainBlocksRepository,
     FederatedNodesRepository,
 )
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 
 def _now() -> str:

@@ -31,9 +31,10 @@ class SandboxSimulationMixin:
         Raises:
             HTTPException: 404 if the HCP profile is not found.
         """
-        profiles_repo = HcpProfilesRepository(self.db)
-        interactions_repo = HcpInteractionsRepository(self.db)
-        simulations_repo = HcpSimulationsRepository(self.db)
+        conn = self._connection()
+        profiles_repo = HcpProfilesRepository(conn)
+        interactions_repo = HcpInteractionsRepository(conn)
+        simulations_repo = HcpSimulationsRepository(conn)
         hcp_row = profiles_repo.get_by_id(hcp_id)
         if not hcp_row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="HCP profile not found")
@@ -60,7 +61,7 @@ class SandboxSimulationMixin:
         Returns:
             A PaginatedResponse containing simulation items.
         """
-        repo = HcpSimulationsRepository(self.db)
+        repo = HcpSimulationsRepository(self._connection())
         total, total_pages, items = repo.list_filtered(hcp_id=hcp_id, status_=status, page=page, page_size=page_size)
         return PaginatedResponse(
             items=items,
@@ -71,18 +72,7 @@ class SandboxSimulationMixin:
         )
 
     def get_simulation(self, sim_id: int) -> dict:
-        """Retrieve a single simulation record by ID.
-
-        Args:
-            sim_id: The simulation ID.
-
-        Returns:
-            A dict representing the simulation record.
-
-        Raises:
-            HTTPException: 404 if the simulation is not found.
-        """
-        repo = HcpSimulationsRepository(self.db)
+        repo = HcpSimulationsRepository(self._connection())
         row = repo.get_by_id(sim_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Simulation not found")
@@ -94,8 +84,9 @@ class SandboxSimulationMixin:
         Returns:
             A dict with total_hcp, tier_distribution, total_simulations, and recent_simulations.
         """
-        profiles_repo = HcpProfilesRepository(self.db)
-        simulations_repo = HcpSimulationsRepository(self.db)
+        conn = self._connection()
+        profiles_repo = HcpProfilesRepository(conn)
+        simulations_repo = HcpSimulationsRepository(conn)
         total = profiles_repo.count_active()
         tier_dist = profiles_repo.tier_distribution()
         sim_total = simulations_repo.count_all()

@@ -5,9 +5,9 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-from sales_coach.app.services.module_service import ModuleService
 from starlette import status
 
+from sales_coach.app.services.module_service import ModuleService
 from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 

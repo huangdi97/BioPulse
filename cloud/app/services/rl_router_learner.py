@@ -2,7 +2,7 @@
 
 import json
 
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 
 class RouterLearner(BaseService):

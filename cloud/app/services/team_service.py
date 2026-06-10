@@ -6,8 +6,8 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.repositories import TeamsRepository, UserTeamRepository
-from cloud.app.services.base import BaseService
 from shared.base import validate_columns
+from shared.base_service import BaseService
 from shared.columns import TABLE_TEAMS_COLS
 
 
@@ -142,7 +142,7 @@ class TeamService(BaseService):
                     "created_at": "CURRENT_TIMESTAMP",
                 }
             )
-        except Exception:
+        except Exception:  # noqa: BLE001  # DB constraints (unique, foreign key) may vary by backend
             raise HTTPException(
                 status.HTTP_409_CONFLICT,
                 detail="Member already in team",

@@ -2,12 +2,12 @@
 
 import json
 
-from cloud.app.services.base import BaseService
 from cloud.app.services.brain_task_scheduler import (
     _now,
     orchestrator_flow,
     schedule_sensory,
 )
+from shared.base_service import BaseService
 
 
 class BrainOrchestratorService(BaseService):

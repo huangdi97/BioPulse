@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
 import { useNavigate } from "react-router-dom"
 import KpiCard from "../../components/dashboard/KpiCard"
@@ -22,13 +22,21 @@ export default function PharmaPage() {
   const [violations, setViolations] = useState<any[]>([])
   const [compliancePieData, setCompliancePieData] = useState<{name: string; value: number; color: string}[]>([])
   const [complianceLoaded, setComplianceLoaded] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [apiError, setApiError] = useState<string | null>(null)
+  const loadCount = useRef(0)
+  const CALL_TOTAL = 5
+  const onLoad = () => {
+    loadCount.current += 1
+    if (loadCount.current >= CALL_TOTAL) setLoading(false)
+  }
   const navigate = useNavigate()
 
   useEffect(() => {
-    getPharmaKpis().then(setPharmaKpis).catch(err => console.error('Failed to load pharma KPIs:', err))
-    getVisitTrends().then(setVisitTrends).catch(err => console.error('Failed to load visit trends:', err))
-    getTeamRanks().then(setTeamRanks).catch(err => console.error('Failed to load team ranks:', err))
-    getViolations().then(setViolations).catch(err => console.error('Failed to load violations:', err))
+    getPharmaKpis().then(data => { setPharmaKpis(data); onLoad() }).catch(err => { console.error('Failed to load pharma KPIs:', err); setApiError('数据加载失败，请刷新重试'); onLoad() })
+    getVisitTrends().then(data => { setVisitTrends(data); onLoad() }).catch(err => { console.error('Failed to load visit trends:', err); setApiError('数据加载失败，请刷新重试'); onLoad() })
+    getTeamRanks().then(data => { setTeamRanks(data); onLoad() }).catch(err => { console.error('Failed to load team ranks:', err); setApiError('数据加载失败，请刷新重试'); onLoad() })
+    getViolations().then(data => { setViolations(data); onLoad() }).catch(err => { console.error('Failed to load violations:', err); setApiError('数据加载失败，请刷新重试'); onLoad() })
     getComplianceKpis()
       .then(kpis => {
         const findRate = (keywords: string[]) => {
@@ -47,10 +55,13 @@ export default function PharmaPage() {
           ])
         }
         setComplianceLoaded(true)
+        onLoad()
       })
       .catch(err => {
         console.error('Failed to load compliance KPIs:', err)
+        setApiError('数据加载失败，请刷新重试')
         setComplianceLoaded(true)
+        onLoad()
       })
   }, [])
 
@@ -61,8 +72,19 @@ export default function PharmaPage() {
     { header: "成单数", accessorKey: "deals" },
   ]
 
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <span className="text-sm" style={{ color: "var(--clr-text-secondary)" }}>加载中...</span>
+    </div>
+  )
+
   return (
     <div className="space-y-5">
+      {apiError && (
+        <div className="rounded-lg px-4 py-3 text-sm font-medium" style={{ backgroundColor: "#fef2f2", color: "var(--clr-error)", border: "1px solid var(--clr-error)" }}>
+          数据加载失败，请刷新重试
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold" style={{ color: "var(--clr-text-primary)" }}>医药看板</h1>

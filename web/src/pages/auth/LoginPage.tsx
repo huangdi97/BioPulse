@@ -50,10 +50,11 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--clr-text-primary)]">
+              <label htmlFor="login-username" className="mb-1.5 block text-sm font-medium text-[var(--clr-text-primary)]">
                 Username
               </label>
               <Input
+                id="login-username"
                 type="text"
                 placeholder="Enter your username"
                 value={username}
@@ -67,10 +68,11 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--clr-text-primary)]">
+              <label htmlFor="login-password" className="mb-1.5 block text-sm font-medium text-[var(--clr-text-primary)]">
                 Password
               </label>
               <Input
+                id="login-password"
                 type="password"
                 placeholder="Enter your password"
                 value={password}
@@ -84,7 +86,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[var(--clr-text-primary)]">
+              <label id="login-mode-label" className="mb-1.5 block text-sm font-medium text-[var(--clr-text-primary)]">
                 Login Mode
               </label>
               <div className="flex gap-2">

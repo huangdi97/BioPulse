@@ -63,7 +63,7 @@ def list_modules(
     return success(rows)
 
 
-@router.post("/sessions", tags=["Training Coach"])
+@router.post("/sessions", status_code=201, tags=["Training Coach"])
 def create_session(
     body: SessionCreate,
     cu=Depends(require_scope("visit")),
@@ -163,7 +163,7 @@ def recommend(
     return success(result)
 
 
-@router.post("/attributions", tags=["Training Coach"])
+@router.post("/attributions", status_code=201, tags=["Training Coach"])
 def create_attribution(
     body: AttributionCreate,
     cu=Depends(require_scope("visit")),

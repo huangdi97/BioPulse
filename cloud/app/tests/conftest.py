@@ -16,7 +16,7 @@ os.makedirs(os.path.dirname(TEST_DB), exist_ok=True)
 @pytest.fixture(scope="session")
 def app():
     import cloud.app.database as mod_db
-    from cloud.app.schema import SCHEMA_SQL
+    from cloud.app.schemas.ddl import SCHEMA_SQL
 
     setup_test_db(mod_db, SCHEMA_SQL, TEST_DB)
     with _sql.connect(TEST_DB) as conn:
@@ -120,11 +120,10 @@ def admin_token(client):
     hashed = hash_password(password)
 
     if is_pg():
-        import psycopg2
-        from psycopg2.extras import RealDictCursor
+        import psycopg
 
         pg_url = get_pg_url(TEST_DB)
-        conn = psycopg2.connect(pg_url, cursor_factory=RealDictCursor)
+        conn = psycopg.connect(pg_url)
         conn.autocommit = True
         conn.cursor().execute(
             "INSERT INTO users (username, hashed_password, role) VALUES (%s, %s, %s)",

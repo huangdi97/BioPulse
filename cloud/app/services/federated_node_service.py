@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 from .federated_node_aggregator import FedAggregator
 from .federated_node_manager import NodeManager

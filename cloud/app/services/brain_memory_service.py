@@ -2,18 +2,30 @@
 
 from typing import Optional
 
-from cloud.app.services.base import BaseService
+from cloud.app.services.holographic_service import HolographicService
+from cloud.app.services.memory_episodic_writer import EpisodicMemoryWriter
+from cloud.app.services.memory_procedural_writer import ProceduralMemoryWriter
 from cloud.app.services.memory_retriever import MemoryRetriever
-from cloud.app.services.memory_writer import MemoryWriter
+from cloud.app.services.memory_working_writer import WorkingMemoryWriter
+from shared.base_service import BaseService
 
 
 class BrainMemoryService(BaseService):
-    """脑记忆门面服务，聚合 MemoryWriter 和 MemoryRetriever 提供多类型记忆读写。"""
+    """脑记忆门面服务，聚合写入组件和 MemoryRetriever 提供多类型记忆读写。"""
 
     def __init__(self, db):
         super().__init__(db)
-        self._writer = MemoryWriter(self.db)
+        self._holographic_service = None
+        self._working_writer = WorkingMemoryWriter(self.db)
+        self._episodic_writer = EpisodicMemoryWriter(self.db, self._auto_associate)
+        self._procedural_writer = ProceduralMemoryWriter(self.db, self._auto_associate)
         self._retriever = MemoryRetriever(self.db)
+
+    @property
+    def holographic_service(self):
+        if self._holographic_service is None:
+            self._holographic_service = HolographicService(self.db)
+        return self._holographic_service
 
     def working_set(
         self,
@@ -24,7 +36,7 @@ class BrainMemoryService(BaseService):
         ttl_seconds: int,
     ) -> dict:
         """设置工作记忆的槽位值并指定 TTL。"""
-        return self._writer.working_set(session_id, slot_key, slot_value, slot_type, ttl_seconds)
+        return self._working_writer.working_set(session_id, slot_key, slot_value, slot_type, ttl_seconds)
 
     def working_get(self, session_id: str, slot_key: Optional[str] = None) -> dict:
         """获取工作记忆中指定 session 的槽位值。"""
@@ -32,11 +44,11 @@ class BrainMemoryService(BaseService):
 
     def working_clear(self, session_id: str) -> str:
         """清除指定 session 的工作记忆。"""
-        return self._writer.working_clear(session_id)
+        return self._working_writer.working_clear(session_id)
 
     def working_refresh(self, session_id: str) -> dict:
         """刷新工作记忆的 TTL，防止过期。"""
-        return self._writer.working_refresh(session_id)
+        return self._working_writer.working_refresh(session_id)
 
     def episodic_store(
         self,
@@ -53,7 +65,7 @@ class BrainMemoryService(BaseService):
         uid: str,
     ) -> dict:
         """存储一条情景记忆，包含事件属性与参与 Agent。"""
-        return self._writer.episodic_store(
+        return self._episodic_writer.episodic_store(
             event_type,
             title,
             description,
@@ -85,7 +97,7 @@ class BrainMemoryService(BaseService):
 
     def episodic_consolidate(self, memory_id: int, auth_header: str) -> dict:
         """将情景记忆巩固为长期语义记忆。"""
-        return self._writer.episodic_consolidate(memory_id, auth_header)
+        return self._episodic_writer.episodic_consolidate(memory_id, auth_header)
 
     def dashboard(self) -> dict:
         """获取记忆系统概览仪表盘数据。"""
@@ -99,7 +111,7 @@ class BrainMemoryService(BaseService):
         auth_header: str = "",
     ) -> dict:
         """从源数据中提取抽象语义记忆。"""
-        return self._writer.semantic_abstract(source_type, source_id, abstraction_level, auth_header)
+        return self._episodic_writer.semantic_abstract(source_type, source_id, abstraction_level, auth_header)
 
     def semantic_search(self, query: str, limit: int = 10) -> dict:
         """语义搜索记忆库，返回最匹配的结果。"""
@@ -113,7 +125,7 @@ class BrainMemoryService(BaseService):
         success_rate: float,
     ) -> dict:
         """学习一个程序记忆模式，记录触发条件与动作序列。"""
-        return self._writer.procedural_learn(pattern_name, trigger_conditions, action_sequence, success_rate)
+        return self._procedural_writer.procedural_learn(pattern_name, trigger_conditions, action_sequence, success_rate)
 
     def procedural_recall(self, trigger_context: str) -> dict:
         """根据触发上下文召回匹配的程序记忆。"""
@@ -121,8 +133,11 @@ class BrainMemoryService(BaseService):
 
     def memory_decay(self, hours_threshold: int = 72) -> dict:
         """对超过阈值的记忆执行衰减清理。"""
-        return self._writer.memory_decay(hours_threshold)
+        return self._procedural_writer.memory_decay(hours_threshold)
 
     def holographic_get(self, memory_id: int, depth: int = 3) -> dict:
         """获取指定记忆的全息关联网络。"""
         return self._retriever.holographic_get(memory_id, depth)
+
+    def _auto_associate(self, entry_id: int, entry: dict):
+        self.holographic_service.auto_associate(entry_id, entry)

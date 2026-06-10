@@ -61,6 +61,7 @@ class PiRepository:
             ),
         )
         self.db.commit()
+        assert cursor.lastrowid is not None
         return cursor.lastrowid
 
     def get_by_id(self, pi_id: int) -> Optional[dict]:

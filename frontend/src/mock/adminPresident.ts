@@ -72,3 +72,63 @@ export function getMockSummaryBarData() {
     { month: '6月', revenue: 509000, visits: 281 },
   ]
 }
+
+export function getMockExpenseWasteData() {
+  return {
+    summary: { totalWaste: 386000, caseCount: 24, avgRate: 16.8, trend: 'up' },
+    details: [
+      { id: 1, rep: '赵建国', expenseUp: 32, visitDown: 18, flowDown: 12, amount: 45000, date: '2026-05' },
+      { id: 2, rep: '钱晓峰', expenseUp: 28, visitDown: 12, flowDown: 8, amount: 38000, date: '2026-05' },
+      { id: 3, rep: '孙丽华', expenseUp: 22, visitDown: 15, flowDown: 5, amount: 29000, date: '2026-05' },
+      { id: 4, rep: '李志远', expenseUp: 18, visitDown: 10, flowDown: 6, amount: 22000, date: '2026-04' },
+      { id: 5, rep: '周美琴', expenseUp: 15, visitDown: 8, flowDown: 3, amount: 18000, date: '2026-04' },
+    ],
+  }
+}
+
+export function getMockVisitFraudData() {
+  return {
+    summary: { totalFraud: 48, caseCount: 16, detectionRate: 92, trend: 'down' },
+    details: [
+      { id: 1, rep: '赵建国', visitsUp: 35, flowFlat: true, score: 0.82, date: '2026-05' },
+      { id: 2, rep: '孙丽华', visitsUp: 28, flowFlat: true, score: 0.78, date: '2026-05' },
+      { id: 3, rep: '吴国强', visitsUp: 22, flowFlat: true, score: 0.75, date: '2026-05' },
+      { id: 4, rep: '李志远', visitsUp: 18, flowFlat: true, score: 0.71, date: '2026-04' },
+    ],
+  }
+}
+
+export function getMockManagementNeglectData() {
+  return {
+    summary: { unresolvedReds: 12, avgResponseDays: 8.5, highRiskTeams: 3, trend: 'up' },
+    details: [
+      { id: 1, team: '西南区域', redLights: 5, unresolved: 3, managerActions: 0, risk: 'high', daysOpen: 14 },
+      { id: 2, team: '西北区域', redLights: 4, unresolved: 2, managerActions: 1, risk: 'high', daysOpen: 10 },
+      { id: 3, team: '华中区域', redLights: 3, unresolved: 1, managerActions: 0, risk: 'medium', daysOpen: 7 },
+    ],
+  }
+}
+
+export function getMockRectificationData() {
+  return {
+    summary: { totalIssues: 38, closed: 22, inProgress: 12, overdue: 4, closureRate: 57.9 },
+    details: [
+      { id: 1, issue: '费用合规违规', owner: '赵建国', status: 'closed', createdAt: '2026-05-01', closedAt: '2026-05-15', days: 14 },
+      { id: 2, issue: '拜访数据不实', owner: '孙丽华', status: 'in_progress', createdAt: '2026-05-10', closedAt: '', days: 31 },
+      { id: 3, issue: '礼品超限未报备', owner: '李志远', status: 'closed', createdAt: '2026-05-05', closedAt: '2026-05-12', days: 7 },
+      { id: 4, issue: '话术违规未整改', owner: '钱晓峰', status: 'overdue', createdAt: '2026-04-20', closedAt: '', days: 51 },
+      { id: 5, issue: '培训缺失', owner: '周美琴', status: 'in_progress', createdAt: '2026-05-20', closedAt: '', days: 21 },
+    ],
+  }
+}
+
+export function getMockExclusionGates() {
+  return {
+    gates: [
+      { id: 1, name: '高价值客户豁免', rule: 'compliance.visit_fraud', enabled: true, scope: 'key_accounts', priority: 'high' },
+      { id: 2, name: '新代表过渡期', rule: 'compliance.expense_waste', enabled: true, scope: 'probation_reps', priority: 'medium' },
+      { id: 3, name: '紧急学术活动', rule: 'compliance.expense_approval', enabled: false, scope: 'emergency', priority: 'low' },
+      { id: 4, name: '区域试点豁免', rule: 'compliance.management_neglect', enabled: true, scope: 'pilot_region', priority: 'medium' },
+    ],
+  }
+}

@@ -5,6 +5,8 @@ from typing import Literal, Optional
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+from starlette import status
+
 from sales_coach.app.scenario_library import (
     FIXED_SCENARIOS,
     get_scenario_by_difficulty,
@@ -13,8 +15,6 @@ from sales_coach.app.scenario_library import (
 from sales_coach.app.schemas.scenario import ScenarioRecommendation
 from sales_coach.app.services.scenario_recommender import recommend_scenario
 from sales_coach.app.services.scenario_service import ScenarioService
-from starlette import status
-
 from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 

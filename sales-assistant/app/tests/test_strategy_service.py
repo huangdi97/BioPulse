@@ -1,11 +1,11 @@
 import json
 from unittest.mock import MagicMock
 
-from sales_assistant.app.services.strategy_service import StrategyService
-from sales_assistant.app.strategy_router import (
+from sales_assistant.app.sales_assistant_strategy_router import (
     StrategyGenerateRequest,
     StrategySimulateRequest,
 )
+from sales_assistant.app.services.strategy_service import StrategyService
 
 
 class _Response:

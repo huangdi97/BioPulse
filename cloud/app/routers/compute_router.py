@@ -5,6 +5,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
+from starlette import status
 
 from cloud.app.services.compute_service import ComputeService
 from shared.auth_scope import require_scope
@@ -36,7 +37,7 @@ class TrustFedProve(BaseModel):
     contribution_id: int
 
 
-@router.post("/job/create", summary="创建隐私计算任务", description="创建一个新的隐私计算任务", tags=["Privacy Computing"])
+@router.post("/job/create", status_code=status.HTTP_201_CREATED, summary="创建隐私计算任务", description="创建一个新的隐私计算任务", tags=["Privacy Computing"])
 def job_create(
     body: ComputeJobCreate,
     current_user: dict = Depends(require_scope("visit")),
@@ -76,7 +77,7 @@ def job_detail(
     return success(data=row)
 
 
-@router.post("/federated/init", summary="初始化联邦学习", description="初始化一个新的联邦学习过程", tags=["Privacy Computing"])
+@router.post("/federated/init", status_code=status.HTTP_201_CREATED, summary="初始化联邦学习", description="初始化一个新的联邦学习过程", tags=["Privacy Computing"])
 def federated_init(
     body: FederatedInit,
     current_user: dict = Depends(require_scope("visit")),
@@ -91,7 +92,7 @@ def federated_init(
     return success(data=rows)
 
 
-@router.post("/federated/submit", summary="提交联邦学习结果", description="提交联邦学习参与方的计算结果", tags=["Privacy Computing"])
+@router.post("/federated/submit", status_code=status.HTTP_201_CREATED, summary="提交联邦学习结果", description="提交联邦学习参与方的计算结果", tags=["Privacy Computing"])
 def federated_submit(
     body: FederatedSubmit,
     current_user: dict = Depends(require_scope("visit")),

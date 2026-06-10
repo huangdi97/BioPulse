@@ -4,7 +4,6 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.repositories import UsersRepository
-from cloud.app.services.base import BaseService
 from shared.auth import (
     create_access_token,
     create_refresh_token,
@@ -12,10 +11,14 @@ from shared.auth import (
     verify_password,
     verify_token,
 )
+from shared.base_service import BaseService
 
 
 class AuthService(BaseService):
     """认证服务，提供注册、登录及 JWT Token 刷新操作。"""
+
+    def __init__(self, db=None):
+        super().__init__(db=db)
 
     def register(self, username: str, password: str) -> dict:
         if len(username) < 3:
@@ -54,7 +57,7 @@ class AuthService(BaseService):
 
         role = row["role"] or "rep"
         access_token = create_access_token(row["id"], role, scope)
-        refresh_token = create_refresh_token(row["id"])
+        refresh_token = create_refresh_token(row["id"], scope)
 
         return {
             "access_token": access_token,
@@ -88,8 +91,9 @@ class AuthService(BaseService):
         if not user:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
-        access_token = create_access_token(user["id"], user["role"])
-        new_refresh_token = create_refresh_token(user["id"])
+        scope = payload.get("scope", "visit")
+        access_token = create_access_token(user["id"], user["role"], scope=scope)
+        new_refresh_token = create_refresh_token(user["id"], scope)
 
         return {
             "access_token": access_token,

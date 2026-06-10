@@ -142,3 +142,21 @@ scripts/backup_schedule.md
 # 本地 symlink（Python 包名 sales_coach←→目录名 sales-coach 的桥接）
 sales_coach
 sales_assistant
+
+# Generated reports
+coverage_html/
+.benchmarks/
+cloud/.benchmarks/
+
+# Historical working files
+vibecoding/
+briefings/
+data/export/
+
+# Cache
+**/__pycache__/
+
+# Test databases and coverage
+data/test_*.db
+.coverage
+data/safety_audit.log

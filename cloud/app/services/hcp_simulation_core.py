@@ -80,7 +80,7 @@ def simulate_hcp_response(
     try:
         ai_raw = call_ai(system_prompt, user_prompt)
         result = json.loads(ai_raw)
-    except Exception:
+    except json.JSONDecodeError:
         result = DEFAULT_RESULT.copy()
     return result
 

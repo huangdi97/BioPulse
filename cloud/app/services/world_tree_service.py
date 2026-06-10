@@ -3,7 +3,6 @@
 import json
 from typing import Optional
 
-from cloud.app.services.base import BaseService
 from cloud.app.services.world_tree_query import WorldTreeQueryMixin
 from cloud.app.services.world_tree_search import (
     _build,
@@ -14,6 +13,7 @@ from cloud.app.services.world_tree_search import (
     _refresh_children,
     _refresh_path,
 )
+from shared.base_service import BaseService
 
 
 class WorldTreeService(WorldTreeQueryMixin, BaseService):

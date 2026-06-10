@@ -36,6 +36,7 @@ class McpToolService:
         return d
 
     def register_tool(self, body, uid, role):
+        """注册一个新的 MCP 工具。"""
         McpGuardService.check_tool_access(body.tool_name, role)
         if not McpGuardService.validate_tool_version(body.tool_name, "1.0.0"):
             raise HTTPException(
@@ -65,6 +66,7 @@ class McpToolService:
                 conn.close()
 
     def list_tools(self, enabled, role):
+        """查询 MCP 工具列表，可选按启用状态过滤。"""
         McpGuardService.check_tool_access("pubmed_search", role)
         conn = None
         try:
@@ -75,6 +77,7 @@ class McpToolService:
                 conn.close()
 
     def toggle_tool(self, tool_id, role):
+        """切换 MCP 工具的启用/禁用状态。"""
         McpGuardService.check_tool_access("pubmed_search", role)
         conn = None
         try:
@@ -89,6 +92,7 @@ class McpToolService:
                 conn.close()
 
     def delete_tool(self, tool_id, role):
+        """删除指定的 MCP 工具。"""
         McpGuardService.check_tool_access("market_intel", role)
         conn = None
         try:

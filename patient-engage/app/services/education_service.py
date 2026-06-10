@@ -4,9 +4,11 @@ from datetime import datetime, timezone
 
 import httpx
 
+from shared.app_settings import settings
+
 from ..database import get_cache, set_cache
 
-CLOUD_API = "http://localhost:8000"
+CLOUD_API = settings.cloud_api_base
 
 
 async def get_education_content(disease: str) -> dict:

@@ -25,8 +25,8 @@ def parse_date(value: Any) -> date | None:
         return None
     try:
         return date.fromisoformat(text[:10])
-    except ValueError:
-        pass
+    except Exception:
+        logger.warning("知识图谱解析异常", exc_info=True)
     for fmt in ("%Y-%m-%d %H:%M:%S", "%Y/%m/%d", "%Y-%m-%dT%H:%M:%S"):
         try:
             return datetime.strptime(text, fmt).date()

@@ -1,7 +1,10 @@
 """Sage 引擎服务，负责多维记忆评分与热温冷分层进化管理。"""
 
 import json
+import logging
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 from cloud.app.repositories.sage_repository import SageRepository
 from cloud.app.research_database import get_research_db
@@ -116,7 +119,8 @@ class SageEngineService(SageCacheMixin, SageScoringMixin):
                         json.dumps({"status": "unhandled_type"}),
                     )
                 cold_count += 1
-            except Exception:
+            except Exception:  # noqa: BLE001  # consolidation/AI ops can fail per-item; continue the loop
+                logger.exception("Cold consolidation failed for memory_type=%s mid=%s", mt, mid)
                 continue
 
         warm_scores = self.repo.get_scores_by_tier("warm")
@@ -139,7 +143,8 @@ class SageEngineService(SageCacheMixin, SageScoringMixin):
                         json.dumps({"status": "evolved"}),
                     )
                     warm_count += 1
-            except Exception:
+            except Exception:  # noqa: BLE001  # evolve/DB ops can fail per-item; continue the loop
+                logger.exception("Warm evolution failed for memory_type=%s mid=%s", mt, mid)
                 continue
 
         hot_scores = self.repo.get_scores_by_tier("hot")
@@ -159,7 +164,8 @@ class SageEngineService(SageCacheMixin, SageScoringMixin):
                     confidence=hs["confidence"],
                 )
                 hot_count += 1
-            except Exception:
+            except Exception:  # noqa: BLE001  # DB upsert can fail per-item; continue the loop
+                logger.exception("Hot refresh failed for memory_type=%s mid=%s", mt, mid)
                 continue
 
         duration_ms = int((datetime.now() - start).total_seconds() * 1000)

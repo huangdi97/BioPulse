@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from opportunity.app.repositories import BiddingInfoRepository
-from opportunity.app.services.base import BaseCrudService
+from shared.base_service import BaseCrudService
 
 """招投标管理服务，负责招标信息的增删改查。"""
 

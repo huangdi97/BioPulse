@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 from starlette import status
 
-from cloud.app.services.market_intel_service import MarketIntelService
+from cloud.app.services import MarketIntelService
 from shared.auth_scope import require_scope
 from shared.base import success
 

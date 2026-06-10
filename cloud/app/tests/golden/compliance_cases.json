@@ -11,8 +11,8 @@
       "call_type": "日常拜访"
     },
     "expected": {
-      "action": "pass",
-      "rule_names": []
+      "action": "block",
+      "rule_names": ["离职后竞业限制"]
     }
   },
   {
@@ -26,7 +26,7 @@
     },
     "expected": {
       "action": "block",
-      "rule_names": ["统方禁止"]
+      "rule_names": ["统方禁止", "离职后竞业限制"]
     }
   },
   {
@@ -40,7 +40,7 @@
     },
     "expected": {
       "action": "block",
-      "rule_names": ["回扣红线"]
+      "rule_names": ["回扣红线", "离职后竞业限制"]
     }
   },
   {
@@ -54,7 +54,7 @@
     },
     "expected": {
       "action": "block",
-      "rule_names": ["场所异常检测"]
+      "rule_names": ["场所异常检测", "离职后竞业限制"]
     }
   },
   {
@@ -69,7 +69,7 @@
     },
     "expected": {
       "action": "block",
-      "rule_names": ["利益输送拦截"]
+      "rule_names": ["利益输送拦截", "离职后竞业限制"]
     }
   }
 ]

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from jose import jwt
+import jwt
 
 from shared.auth import ALGORITHM, SECRET_KEY, create_access_token
 

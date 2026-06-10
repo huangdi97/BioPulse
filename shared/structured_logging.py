@@ -3,12 +3,14 @@ import uuid
 
 from fastapi import Request
 
+from shared.app_settings import settings
 from shared.json_formatter import JSONFormatter, StructuredLogging, request_id_var  # noqa: F401
 
 
 def setup_logging(service_name: str = "cloud") -> logging.Logger:
     logger = logging.getLogger(service_name)
-    logger.setLevel(logging.INFO)
+    level = getattr(logging, settings.log_level.upper(), logging.INFO)
+    logger.setLevel(level)
     handler = logging.StreamHandler()
     handler.setFormatter(JSONFormatter())
     if not logger.handlers:

@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.repositories.pi_repository import PiRepository
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 
 class PiService(BaseService):

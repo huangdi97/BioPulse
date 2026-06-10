@@ -7,8 +7,8 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.repositories import BoardTasksRepository, TaskBoardsRepository
-from cloud.app.services.base import BaseService
 from shared.base import validate_columns
+from shared.base_service import BaseService
 from shared.columns import TABLE_TASK_BOARDS_COLS
 
 

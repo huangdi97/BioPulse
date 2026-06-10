@@ -10,8 +10,8 @@ from fastapi import HTTPException
 from starlette import status
 
 from opportunity.app.repositories import BiddingAgentLogRepository
-from opportunity.app.services.base import BaseService
 from shared.app_settings import settings
+from shared.base_service import BaseService
 
 logger = logging.getLogger(__name__)
 

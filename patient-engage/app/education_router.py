@@ -1,7 +1,8 @@
 """患者教育路由。"""
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
+from shared.auth_scope import require_scope
 from shared.base import success
 
 from .services.education_service import (
@@ -32,7 +33,7 @@ async def recommended(
 
 
 @router.post("/push", tags=["患者"])
-async def push(body: dict):
+async def push(body: dict, _: dict = Depends(require_scope("visit"))):
     """推送内容。将教育内容推送给指定患者群体。"""
     result = await push_content(
         body.get("content_id", ""),

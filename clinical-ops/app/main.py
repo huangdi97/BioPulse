@@ -2,9 +2,13 @@
 
 import time
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
+from shared.auth import get_current_user
+from shared.exception_handlers import register_exception_handlers
 from shared.middleware import RequestIDMiddleware
+from shared.structured_logging import setup_logging
 
 from .database import init_cache_db
 from .monitoring_router import router as monitoring_router
@@ -14,6 +18,8 @@ from .routers.monitor_task_router import router as monitor_task_router
 from .site_router import router as site_router
 
 START_TIME = time.time()
+
+setup_logging("clinical-ops")
 
 app = FastAPI(
     title="ClinicalOps · 临床试验运营",
@@ -25,7 +31,16 @@ app = FastAPI(
         {"name": "中心管理", "description": "中心筛选、患者招募管理"},
     ],
 )
+_cors_origins = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_credentials=_cors_origins != ["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.add_middleware(RequestIDMiddleware)
+register_exception_handlers(app)
 
 
 @app.on_event("startup")
@@ -42,8 +57,8 @@ def health():
     }
 
 
-app.include_router(site_router)
-app.include_router(recruitment_router)
-app.include_router(monitoring_router)
-app.include_router(milestone_tracker_router)
-app.include_router(monitor_task_router)
+app.include_router(site_router, dependencies=[Depends(get_current_user)])
+app.include_router(recruitment_router, dependencies=[Depends(get_current_user)])
+app.include_router(monitoring_router, dependencies=[Depends(get_current_user)])
+app.include_router(milestone_tracker_router, dependencies=[Depends(get_current_user)])
+app.include_router(monitor_task_router, dependencies=[Depends(get_current_user)])

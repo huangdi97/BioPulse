@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from cloud.app.agent_runtime.tool_bridge import ToolBridge
 from cloud.app.services.agent_runtime_service import AgentRuntimeService
 from shared.auth_scope import require_scope
+from shared.base import success
 
 router = APIRouter(prefix="/agent/runtime", tags=["Agent Runtime"])
 
@@ -80,7 +81,7 @@ def list_tools(
 def list_pending_approvals(
     user=Depends(require_scope("visit")),
 ):
-    return {"items": AgentRuntimeService().list_pending_approvals()}
+    return success(data={"items": AgentRuntimeService().list_pending_approvals()})
 
 
 @router.post("/approvals/{approval_id}/approve", tags=["Agent Runtime"])
@@ -90,7 +91,7 @@ def approve_approval(
 ):
     username = user.get("username", "unknown")
     AgentRuntimeService().approve_approval(approval_id, username)
-    return {"message": "approved", "approval_id": approval_id}
+    return success(message="approved", data={"approval_id": approval_id})
 
 
 @router.post("/approvals/{approval_id}/reject", tags=["Agent Runtime"])
@@ -100,7 +101,7 @@ def reject_approval(
 ):
     username = user.get("username", "unknown")
     AgentRuntimeService().reject_approval(approval_id, username)
-    return {"message": "rejected", "approval_id": approval_id}
+    return success(message="rejected", data={"approval_id": approval_id})
 
 
 @router.post("/resume", tags=["Agent Runtime"])

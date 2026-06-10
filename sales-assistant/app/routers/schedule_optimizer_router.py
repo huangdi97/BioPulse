@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends
 
 from sales_assistant.app.schemas.schedule_optimizer import ScheduleRequest, ScheduleResult
 from sales_assistant.app.services.schedule_optimizer_service import ScheduleOptimizerService
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
 router = APIRouter(prefix="/api/schedule", tags=["拜访"])
@@ -16,6 +17,7 @@ router = APIRouter(prefix="/api/schedule", tags=["拜访"])
 def optimize_schedule(
     body: ScheduleRequest,
     service: ScheduleOptimizerService = Depends(),
+    _: dict = Depends(require_scope("visit")),
 ) -> ApiResponse[ScheduleResult]:
     result = service.optimize_daily_schedule(body.rep_id, body.date, body)
     service._ensure_table()

@@ -4,6 +4,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
+from starlette import status
 
 from cloud.app.services.kg_service import KgService
 from shared.auth_scope import require_scope
@@ -40,7 +41,7 @@ class KgSearch(BaseModel):
     limit: int = 20
 
 
-@router.post("/entities/create", tags=["知识图谱"])
+@router.post("/entities/create", status_code=status.HTTP_201_CREATED, tags=["知识图谱"])
 def create_entity(
     data: KgEntityCreate,
     user: dict = Depends(require_scope("visit")),
@@ -120,7 +121,7 @@ def delete_entity(
     return success(service.delete_entity(entity_id))
 
 
-@router.post("/relations/create", tags=["知识图谱"])
+@router.post("/relations/create", status_code=status.HTTP_201_CREATED, tags=["知识图谱"])
 def create_relation(
     data: KgRelationCreate,
     user: dict = Depends(require_scope("visit")),

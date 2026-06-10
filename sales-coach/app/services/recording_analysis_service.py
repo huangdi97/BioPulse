@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from typing import Optional
 
 from fastapi import HTTPException
-from sales_coach.app.schemas.recording_analysis import RecordingAnalysis, SpeechMetrics
 from starlette import status
+
+from sales_coach.app.schemas.recording_analysis import RecordingAnalysis, SpeechMetrics
 
 FILLER_WORDS = ("嗯", "啊", "这个")
 PERSUASION_KEYWORDS = ("数据证明", "临床证据", "指南推荐", "真实世界研究", "获益", "安全性")

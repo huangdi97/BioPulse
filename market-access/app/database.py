@@ -1,30 +1,8 @@
 """本地缓存数据库。缓存 Cloud API 响应，TTL 300 秒。"""
 
-import os
+from shared.database import make_cache_db
 
-from shared.database import SQLiteCache
-
-DB_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-    "data",
-    "market_access_cache.db",
-)
-
-CACHE_TTL = 300
-
-_cache = SQLiteCache(DB_PATH, default_ttl=CACHE_TTL)
-
-
-def init_cache_db():
-    """初始化缓存数据库，创建 api_cache 表。"""
-    _cache.init_cache_db()
-
-
-def get_cache(key: str) -> dict | None:
-    """获取缓存，如果未过期则返回数据，否则返回 None。"""
-    return _cache.get_cache(key)
-
-
-def set_cache(key: str, data: dict, ttl: int = CACHE_TTL):
-    """写入缓存，key 相同则覆盖。"""
-    _cache.set_cache(key, data, ttl)
+_cache = make_cache_db("market_access", ttl=300)
+init_cache_db = _cache.init_cache_db
+get_cache = _cache.get_cache
+set_cache = _cache.set_cache

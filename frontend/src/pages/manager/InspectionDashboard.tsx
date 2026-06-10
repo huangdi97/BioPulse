@@ -2,23 +2,17 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import StatCard from '@/components/StatCard'
 import { AlertTriangle, CheckCircle, Clock, ShieldCheck } from 'lucide-react'
-import client, { getApiUrl } from '@/api/client'
-
-interface DashboardData {
-  self_check_rate: number
-  overdue_count: number
-  history_records: number
-  score: number
-}
+import { fetchDashboard } from '@/api/inspection'
+import type { InspectionDashboardData } from '@/types/inspection'
 
 export default function InspectionDashboard() {
-  const [data, setData] = useState<DashboardData | null>(null)
+  const [data, setData] = useState<InspectionDashboardData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    client.get(getApiUrl('cloud', '/api/inspection/dashboard')).then(res => {
-      setData(res as unknown as DashboardData)
-    }).finally(() => setLoading(false))
+    let cancelled = false
+    fetchDashboard().then((data) => { if (!cancelled) setData(data) }).finally(() => setLoading(false))
+    return () => { cancelled = true }
   }, [])
 
   if (loading) return <div className="p-4 text-sm text-muted-foreground">加载中...</div>
@@ -32,26 +26,10 @@ export default function InspectionDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon={<ShieldCheck className="h-5 w-5 text-blue-600" />}
-          label="自检完成率"
-          value={`${data.self_check_rate}%`}
-        />
-        <StatCard
-          icon={<Clock className="h-5 w-5 text-orange-600" />}
-          label="逾期项"
-          value={data.overdue_count}
-        />
-        <StatCard
-          icon={<CheckCircle className="h-5 w-5 text-green-600" />}
-          label="历史记录"
-          value={data.history_records}
-        />
-        <StatCard
-          icon={<AlertTriangle className="h-5 w-5 text-red-600" />}
-          label="风险评分"
-          value={data.score}
-        />
+        <StatCard icon={<ShieldCheck className="h-5 w-5 text-blue-600" />} label="自检完成率" value={`${data.self_check_rate}%`} />
+        <StatCard icon={<Clock className="h-5 w-5 text-orange-600" />} label="逾期项" value={data.overdue_count} />
+        <StatCard icon={<CheckCircle className="h-5 w-5 text-green-600" />} label="历史记录" value={data.history_records} />
+        <StatCard icon={<AlertTriangle className="h-5 w-5 text-red-600" />} label="风险评分" value={data.score} />
       </div>
 
       <Card>

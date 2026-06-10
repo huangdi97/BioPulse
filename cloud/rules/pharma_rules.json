@@ -343,5 +343,345 @@
       "operator": "eq",
       "value": false
     }
+  },
+  {
+    "code": "PHR-L1-026",
+    "name": "现金回扣禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "严禁向医务人员提供现金、现金等价物或任何形式的回扣",
+    "detection": {
+      "type": "keyword_match",
+      "field": "expense_notes",
+      "keywords": ["现金", "红包", "好处费", "辛苦费", "感谢费"]
+    }
+  },
+  {
+    "code": "PHR-L1-027",
+    "name": "利益输送-旅游禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "不得以学术名义为医务人员安排旅游、度假等高消费活动",
+    "detection": {
+      "type": "keyword_match",
+      "field": "notes",
+      "keywords": ["旅游", "度假", "景点", "观光", "高尔夫"]
+    }
+  },
+  {
+    "code": "PHR-L1-028",
+    "name": "利益输送-子女安排禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "不得为医务人员亲属提供实习、就业、留学等利益安排",
+    "detection": {
+      "type": "keyword_match",
+      "field": "notes",
+      "keywords": ["亲属安排", "子女实习", "子女就业", "推荐入学", "家属"]
+    }
+  },
+  {
+    "code": "PHR-L1-029",
+    "name": "间接利益输送禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "不得通过第三方机构向医务人员输送不正当利益",
+    "detection": {
+      "type": "keyword_match",
+      "field": "notes",
+      "keywords": ["第三方", "中间人", "代理支付", "间接支付", "转付"]
+    }
+  },
+  {
+    "code": "PHR-L1-030",
+    "name": "捐赠捆绑禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "捐赠不得与产品采购、处方量挂钩",
+    "detection": {
+      "type": "keyword_match",
+      "field": "notes",
+      "keywords": ["捐赠附条件", "采购挂钩", "处方挂钩", "捆绑捐赠"]
+    }
+  },
+  {
+    "code": "PHR-L1-031",
+    "name": "竞品代理冲突",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "医药代表不得同时代理存在直接竞争关系的产品",
+    "detection": {
+      "type": "field_check",
+      "field": "competing_product_conflict",
+      "operator": "eq",
+      "value": true
+    }
+  },
+  {
+    "code": "PHR-L1-032",
+    "name": "HCP经济利益关系禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "代表不得与HCP存在借贷、投资、合伙等经济利益关系",
+    "detection": {
+      "type": "field_check",
+      "field": "hcp_financial_tie",
+      "operator": "eq",
+      "value": true
+    }
+  },
+  {
+    "code": "PHR-L1-033",
+    "name": "家庭成员利益冲突申报",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "代表家庭成员在医疗机构任职须主动申报并避免利益冲突",
+    "detection": {
+      "type": "field_check",
+      "field": "family_conflict_disclosed",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-034",
+    "name": "离职后竞业限制",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "离职代表在竞业限制期内不得从事竞品推广活动",
+    "detection": {
+      "type": "threshold",
+      "field": "days_since_resignation",
+      "operator": "lte",
+      "value": 180,
+      "exclude_when": {"field": "non_compete_waived", "operator": "eq", "value": true}
+    }
+  },
+  {
+    "code": "PHR-L1-035",
+    "name": "知情同意缺失",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "收集HCP个人数据前须获得明确的知情同意",
+    "detection": {
+      "type": "field_check",
+      "field": "consent_obtained",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-036",
+    "name": "患者数据外传禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "禁止将患者诊疗数据通过任何渠道外传至第三方",
+    "detection": {
+      "type": "keyword_match",
+      "field": "notes",
+      "keywords": ["患者数据", "诊疗数据", "外传", "导出患者", "泄露数据"]
+    }
+  },
+  {
+    "code": "PHR-L1-037",
+    "name": "HCP数据脱敏要求",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "HCP个人数据在分析报表中须脱敏处理",
+    "detection": {
+      "type": "field_check",
+      "field": "hcp_data_masked",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-038",
+    "name": "数据最小化原则",
+    "level": "L1",
+    "action": "warn",
+    "severity": "high",
+    "description": "收集HCP数据须遵循最小必要原则，不得超范围收集",
+    "detection": {
+      "type": "field_check",
+      "field": "data_collection_minimal",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-039",
+    "name": "数据保留期限违规",
+    "level": "L1",
+    "action": "warn",
+    "severity": "high",
+    "description": "HCP个人数据保存期限不得超过业务所需或法规规定",
+    "detection": {
+      "type": "threshold",
+      "field": "data_retention_days",
+      "operator": "gte",
+      "value": 730
+    }
+  },
+  {
+    "code": "PHR-L1-040",
+    "name": "非管辖处方查询禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "禁止查询非管辖医生的处方数据",
+    "detection": {
+      "type": "field_check",
+      "field": "prescription_query_authorized",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-041",
+    "name": "统方数据截屏禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "禁止对手工统计或截屏方式保存统方数据",
+    "detection": {
+      "type": "keyword_match",
+      "field": "notes",
+      "keywords": ["截屏", "拍照处方", "手写统计", "抄录处方"]
+    }
+  },
+  {
+    "code": "PHR-L1-042",
+    "name": "越级处方查询禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "代表不得查询非其管辖区域内的HCP处方信息",
+    "detection": {
+      "type": "field_check",
+      "field": "cross_region_query_authorized",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-043",
+    "name": "统方汇总上报禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "禁止汇总多名医生处方数据进行内部上报",
+    "detection": {
+      "type": "keyword_match",
+      "field": "notes",
+      "keywords": ["汇总上报", "处方汇总", "排名分析", "医生排名"]
+    }
+  },
+  {
+    "code": "PHR-L1-044",
+    "name": "统方数据接收禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "禁止从医疗机构内部人员处接收统方数据",
+    "detection": {
+      "type": "keyword_match",
+      "field": "notes",
+      "keywords": ["接收统方", "内部数据", "信息科数据", "药房数据"]
+    }
+  },
+  {
+    "code": "PHR-L1-045",
+    "name": "会议人均费用上限",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "学术会议人均费用不得超过规定的上限标准",
+    "detection": {
+      "type": "threshold",
+      "field": "meeting_cost_per_person",
+      "operator": "gte",
+      "value": 500
+    }
+  },
+  {
+    "code": "PHR-L1-046",
+    "name": "会议签到记录保存",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "学术会议的签到记录须按要求保存归档",
+    "detection": {
+      "type": "field_check",
+      "field": "sign_in_records_saved",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-047",
+    "name": "会议内容合规审批",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "学术会议的内容和材料须事先经合规部门审批",
+    "detection": {
+      "type": "field_check",
+      "field": "meeting_content_approved",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-048",
+    "name": "学术材料审批",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "所有对外使用的学术推广材料须经合规审批并登记版本号",
+    "detection": {
+      "type": "field_check",
+      "field": "promo_material_approved",
+      "operator": "eq",
+      "value": false
+    }
+  },
+  {
+    "code": "PHR-L1-049",
+    "name": "学术名义行贿禁止",
+    "level": "L1",
+    "action": "block",
+    "severity": "critical",
+    "description": "不得以学术赞助、科研合作等名义变相行贿",
+    "detection": {
+      "type": "keyword_match",
+      "field": "notes",
+      "keywords": ["赞助费关联", "合作费名义", "课题费变相", "学术赞助"]
+    }
+  },
+  {
+    "code": "PHR-L1-050",
+    "name": "推广内容合规边界",
+    "level": "L1",
+    "action": "block",
+    "severity": "high",
+    "description": "学术推广内容须基于科学证据，不得含有误导性声明",
+    "detection": {
+      "type": "keyword_match",
+      "field": "promotion_content",
+      "keywords": ["保证疗效", "绝对安全", "无效退款", "无副作用", "根治"]
+    }
   }
 ]

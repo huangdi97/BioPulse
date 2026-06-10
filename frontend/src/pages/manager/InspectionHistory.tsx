@@ -2,19 +2,20 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ChevronDown, ChevronUp, FileText } from 'lucide-react'
-import client, { getApiUrl } from '@/api/client'
+import { fetchHistory, fetchAuditTrail } from '@/api/inspection'
+import type { InspectionTask, AuditTrailItem } from '@/types/inspection'
 
 export default function InspectionHistory() {
-  const [history, setHistory] = useState<any[]>([])
+  const [history, setHistory] = useState<InspectionTask[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [auditTrail, setAuditTrail] = useState<any[] | null>(null)
+  const [auditTrail, setAuditTrail] = useState<AuditTrailItem[] | null>(null)
   const [auditLoading, setAuditLoading] = useState(false)
 
   useEffect(() => {
-    client.get(getApiUrl('cloud', '/api/inspection/history')).then(res => {
-      setHistory((res as any[]) || [])
-    }).finally(() => setLoading(false))
+    let cancelled = false
+    fetchHistory().then((data) => { if (!cancelled) setHistory(data) }).finally(() => setLoading(false))
+    return () => { cancelled = true }
   }, [])
 
   async function handleExpand(inspectionId: string) {
@@ -26,8 +27,8 @@ export default function InspectionHistory() {
     setExpandedId(inspectionId)
     setAuditLoading(true)
     try {
-      const res = await client.get(getApiUrl('cloud', `/api/inspection/${inspectionId}/audit-trail`))
-      setAuditTrail((res as any)?.trail || (res as any[]) || [])
+      const trail = await fetchAuditTrail(inspectionId)
+      setAuditTrail(trail)
     } catch {
       setAuditTrail([])
     }
@@ -47,8 +48,8 @@ export default function InspectionHistory() {
         <p className="text-sm text-muted-foreground py-8 text-center">暂无历史记录</p>
       ) : (
         <div className="space-y-3">
-          {history.map((record: any) => {
-            const inspectionId = record.inspection_id || record.id
+          {history.map((record: InspectionTask) => {
+            const inspectionId = record.inspection_id || String(record.id)
             return (
               <Card key={inspectionId}>
                 <CardContent className="p-4">
@@ -56,7 +57,7 @@ export default function InspectionHistory() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <p className="text-sm font-medium truncate">{record.title || record.name || `检查 ${inspectionId}`}</p>
+                        <p className="text-sm font-medium truncate">{record.title || record.event || `检查 ${inspectionId}`}</p>
                       </div>
                       <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                         <span>{record.date || record.created_at || '-'}</span>
@@ -76,7 +77,7 @@ export default function InspectionHistory() {
                         <p className="text-xs text-muted-foreground">加载审计轨迹...</p>
                       ) : auditTrail && auditTrail.length > 0 ? (
                         <div className="space-y-2">
-                          {auditTrail.map((step: any, i: number) => (
+                          {auditTrail.map((step: AuditTrailItem, i: number) => (
                             <div key={step.id || i} className="flex gap-3 text-xs">
                               <div className="flex flex-col items-center">
                                 <div className="w-2 h-2 rounded-full bg-primary shrink-0" />

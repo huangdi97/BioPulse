@@ -11,19 +11,19 @@ from opportunity.app.bidding_agent_router import (
 from opportunity.app.bidding_agent_router import (
     start_bidding_scheduler,
 )
-from opportunity.app.bidding_router import router as bidding_router
 from opportunity.app.bookmark_router import router as bookmark_router
 from opportunity.app.contact_router import router as contact_router
 from opportunity.app.database import init_db
-from opportunity.app.health_router import router as health_router
-from opportunity.app.opportunity_router import router as opportunity_router
+from opportunity.app.opportunity_bidding_router import router as bidding_router
+from opportunity.app.opportunity_opportunity_router import router as opportunity_router
+from opportunity.app.opportunity_stats_router import router as stats_router
 from opportunity.app.pubpeer_router import router as pubpeer_router
 from opportunity.app.research_router import router as research_router
 from opportunity.app.scoring_router import router as scoring_router
-from opportunity.app.stats_router import router as stats_router
 from opportunity.app.trend_router import router as trend_router
 from shared.app_settings import settings
 from shared.exception_handlers import register_exception_handlers
+from shared.health import router as health_router
 from shared.l1_cache import cache_rules, init_l1_cache, load_l1_rules
 from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
@@ -44,10 +44,11 @@ setup_logging("opportunity")
 
 app = FastAPI(title="Opportunity Service", version=settings.version)
 
+_cors_origins = settings.cors_origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    allow_credentials=_cors_origins != ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )

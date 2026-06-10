@@ -1,7 +1,8 @@
 """用药提醒路由。"""
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
+from shared.auth_scope import require_scope
 from shared.base import success
 
 from .services.reminder_service import (
@@ -14,7 +15,7 @@ router = APIRouter(prefix="/api/reminder")
 
 
 @router.post("/create", tags=["用药提醒"])
-async def create(body: dict):
+async def create(body: dict, _: dict = Depends(require_scope("visit"))):
     """创建提醒计划。配置用药提醒的时间、频率和药品信息。"""
     result = await create_reminder(
         body.get("patient_id", ""),

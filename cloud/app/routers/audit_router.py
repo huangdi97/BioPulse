@@ -4,6 +4,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
+from starlette import status
 
 from cloud.app.services.audit_service import AuditService
 from shared.auth_scope import require_scope
@@ -22,7 +23,7 @@ class AuditLogCreate(BaseModel):
     ip_address: str = ""
 
 
-@router.post("/logs", tags=["审计日志"])
+@router.post("/logs", status_code=status.HTTP_201_CREATED, tags=["审计日志"])
 def create_audit_log(
     body: AuditLogCreate,
     current_user: dict = Depends(require_scope("visit")),

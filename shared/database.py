@@ -34,9 +34,9 @@ class SQLiteDatabase:
 
     def get_db(self) -> Generator:
         if self.database_url and (self.database_url.startswith("postgresql://") or self.database_url.startswith("postgres://")):
-            import psycopg2
+            import psycopg
 
-            conn = PGCompatConnection(psycopg2.connect(self.database_url))
+            conn = PGCompatConnection(psycopg.connect(self.database_url))
             try:
                 yield conn
             finally:
@@ -63,9 +63,9 @@ class SQLiteDatabase:
 
     def init_db(self) -> None:
         if self.database_url and (self.database_url.startswith("postgresql://") or self.database_url.startswith("postgres://")):
-            import psycopg2
+            import psycopg
 
-            conn = PGCompatConnection(psycopg2.connect(self.database_url))
+            conn = PGCompatConnection(psycopg.connect(self.database_url))
             try:
                 if self.pg_schema_sql:
                     conn.executescript(self.pg_schema_sql)
@@ -143,3 +143,21 @@ class SQLiteCache:
         )
         conn.commit()
         conn.close()
+
+
+def make_cache_db(end_name: str, ttl: int = 600) -> SQLiteCache:
+    """Create a SQLiteCache for a service end using standard data/ path.
+
+    Args:
+        end_name: Short service name, used as 'data/{end_name}_cache.db'.
+        ttl: Cache TTL in seconds.
+
+    Returns:
+        A ready-to-use SQLiteCache instance (init_cache_db already called).
+    """
+    base_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+    os.makedirs(base_dir, exist_ok=True)
+    db_path = os.path.join(base_dir, f"{end_name}_cache.db")
+    cache = SQLiteCache(db_path, default_ttl=ttl)
+    cache.init_cache_db()
+    return cache

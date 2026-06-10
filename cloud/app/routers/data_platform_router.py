@@ -19,6 +19,7 @@ router = APIRouter(prefix="/api/data-platform", tags=["data-platform"])
     response_model=PipelineRunResult,
     summary="执行ETL管道",
     description="启动数据平台ETL管道，从数据源提取、转换并加载至数据仓库。",
+    tags=["data-platform"],
 )
 def run_pipeline(
     current_user: dict = Depends(require_scope("visit")),
@@ -32,6 +33,7 @@ def run_pipeline(
     "/olap/query",
     summary="OLAP多维查询",
     description="在多维数据上执行聚合查询，支持自定义维度、度量和过滤条件。",
+    tags=["data-platform"],
 )
 def olap_query(
     payload: OLAPQuery = Body(...),
@@ -53,6 +55,7 @@ def olap_query(
     "/bi/report",
     summary="嵌入式BI报表数据",
     description="获取聚合后的BI报表数据集，可按日期、团队等维度分组展示关键指标。",
+    tags=["data-platform"],
 )
 def bi_report(
     date_from: str | None = None,

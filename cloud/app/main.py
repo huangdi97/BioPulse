@@ -17,7 +17,7 @@ from shared.app_settings import settings
 START_TIME = time.time()
 
 _logger = logging.getLogger("cloud")
-_logger.setLevel(logging.INFO)
+_logger.setLevel(getattr(logging, settings.log_level.upper(), logging.INFO))
 _handler = logging.StreamHandler()
 _handler.setFormatter(JSONFormatter())
 if not _logger.handlers:
@@ -83,8 +83,10 @@ async def catch_all(path_name: str):
     from starlette.responses import Response
 
     headers = {"Cache-Control": "no-cache, no-store, must-revalidate"}
+    with open("static/index.html", "rb") as f:
+        content = f.read()
     return Response(
-        content=open("static/index.html", "rb").read(),
+        content=content,
         media_type="text/html",
         headers=headers,
     )

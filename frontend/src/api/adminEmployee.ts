@@ -1,4 +1,4 @@
-import client from './client'
+import client, { withFallback } from './client'
 import {
   getMockEmployeeComplianceRecords,
   getMockEmployeePerf,
@@ -13,52 +13,57 @@ import {
 export type { ComplianceItem, TaskItem }
 
 export async function fetchEmployeeCompliance() {
-  try {
-    const res = await client.get<ComplianceItem[]>('/api/admin/employee/compliance')
-    return res.data
-  } catch {
-    return getMockEmployeeComplianceRecords()
-  }
+  return withFallback(
+    async () => {
+      const res = await client.get<ComplianceItem[]>('/api/admin/employee/compliance')
+      return res.data
+    },
+    () => getMockEmployeeComplianceRecords()
+  )
 }
 
 export async function fetchEmployeePerformance() {
-  try {
-    const res = await client.get('/api/admin/employee/performance')
-    return res.data as {
-      perf: ReturnType<typeof getMockEmployeePerf>
-      details: ReturnType<typeof getMockEmployeePerfDetails>
-    }
-  } catch {
-    return {
+  return withFallback(
+    async () => {
+      const res = await client.get('/api/admin/employee/performance')
+      return res.data as {
+        perf: ReturnType<typeof getMockEmployeePerf>
+        details: ReturnType<typeof getMockEmployeePerfDetails>
+      }
+    },
+    () => ({
       perf: getMockEmployeePerf(),
       details: getMockEmployeePerfDetails(),
-    }
-  }
+    })
+  )
 }
 
 export async function fetchEmployeeProfile() {
-  try {
-    const res = await client.get('/api/admin/employee/profile')
-    return res.data as ReturnType<typeof getMockEmployeeProfile>
-  } catch {
-    return getMockEmployeeProfile()
-  }
+  return withFallback(
+    async () => {
+      const res = await client.get('/api/admin/employee/profile')
+      return res.data as ReturnType<typeof getMockEmployeeProfile>
+    },
+    () => getMockEmployeeProfile()
+  )
 }
 
 export async function fetchEmployeeTasks() {
-  try {
-    const res = await client.get<TaskItem[]>('/api/admin/employee/tasks')
-    return res.data
-  } catch {
-    return getMockEmployeeTasks()
-  }
+  return withFallback(
+    async () => {
+      const res = await client.get<TaskItem[]>('/api/admin/employee/tasks')
+      return res.data
+    },
+    () => getMockEmployeeTasks()
+  )
 }
 
 export async function fetchEmployeeTrend() {
-  try {
-    const res = await client.get('/api/admin/employee/trend')
-    return res.data as ReturnType<typeof getMockEmployeeTrendData>
-  } catch {
-    return getMockEmployeeTrendData()
-  }
+  return withFallback(
+    async () => {
+      const res = await client.get('/api/admin/employee/trend')
+      return res.data as ReturnType<typeof getMockEmployeeTrendData>
+    },
+    () => getMockEmployeeTrendData()
+  )
 }

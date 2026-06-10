@@ -3,10 +3,10 @@
 import json
 
 from fastapi import APIRouter, Depends, HTTPException
-from sales_coach.app.services.reflection_service import generate_reflection_report, get_scenario
-from sales_coach.app.services.session_service import SessionService
 from starlette import status
 
+from sales_coach.app.services.reflection_service import generate_reflection_report, get_scenario
+from sales_coach.app.services.session_service import SessionService
 from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 

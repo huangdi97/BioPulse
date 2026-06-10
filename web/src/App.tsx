@@ -1,17 +1,19 @@
-import { useEffect } from "react"
+import { useEffect, lazy, Suspense } from "react"
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom"
 import { AuthProvider, useAuth } from "./auth/AuthContext"
 import MainLayout from "./components/layout/MainLayout"
-import PharmaPage from "./pages/dashboard/PharmaPage"
-import ResearchPage from "./pages/research/ResearchPage"
-import CompliancePage from "./pages/compliance/CompliancePage"
-import TrainingPage from "./pages/coach/TrainingPage"
-import IntelPage from "./pages/intel/IntelPage"
-import ConferencePage from "./pages/conference/ConferencePage"
-import SettingsPage from "./pages/settings/SettingsPage"
-import PricingPage from "./pages/pricing/PricingPage"
-import LoginPage from "./pages/auth/LoginPage"
-import RegisterPage from "./pages/auth/RegisterPage"
+
+const PharmaPage = lazy(() => import("./pages/dashboard/PharmaPage"))
+const ResearchPage = lazy(() => import("./pages/research/ResearchPage"))
+const CompliancePage = lazy(() => import("./pages/compliance/CompliancePage"))
+const TrainingPage = lazy(() => import("./pages/coach/TrainingPage"))
+const IntelPage = lazy(() => import("./pages/intel/IntelPage"))
+const ConferencePage = lazy(() => import("./pages/conference/ConferencePage"))
+const SettingsPage = lazy(() => import("./pages/settings/SettingsPage"))
+const PricingPage = lazy(() => import("./pages/pricing/PricingPage"))
+const LoginPage = lazy(() => import("./pages/auth/LoginPage"))
+const RegisterPage = lazy(() => import("./pages/auth/RegisterPage"))
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage"))
 
 function AuthGuard({ children }: { children: React.ReactNode }) {
   const { token, init } = useAuth()
@@ -41,10 +43,18 @@ function AuthenticatedLayout() {
   )
 }
 
+function DynamicTitle() {
+  useEffect(() => { document.title = '制药情报 · 一云四端' }, [])
+  return null
+}
+
 export default function App() {
   return (
+    <>
+    <DynamicTitle />
     <AuthProvider>
       <BrowserRouter>
+        <Suspense fallback={<div className="flex items-center justify-center h-screen">加载中...</div>}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -58,9 +68,12 @@ export default function App() {
             <Route path="conference" element={<ConferencePage />} />
             <Route path="settings/system" element={<SettingsPage />} />
             <Route path="pricing" element={<PricingPage />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
+        </Suspense>
       </BrowserRouter>
     </AuthProvider>
+    </>
   )
 }

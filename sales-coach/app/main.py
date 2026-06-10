@@ -2,23 +2,23 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from sales_coach.app.assessment_router import api_router as assessment_api_router
 from sales_coach.app.assessment_router import router as assessment_router
 from sales_coach.app.database import init_db
 from sales_coach.app.digital_human_router import router as digital_human_router
-from sales_coach.app.health_router import router as health_router
 from sales_coach.app.module_router import router as module_router
 from sales_coach.app.reflection_router import router as reflection_router
 from sales_coach.app.routers.compliance_training_router import router as compliance_training_router
 from sales_coach.app.routers.recording_analysis_router import router as recording_analysis_router
+from sales_coach.app.sales_coach_stats_router import router as stats_router
+from sales_coach.app.sales_coach_stats_router import stats_root_router
 from sales_coach.app.scenario_router import api_router as scenario_api_router
 from sales_coach.app.scenario_router import router as scenario_router
 from sales_coach.app.session_router import router as session_router
-from sales_coach.app.stats_router import router as stats_router
-from sales_coach.app.stats_router import stats_root_router
-
 from shared.app_settings import settings
 from shared.exception_handlers import register_exception_handlers
+from shared.health import router as health_router
 from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
 from shared.structured_logging import setup_logging
@@ -36,10 +36,11 @@ app = FastAPI(
 
 setup_logging("sales_coach")
 
+_cors_origins = settings.cors_origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    allow_credentials=_cors_origins != ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )

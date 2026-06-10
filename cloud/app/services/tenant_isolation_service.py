@@ -51,7 +51,7 @@ def _decode_jwt_payload(token: str) -> dict[str, Any]:
     try:
         raw = base64.urlsafe_b64decode(payload + padding)
         return json.loads(raw.decode("utf-8"))
-    except Exception:
+    except (ValueError, json.JSONDecodeError, UnicodeDecodeError):
         return {}
 
 

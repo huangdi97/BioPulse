@@ -202,7 +202,7 @@ def semantic_search(
     return success(data=result)
 
 
-@router.post("/procedural/learn", summary="学习程序记忆", description="学习并存储程序性记忆模式", tags=["Brain Memory"])
+@router.post("/procedural/learn", status_code=201, summary="学习程序记忆", description="学习并存储程序性记忆模式", tags=["Brain Memory"])
 def procedural_learn(body: ProceduralLearn, service: BrainMemoryService = Depends()):
     """学习程序性记忆模式。Args: body (ProceduralLearn) 程序学习体; service (BrainMemoryService) 记忆服务。Returns: dict 成功响应"""
     result = service.procedural_learn(

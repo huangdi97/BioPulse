@@ -53,7 +53,10 @@ export default function VisitNew() {
   const [isScanning, setIsScanning] = useState(false)
   const [showViolationDialog, setShowViolationDialog] = useState(false)
 
-  const [photos, setPhotos] = useState<File[]>([]), [location, setLocation] = useState(''), [locationMode, setLocationMode] = useState('auto'), [settings, setSettings] = useState<Record<string,string>>({})
+  const [photos, setPhotos] = useState<File[]>([])
+  const [location, setLocation] = useState('')
+  const [locationMode, setLocationMode] = useState('auto')
+  const [settings, setSettings] = useState<Record<string,string>>({})
 
   const validateField = useCallback((field: string, value: string) => {
     switch (field) {
@@ -109,10 +112,16 @@ export default function VisitNew() {
     }
     return urls
   }
-  useEffect(() => { client.get('/api/cloud/admin/settings').then((res: any) => {
-    if (res?.data) setSettings(res.data)
-    if (res?.data?.location_mode) setLocationMode(res.data.location_mode)
-  }).catch(() => {}) }, [])
+  useEffect(() => {
+    let cancelled = false
+    client.get('/api/cloud/admin/settings').then((res: any) => {
+      if (!cancelled) {
+        if (res?.data) setSettings(res.data)
+        if (res?.data?.location_mode) setLocationMode(res.data.location_mode)
+      }
+    }).catch(err => console.error('Failed to load settings:', err))
+    return () => { cancelled = true }
+  }, [])
   const getLocation = () => {
     if (!navigator.geolocation) return setLocation('浏览器不支持定位')
     navigator.geolocation.getCurrentPosition(
@@ -302,7 +311,9 @@ export default function VisitNew() {
             </div>
 
             <div className="relative">
+              <label htmlFor="visit-content" className="sr-only">拜访内容</label>
               <textarea
+                id="visit-content"
                 ref={textareaRef}
                 value={content}
                 onChange={handleContentChange}
@@ -336,7 +347,7 @@ export default function VisitNew() {
               {locationMode === 'auto' ? (<div className="flex items-center gap-2">
                   <Button type="button" variant="outline" size="sm" onClick={getLocation}><Crosshair className="h-4 w-4 mr-1" />{location ? '重新获取位置' : '获取当前位置'}</Button>
                   {location && <span className="text-sm text-muted-foreground">{location}</span>}
-                </div>) : (<input type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="请输入签到地址" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />)}
+                </div>) : (<div><label htmlFor="visit-location" className="sr-only">签到地址</label><input id="visit-location" type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="请输入签到地址" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm" /></div>)}
             </CardContent>
           </Card>
         )}

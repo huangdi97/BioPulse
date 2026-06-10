@@ -8,8 +8,8 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sales_assistant.app.repositories import PromptRepository, SessionRepository
-from sales_assistant.app.services.base import BaseCrudService
 from shared.app_settings import settings
+from shared.base_service import BaseCrudService
 
 AI_GATEWAY_URL = f"{settings.cloud_api_base}/ai/chat"
 TIMEOUT_SECONDS = 30

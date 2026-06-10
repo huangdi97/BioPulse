@@ -4,6 +4,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
+from starlette import status
 
 from cloud.app.services.world_tree_service import WorldTreeService
 from shared.auth_scope import require_scope
@@ -30,7 +31,7 @@ class NodeUpdate(BaseModel):
 
 
 # 1
-@router.post("/nodes", tags=["记忆系统"])
+@router.post("/nodes", status_code=status.HTTP_201_CREATED, tags=["记忆系统"])
 def create_node(
     body: NodeCreate,
     current_user: dict = Depends(require_scope("visit")),
@@ -175,7 +176,7 @@ def get_ancestors(node_id: int, service: WorldTreeService = Depends()):
 
 
 # 8
-@router.post("/nodes/{node_id}/link/{memory_id}", tags=["记忆系统"])
+@router.post("/nodes/{node_id}/link/{memory_id}", status_code=status.HTTP_201_CREATED, tags=["记忆系统"])
 def link_memory(node_id: int, memory_id: int, service: WorldTreeService = Depends()):
     """将记忆关联到指定世界树节点。
 

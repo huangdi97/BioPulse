@@ -74,10 +74,10 @@ def setup_test_db(module_db, schema_sql: str, test_db_path: str):
     _current_test_db = test_db_path
 
     if is_pg():
-        import psycopg2
+        import psycopg
 
         pg_url = get_pg_url(test_db_path)
-        conn = psycopg2.connect(pg_url)
+        conn = psycopg.connect(pg_url)
         cur = conn.cursor()
         cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
         tables = [row[0] for row in cur.fetchall()]
@@ -103,10 +103,10 @@ def setup_test_db(module_db, schema_sql: str, test_db_path: str):
 def clean_test_tables(tables: list):
     test_db = _current_test_db
     if is_pg():
-        import psycopg2
+        import psycopg
 
         pg_url = get_pg_url(test_db)
-        with psycopg2.connect(pg_url) as conn:
+        with psycopg.connect(pg_url) as conn:
             conn.autocommit = True
             with conn.cursor() as cur:
                 for t in tables:

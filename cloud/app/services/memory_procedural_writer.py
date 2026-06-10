@@ -5,7 +5,10 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 
 from cloud.app.repositories import MemoryEntriesRepository
-from cloud.app.services.memory_format import _now
+
+
+def _now() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 class ProceduralMemoryWriter:

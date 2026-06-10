@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Dict, List
 
 from assistant.app.repositories import SyncQueueRepository
-from assistant.app.services.base import BaseService
+from shared.base_service import BaseService
 from shared.columns import (
     TABLE_ASSISTANT_HCP_COLS,
     TABLE_HEALTH_RADAR_COLS,

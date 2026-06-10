@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
+from starlette import status
 
 from cloud.app.services.a2a_registry_service import A2aRegistryService
 from shared.auth_scope import require_scope
@@ -45,7 +46,7 @@ class TaskSubmitRequest(BaseModel):
 router = APIRouter(prefix="/a2a", tags=["A2A Agent Registry"])
 
 
-@router.post("/agents/register", summary="注册Agent", description="向注册中心注册新的Agent实例", tags=["A2A Agent Registry"])
+@router.post("/agents/register", status_code=status.HTTP_201_CREATED, summary="注册Agent", description="向注册中心注册新的Agent实例", tags=["A2A Agent Registry"])
 def register_agent(
     body: RegisterRequest,
     service: A2aRegistryService = Depends(),
@@ -137,7 +138,7 @@ def update_agent_status(
     return success(data=service.update_status(agent_key, body.status))
 
 
-@router.post("/tasks/submit", summary="提交任务", description="向目标Agent提交一个任务", tags=["A2A Agent Registry"])
+@router.post("/tasks/submit", status_code=status.HTTP_201_CREATED, summary="提交任务", description="向目标Agent提交一个任务", tags=["A2A Agent Registry"])
 def submit_task(
     body: TaskSubmitRequest,
     service: A2aRegistryService = Depends(),

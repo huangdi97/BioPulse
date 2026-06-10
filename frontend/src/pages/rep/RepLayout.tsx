@@ -111,9 +111,9 @@ export default function RepLayout() {
         <header className="flex md:hidden items-center justify-between px-4 py-2 bg-primary text-primary-foreground shrink-0">
           <div className="flex items-center gap-2">
             <Pill className="h-5 w-5" />
-            <span className="font-semibold text-sm">云四端</span>
+              <span className="font-semibold text-sm">云四端</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 dark:text-slate-100">
             <span className="text-sm">{user?.username}</span>
             <Button
               variant="ghost"
@@ -154,7 +154,7 @@ export default function RepLayout() {
         </main>
 
         {/* Mobile bottom tabs */}
-        <nav className="flex md:hidden border-t bg-background shrink-0">
+        <nav className="flex md:hidden border-t bg-background dark:bg-gray-900 shrink-0">
           {tabs.map((tab) => {
             const Icon = tab.icon
             if (tab.disabled) {

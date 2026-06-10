@@ -4,9 +4,10 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+from starlette import status
 
 from cloud.app.services.api_token_service import ApiTokenService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import success
 
 router = APIRouter(prefix="/tokens", tags=["tokens"])
@@ -23,10 +24,10 @@ class TokenResponse(BaseModel):
     is_active: bool
 
 
-@router.post("/", tags=["tokens"])
+@router.post("/", status_code=status.HTTP_201_CREATED, tags=["tokens"])
 def create_token(
     body: CreateTokenRequest,
-    current_user: dict = Depends(get_current_user),
+    _: dict = Depends(require_scope("visit")),
     service: ApiTokenService = Depends(),
 ) -> Any:
     user_id = int(current_user["sub"])
@@ -35,7 +36,7 @@ def create_token(
 
 @router.get("/", tags=["tokens"])
 def list_tokens(
-    current_user: dict = Depends(get_current_user),
+    _: dict = Depends(require_scope("visit")),
     service: ApiTokenService = Depends(),
 ) -> Any:
     user_id = int(current_user["sub"])
@@ -45,7 +46,7 @@ def list_tokens(
 @router.delete("/{token_id:int}", tags=["tokens"])
 def revoke_token(
     token_id: int,
-    current_user: dict = Depends(get_current_user),
+    _: dict = Depends(require_scope("visit")),
     service: ApiTokenService = Depends(),
 ) -> Any:
     user_id = int(current_user["sub"])

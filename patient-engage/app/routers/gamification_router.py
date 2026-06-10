@@ -1,7 +1,8 @@
 """患者游戏化激励路由。"""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from shared.auth_scope import require_scope
 from shared.base import success
 
 from ..schemas.gamification import RedeemRequest
@@ -23,7 +24,7 @@ async def points(patient_id: str):
 
 
 @router.post("/redeem", tags=["游戏化激励"])
-async def redeem(body: RedeemRequest):
+async def redeem(body: RedeemRequest, _: dict = Depends(require_scope("visit"))):
     """兑换奖励。"""
     result = await redeem_reward(body.patient_id, body.reward_id)
     return success(data=result)

@@ -1,5 +1,6 @@
 """MDT辩论服务，负责多学科团队辩论会话的管理与AI辩论编排。"""
 
+import logging
 from datetime import datetime
 
 from fastapi import HTTPException
@@ -11,8 +12,10 @@ from cloud.app.repositories import (
     MdtParticipantsRepository,
     MdtSessionsRepository,
 )
-from cloud.app.services.base import BaseService
 from cloud.app.services.mdt_debate_scorer import _call_ai, parse_ai_opinion, parse_consensus_json
+from shared.base_service import BaseService
+
+logger = logging.getLogger(__name__)
 from shared.base import success
 
 
@@ -185,7 +188,8 @@ class MdtDebater(BaseService):
                             "confidence": parsed["confidence"],
                         }
                     )
-                except Exception:
+                except Exception:  # noqa: BLE001  # AI call / JSON parse / DB ops can fail
+                    logger.exception("Debate AI call failed for participant %s round %d", p["id"], current_round)
                     results.append({"participant_id": p["id"], "round": current_round, "error": "AI call failed"})
         sessions_repo.update_fields(session_id, {"round_count": current_round, "updated_at": self._now()})
         return success({"round": current_round, "results": results})

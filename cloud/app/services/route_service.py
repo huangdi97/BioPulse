@@ -10,10 +10,10 @@ from cloud.app.repositories import (
     RouteLogsRepository,
     RouteRulesRepository,
 )
-from cloud.app.services.base import BaseService
 from cloud.app.services.route_calculation import RouteCalculationMixin
 from cloud.app.services.route_optimization import RouteOptimizationMixin
 from shared.base import validate_columns
+from shared.base_service import BaseService
 from shared.columns import TABLE_ROUTE_RULES_COLS
 
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"

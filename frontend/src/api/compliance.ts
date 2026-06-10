@@ -1,4 +1,4 @@
-import client from './client'
+import client, { withFallback } from './client'
 import type { ScanResult, Violation, ComplianceDashboard, ComplianceRecord, AuditEntry } from '@/types'
 import {
   mockComplianceDashboard,
@@ -28,12 +28,7 @@ function fallbackScan(content: string): ScanResult {
   }
 
   if (violations.length === 0) {
-    return {
-      passed: true,
-      riskLevel: 'low',
-      violations: [],
-      score: 100,
-    }
+    return { passed: true, riskLevel: 'low', violations: [], score: 100 }
   }
 
   const riskLevels = violations.map((v) => {
@@ -53,69 +48,71 @@ function fallbackScan(content: string): ScanResult {
 
   const score = Math.max(0, 100 - violations.length * 25)
 
-  return {
-    passed: false,
-    riskLevel,
-    violations,
-    score,
-  }
+  return { passed: false, riskLevel, violations, score }
 }
 
 export async function scanContent(content: string): Promise<ScanResult> {
-  try {
-    const response = await client.post<ScanResult>('/api/cloud/compliance-v2/scan', { content })
-    return response.data
-  } catch {
-    return fallbackScan(content)
-  }
+  return withFallback(
+    async () => {
+      const response = await client.post<ScanResult>('/api/cloud/compliance-v2/scan', { content })
+      return response.data
+    },
+    () => fallbackScan(content)
+  )
 }
 
 export async function fetchComplianceDashboard(): Promise<ComplianceDashboard> {
-  try {
-    const response = await client.get<ComplianceDashboard>('/api/cloud/compliance-v2/dashboard')
-    return response.data
-  } catch {
-    return mockComplianceDashboard
-  }
+  return withFallback(
+    async () => {
+      const response = await client.get<ComplianceDashboard>('/api/cloud/compliance-v2/dashboard')
+      return response.data
+    },
+    () => mockComplianceDashboard
+  )
 }
 
 export async function fetchComplianceRecords(
   params?: { status?: string; riskLevel?: string; repName?: string }
 ): Promise<ComplianceRecord[]> {
-  try {
-    const response = await client.get<ComplianceRecord[]>('/api/cloud/compliance-v2/records', { params })
-    return response.data
-  } catch {
-    let records = [...mockComplianceRecords]
-    if (params?.status && params.status !== 'all') {
-      records = records.filter((r) => r.status === params.status)
+  return withFallback(
+    async () => {
+      const response = await client.get<ComplianceRecord[]>('/api/cloud/compliance-v2/records', { params })
+      return response.data
+    },
+    () => {
+      let records = [...mockComplianceRecords]
+      if (params?.status && params.status !== 'all') {
+        records = records.filter((r) => r.status === params.status)
+      }
+      if (params?.riskLevel && params.riskLevel !== 'all') {
+        records = records.filter((r) => r.riskLevel === params.riskLevel)
+      }
+      if (params?.repName) {
+        records = records.filter((r) => r.repName.includes(params.repName!))
+      }
+      return records
     }
-    if (params?.riskLevel && params.riskLevel !== 'all') {
-      records = records.filter((r) => r.riskLevel === params.riskLevel)
-    }
-    if (params?.repName) {
-      records = records.filter((r) => r.repName.includes(params.repName!))
-    }
-    return records
-  }
+  )
 }
 
 export async function fetchComplianceRecordDetail(id: number): Promise<ComplianceRecord | null> {
-  try {
-    const response = await client.get<ComplianceRecord>(`/api/cloud/compliance-v2/records/${id}`)
-    return response.data
-  } catch {
-    return mockComplianceRecords.find((r) => r.id === id) ?? null
-  }
+  return withFallback(
+    async () => {
+      const response = await client.get<ComplianceRecord>(`/api/cloud/compliance-v2/records/${id}`)
+      return response.data
+    },
+    () => mockComplianceRecords.find((r) => r.id === id) ?? null
+  )
 }
 
 export async function fetchAuditChain(entityType: string, entityId: number): Promise<AuditEntry[]> {
-  try {
-    const response = await client.get<AuditEntry[]>(
-      `/api/cloud/compliance-v2/audit-chain/${entityType}/${entityId}`
-    )
-    return response.data
-  } catch {
-    return mockAuditChain
-  }
+  return withFallback(
+    async () => {
+      const response = await client.get<AuditEntry[]>(
+        `/api/cloud/compliance-v2/audit-chain/${entityType}/${entityId}`
+      )
+      return response.data
+    },
+    () => mockAuditChain
+  )
 }

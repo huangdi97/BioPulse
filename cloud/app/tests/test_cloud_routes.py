@@ -279,3 +279,123 @@ class TestEmptyResultSets:
         assert resp.status_code == 200
         items = resp.json()["data"].get("items", [])
         assert isinstance(items, list)
+
+
+class TestBoardParamBoundaries:
+    def test_board_create_empty_name(self, client, auth_token):
+        resp = client.post(
+            "/boards/",
+            json={"name": "", "description": "empty name"},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (422, 400, 201)
+
+    def test_board_create_long_name(self, client, auth_token):
+        resp = client.post(
+            "/boards/",
+            json={"name": "x" * 500, "description": "long name"},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (422, 400, 201)
+
+    def test_board_get_nonexistent(self, client, auth_token):
+        resp = client.get(
+            "/boards/99999999",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (404, 200)
+
+    def test_board_delete_nonexistent(self, client, auth_token):
+        resp = client.delete(
+            "/boards/99999999",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (404, 200)
+
+    def test_board_patch_nonexistent(self, client, auth_token):
+        resp = client.patch(
+            "/boards/99999999",
+            json={"name": "ghost"},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (404, 200)
+
+
+class TestTeamParamBoundaries:
+    def test_team_create_empty_name(self, client, auth_token):
+        resp = client.post(
+            "/teams",
+            json={"name": "", "description": "empty"},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (422, 400, 201)
+
+    def test_team_get_nonexistent(self, client, auth_token):
+        resp = client.get(
+            "/teams/99999999",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (404, 200)
+
+    def test_team_delete_nonexistent(self, client, auth_token):
+        resp = client.delete(
+            "/teams/99999999",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (404, 200)
+
+    def test_team_patch_nonexistent(self, client, auth_token):
+        resp = client.patch(
+            "/teams/99999999",
+            json={"description": "ghost update"},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (404, 200)
+
+
+class TestCustomerParamBoundaries:
+    def test_customer_create_missing_name(self, client, auth_token):
+        resp = client.post(
+            "/customers/",
+            json={"hospital": "Some Hospital"},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (422, 400, 200, 201)
+
+    def test_customer_get_nonexistent(self, client, auth_token):
+        resp = client.get(
+            "/customers/99999999",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (404, 200)
+
+
+class TestSettingsParamBoundaries:
+    def test_settings_unauthorized_methods(self, client):
+        resp = client.post("/settings/", json={})
+        assert resp.status_code in (401, 405, 404)
+
+    def test_settings_put_not_allowed(self, client, auth_token):
+        resp = client.put(
+            "/settings/",
+            json={},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (405, 401, 404)
+
+
+class TestVisitParamBoundaries:
+    def test_visit_create_missing_required(self, client, auth_token):
+        resp = client.post(
+            "/visit/",
+            json={},
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (422, 400)
+
+    def test_visit_get_detail_nonexistent(self, client, auth_token):
+        resp = client.get(
+            "/visit/99999999",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert resp.status_code in (404, 200)

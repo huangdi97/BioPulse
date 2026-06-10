@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 
 from cloud.app.services.ai_gateway_service import AiGatewayService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
 from shared.base import ApiResponse, success
 
 router = APIRouter(prefix="/ai", tags=["AI Gateway"])
@@ -27,7 +27,7 @@ class ChatResponse(BaseModel):
 def chat(
     request: Request,
     body: ChatRequest,
-    current_user: dict = Depends(get_current_user),
+    _: dict = Depends(require_scope("visit")),
     service: AiGatewayService = Depends(),
 ) -> Any:
     result = service.chat(body.messages, body.temperature, body.max_tokens, current_user.get("id"))

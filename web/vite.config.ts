@@ -4,6 +4,16 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  server: {
+    proxy: {
+      '/api/cloud': { target: 'http://localhost:8000', changeOrigin: true },
+      '/api/assistant': { target: 'http://localhost:8003', changeOrigin: true },
+      '/api/opportunity': { target: 'http://localhost:8002', changeOrigin: true },
+      '/api/sales-assistant': { target: 'http://localhost:8004', changeOrigin: true },
+      '/api/sales-coach': { target: 'http://localhost:8001', changeOrigin: true },
+      '/api/intel': { target: 'http://localhost:8006', changeOrigin: true },
+    },
+  },
   build: {
     chunkSizeWarningLimit: 800,
     rollupOptions: {

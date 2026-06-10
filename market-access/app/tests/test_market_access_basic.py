@@ -9,9 +9,9 @@ class TestImports:
         assert mod.app is not None
 
     def test_import_all_routers(self):
-        br = importlib.import_module("market-access.app.bidding_router")
+        br = importlib.import_module("market-access.app.market_access_bidding_router")
         fr = importlib.import_module("market-access.app.formulary_router")
-        sr = importlib.import_module("market-access.app.strategy_router")
+        sr = importlib.import_module("market-access.app.market_access_strategy_router")
         par = importlib.import_module("market-access.app.routers.price_alert_router")
         pmr = importlib.import_module("market-access.app.routers.price_monitor_router")
         assert all(hasattr(m, "router") for m in (br, fr, sr, par, pmr))

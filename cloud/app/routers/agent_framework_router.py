@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
+from starlette import status
 
 from cloud.app.services.agent_framework_service import AgentFrameworkService
 from shared.auth_scope import require_scope
@@ -66,7 +67,7 @@ def get_template(
     return success(data=service.get_template(template_key))
 
 
-@router.post("/templates", summary="创建模板", description="创建一个新的Agent模板", tags=["Agent Framework"])
+@router.post("/templates", status_code=status.HTTP_201_CREATED, summary="创建模板", description="创建一个新的Agent模板", tags=["Agent Framework"])
 def create_template(
     body: TemplateCreate,
     service: AgentFrameworkService = Depends(),
@@ -126,7 +127,7 @@ def get_instance(
     return success(data=service.get_instance(instance_key))
 
 
-@router.post("/instances", summary="创建实例", description="基于模板创建一个新的Agent实例", tags=["Agent Framework"])
+@router.post("/instances", status_code=status.HTTP_201_CREATED, summary="创建实例", description="基于模板创建一个新的Agent实例", tags=["Agent Framework"])
 def create_instance(
     body: InstanceCreate,
     service: AgentFrameworkService = Depends(),

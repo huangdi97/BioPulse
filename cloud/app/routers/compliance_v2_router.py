@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from cloud.app.services.compliance_v2_service import ComplianceV2Service
 from shared.auth_scope import require_scope
+from shared.base import success
 
 router = APIRouter(prefix="/compliance-v2", tags=["合规"])
 
@@ -49,7 +50,7 @@ def scan(
 ):
     """扫描内容合规性。"""
     uid = int(current_user["sub"])
-    return service.scan(body, request, uid)
+    return success(data=service.scan(body, request, uid))
 
 
 @router.get("/records", summary="分页查询合规审核记录", description="按消息类型、风险等级等条件分页查询合规审核记录", tags=["合规"])
@@ -65,7 +66,7 @@ def list_records(
     service: ComplianceV2Service = Depends(),
 ):
     """分页查询合规审核记录。"""
-    return service.list_records(message_type, risk_level, passed, date_from, date_to, page, page_size)
+    return success(data=service.list_records(message_type, risk_level, passed, date_from, date_to, page, page_size))
 
 
 @router.get("/records/{record_id}", summary="获取单条审核记录", description="根据记录ID获取合规审核单条记录详情", tags=["合规"])
@@ -75,7 +76,7 @@ def get_record(
     service: ComplianceV2Service = Depends(),
 ):
     """获取单条审核记录。"""
-    return service.get_record(record_id)
+    return success(data=service.get_record(record_id))
 
 
 @router.post("/records/{record_id}/review", summary="人工审核合规记录", description="对合规记录进行人工审核操作", tags=["合规"])
@@ -87,7 +88,7 @@ def review_record(
 ):
     """人工审核合规记录。"""
     uid = int(current_user["sub"])
-    return service.review_record(record_id, body, uid)
+    return success(data=service.review_record(record_id, body, uid))
 
 
 @router.post("/audit-chain", status_code=201, summary="创建审计链条目", description="创建一条新的审计链条目记录", tags=["合规"])
@@ -98,7 +99,7 @@ def create_audit_chain(
 ):
     """创建审计链条目。"""
     uid = int(current_user["sub"])
-    return service.create_audit_chain(body, uid)
+    return success(data=service.create_audit_chain(body, uid))
 
 
 @router.get("/audit-chain/{entity_type}/{entity_id}", summary="获取实体审计链", description="根据实体类型和ID获取完整的审计链", tags=["合规"])
@@ -109,7 +110,7 @@ def get_audit_chain(
     service: ComplianceV2Service = Depends(),
 ):
     """获取实体的审计链。"""
-    return service.get_audit_chain(entity_type, entity_id)
+    return success(data=service.get_audit_chain(entity_type, entity_id))
 
 
 @router.get("/audit-chain/verify/{entity_type}/{entity_id}", summary="验证审计链完整性", description="验证指定实体的审计链数据完整性", tags=["合规"])
@@ -132,7 +133,7 @@ def train_correction(
 ):
     """基于审核记录生成培训纠正。"""
     uid = int(current_user["sub"])
-    return service.train_correction(record_id, request, uid)
+    return success(data=service.train_correction(record_id, request, uid))
 
 
 @router.get("/corrections", summary="分页查询培训纠正记录", description="按类别、严重程度等条件分页查询培训纠正记录", tags=["合规"])
@@ -146,7 +147,7 @@ def list_corrections(
     service: ComplianceV2Service = Depends(),
 ):
     """分页查询培训纠正记录。"""
-    return service.list_corrections(category, severity, status, page, page_size)
+    return success(data=service.list_corrections(category, severity, status, page, page_size))
 
 
 @router.patch("/corrections/{correction_id}", summary="更新培训纠正状态", description="更新指定培训纠正记录的状态或分配人", tags=["合规"])
@@ -157,7 +158,7 @@ def update_correction(
     service: ComplianceV2Service = Depends(),
 ):
     """更新培训纠正状态。"""
-    return service.update_correction(correction_id, body)
+    return success(data=service.update_correction(correction_id, body))
 
 
 @router.get("/rules/l2", summary="列出L2合规规则", description="获取所有二级合规规则列表", tags=["合规"])
@@ -166,7 +167,7 @@ def list_l2_rules(
     service: ComplianceV2Service = Depends(),
 ):
     """列出 L2 合规规则。"""
-    return service.list_l2_rules()
+    return success(data=service.list_l2_rules())
 
 
 @router.post("/evaluate", summary="评估拜访数据合规性", description="评估医访数据的合规性", tags=["合规"])
@@ -176,7 +177,7 @@ def evaluate_visit(
     service: ComplianceV2Service = Depends(),
 ):
     """评估拜访数据的合规性。"""
-    return service.evaluate_visit(body)
+    return success(data=service.evaluate_visit(body))
 
 
 @router.get("/dashboard", summary="获取合规仪表盘数据", description="获取合规系统的仪表盘统计数据", tags=["合规"])
@@ -185,4 +186,4 @@ def dashboard(
     service: ComplianceV2Service = Depends(),
 ):
     """获取合规仪表盘数据。"""
-    return service.dashboard()
+    return success(data=service.dashboard())

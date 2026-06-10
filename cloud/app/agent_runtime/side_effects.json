@@ -1,0 +1,140 @@
+{
+  "trigger_red_light": {
+    "known_effects": ["暂停费用发放", "通知合规官", "通知区域经理", "通知总裁", "触发复盘流程"],
+    "affected_modules": ["compliance", "finance", "notification"],
+    "risk_level": "high",
+    "recommendation": "需确认"
+  },
+  "submit_interaction": {
+    "known_effects": ["更新HCP拜访统计", "触发合规检查", "写入拜访历史"],
+    "affected_modules": ["visits", "compliance", "analytics"],
+    "risk_level": "medium",
+    "recommendation": "允许"
+  },
+  "approve_quotation": {
+    "known_effects": ["更新订单金额", "通知财务", "触发审批流程"],
+    "affected_modules": ["orders", "finance", "notification"],
+    "risk_level": "high",
+    "recommendation": "需确认"
+  },
+  "update_admission_status": {
+    "known_effects": ["更新入院看板进度", "通知相关方"],
+    "affected_modules": ["admission", "notification"],
+    "risk_level": "low",
+    "recommendation": "允许"
+  },
+  "create_notification": {
+    "known_effects": ["发送通知给目标用户", "写入通知历史"],
+    "affected_modules": ["notification"],
+    "risk_level": "low",
+    "recommendation": "允许"
+  },
+  "write_memory": {
+    "known_effects": ["写入Agent短期记忆", "可能影响后续Agent决策"],
+    "affected_modules": ["agent_memory"],
+    "risk_level": "medium",
+    "recommendation": "允许"
+  },
+  "agent_brain_set": {
+    "known_effects": ["修改Agent状态值", "可能影响Agent行为"],
+    "affected_modules": ["agent_runtime"],
+    "risk_level": "medium",
+    "recommendation": "允许"
+  },
+  "compliance_check": {
+    "known_effects": ["触发合规规则检查", "写入合规审计日志"],
+    "affected_modules": ["compliance", "audit"],
+    "risk_level": "medium",
+    "recommendation": "允许"
+  },
+  "write_audit_log": {
+    "known_effects": ["写入审计链记录", "不可逆操作"],
+    "affected_modules": ["audit", "compliance"],
+    "risk_level": "medium",
+    "recommendation": "允许"
+  },
+  "triangulation_check": {
+    "known_effects": ["触发三角勾稽交叉验证", "可能产生红灯事件"],
+    "affected_modules": ["compliance", "triangulation", "event_bus"],
+    "risk_level": "high",
+    "recommendation": "需确认"
+  },
+  "verify_expense": {
+    "known_effects": ["查询费用数据", "触发费用异常标记"],
+    "affected_modules": ["compliance", "expense"],
+    "risk_level": "low",
+    "recommendation": "允许"
+  },
+  "verify_visit": {
+    "known_effects": ["查询拜访数据", "触发拜访异常标记"],
+    "affected_modules": ["compliance", "visits"],
+    "risk_level": "low",
+    "recommendation": "允许"
+  },
+  "trace_distribution": {
+    "known_effects": ["查询流向数据", "触发流向异常标记"],
+    "affected_modules": ["compliance", "distribution"],
+    "risk_level": "low",
+    "recommendation": "允许"
+  },
+  "query_bidding": {
+    "known_effects": ["查询招标信息"],
+    "affected_modules": ["bidding"],
+    "risk_level": "low",
+    "recommendation": "允许"
+  },
+  "query_opportunity": {
+    "known_effects": ["查询商机信息"],
+    "affected_modules": ["opportunity"],
+    "risk_level": "low",
+    "recommendation": "允许"
+  },
+  "query_knowledge_graph": {
+    "known_effects": ["查询知识图谱"],
+    "affected_modules": ["knowledge"],
+    "risk_level": "low",
+    "recommendation": "允许"
+  },
+  "analyze_with_llm": {
+    "known_effects": ["消耗LLM调用配额", "产生分析结果"],
+    "affected_modules": ["llm", "cost"],
+    "risk_level": "low",
+    "recommendation": "允许"
+  },
+  "search_memory": {
+    "known_effects": ["查询Agent记忆"],
+    "affected_modules": ["agent_memory"],
+    "risk_level": "low",
+    "recommendation": "允许"
+  },
+  "collect_related_data": {
+    "known_effects": ["收集异常分析所需的多维数据"],
+    "affected_modules": ["compliance", "analytics"],
+    "risk_level": "low",
+    "recommendation": "允许"
+  },
+  "run_pattern_analysis": {
+    "known_effects": ["执行模式分析", "消耗计算资源"],
+    "affected_modules": ["analytics"],
+    "risk_level": "low",
+    "recommendation": "允许"
+  },
+  "run_causal_inference": {
+    "known_effects": ["执行因果推断", "消耗计算资源"],
+    "affected_modules": ["analytics"],
+    "risk_level": "low",
+    "recommendation": "允许"
+  },
+  "generate_narrative": {
+    "known_effects": ["生成自然语言报告"],
+    "affected_modules": ["reporting"],
+    "risk_level": "low",
+    "recommendation": "允许"
+  },
+  "discover_related_patterns": {
+    "known_effects": ["扫描跨代表相似异常模式"],
+    "affected_modules": ["analytics"],
+    "risk_level": "low",
+    "recommendation": "允许"
+  }
+}

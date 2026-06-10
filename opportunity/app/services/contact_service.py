@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from opportunity.app.repositories import ContactRecordRepository
-from opportunity.app.services.base import BaseCrudService
+from shared.base_service import BaseCrudService
 
 """联系记录服务，管理商机线索下的联系沟通记录。"""
 

@@ -8,8 +8,8 @@ from opportunity.app.repositories import (
     ResearchTrailRepository,
     TrendAnalysisRepository,
 )
-from opportunity.app.services.base import BaseService
 from shared.app_settings import settings
+from shared.base_service import BaseService
 
 AI_GATEWAY_URL = f"{settings.cloud_api_base}/ai/chat"
 

@@ -15,7 +15,7 @@ from cloud.app.repositories import (
     CollaborationStepsRepository,
     OrchestrationTemplatesRepository,
 )
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +41,7 @@ class OrchestrateService(BaseService):
     """编排服务，提供编排模板管理与多步骤协作流程执行。"""
 
     def create_template(self, template_name: str, description: str, steps: list[dict], user_id: int) -> dict:
+        """创建一个新的编排模板。"""
         tmpl_repo = OrchestrationTemplatesRepository(self.db)
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         row_id = tmpl_repo.create(
@@ -57,6 +58,7 @@ class OrchestrateService(BaseService):
         return _row(row)
 
     def list_templates(self, enabled: Optional[int] = None) -> list:
+        """查询编排模板列表，可选按启用状态过滤。"""
         tmpl_repo = OrchestrationTemplatesRepository(self.db)
         conditions = []
         params = []
@@ -71,6 +73,7 @@ class OrchestrateService(BaseService):
         return _rows(rows)
 
     def run_orchestration(self, template_name: str, context: dict) -> dict:
+        """根据模板名称执行多步骤协同编排流程。"""
         tmpl_repo = OrchestrationTemplatesRepository(self.db)
         placeholders = ", ".join(tmpl_repo.cols)
         tmpl = self.db.execute(

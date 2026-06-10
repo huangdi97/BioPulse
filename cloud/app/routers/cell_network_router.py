@@ -2,8 +2,9 @@
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
+from starlette import status
 
-from cloud.app.services.cell_network_service import CellNetworkService
+from cloud.app.services import CellNetworkService
 from cloud.app.services.cell_topology_service import CellTopologyService
 from shared.auth import get_current_user
 from shared.auth_scope import require_scope
@@ -27,7 +28,7 @@ class RouteTaskRequest(BaseModel):
 router = APIRouter(prefix="/cell-network", tags=["细胞网络"])
 
 
-@router.post("/register", summary="注册细胞", description="注册一个新的Agent细胞到网络中", tags=["细胞网络"])
+@router.post("/register", status_code=status.HTTP_201_CREATED, summary="注册细胞", description="注册一个新的Agent细胞到网络中", tags=["细胞网络"])
 def register_cell(
     body: RegisterCellRequest,
     service: CellNetworkService = Depends(),

@@ -1,5 +1,12 @@
+"""全息记忆关联路由。
+
+路由前缀：/memory
+核心数据模型：AssociateRequest、memory_associations 与各类记忆节点。
+"""
+
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
+from starlette import status
 
 from cloud.app.database import get_db
 from cloud.app.services.holographic_service import HolographicService
@@ -15,7 +22,7 @@ class AssociateRequest(BaseModel):
     weight: float = 1.0
 
 
-@router.post("/{memory_id}/associate", tags=["记忆系统"])
+@router.post("/{memory_id}/associate", status_code=status.HTTP_201_CREATED, tags=["记忆系统"])
 def create_association(
     memory_id: int,
     body: AssociateRequest,

@@ -3,10 +3,14 @@
 import json
 import urllib.request
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
+from starlette import status
 
 from shared.app_settings import settings
+from shared.auth_scope import require_scope
+from shared.base import success, error
+from shared.error_code import ErrorCode
 
 GATEWAY_ROUTES: dict[str, str] = {
     "query_bidding": "GET /opportunity/bidding/list",
@@ -53,16 +57,16 @@ def _http_forward(method: str, path: str, params: dict, auth_header: str) -> dic
     try:
         with urllib.request.urlopen(req, timeout=15) as rp:
             raw = rp.read().decode("utf-8")
-            return {"success": True, "data": json.loads(raw), "error": ""}
+            return success(data=json.loads(raw))
     except Exception as e:
-        return {"success": False, "data": None, "error": str(e)}
+        return error(ErrorCode.INTERNAL_ERROR, str(e))
 
 
 @router.post("/execute", summary="执行工具", description="通过网关转发执行指定的Agent工具", tags=["Agent Gateway"])
-def execute(body: ExecuteRequest, request: Request):
+def execute(body: ExecuteRequest, request: Request, _: dict = Depends(require_scope("visit"))):
     route = GATEWAY_ROUTES.get(body.tool_name)
     if not route:
-        return {"success": False, "data": None, "error": f"unknown tool: {body.tool_name}"}
+        return error(ErrorCode.NOT_FOUND, f"unknown tool: {body.tool_name}")
 
     parts = route.split(" ", 1)
     method = parts[0]
@@ -71,22 +75,18 @@ def execute(body: ExecuteRequest, request: Request):
     return _http_forward(method, path, body.params, auth_header)
 
 
-@router.post("/tools/register", summary="注册工具", description="向网关注册一个新的Agent工具路由", tags=["Agent Gateway"])
-def register_tool(body: RegisterRequest):
+@router.post("/tools/register", status_code=status.HTTP_201_CREATED, summary="注册工具", description="向网关注册一个新的Agent工具路由", tags=["Agent Gateway"])
+def register_tool(body: RegisterRequest, _: dict = Depends(require_scope("visit"))):
     GATEWAY_ROUTES[body.tool_name] = f"{body.method.upper()} {body.url}"
-    return {
-        "success": True,
-        "data": {
-            "tool_name": body.tool_name,
-            "method": body.method.upper(),
-            "url": body.url,
-            "description": body.description,
-            "permission_level": body.permission_level,
-        },
-        "error": "",
-    }
+    return success(data={
+        "tool_name": body.tool_name,
+        "method": body.method.upper(),
+        "url": body.url,
+        "description": body.description,
+        "permission_level": body.permission_level,
+    })
 
 
 @router.get("/tools", summary="工具列表", description="获取所有已注册的Agent工具名称列表", tags=["Agent Gateway"])
 def list_tools():
-    return {"success": True, "data": list(GATEWAY_ROUTES.keys()), "error": ""}
+    return success(data=list(GATEWAY_ROUTES.keys()))

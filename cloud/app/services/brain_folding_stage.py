@@ -1,8 +1,11 @@
 """记忆折叠压缩阶段。"""
 
 import json
+from datetime import datetime
 
-from cloud.app.services.brain_evolution_common import now_str
+
+def now_str() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 class MemoryFoldingStage:
@@ -12,6 +15,18 @@ class MemoryFoldingStage:
         self.db = db
 
     def fold_memories(self, memory_ids: list[int]) -> dict:
+        if not memory_ids:
+            return {"error": "no valid memory_ids found", "memory_ids": memory_ids}
+
+        placeholders = ",".join("?" * len(memory_ids))
+        episodic_rows = self.db.execute(f"SELECT * FROM episodic_memory WHERE id IN ({placeholders})", memory_ids).fetchall()
+        sensory_rows = self.db.execute(f"SELECT * FROM sensory_memory WHERE id IN ({placeholders})", memory_ids).fetchall()
+        procedural_rows = self.db.execute(f"SELECT * FROM procedural_memory WHERE id IN ({placeholders})", memory_ids).fetchall()
+
+        episodic_dict = {r["id"]: dict(r) for r in episodic_rows}
+        sensory_dict = {r["id"]: dict(r) for r in sensory_rows}
+        procedural_dict = {r["id"]: dict(r) for r in procedural_rows}
+
         sources = []
         descriptions = []
         total_importance = 0.0
@@ -19,25 +34,20 @@ class MemoryFoldingStage:
         valence_count = 0
 
         for mid in memory_ids:
-            row = self.db.execute("SELECT * FROM episodic_memory WHERE id=?", (mid,)).fetchone()
-            if row:
-                row = dict(row)
+            if mid in episodic_dict:
+                row = episodic_dict[mid]
                 sources.append({"memory_id": mid, "memory_type": "episodic", "table": "episodic_memory"})
                 descriptions.append(row.get("title", "") + ": " + row.get("description", ""))
                 total_importance += 0.5
                 total_valence += row.get("valence", 0.0)
                 valence_count += 1
-                continue
-            row = self.db.execute("SELECT * FROM sensory_memory WHERE id=?", (mid,)).fetchone()
-            if row:
-                row = dict(row)
+            elif mid in sensory_dict:
+                row = sensory_dict[mid]
                 sources.append({"memory_id": mid, "memory_type": "sensory", "table": "sensory_memory"})
                 descriptions.append(row.get("raw_content", ""))
                 total_importance += row.get("importance", 0.5)
-                continue
-            row = self.db.execute("SELECT * FROM procedural_memory WHERE id=?", (mid,)).fetchone()
-            if row:
-                row = dict(row)
+            elif mid in procedural_dict:
+                row = procedural_dict[mid]
                 sources.append({"memory_id": mid, "memory_type": "procedural", "table": "procedural_memory"})
                 descriptions.append(row.get("name", "") + ": " + row.get("description", ""))
                 total_importance += 0.5

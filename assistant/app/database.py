@@ -36,3 +36,11 @@ class AssistantDatabase(SQLiteDatabase):
 _db = AssistantDatabase()
 get_db = _db.get_db
 init_db = _db.init_db
+
+
+def get_connection() -> sqlite3.Connection:
+    """Get a direct database connection for scripts/tasks (not FastAPI Depends)."""
+    init_db()
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn

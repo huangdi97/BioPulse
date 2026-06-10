@@ -10,7 +10,7 @@ from cloud.app.services.interaction_service import InteractionService
 from shared.auth_scope import require_scope
 from shared.base import success
 
-router = APIRouter(prefix="", tags=["interactions"])
+router = APIRouter(prefix="/api", tags=["interactions"])
 
 
 class InteractionCreate(BaseModel):

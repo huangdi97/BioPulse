@@ -1,14 +1,29 @@
 """L4 安全守卫与 LLM 规则引擎。"""
 
 import json
+import os
 import urllib.request
 
-from cloud.app.agent_runtime.check_result import CheckResult
+from cloud.app.agent_runtime.models import CheckResult
 from shared.config import settings as config_settings
 
 
 class SafetyGuard:
-    """Parameter boundary check and side-effect prediction."""
+    """Parameter boundary check and side-effect prediction (L1+L2+L3)."""
+
+    _side_effects_cache: dict | None = None
+
+    @classmethod
+    def _load_side_effects(cls) -> dict:
+        if cls._side_effects_cache is not None:
+            return cls._side_effects_cache
+        path = os.path.join(os.path.dirname(__file__), "side_effects.json")
+        try:
+            with open(path, encoding="utf-8") as f:
+                cls._side_effects_cache = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            cls._side_effects_cache = {}
+        return cls._side_effects_cache
 
     @staticmethod
     def check_params(tool: str, params: dict) -> CheckResult:
@@ -22,9 +37,35 @@ class SafetyGuard:
 
     @staticmethod
     def predict_side_effect(tool: str, params: dict) -> CheckResult:
+        """Layer3 side-effect prediction using knowledge base.
+        Checks side_effects.json for known effects, affected modules, and risk level.
+        Returns structured risk assessment with recommendation.
+        """
+        effects_db = SafetyGuard._load_side_effects()
+        entry = effects_db.get(tool)
+
+        if entry:
+            risk = entry.get("risk_level", "low")
+            effects = entry.get("known_effects", [])
+            modules = entry.get("affected_modules", [])
+            recommendation = entry.get("recommendation", "允许")
+
+            detail_parts = [f"副作用: {'; '.join(effects)}", f"影响模块: {', '.join(modules)}", f"风险等级: {risk}", f"建议: {recommendation}"]
+
+            passed = risk != "high" or recommendation != "禁止"
+            return CheckResult(
+                name="side_effect",
+                passed=passed,
+                detail=" | ".join(detail_parts),
+            )
+
         write_tools = {"create_notification", "write_memory", "compliance_check", "agent_brain_set"}
         is_write = tool in write_tools
-        return CheckResult(name="side_effect", passed=True, detail=f"Write operation: {tool}" if is_write else "Read-only operation")
+        return CheckResult(
+            name="side_effect",
+            passed=True,
+            detail=f"Write operation: {tool}" if is_write else "Read-only operation (no known side effects)",
+        )
 
 
 class RuleEngineLLM:

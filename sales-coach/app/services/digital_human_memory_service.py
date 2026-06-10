@@ -3,7 +3,7 @@
 from fastapi import HTTPException
 from starlette import status
 
-from sales_coach.app.services.base import BaseService
+from shared.base_service import BaseService
 
 
 class DigitalHumanMemoryService(BaseService):

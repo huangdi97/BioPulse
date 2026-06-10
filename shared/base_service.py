@@ -1,5 +1,6 @@
 """服务层基类——供各子项目继承使用。"""
 
+import importlib
 import sqlite3
 
 from fastapi import HTTPException
@@ -14,8 +15,8 @@ class BaseService:
     """
 
     def __init__(self, db=None):
-        if db is not None:
-            self.db = db
+        self.db = db
+
 
     def _connect(self, db_path: str):
         conn = sqlite3.connect(db_path)
@@ -27,7 +28,22 @@ class BaseService:
     def _connection(self):
         if hasattr(self, "db") and self.db is not None:
             return self.db
+        db_path = self._default_db_path()
+        if db_path:
+            return self._connect(db_path)
         raise NotImplementedError("Override _connection() or pass db to __init__")
+
+    def _default_db_path(self) -> str | None:
+        module_name = self.__class__.__module__
+        marker = ".app.services."
+        if marker not in module_name:
+            return None
+        app_root = module_name.split(marker, 1)[0]
+        try:
+            database_module = importlib.import_module(f"{app_root}.app.database")
+        except ImportError:
+            return None
+        return getattr(database_module, "DB_PATH", None)
 
 
 class BaseCrudService(BaseService):

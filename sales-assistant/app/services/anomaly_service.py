@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from sales_assistant.app.repositories import AlertRepository, AnomalyRuleRepository
-from sales_assistant.app.services.base import BaseCrudService
+from shared.base_service import BaseCrudService
 
 
 class AnomalyService(BaseCrudService):

@@ -3,6 +3,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
+from starlette import status
 
 from cloud.app.event_bus_handlers import EventDefCreate, EventPublish, EventSubscribe
 from cloud.app.services.event_bus_service import EventBusService
@@ -15,7 +16,7 @@ ALL_ENDS = ["cloud", "sales-coach", "sales-assistant", "assistant", "opportunity
 
 
 @router.post(
-    "/definitions/create", summary="创建事件定义", description="创建一个新的事件定义，指定事件类型、来源端、目标端和优先级等。", tags=["Event Bus"]
+    "/definitions/create", status_code=status.HTTP_201_CREATED, summary="创建事件定义", description="创建一个新的事件定义，指定事件类型、来源端、目标端和优先级等。", tags=["Event Bus"]
 )
 def definitions_create(
     body: EventDefCreate,
@@ -86,7 +87,7 @@ def definitions_toggle(
     return success(data=result)
 
 
-@router.post("/messages/publish", summary="发布事件消息", description="发布一条事件消息到事件总线，指定事件类型、负载和关联 ID。", tags=["Event Bus"])
+@router.post("/messages/publish", status_code=status.HTTP_201_CREATED, summary="发布事件消息", description="发布一条事件消息到事件总线，指定事件类型、负载和关联 ID。", tags=["Event Bus"])
 def messages_publish(
     body: EventPublish,
     current_user: dict = Depends(require_scope("visit")),
@@ -188,7 +189,7 @@ def messages_redeliver(
     return success(data=result)
 
 
-@router.post("/subscribe", summary="订阅事件", description="订阅指定类型的事件，配置目标端和回调地址。", tags=["Event Bus"])
+@router.post("/subscribe", status_code=status.HTTP_201_CREATED, summary="订阅事件", description="订阅指定类型的事件，配置目标端和回调地址。", tags=["Event Bus"])
 def subscribe(
     body: EventSubscribe,
     current_user: dict = Depends(require_scope("visit")),

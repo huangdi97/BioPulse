@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:one_cloud_app/models/hcp.dart';
 import 'package:one_cloud_app/models/visit.dart';
 import 'package:one_cloud_app/models/surgery.dart';
+import 'package:one_cloud_app/constants/app_constants.dart';
 import 'package:one_cloud_app/services/database_service.dart';
 
 class SyncService {
@@ -18,7 +19,7 @@ class SyncService {
 
   Future<int> addToSyncQueue(String table, int recordId, String action) async {
     final prefs = await SharedPreferences.getInstance();
-    final serverUrl = prefs.getString(_serverUrlKey) ?? 'http://43.153.166.191:8000';
+    final serverUrl = prefs.getString(_serverUrlKey) ?? AppConstants.syncUrl;
     return _db.addToSyncQueue(
       tableName: table,
       recordId: recordId,

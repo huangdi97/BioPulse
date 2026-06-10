@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sales_coach.app.repositories import ScenarioRepository
-from sales_coach.app.services.base import BaseCrudService
+from shared.base_service import BaseCrudService
 
 
 class ScenarioService(BaseCrudService):

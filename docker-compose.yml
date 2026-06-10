@@ -140,6 +140,109 @@ services:
       retries: 3
       start_period: 15s
 
+  clinical-ops:
+    build:
+      context: .
+      dockerfile: clinical-ops/Dockerfile
+    ports:
+      - "8010:8010"
+    env_file:
+      - .env
+    environment:
+      - DSN=sqlite:///data/clinical_ops.db
+    networks:
+      - yysd-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8010/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  patient-engage:
+    build:
+      context: .
+      dockerfile: patient-engage/Dockerfile
+    ports:
+      - "8011:8011"
+    env_file:
+      - .env
+    environment:
+      - DSN=sqlite:///data/patient_engage.db
+    networks:
+      - yysd-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8011/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  market-access:
+    build:
+      context: .
+      dockerfile: market-access/Dockerfile
+    ports:
+      - "8007:8007"
+    env_file:
+      - .env
+    environment:
+      - DSN=sqlite:///data/market_access.db
+    networks:
+      - yysd-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8007/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  agent-compliance-monitor:
+    build:
+      context: .
+      dockerfile: cloud/Dockerfile
+    command: python -m cloud.app.agent_entrypoint
+    ports:
+      - "8015:8015"
+    environment:
+      - AGENT_NAME=compliance_monitor
+      - AGENT_PORT=8015
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env
+    networks:
+      - yysd-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8015/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  agent-anomaly-analysis:
+    build:
+      context: .
+      dockerfile: cloud/Dockerfile
+    command: python -m cloud.app.agent_entrypoint
+    ports:
+      - "8016:8016"
+    environment:
+      - AGENT_NAME=anomaly_analysis
+      - AGENT_PORT=8016
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env
+    networks:
+      - yysd-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8016/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
   redis:
     image: redis:7-alpine
     ports:

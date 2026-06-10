@@ -2,12 +2,11 @@
 
 import asyncio
 import logging
-import sqlite3
 from datetime import datetime, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from assistant.app.database import DB_PATH
+from assistant.app.database import get_connection
 from assistant.app.ws_manager import connection_manager
 
 logger = logging.getLogger(__name__)
@@ -25,8 +24,7 @@ def _send_ws(user_id: int, message: dict) -> None:
 
 
 def check_reminders() -> int:
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_connection()
     now = datetime.now(timezone.utc).isoformat()
     rows = conn.execute("""
         SELECT * FROM surgery_reminder

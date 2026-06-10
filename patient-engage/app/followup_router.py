@@ -1,7 +1,8 @@
 """随访管理路由。"""
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
+from shared.auth_scope import require_scope
 from shared.base import success
 
 from .services.followup_service import (
@@ -14,7 +15,7 @@ router = APIRouter(prefix="/api/followup")
 
 
 @router.post("/plan", tags=["依从性"])
-async def plan(body: dict):
+async def plan(body: dict, _: dict = Depends(require_scope("visit"))):
     """创建随访计划。为患者制定随访频率和项目。"""
     result = await create_followup_plan(
         body.get("patient_id", ""),

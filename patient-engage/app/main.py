@@ -2,7 +2,11 @@
 
 import time
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from shared.auth import get_current_user
+from shared.exception_handlers import register_exception_handlers
 
 from shared.middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
@@ -30,7 +34,16 @@ app = FastAPI(
         {"name": "游戏化激励", "description": "患者积分、奖励与排行榜"},
     ],
 )
+_cors_origins = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_credentials=_cors_origins != ["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.add_middleware(RequestIDMiddleware)
+register_exception_handlers(app)
 
 
 @app.on_event("startup")
@@ -47,8 +60,8 @@ def health():
     }
 
 
-app.include_router(education_router)
-app.include_router(reminder_router)
-app.include_router(followup_router)
-app.include_router(patient_weapp_router)
-app.include_router(gamification_router)
+app.include_router(education_router, dependencies=[Depends(get_current_user)])
+app.include_router(reminder_router, dependencies=[Depends(get_current_user)])
+app.include_router(followup_router, dependencies=[Depends(get_current_user)])
+app.include_router(patient_weapp_router, dependencies=[Depends(get_current_user)])
+app.include_router(gamification_router, dependencies=[Depends(get_current_user)])

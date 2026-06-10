@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 from starlette import status
 
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 
 def _check_image_compliance(body: str) -> list:

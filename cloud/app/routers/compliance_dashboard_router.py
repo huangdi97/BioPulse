@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends
 
 from cloud.app.services.compliance_service import ComplianceService
 from shared.auth import get_current_user
+from shared.base import success
 
 router = APIRouter(prefix="/api/compliance/dashboard", tags=["合规"])
 
@@ -13,7 +14,7 @@ def dashboard_summary(
     current_user: dict = Depends(get_current_user),
     service: ComplianceService = Depends(),
 ):
-    return service.dashboard_summary()
+    return success(data=service.dashboard_summary())
 
 
 @router.get("/reps/{rep_id}", summary="代表违规查询", description="查询指定代表的违规记录", tags=["合规"])
@@ -22,4 +23,4 @@ def rep_violations(
     current_user: dict = Depends(get_current_user),
     service: ComplianceService = Depends(),
 ):
-    return service.rep_violations(rep_id)
+    return success(data=service.rep_violations(rep_id))

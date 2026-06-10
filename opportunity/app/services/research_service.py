@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from opportunity.app.repositories import ResearchTrailRepository
-from opportunity.app.services.base import BaseCrudService
+from shared.base_service import BaseCrudService
 
 """科研轨迹服务，管理HCP科研动态轨迹的增删改查。"""
 

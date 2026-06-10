@@ -1,10 +1,14 @@
+"""Consolidated research matching router module."""
+
+from fastapi import APIRouter
+
 """Research product matching API endpoints.
 
 Matches research products against PI profiles (by research area)
 or free-text method descriptions using keyword overlap scoring.
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 from pydantic import BaseModel
 
 from cloud.app.services.product_matching_service import (
@@ -14,8 +18,9 @@ from cloud.app.services.product_matching_service import (
 from cloud.app.services.research_service import ResearchService
 from shared.auth import get_current_user
 from shared.auth_scope import require_scope
+from shared.base import success
 
-router = APIRouter(
+matching_router = APIRouter(
     prefix="/api/research/matching",
     tags=["科研线"],
     dependencies=[Depends(require_scope("research"))],
@@ -34,7 +39,7 @@ class MethodMatchRequest(BaseModel):
     method_description: str
 
 
-@router.post("/for-pi", tags=["Research Matching"])
+@matching_router.post("/for-pi", tags=["Research Matching"])
 def match_for_pi(
     body: PiMatchRequest,
     current_user: dict = Depends(get_current_user),
@@ -48,10 +53,10 @@ def match_for_pi(
         new_value=str(results),
         operator=current_user.get("username", ""),
     )
-    return {"code": 0, "data": results, "message": "success"}
+    return success(data=results)
 
 
-@router.post("/by-method", tags=["Research Matching"])
+@matching_router.post("/by-method", tags=["Research Matching"])
 def match_by_method(
     body: MethodMatchRequest,
     current_user: dict = Depends(get_current_user),
@@ -65,4 +70,132 @@ def match_by_method(
         new_value=f"method={body.method_description[:100]}",
         operator=current_user.get("username", ""),
     )
-    return {"code": 0, "data": results, "message": "success"}
+    return success(data=results)
+
+
+"""科研 PI 路由：研究者搜索、详情、创建与审计日志。"""
+
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+
+from cloud.app.services.research_pi_service import ResearchPiService
+from shared.auth import get_current_user
+from shared.auth_scope import require_scope
+
+pi_router = APIRouter(
+    prefix="/api/research/pi",
+    tags=["科研线"],
+    dependencies=[Depends(require_scope("research"))],
+)
+
+
+class PiCreate(BaseModel):
+    """科研 PI 创建请求体。"""
+
+    name: str
+    institution: str
+    department: str = ""
+    title: str = ""
+    hcp_id: Optional[int] = None
+    research_areas: list[str] = []
+    total_papers: int = 0
+    total_grants: int = 0
+    h_index: int = 0
+
+
+@pi_router.get("/search", tags=["Research Pi"])
+def search_pi(
+    q: str = Query("", description="Search keyword"),
+    current_user: dict = Depends(get_current_user),
+):
+    service = ResearchPiService()
+    results = service.search(q)
+    return success(data=results)
+
+
+@pi_router.get("/{pi_id}", tags=["Research Pi"])
+def get_pi(
+    pi_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    service = ResearchPiService()
+    pi = service.get_by_id(pi_id)
+    return success(data=pi)
+
+
+@pi_router.post("", status_code=201, tags=["Research Pi"])
+def create_pi(
+    body: PiCreate,
+    current_user: dict = Depends(get_current_user),
+):
+    if not body.name.strip():
+        raise HTTPException(status_code=400, detail="name is required")
+    service = ResearchPiService()
+    pi = service.create(
+        name=body.name,
+        institution=body.institution,
+        department=body.department,
+        title=body.title,
+        hcp_id=body.hcp_id,
+        research_areas=body.research_areas,
+        total_papers=body.total_papers,
+        total_grants=body.total_grants,
+        h_index=body.h_index,
+    )
+    ResearchService().log_audit(
+        event_type="create",
+        entity_type="pi",
+        entity_id=pi["pi_id"],
+        new_value=str(pi),
+        operator=current_user.get("username", ""),
+    )
+    return success(data=pi)
+
+
+"""科研产品路由：产品搜索与详情查询。"""
+
+from fastapi import APIRouter, Depends, Query
+
+from cloud.app.services.research_product_service import ResearchProductService
+from shared.auth import get_current_user
+from shared.auth_scope import require_scope
+
+product_router = APIRouter(
+    prefix="/api/research/products",
+    tags=["科研线"],
+    dependencies=[Depends(require_scope("research"))],
+)
+
+
+@product_router.get("/search", tags=["Research Product"])
+def search_products(
+    q: str = Query("", description="Search keyword"),
+    category: str = Query("", description="Filter by category"),
+    current_user: dict = Depends(get_current_user),
+):
+    service = ResearchProductService()
+    results = service.search(q=q, category=category)
+    return success(data=results)
+
+
+@product_router.get("/{product_id}", tags=["Research Product"])
+def get_product(
+    product_id: int,
+    current_user: dict = Depends(get_current_user),
+):
+    service = ResearchProductService()
+    product = service.get_by_id(product_id)
+    return success(data=product)
+
+
+router = APIRouter()
+
+router.include_router(matching_router)
+
+router.include_router(pi_router)
+
+router.include_router(product_router)
+
+__all__ = ["router", 'matching_router', 'pi_router', 'product_router']

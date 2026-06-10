@@ -1,4 +1,37 @@
-__test__ = False
+"""Agent package smoke tests."""
 
-from cloud.app.tests.test_agent_pipelines import *  # noqa: F401, F403
-from cloud.app.tests.test_cloud_agent_roles_execution import *  # noqa: F401, F403
+import sys
+import types
+
+
+def _install_langgraph_stub():
+    if "langgraph.graph" in sys.modules:
+        return
+    langgraph_module = types.ModuleType("langgraph")
+    graph_module = types.ModuleType("langgraph.graph")
+
+    class StateGraph:
+        def __init__(self, *args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
+
+    graph_module.END = "__END__"
+    graph_module.StateGraph = StateGraph
+    sys.modules.setdefault("langgraph", langgraph_module)
+    sys.modules.setdefault("langgraph.graph", graph_module)
+
+
+def test_agent_pipeline_service_imports():
+    _install_langgraph_stub()
+    from cloud.app.services.agent_pipeline_service import AgentPipelineService
+
+    assert AgentPipelineService is not None
+
+
+def test_agent_pipeline_service_imports_and_instantiates():
+    _install_langgraph_stub()
+    from cloud.app.services.agent_pipeline_service import AgentPipelineService
+
+    service = AgentPipelineService(db=None)
+
+    assert isinstance(service, AgentPipelineService)

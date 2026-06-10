@@ -1,12 +1,15 @@
 """MDT智能体服务，负责多学科团队协作的智能体管理。"""
 
 import json
+import logging
 from datetime import datetime
 
 from fastapi import HTTPException
 from starlette import status
 
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
+
+logger = logging.getLogger(__name__)
 
 
 class MdtAgentService(BaseService):
@@ -130,7 +133,8 @@ class MdtAgentService(BaseService):
                 a2a_task = a2a.get_task(a2a_id)
                 task["a2a_status"] = a2a_task.get("status")
                 task["a2a_output"] = a2a_task.get("output_data")
-            except Exception:
+            except Exception:  # noqa: BLE001  # A2A service call may fail for network/API reasons
+                logger.exception("A2A task status check failed for a2a_id=%s", a2a_id)
                 task["a2a_status"] = "unknown"
         return task
 

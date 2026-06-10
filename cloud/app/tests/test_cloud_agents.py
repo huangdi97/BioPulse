@@ -1,4 +1,15 @@
-__test__ = False
+"""Cloud agent smoke tests."""
 
-from cloud.app.tests.test_cloud_agent_pipelines import *  # noqa: F401, F403
-from cloud.app.tests.test_cloud_agent_roles_execution import *  # noqa: F401, F403
+
+def test_agent_role_service_imports():
+    from cloud.app.services.agent_role_service import AgentRoleService
+
+    assert AgentRoleService is not None
+
+
+def test_agent_role_service_imports_and_instantiates():
+    from cloud.app.services.agent_role_service import AgentRoleService
+
+    service = AgentRoleService(db=None)
+
+    assert isinstance(service, AgentRoleService)

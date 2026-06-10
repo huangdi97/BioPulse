@@ -13,7 +13,9 @@ export default function TeamStats() {
   const [data, setData] = useState<StatsData | null>(null)
 
   useEffect(() => {
-    fetchManagerStats().then(setData)
+    let cancelled = false
+    fetchManagerStats().then((data) => { if (!cancelled) setData(data) })
+    return () => { cancelled = true }
   }, [])
 
   if (!data) return <div className="p-4 text-muted-foreground">加载中...</div>

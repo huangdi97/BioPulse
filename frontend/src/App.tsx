@@ -1,73 +1,86 @@
+import { lazy, Suspense } from 'react'
 import { AuthProvider } from './contexts/AuthContext'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { ToastProvider } from './contexts/ToastContext'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import Login from './pages/Login'
 import KeyboardShell from './components/KeyboardShell'
 import ProtectedRoute from './components/ProtectedRoute'
 import RoleRoute from './components/RoleRoute'
 import RepLayout from './pages/rep/RepLayout'
-import RepDashboard from './pages/rep/Dashboard'
-import HcpList from './pages/rep/HcpList'
-import HcpDetail from './pages/rep/HcpDetail'
-import VisitNew from './pages/rep/VisitNew'
-import VisitDetail from './pages/rep/VisitDetail'
-import TaskList from './pages/rep/TaskList'
 import ManagerLayout from './pages/manager/ManagerLayout'
-import ManagerDashboard from './pages/manager/Dashboard'
-import ManagerVisits from './pages/manager/Visits'
-import ManagerOpportunities from './pages/manager/Opportunities'
-import ComplianceOverview from './pages/manager/ComplianceOverview'
-import ComplianceRecords from './pages/manager/ComplianceRecords'
-import ComplianceDetail from './pages/manager/ComplianceDetail'
-import InspectionDashboard from './pages/manager/InspectionDashboard'
-import InspectionChecklist from './pages/manager/InspectionChecklist'
-import InspectionHistory from './pages/manager/InspectionHistory'
-import Settings from './pages/manager/Settings'
 import ManagementLayout from './layouts/ManagementLayout'
-import PresidentSummary from './pages/admin/president/Summary'
-import PresidentCompliance from './pages/admin/president/ComplianceOverview'
-import PresidentRankings from './pages/admin/president/TeamRankings'
-import PresidentTrend from './pages/admin/president/TrendReport'
-import ManagerStats from './pages/admin/manager/TeamStats'
-import ManagerMembers from './pages/admin/manager/TeamMembers'
-import ManagerCompliance from './pages/admin/manager/TeamCompliance'
-import ManagerPerformance from './pages/admin/manager/TeamPerformance'
-import EmployeeProfile from './pages/admin/employee/MyProfile'
-import EmployeeTasks from './pages/admin/employee/MyTasks'
-import EmployeeCompliance from './pages/admin/employee/MyCompliance'
-import EmployeePerformance from './pages/admin/employee/MyPerformance'
-import EmployeeTrend from './pages/admin/employee/MyTrend'
 import CoachLayout from './pages/coach/CoachLayout'
-import ScenarioList from './pages/coach/ScenarioList'
-import SessionList from './pages/coach/SessionList'
-import SessionDetail from './pages/coach/SessionDetail'
-import AssessmentList from './pages/coach/AssessmentList'
-import ReflectionList from './pages/coach/ReflectionList'
-import StatsDashboard from './pages/coach/StatsDashboard'
 import OpportunityLayout from './pages/opportunity/OpportunityLayout'
-import OpportunityList from './pages/opportunity/OpportunityList'
-import OpportunityDetail from './pages/opportunity/OpportunityDetail'
-import BiddingList from './pages/opportunity/BiddingList'
-import ResearchPanel from './pages/opportunity/ResearchPanel'
-import ContactList from './pages/opportunity/ContactList'
-import TrendsChart from './pages/opportunity/TrendsChart'
-import OppStats from './pages/opportunity/OppStats'
 import AssistantLayout from './pages/assistant/AssistantLayout'
-import AsstHcpList from './pages/assistant/HcpList'
-import AsstHcpDetail from './pages/assistant/HcpDetail'
-import VisitList from './pages/assistant/VisitList'
-import AsstTaskList from './pages/assistant/TaskList'
-import KnowledgeView from './pages/assistant/KnowledgeView'
-import QAPanel from './pages/assistant/QAPanel'
 import SalesAssistantLayout from './pages/sales-assistant/SalesAssistantLayout'
-import PreCallView from './pages/sales-assistant/PreCallView'
-import ContentLibrary from './pages/sales-assistant/ContentLibrary'
-import StrategyView from './pages/sales-assistant/StrategyView'
-import ObjectionList from './pages/sales-assistant/ObjectionList'
-import NoteList from './pages/sales-assistant/NoteList'
-import FunnelView from './pages/sales-assistant/FunnelView'
-import ScheduleView from './pages/sales-assistant/ScheduleView'
+
+const Login = lazy(() => import('./pages/Login'))
+const RepDashboard = lazy(() => import('./pages/rep/Dashboard'))
+const HcpList = lazy(() => import('./pages/rep/HcpList'))
+const HcpDetail = lazy(() => import('./pages/rep/HcpDetail'))
+const VisitNew = lazy(() => import('./pages/rep/VisitNew'))
+const VisitDetail = lazy(() => import('./pages/rep/VisitDetail'))
+const TaskList = lazy(() => import('./pages/rep/TaskList'))
+const ManagerDashboard = lazy(() => import('./pages/manager/Dashboard'))
+const ManagerVisits = lazy(() => import('./pages/manager/Visits'))
+const ManagerOpportunities = lazy(() => import('./pages/manager/Opportunities'))
+const ComplianceOverview = lazy(() => import('./pages/manager/ComplianceOverview'))
+const ComplianceRecords = lazy(() => import('./pages/manager/ComplianceRecords'))
+const ComplianceDetail = lazy(() => import('./pages/manager/ComplianceDetail'))
+const InspectionDashboard = lazy(() => import('./pages/manager/InspectionDashboard'))
+const InspectionChecklist = lazy(() => import('./pages/manager/InspectionChecklist'))
+const InspectionHistory = lazy(() => import('./pages/manager/InspectionHistory'))
+const InspectionAssign = lazy(() => import('./pages/manager/InspectionAssign'))
+const InspectionReview = lazy(() => import('./pages/manager/InspectionReview'))
+const ApprovalPanel = lazy(() => import('./pages/manager/ApprovalPanel'))
+const AdmissionTracker = lazy(() => import('./pages/manager/AdmissionTracker'))
+const Settings = lazy(() => import('./pages/manager/Settings'))
+const PresidentSummary = lazy(() => import('./pages/admin/president/Summary'))
+const PresidentCompliance = lazy(() => import('./pages/admin/president/ComplianceOverview'))
+const PresidentRankings = lazy(() => import('./pages/admin/president/TeamRankings'))
+const PresidentTrend = lazy(() => import('./pages/admin/president/TrendReport'))
+const ExpenseWasteDashboard = lazy(() => import('./pages/admin/president/ExpenseWasteDashboard'))
+const VisitFraudDashboard = lazy(() => import('./pages/admin/president/VisitFraudDashboard'))
+const ManagementNeglectDashboard = lazy(() => import('./pages/admin/president/ManagementNeglectDashboard'))
+const RectificationDashboard = lazy(() => import('./pages/admin/president/RectificationDashboard'))
+const ExclusionGateConfig = lazy(() => import('./pages/admin/president/ExclusionGateConfig'))
+const ManagerStats = lazy(() => import('./pages/admin/manager/TeamStats'))
+const ManagerMembers = lazy(() => import('./pages/admin/manager/TeamMembers'))
+const ManagerCompliance = lazy(() => import('./pages/admin/manager/TeamCompliance'))
+const ManagerPerformance = lazy(() => import('./pages/admin/manager/TeamPerformance'))
+const EmployeeProfile = lazy(() => import('./pages/admin/employee/MyProfile'))
+const EmployeeTasks = lazy(() => import('./pages/admin/employee/MyTasks'))
+const EmployeeCompliance = lazy(() => import('./pages/admin/employee/MyCompliance'))
+const EmployeePerformance = lazy(() => import('./pages/admin/employee/MyPerformance'))
+const EmployeeTrend = lazy(() => import('./pages/admin/employee/MyTrend'))
+const AgentTraceDashboard = lazy(() => import('./pages/admin/AgentTraceDashboard'))
+const ScenarioList = lazy(() => import('./pages/coach/ScenarioList'))
+const SessionList = lazy(() => import('./pages/coach/SessionList'))
+const SessionDetail = lazy(() => import('./pages/coach/SessionDetail'))
+const AssessmentList = lazy(() => import('./pages/coach/AssessmentList'))
+const ReflectionList = lazy(() => import('./pages/coach/ReflectionList'))
+const StatsDashboard = lazy(() => import('./pages/coach/StatsDashboard'))
+const OpportunityList = lazy(() => import('./pages/opportunity/OpportunityList'))
+const OpportunityDetail = lazy(() => import('./pages/opportunity/OpportunityDetail'))
+const BiddingList = lazy(() => import('./pages/opportunity/BiddingList'))
+const ResearchPanel = lazy(() => import('./pages/opportunity/ResearchPanel'))
+const ContactList = lazy(() => import('./pages/opportunity/ContactList'))
+const TrendsChart = lazy(() => import('./pages/opportunity/TrendsChart'))
+const OppStats = lazy(() => import('./pages/opportunity/OppStats'))
+const AsstHcpList = lazy(() => import('./pages/assistant/HcpList'))
+const AsstHcpDetail = lazy(() => import('./pages/assistant/HcpDetail'))
+const VisitList = lazy(() => import('./pages/assistant/VisitList'))
+const NotFound = lazy(() => import('./pages/NotFound'))
+const AsstTaskList = lazy(() => import('./pages/assistant/TaskList'))
+const KnowledgeView = lazy(() => import('./pages/assistant/KnowledgeView'))
+const QAPanel = lazy(() => import('./pages/assistant/QAPanel'))
+const PreCallView = lazy(() => import('./pages/sales-assistant/PreCallView'))
+const ContentLibrary = lazy(() => import('./pages/sales-assistant/ContentLibrary'))
+const StrategyView = lazy(() => import('./pages/sales-assistant/StrategyView'))
+const ObjectionList = lazy(() => import('./pages/sales-assistant/ObjectionList'))
+const NoteList = lazy(() => import('./pages/sales-assistant/NoteList'))
+const FunnelView = lazy(() => import('./pages/sales-assistant/FunnelView'))
+const ScheduleView = lazy(() => import('./pages/sales-assistant/ScheduleView'))
 
 export default function App() {
   return (
@@ -75,7 +88,8 @@ export default function App() {
       <ToastProvider>
         <AuthProvider>
           <BrowserRouter>
-            <Routes>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen">加载中...</div>}>
+          <Routes>
           <Route path="/login" element={<Login />} />
           <Route element={<KeyboardShell />}>
             <Route element={<ProtectedRoute />}>
@@ -88,7 +102,7 @@ export default function App() {
                 <Route path="tasks" element={<TaskList />} />
                 <Route path="visits/new" element={<VisitNew />} />
                 <Route path="visits/:id" element={<VisitDetail />} />
-                <Route path="visits" element={<Navigate to="/rep/visits/new?hcpId=1" replace />} />
+                <Route path="visits" element={<VisitList />} />
               </Route>
             </Route>
             <Route element={<RoleRoute allowedRoles={['manager', 'admin']} />}>
@@ -103,6 +117,10 @@ export default function App() {
                 <Route path="inspection" element={<InspectionDashboard />} />
                 <Route path="inspection/checklist" element={<InspectionChecklist />} />
                 <Route path="inspection/history" element={<InspectionHistory />} />
+                <Route path="inspection/assign" element={<InspectionAssign />} />
+                <Route path="inspection/review" element={<InspectionReview />} />
+                <Route path="approval" element={<ApprovalPanel />} />
+                <Route path="admission" element={<AdmissionTracker />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
             </Route>
@@ -113,6 +131,12 @@ export default function App() {
                 <Route path="president/compliance" element={<PresidentCompliance />} />
                 <Route path="president/rankings" element={<PresidentRankings />} />
                 <Route path="president/trend" element={<PresidentTrend />} />
+                <Route path="president/expense-waste" element={<ExpenseWasteDashboard />} />
+                <Route path="president/visit-fraud" element={<VisitFraudDashboard />} />
+                <Route path="president/management-neglect" element={<ManagementNeglectDashboard />} />
+                <Route path="president/rectification" element={<RectificationDashboard />} />
+                <Route path="president/exclusion-gates" element={<ExclusionGateConfig />} />
+                <Route path="traces" element={<AgentTraceDashboard />} />
               </Route>
               <Route element={<RoleRoute allowedRoles={['manager']} />}>
                 <Route path="manager/stats" element={<ManagerStats />} />
@@ -169,9 +193,11 @@ export default function App() {
             </Route>
             <Route path="/dashboard" element={<Navigate to="/rep/dashboard" replace />} />
             <Route path="/" element={<Navigate to="/rep/dashboard" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
           </Route>
         </Routes>
+        </Suspense>
       </BrowserRouter>
     </AuthProvider>
       </ToastProvider>

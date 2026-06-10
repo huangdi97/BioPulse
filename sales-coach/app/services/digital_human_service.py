@@ -3,10 +3,10 @@
 from fastapi import Depends
 
 from sales_coach.app.database import get_db
-from sales_coach.app.services.base import BaseService
 from sales_coach.app.services.dh_dialog import DHDialogMixin
 from sales_coach.app.services.dh_profile import DHProfileMixin
 from sales_coach.app.services.digital_human_provider import get_provider
+from shared.base_service import BaseService
 from shared.config import settings
 
 

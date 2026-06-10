@@ -8,8 +8,8 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.repositories import ContentsRepository
-from cloud.app.services.base import BaseService
 from shared.base import validate_columns
+from shared.base_service import BaseService
 from shared.columns import TABLE_CONTENTS_COLS
 from shared.compliance import check_content
 from shared.notification_client import send_notification

@@ -49,19 +49,28 @@ class MemoryUnfoldingStage:
     def _read_sources(self, folded: dict) -> list[dict]:
         context = json.loads(folded.get("context", "{}"))
         source_ids = context.get("source_ids", [])
+        if not source_ids:
+            return []
 
-        result = []
-        for sid in source_ids:
-            for table, mtype in [
-                ("episodic_memory", "episodic"),
-                ("sensory_memory", "sensory"),
-                ("procedural_memory", "procedural"),
-            ]:
-                r = self.db.execute(f"SELECT * FROM {table} WHERE id=?", (sid,)).fetchone()
-                if r:
-                    r = dict(r)
-                    r["_memory_type"] = mtype
-                    result.append(r)
-                    break
+        placeholders = ",".join("?" * len(source_ids))
+        episodic_rows = self.db.execute(f"SELECT * FROM episodic_memory WHERE id IN ({placeholders})", source_ids).fetchall()
+        sensory_rows = self.db.execute(f"SELECT * FROM sensory_memory WHERE id IN ({placeholders})", source_ids).fetchall()
+        procedural_rows = self.db.execute(f"SELECT * FROM procedural_memory WHERE id IN ({placeholders})", source_ids).fetchall()
 
-        return result
+        result_map = {}
+        for r in episodic_rows:
+            d = dict(r)
+            d["_memory_type"] = "episodic"
+            result_map[d["id"]] = d
+        for r in sensory_rows:
+            d = dict(r)
+            if d["id"] not in result_map:
+                d["_memory_type"] = "sensory"
+                result_map[d["id"]] = d
+        for r in procedural_rows:
+            d = dict(r)
+            if d["id"] not in result_map:
+                d["_memory_type"] = "procedural"
+                result_map[d["id"]] = d
+
+        return [result_map[sid] for sid in source_ids if sid in result_map]

@@ -2,17 +2,20 @@
 
 import time
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
+from shared.auth import get_current_user
+from shared.exception_handlers import register_exception_handlers
 from shared.middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 
-from .bidding_router import router as bidding_router
 from .database import init_cache_db
 from .formulary_router import router as formulary_router
+from .market_access_bidding_router import router as bidding_router
+from .market_access_strategy_router import router as strategy_router
 from .routers.price_alert_router import router as price_alert_router
 from .routers.price_monitor_router import router as price_monitor_router
-from .strategy_router import router as strategy_router
 
 START_TIME = time.time()
 
@@ -28,7 +31,16 @@ app = FastAPI(
         {"name": "集采", "description": "集采策略分析、医保目录查询"},
     ],
 )
+_cors_origins = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_credentials=_cors_origins != ["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.add_middleware(RequestIDMiddleware)
+register_exception_handlers(app)
 
 
 @app.on_event("startup")
@@ -45,8 +57,8 @@ def health():
     }
 
 
-app.include_router(formulary_router)
-app.include_router(bidding_router)
-app.include_router(strategy_router)
-app.include_router(price_monitor_router)
-app.include_router(price_alert_router)
+app.include_router(formulary_router, dependencies=[Depends(get_current_user)])
+app.include_router(bidding_router, dependencies=[Depends(get_current_user)])
+app.include_router(strategy_router, dependencies=[Depends(get_current_user)])
+app.include_router(price_monitor_router, dependencies=[Depends(get_current_user)])
+app.include_router(price_alert_router, dependencies=[Depends(get_current_user)])

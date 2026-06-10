@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:one_cloud_app/services/api_client.dart';
-import 'package:one_cloud_app/services/auth_service.dart';
 class Opportunity {
   final String id;
   final String name;
@@ -50,10 +50,7 @@ class _OpportunityListScreenState extends State<OpportunityListScreen>
 
   Future<void> _loadData() async {
     setState(() => _loading = true);
-    final client = MultiBackendApiClient(
-      backends: {'cloud': 'http://43.153.166.191:8000'},
-      authService: AuthService(),
-    );
+    final client = context.read<MultiBackendApiClient>();
     final res = await client.get<List>('/opportunities/');
     if (res.isSuccess && res.data != null) {
       _opportunities = res.data!.map((e) => Opportunity(

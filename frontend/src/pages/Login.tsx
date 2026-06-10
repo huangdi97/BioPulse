@@ -51,10 +51,11 @@ export default function Login() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">
+              <label htmlFor="login-username" className="text-sm font-medium">
                 <span className="text-red-500 mr-1">*</span>用户名
               </label>
               <Input
+                id="login-username"
                 type="text"
                 placeholder="请输入用户名"
                 value={username}
@@ -72,10 +73,11 @@ export default function Login() {
               )}
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">
+              <label htmlFor="login-password" className="text-sm font-medium">
                 <span className="text-red-500 mr-1">*</span>密码
               </label>
               <Input
+                id="login-password"
                 type="password"
                 placeholder="请输入密码"
                 value={password}

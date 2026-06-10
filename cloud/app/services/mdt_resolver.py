@@ -12,8 +12,8 @@ from cloud.app.repositories import (
     MdtParticipantsRepository,
     MdtSessionsRepository,
 )
-from cloud.app.services.base import BaseService
 from shared.base import success
+from shared.base_service import BaseService
 from shared.config import settings as config_settings
 
 
@@ -89,7 +89,7 @@ class MdtResolver(BaseService):
                     "updated_at": self._now(),
                 },
             )
-        except Exception:
+        except Exception:  # noqa: BLE001  # multiple operations (JSON, DB) could fail in consensus generation
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail="Failed to generate consensus")
         return success({"consensus": consensus_text, "consensus_json": self._parse_json(consensus_json, {})})
 

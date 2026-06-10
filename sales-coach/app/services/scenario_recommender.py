@@ -5,7 +5,7 @@ from typing import Optional
 
 from sales_coach.app.scenario_library import FIXED_SCENARIOS
 from sales_coach.app.schemas.scenario import Scenario, ScenarioRecommendation
-from sales_coach.app.services.base import BaseService
+from shared.base_service import BaseService
 
 _LEVEL_TO_DIFFICULTY = {
     "beginner": "easy",

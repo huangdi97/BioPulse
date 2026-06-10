@@ -3,14 +3,11 @@
 import json
 import logging
 import urllib.error
-import urllib.request
 
-from assistant.app.services.base import BaseService
-from shared.app_settings import settings
+from shared.ai_gateway import call_ai_gateway
+from shared.base_service import BaseService
 
-AI_GATEWAY_URL = f"{settings.cloud_api_base}/ai/chat"
 TIMEOUT_SECONDS = 30
-
 logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = (
@@ -57,31 +54,12 @@ class QaService(BaseService):
         return "\n".join(lines)
 
     def _call_ai_gateway(self, auth_header: str, body) -> dict:
-        req_body = {
-            "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": self._build_user_message(body)},
-            ],
-            "temperature": 0.3,
-            "max_tokens": 2048,
-        }
-        req_data = json.dumps(req_body).encode("utf-8")
-
-        req = urllib.request.Request(
-            AI_GATEWAY_URL,
-            data=req_data,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": auth_header,
-            },
-            method="POST",
+        return call_ai_gateway(
+            auth_header=auth_header,
+            system_prompt=SYSTEM_PROMPT,
+            user_message=self._build_user_message(body),
+            temperature=0.3,
         )
-
-        with urllib.request.urlopen(req, timeout=TIMEOUT_SECONDS) as resp:
-            raw = resp.read()
-
-        envelope = json.loads(raw)
-        return envelope.get("data", {})
 
     def _parse_qa_response(self, reply: str, question: str) -> dict:
         try:

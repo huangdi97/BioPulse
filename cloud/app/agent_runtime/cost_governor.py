@@ -1,5 +1,9 @@
 """成本管控模块，按 token 用量估算并限制 LLM 调用成本。"""
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class CostGovernor:
     """LLM 调用成本控制器，累计 token 消耗并在超预算时阻止调用。"""
@@ -88,6 +92,45 @@ class CostGovernor:
         self._total_output_tokens = int(usage.get("total_output_tokens", 0) or 0)
         self._call_count = int(usage.get("call_count", 0) or 0)
         self._step_costs = list(usage.get("step_costs", []) or [])
+
+    def record_call(self, agent_name: str, model: str, input_tokens: int, output_tokens: int, cost: float, trace_id: str = "", db=None):
+        if db is None:
+            return
+        try:
+            db.execute(
+                "INSERT INTO agent_cost_tracking (agent_name, model, model_tier, input_tokens, output_tokens, cost, trace_id) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (agent_name, model, model, input_tokens, output_tokens, round(cost, 9), trace_id),
+            )
+            db.commit()
+        except Exception:
+            logger.exception("Failed to record cost tracking entry")
+
+    def get_daily_costs(self, db, start: str, end: str) -> list[dict]:
+        rows = db.execute(
+            "SELECT DATE(timestamp) as day, SUM(cost) as total_cost, SUM(input_tokens) as total_input, "
+            "SUM(output_tokens) as total_output, COUNT(*) as call_count "
+            "FROM agent_cost_tracking WHERE DATE(timestamp) >= ? AND DATE(timestamp) <= ? "
+            "GROUP BY DATE(timestamp) ORDER BY day",
+            (start, end),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_costs_by_agent(self, db) -> list[dict]:
+        rows = db.execute(
+            "SELECT agent_name, SUM(cost) as total_cost, SUM(input_tokens) as total_input, "
+            "SUM(output_tokens) as total_output, COUNT(*) as call_count "
+            "FROM agent_cost_tracking GROUP BY agent_name ORDER BY total_cost DESC"
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_costs_by_model(self, db) -> list[dict]:
+        rows = db.execute(
+            "SELECT model, SUM(cost) as total_cost, SUM(input_tokens) as total_input, "
+            "SUM(output_tokens) as total_output, COUNT(*) as call_count "
+            "FROM agent_cost_tracking GROUP BY model ORDER BY total_cost DESC"
+        ).fetchall()
+        return [dict(r) for r in rows]
 
     def get_usage(self) -> dict:
         step_cost = self._step_costs[-1]["cost"] if self._step_costs else 0.0

@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+from starlette import status
 
 from cloud.app.services.content_factory_service import ContentFactoryService
 from shared.auth_scope import require_scope
@@ -30,7 +31,7 @@ class RenderRequest(BaseModel):
     variables: dict = {}
 
 
-@router.post("", summary="创建模板", description="创建新的内容模板", tags=["内容工厂"])
+@router.post("", status_code=status.HTTP_201_CREATED, summary="创建模板", description="创建新的内容模板", tags=["内容工厂"])
 def create_template(
     body: CreateTemplateRequest,
     current_user: dict = Depends(require_scope("visit")),

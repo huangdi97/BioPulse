@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from cloud.app.repositories import AuditLogsRepository
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 
 class AuditService(BaseService):
@@ -20,6 +20,7 @@ class AuditService(BaseService):
         source_end: str = "cloud",
         ip_address: str = "",
     ) -> None:
+        """创建一条审计日志记录。"""
         repo = AuditLogsRepository(self.db)
         repo.create(
             {
@@ -42,6 +43,7 @@ class AuditService(BaseService):
         page: int = 1,
         page_size: int = 20,
     ) -> dict:
+        """按条件分页查询审计日志。"""
         repo = AuditLogsRepository(self.db)
         conds, pars = [], []
         if entity_type:
@@ -72,6 +74,7 @@ class AuditService(BaseService):
         }
 
     def get_stats(self) -> dict:
+        """获取审计日志统计，含按操作分组的计数和近 7 日趋势。"""
         repo = AuditLogsRepository(self.db)
         action_stats = repo.execute("SELECT action, COUNT(*) as cnt FROM audit_logs GROUP BY action").fetchall()
         cutoff = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")

@@ -11,8 +11,8 @@ from cloud.app.repositories import (
     NotificationsRepository,
     TaskBoardsRepository,
 )
-from cloud.app.services.base import BaseService
 from shared.base import validate_columns
+from shared.base_service import BaseService
 from shared.columns import TABLE_BOARD_TASKS_COLS
 
 

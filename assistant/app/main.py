@@ -5,11 +5,13 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from assistant.app.assistant_hcp_router import hcp_alias_router
+from assistant.app.assistant_hcp_router import router as hcp_router
+from assistant.app.assistant_task_router import router as task_router
+from assistant.app.assistant_visit_router import router as visit_router
+from assistant.app.assistant_visit_router import visit_alias_router
 from assistant.app.database import init_db
-from assistant.app.hcp_router import hcp_alias_router
-from assistant.app.hcp_router import router as hcp_router
 from assistant.app.health_radar_router import router as health_radar_router
-from assistant.app.health_router import router as health_router
 from assistant.app.knowledge_router import router as knowledge_router
 from assistant.app.knowledge_seed import seed_knowledge
 from assistant.app.location_router import router as location_router
@@ -21,13 +23,11 @@ from assistant.app.routers.inventory_warning_router import router as inventory_w
 from assistant.app.routers.route_optimization_router import router as route_optimization_router
 from assistant.app.surgery_router import router as surgery_router
 from assistant.app.sync_router import router as sync_router
-from assistant.app.task_router import router as task_router
-from assistant.app.visit_router import router as visit_router
-from assistant.app.visit_router import visit_alias_router
 from assistant.app.voice_router import router as voice_router
 from assistant.app.ws_router import router as ws_router
 from shared.app_settings import settings
 from shared.exception_handlers import register_exception_handlers
+from shared.health import router as health_router
 from shared.l1_cache import cache_rules, init_l1_cache, load_l1_rules
 from shared.middleware import RequestIDMiddleware
 from shared.rate_limiter import RateLimiterMiddleware
@@ -58,10 +58,11 @@ app = FastAPI(
 
 setup_logging("assistant")
 
+_cors_origins = settings.cors_origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    allow_credentials=_cors_origins != ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )

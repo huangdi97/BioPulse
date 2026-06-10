@@ -1,3 +1,15 @@
-from cloud.app.tests.test_cloud_agents import *  # noqa: F401, F403
-from cloud.app.tests.test_cloud_api import *  # noqa: F401, F403
-from cloud.app.tests.test_cloud_services import *  # noqa: F401, F403
+"""Cloud package smoke tests."""
+
+
+def test_cloud_schema_imports():
+    from cloud.app.schemas.ddl import SCHEMA_SQL
+
+    assert "CREATE TABLE" in SCHEMA_SQL
+
+
+def test_cloud_compliance_engine_imports_and_instantiates():
+    from cloud.app.compliance import TriangulationEngine
+
+    engine = TriangulationEngine()
+
+    assert isinstance(engine, TriangulationEngine)

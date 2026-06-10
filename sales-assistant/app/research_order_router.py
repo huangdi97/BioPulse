@@ -6,7 +6,9 @@ from datetime import UTC, datetime
 from threading import Lock
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from shared.auth_scope import require_scope
 
 router = APIRouter(prefix="/api/research/order")
 
@@ -39,7 +41,7 @@ def list_orders() -> dict[str, Any]:
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, tags=["科研PI"])
-def create_order(payload: dict[str, Any]) -> dict[str, Any]:
+def create_order(payload: dict[str, Any], _: dict = Depends(require_scope("research"))) -> dict[str, Any]:
     """Create a research order in memory."""
     global _NEXT_ID
 
@@ -68,7 +70,7 @@ def get_order_detail(id: int) -> dict[str, Any]:
 
 
 @router.put("/{id}", tags=["科研PI"])
-def update_order_status(id: int, payload: dict[str, Any]) -> dict[str, Any]:
+def update_order_status(id: int, payload: dict[str, Any], _: dict = Depends(require_scope("research"))) -> dict[str, Any]:
     """Update one research order status by id."""
     if "status" not in payload:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="status is required")

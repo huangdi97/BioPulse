@@ -12,7 +12,7 @@ from cloud.app.repositories import (
     KgRelationsRepository,
     KgSearchCacheRepository,
 )
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 
 def _bfs_expand(

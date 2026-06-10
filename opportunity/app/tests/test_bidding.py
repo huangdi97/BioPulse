@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi import HTTPException
 
-from opportunity.app.bidding_router import BiddingCreate, BiddingUpdate
+from opportunity.app.opportunity_bidding_router import BiddingCreate, BiddingUpdate
 from opportunity.app.services.bidding_service import BiddingService
 
 

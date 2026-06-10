@@ -14,7 +14,7 @@ from cloud.app.repositories import (
     WorkingMemoryRepository,
 )
 from cloud.app.repositories.holographic_repository import MemoryAssociationsRepository
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 
 def _now() -> str:
@@ -143,7 +143,7 @@ class MemoryRetriever(BaseService):
         for r in rows:
             try:
                 c = json.loads(r["content"])
-            except Exception:
+            except json.JSONDecodeError:
                 c = {}
             items.append(
                 {

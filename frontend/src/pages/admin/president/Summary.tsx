@@ -13,7 +13,9 @@ export default function Summary() {
   const [data, setData] = useState<SummaryData | null>(null)
 
   useEffect(() => {
-    fetchPresidentSummary().then(setData)
+    let cancelled = false
+    fetchPresidentSummary().then((data) => { if (!cancelled) setData(data) })
+    return () => { cancelled = true }
   }, [])
 
   if (!data) return <div className="p-4 text-muted-foreground">加载中...</div>

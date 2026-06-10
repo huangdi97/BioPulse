@@ -8,7 +8,7 @@ from pharma_intel.app.services.pipeline_service import (
 )
 from shared.base import success
 
-router = APIRouter(prefix="/api/pipeline")
+router = APIRouter(prefix="/pipeline")
 
 
 @router.get("/by-company", tags=["管线"])

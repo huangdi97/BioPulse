@@ -109,7 +109,7 @@ class CoachGap:
             result = json.loads(self._call_ai(sys_prompt, user_prompt))
             a_score = float(result.get("attribution_score", 0.0))
             analysis = str(result.get("analysis", ""))
-        except Exception:
+        except (json.JSONDecodeError, ValueError, TypeError, KeyError):
             ch = abs(attr_row["change_pct"])
             a_score = 0.8 if ch > 0.3 else (0.5 if ch > 0.1 else (0.3 if ch > 0.05 else 0.1))
             analysis = f"指标{attr_row['metric_name']}变化率{attr_row['change_pct']}，基于变化率自动评估培训贡献度。"

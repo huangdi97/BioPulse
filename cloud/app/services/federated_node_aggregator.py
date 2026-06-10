@@ -4,7 +4,6 @@ from typing import Optional
 
 from cloud.app.repositories import FederatedNodesRepository, FederatedRoundsRepository
 from cloud.app.repositories.audit_repository import AuditLogsRepository, FedAuditContributionsRepository
-from cloud.app.services.base import BaseService
 from cloud.app.services.fed_weight_calculator import (
     audit_log_to_dict,
     contribution_to_dict,
@@ -12,6 +11,7 @@ from cloud.app.services.fed_weight_calculator import (
     since_datetime,
     to_csv,
 )
+from shared.base_service import BaseService
 
 
 class FedAggregator(BaseService):

@@ -6,7 +6,9 @@ export default function TeamRankings() {
   const [rankings, setRankings] = useState<TeamRank[] | null>(null)
 
   useEffect(() => {
-    fetchPresidentRankings().then(setRankings)
+    let cancelled = false
+    fetchPresidentRankings().then((data) => { if (!cancelled) setRankings(data) })
+    return () => { cancelled = true }
   }, [])
 
   if (!rankings) return <div className="p-4 text-muted-foreground">加载中...</div>

@@ -3,7 +3,7 @@
 from typing import Optional
 
 from opportunity.app.repositories import StatsRepository
-from opportunity.app.services.base import BaseService
+from shared.base_service import BaseService
 
 """统计报表服务，按阶段和产品维度汇总商机统计数据。"""
 

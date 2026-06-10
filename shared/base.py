@@ -25,7 +25,25 @@ class PaginatedResponse(BaseModel, Generic[T]):
     total_pages: int
 
 
-def success(data: T = None, message: str = "ok") -> ApiResponse[T]:
+class AppException(Exception):
+    """Application exception with a stable error code."""
+
+    def __init__(self, code: ErrorCode, message: str) -> None:
+        """Initialize an application exception.
+
+        Args:
+            code: Stable application error code.
+            message: Human-readable error message.
+
+        Returns:
+            None.
+        """
+        super().__init__(message)
+        self.code = code
+        self.message = message
+
+
+def success(data: Optional[T] = None, message: str = "ok") -> ApiResponse[T]:
     """Create a success response.
 
     Args:

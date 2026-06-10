@@ -58,6 +58,7 @@ class ProductRepository:
             ),
         )
         self.db.commit()
+        assert cursor.lastrowid is not None
         return cursor.lastrowid
 
     def get_by_id(self, product_id: int) -> Optional[dict]:

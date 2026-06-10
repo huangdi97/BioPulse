@@ -1,53 +1,42 @@
-"""Schema package - aggregates all domain DDL into SCHEMA_SQL."""
+"""Compatibility package for DDL schemas.
 
-from .agent import AGENT_SQL
-from .audit import AUDIT_SQL
-from .auth import AUTH_SQL
-from .collab import COLLAB_SQL
-from .content import CONTENT_SQL
-from .customer import CUSTOMER_SQL
-from .decision import DECISION_SQL
-from .did import DID_SQL
-from .eventbus import EVENTBUS_SQL
-from .exec import EXEC_SQL
-from .hcp import HCP_SQL
-from .kg import KG_SQL
-from .market import MARKET_SQL
-from .mdt import MDT_SQL
-from .memory import MEMORY_SQL
-from .misc import MISC_SQL
-from .privacy import PRIVACY_SQL
-from .route import ROUTE_SQL
-from .soap import SOAP_SQL
-from .task import TASK_SQL
-from .training import TRAINING_SQL
-from .userprofile import USERPROFILE_SQL
-from .workingmem import WORKINGMEM_SQL
-from .worldtree import WORLDTREE_SQL
+New code should import from ``cloud.app.schemas.ddl``. This package keeps
+``cloud.app.schema`` and ``cloud.app.schema.<domain>`` imports working.
+"""
 
-SCHEMA_SQL = (
-    AUTH_SQL
-    + CONTENT_SQL
-    + AUDIT_SQL
-    + TASK_SQL
-    + CUSTOMER_SQL
-    + MARKET_SQL
-    + AGENT_SQL
-    + DECISION_SQL
-    + MDT_SQL
-    + MEMORY_SQL
-    + WORLDTREE_SQL
-    + ROUTE_SQL
-    + HCP_SQL
-    + TRAINING_SQL
-    + SOAP_SQL
-    + WORKINGMEM_SQL
-    + DID_SQL
-    + KG_SQL
-    + USERPROFILE_SQL
-    + COLLAB_SQL
-    + EVENTBUS_SQL
-    + EXEC_SQL
-    + PRIVACY_SQL
-    + MISC_SQL
-)
+import importlib
+import sys
+
+from cloud.app.schemas.ddl import *  # noqa: F401,F403
+
+_DDL_MODULES = [
+    "agent",
+    "audit",
+    "auth",
+    "collab",
+    "content",
+    "customer",
+    "decision",
+    "did",
+    "eventbus",
+    "exec",
+    "hcp",
+    "kg",
+    "market",
+    "mdt",
+    "memory",
+    "misc",
+    "privacy",
+    "route",
+    "soap",
+    "task",
+    "training",
+    "userprofile",
+    "workingmem",
+    "worldtree",
+]
+
+for _module_name in _DDL_MODULES:
+    sys.modules[f"{__name__}.{_module_name}"] = importlib.import_module(f"cloud.app.schemas.ddl.{_module_name}")
+
+del importlib, sys, _module_name

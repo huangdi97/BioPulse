@@ -1,0 +1,56 @@
+rules:
+  - code: RSR-L1-001
+    name: 学术推广边界
+    level: L1
+    action: block
+    severity: critical
+    description: 不得以科研名义变相推销与学术无关的产品，非学术活动不可推广
+    detection:
+      type: keyword_match
+      keywords: ["推广", "适应症", "处方"]
+      fields: ["notes", "content"]
+
+  - code: RSR-L1-002
+    name: 产品资质校验
+    level: L1
+    action: block
+    severity: critical
+    description: 推广产品须有有效注册证或资质证明
+    detection:
+      type: field_check
+      fields: ["product_cert"]
+      condition: missing
+
+  - code: RSR-L1-003
+    name: 反商业贿赂
+    level: L1
+    action: block
+    severity: critical
+    description: 科研支持不得附带采购条件，不得提供回扣或好处费
+    detection:
+      type: keyword_match
+      keywords: ["回扣", "好处费", "提成"]
+      fields: ["expenses", "notes"]
+
+  - code: RSR-L1-004
+    name: 科研数据隐私保护
+    level: L1
+    action: block
+    severity: critical
+    description: PI科研数据及患者隐私数据不得泄露给未经授权的第三方
+    detection:
+      type: keyword_match
+      field: notes
+      keywords: ["患者姓名", "身份证号", "病历", "PI数据", "研究数据外传"]
+
+  - code: RSR-L1-005
+    name: 伦理审核未通过
+    level: L1
+    action: block
+    severity: critical
+    description: 涉及人体的研究须通过伦理委员会审批方可开展
+    detection:
+      type: field_check
+      field: ethics_approved
+      operator: eq
+      value: false

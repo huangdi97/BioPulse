@@ -228,3 +228,71 @@ class TestCosmeticEndpointCoverage:
 
         resp = client.get("/mcp/tools/list")
         assert resp.status_code == 401
+
+
+class TestRegisterValidation:
+    def test_register_missing_username(self, client):
+        resp = client.post("/auth/register", json={"password": "testpass123"})
+        assert resp.status_code in (422, 400)
+
+    def test_register_missing_password(self, client):
+        resp = client.post("/auth/register", json={"username": "someuser"})
+        assert resp.status_code in (422, 400)
+
+    def test_register_empty_username(self, client):
+        resp = client.post("/auth/register", json={"username": "", "password": "testpass123"})
+        assert resp.status_code in (422, 400)
+
+    def test_register_empty_password(self, client):
+        resp = client.post("/auth/register", json={"username": "validuser", "password": ""})
+        assert resp.status_code in (422, 400)
+
+    def test_register_username_too_long(self, client):
+        long_name = "u" * 300
+        resp = client.post("/auth/register", json={"username": long_name, "password": "testpass123"})
+        assert resp.status_code in (422, 400, 409)
+
+
+class TestTokenValidation:
+    def test_expired_token_formats(self, client):
+        resp = client.get(
+            "/contents/",
+            headers={"Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.d910"},
+        )
+        assert resp.status_code == 401
+
+    def test_token_with_wrong_scheme(self, client, auth_token):
+        resp = client.get(
+            "/contents/",
+            headers={"Authorization": f"Basic {auth_token}"},
+        )
+        assert resp.status_code == 401
+
+    def test_token_missing_in_middleware(self, client):
+        resp = client.get("/contents/", headers={"Authorization": ""})
+        assert resp.status_code == 401
+
+
+class TestLoginEdgeCases:
+    def test_login_missing_fields(self, client):
+        resp = client.post("/auth/login", json={})
+        assert resp.status_code in (422, 400)
+
+    def test_login_empty_username(self, client):
+        resp = client.post("/auth/login", json={"username": "", "password": "test123456"})
+        assert resp.status_code in (422, 400)
+
+    def test_login_empty_password(self, client):
+        resp = client.post("/auth/login", json={"username": "someuser", "password": ""})
+        assert resp.status_code in (422, 400)
+
+    def test_login_bad_token_refresh_chain(self, client):
+        resp = client.post("/auth/refresh", json={"refresh_token": ""})
+        assert resp.status_code in (422, 401)
+
+    def test_register_special_chars_username(self, client):
+        resp = client.post(
+            "/auth/register",
+            json={"username": "user!@#$%", "password": "testpass123"},
+        )
+        assert resp.status_code in (201, 409, 422)

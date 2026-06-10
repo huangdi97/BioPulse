@@ -77,6 +77,22 @@ class AgentDecision(BaseModel):
     reasoning: str | None = None
 
 
+class CheckResult(BaseModel):
+    """单项验证检查结果。"""
+
+    name: str
+    passed: bool
+    detail: str = ""
+
+
+class VerificationResult(BaseModel):
+    """L4 验证聚合结果。"""
+
+    passed: bool = False
+    checks: list[CheckResult] = []
+    confidence: float = 0.0
+
+
 class Models:
     """Namespace for agent runtime data models."""
 
@@ -86,3 +102,5 @@ class Models:
     AgentLogEntry = AgentLogEntry
     CheckpointData = CheckpointData
     AgentDecision = AgentDecision
+    CheckResult = CheckResult
+    VerificationResult = VerificationResult

@@ -6,7 +6,7 @@ from typing import Optional
 from uuid import uuid4
 
 from cloud.app.repositories import NmpaComplianceLogsRepository
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 KEYWORDS = ["首个", "最佳", "最好", "第一", "绝对"]
 

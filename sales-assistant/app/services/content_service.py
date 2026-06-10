@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from sales_assistant.app.repositories import ContentRepository
-from sales_assistant.app.services.base import BaseCrudService
+from shared.base_service import BaseCrudService
 
 TYPES = [
     {"value": "product_material", "label": "产品资料"},

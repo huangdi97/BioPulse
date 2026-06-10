@@ -4,9 +4,11 @@ from datetime import datetime, timedelta, timezone
 
 import httpx
 
+from shared.app_settings import settings
+
 from ..database import get_cache, set_cache
 
-CLOUD_API = "http://localhost:8000"
+CLOUD_API = settings.cloud_api_base
 
 
 async def create_followup_plan(patient_id: str, plan: dict) -> dict:

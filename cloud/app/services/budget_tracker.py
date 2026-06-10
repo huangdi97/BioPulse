@@ -97,15 +97,23 @@ class BudgetTracker:
             sqlite3.Error: 当今日用量查询失败时抛出。
         """
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        alerts = []
+        if not configs:
+            return []
+
         conn = _connect()
         try:
+            rows = conn.execute(
+                "SELECT user_id, model, COALESCE(SUM(tokens), 0) AS total "
+                "FROM token_usage WHERE usage_date=? "
+                "GROUP BY user_id, model",
+                (today,),
+            ).fetchall()
+            usage_map = {(r["user_id"], r["model"]): r["total"] for r in rows}
+
+            alerts = []
             for cfg in configs:
-                row = conn.execute(
-                    "SELECT COALESCE(SUM(tokens), 0) AS total FROM token_usage WHERE user_id=? AND model=? AND usage_date=?",
-                    (cfg["user_id"], cfg["model"], today),
-                ).fetchone()
-                daily_used = row["total"] if row else 0
+                key = (cfg["user_id"], cfg["model"])
+                daily_used = usage_map.get(key, 0)
                 limit_today = cfg["max_tokens_per_day"]
                 ratio = daily_used / limit_today if limit_today > 0 else 0
                 if ratio >= cfg["alert_threshold"]:

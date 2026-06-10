@@ -13,9 +13,9 @@ from cloud.app.repositories import (
     PipelineRunsRepository,
     PipelineStepRunsRepository,
 )
-from cloud.app.services.base import BaseService
 from cloud.app.services.decision_report import DecisionReportMixin
 from shared.base import validate_columns
+from shared.base_service import BaseService
 from shared.columns import TABLE_CROSS_CASE_INSIGHTS_COLS, TABLE_DECISION_CASES_COLS
 
 

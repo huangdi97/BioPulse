@@ -240,5 +240,173 @@
     },
     "threshold": null,
     "description": "线上学术会议未保存参会记录或回放"
+  },
+  {
+    "id": "PHR-L2-021",
+    "name": "会议签到缺失预警",
+    "severity": "warning",
+    "check_type": "flag_check",
+    "condition": {
+      "field": "meeting_sign_in_collected",
+      "expected": true
+    },
+    "threshold": null,
+    "description": "学术会议未收集完整的签到记录"
+  },
+  {
+    "id": "PHR-L2-022",
+    "name": "会议预算超支预警",
+    "severity": "review",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "meeting_budget_overspend_ratio",
+      "operator": "gt"
+    },
+    "threshold": 0.1,
+    "description": "会议实际费用超出预算10%以上时标记"
+  },
+  {
+    "id": "PHR-L2-023",
+    "name": "会议频率异常预警",
+    "severity": "warning",
+    "check_type": "frequency_count",
+    "condition": {
+      "field": "rep_id",
+      "window_days": 30
+    },
+    "threshold": 10,
+    "description": "同一代表月度主办会议超过10次时触发预警"
+  },
+  {
+    "id": "PHR-L2-024",
+    "name": "会议地点异常预警",
+    "severity": "review",
+    "check_type": "flag_check",
+    "condition": {
+      "field": "meeting_venue_approved",
+      "expected": true
+    },
+    "threshold": null,
+    "description": "学术会议地点未经备案或在高风险场所举办"
+  },
+  {
+    "id": "PHR-L2-025",
+    "name": "推广材料版本管理异常",
+    "severity": "warning",
+    "check_type": "flag_check",
+    "condition": {
+      "field": "material_version_tracked",
+      "expected": true
+    },
+    "threshold": null,
+    "description": "推广材料未登记版本号或版本管理不规范"
+  },
+  {
+    "id": "PHR-L2-026",
+    "name": "推广材料分发超标预警",
+    "severity": "warning",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "material_distribution_count",
+      "operator": "gt"
+    },
+    "threshold": 200,
+    "description": "单次活动推广材料分发数量超过200份时标记"
+  },
+  {
+    "id": "PHR-L2-027",
+    "name": "报销对应拜访缺失",
+    "severity": "review",
+    "check_type": "flag_check",
+    "condition": {
+      "field": "expense_has_visit_record",
+      "expected": true
+    },
+    "threshold": null,
+    "description": "费用报销未关联对应的拜访记录"
+  },
+  {
+    "id": "PHR-L2-028",
+    "name": "大额费用预审批缺失",
+    "severity": "review",
+    "check_type": "flag_check",
+    "condition": {
+      "field": "large_expense_pre_approved",
+      "expected": true
+    },
+    "threshold": null,
+    "description": "大额费用（超过5000元）未事先获得预审批"
+  },
+  {
+    "id": "PHR-L2-029",
+    "name": "费用分类异常预警",
+    "severity": "review",
+    "check_type": "flag_check",
+    "condition": {
+      "field": "expense_category_valid",
+      "expected": true
+    },
+    "threshold": null,
+    "description": "费用报销项目分类与实际活动不符"
+  },
+  {
+    "id": "PHR-L2-030",
+    "name": "重复报销检测",
+    "severity": "review",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "duplicate_expense_score",
+      "operator": "gt"
+    },
+    "threshold": 0.8,
+    "description": "发票或费用项目与历史报销相似度超过80%时标记"
+  },
+  {
+    "id": "PHR-L2-031",
+    "name": "讲者利益冲突未披露",
+    "severity": "warning",
+    "check_type": "flag_check",
+    "condition": {
+      "field": "speaker_coi_disclosed",
+      "expected": true
+    },
+    "threshold": null,
+    "description": "学术会议讲者未披露与公司的利益关系"
+  },
+  {
+    "id": "PHR-L2-032",
+    "name": "HCP接待标准超标预警",
+    "severity": "review",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "hcp_entertainment_cost",
+      "operator": "gt"
+    },
+    "threshold": 500,
+    "description": "单次HCP接待费用超过500元时标记"
+  },
+  {
+    "id": "PHR-L2-033",
+    "name": "月度合规培训完成率预警",
+    "severity": "warning",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "monthly_training_completion_rate",
+      "operator": "lt"
+    },
+    "threshold": 0.9,
+    "description": "团队月度合规培训完成率低于90%时触发预警"
+  },
+  {
+    "id": "PHR-L2-034",
+    "name": "高风险行为模式预警",
+    "severity": "review",
+    "check_type": "value_threshold",
+    "condition": {
+      "field": "behavioral_risk_score",
+      "operator": "gt"
+    },
+    "threshold": 70,
+    "description": "代表综合行为风险评分超过70分时标记"
   }
 ]

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:one_cloud_app/services/api_client.dart';
-import 'package:one_cloud_app/services/auth_service.dart';
 
 
 
@@ -23,10 +23,7 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
 
   Future<void> _loadData() async {
     setState(() => _loading = true);
-    final client = MultiBackendApiClient(
-      backends: {'cloud': 'http://43.153.166.191:8000'},
-      authService: AuthService(),
-    );
+    final client = context.read<MultiBackendApiClient>();
     final id = ModalRoute.of(context)!.settings.arguments as String;
     final res = await client.get<Map>('/opportunities/$id');
     if (res.isSuccess && res.data != null) {

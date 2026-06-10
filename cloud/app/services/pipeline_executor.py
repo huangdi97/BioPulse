@@ -2,6 +2,7 @@
 
 import json
 from datetime import datetime
+from typing import Any
 
 from fastapi import HTTPException, Request
 from starlette import status
@@ -13,6 +14,9 @@ from shared.base import success
 
 class PipelineExecutorMixin:
     """流水线运行创建、LangGraph 执行和步骤结果落库方法。"""
+
+    db: Any
+    _p404: Any
 
     def run_pipeline(self, pipeline_id: int, body, request: Request, uid: int) -> dict:
         """执行流水线，通过 LangGraph 编排多步骤 Agent。

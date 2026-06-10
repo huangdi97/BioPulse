@@ -1,0 +1,2 @@
+[pytest]
+conftest_files = conftest_sales_assistant.py

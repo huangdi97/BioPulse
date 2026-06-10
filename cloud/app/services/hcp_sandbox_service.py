@@ -11,10 +11,10 @@ from cloud.app.repositories import (
     HcpProfilesRepository,
     HcpSimulationsRepository,
 )
-from cloud.app.services.base import BaseService
 from cloud.app.services.hcp_sandbox_sim import HcpSandboxSimMixin
 from cloud.app.services.sandbox_simulation import SandboxSimulationMixin
 from shared.base import PaginatedResponse, validate_columns
+from shared.base_service import BaseService
 from shared.columns import TABLE_HCP_PROFILES_COLS
 
 
@@ -36,26 +36,8 @@ class HcpSandboxService(SandboxSimulationMixin, HcpSandboxSimMixin, BaseService)
         digital_engagement: float,
         user_id: int,
     ) -> dict:
-        """Create a new HCP (Healthcare Professional) profile.
-
-        Args:
-            name: The HCP's name.
-            title: The HCP's professional title.
-            hospital: The HCP's affiliated hospital.
-            department: The HCP's department.
-            specialty: The HCP's medical specialty.
-            city: The HCP's city.
-            tier: The HCP tier classification.
-            traits: A dict of behavioral traits.
-            prescription_volume: The HCP's prescription volume metric.
-            influence_score: The HCP's influence score.
-            digital_engagement: The HCP's digital engagement score.
-            user_id: The ID of the user creating the profile.
-
-        Returns:
-            A dict representing the created HCP profile.
-        """
-        repo = HcpProfilesRepository(self.db)
+        """创建一个新的 HCP 医生画像。"""
+        repo = HcpProfilesRepository(self._connection())
         data = {
             "name": name,
             "title": title,
@@ -81,19 +63,8 @@ class HcpSandboxService(SandboxSimulationMixin, HcpSandboxSimMixin, BaseService)
         page: int = 1,
         page_size: int = 20,
     ) -> PaginatedResponse:
-        """List HCP profiles with optional filtering and pagination.
-
-        Args:
-            tier: Optional filter by HCP tier.
-            specialty: Optional filter by specialty.
-            city: Optional filter by city.
-            page: Page number for pagination.
-            page_size: Number of items per page.
-
-        Returns:
-            A PaginatedResponse containing HCP profile items.
-        """
-        repo = HcpProfilesRepository(self.db)
+        """按条件分页查询 HCP 医生画像列表。"""
+        repo = HcpProfilesRepository(self._connection())
         total, total_pages, items = repo.list_filtered(tier=tier, specialty=specialty, city=city, page=page, page_size=page_size)
         return PaginatedResponse(
             items=items,
@@ -104,20 +75,10 @@ class HcpSandboxService(SandboxSimulationMixin, HcpSandboxSimMixin, BaseService)
         )
 
     def get_profile(self, hcp_id: int) -> dict:
-        """Retrieve a single HCP profile with interaction and simulation counts.
-
-        Args:
-            hcp_id: The HCP's ID.
-
-        Returns:
-            A dict representing the HCP profile with interaction_count, simulation_count, and last_interaction.
-
-        Raises:
-            HTTPException: 404 if the HCP profile is not found.
-        """
-        profiles_repo = HcpProfilesRepository(self.db)
-        interactions_repo = HcpInteractionsRepository(self.db)
-        simulations_repo = HcpSimulationsRepository(self.db)
+        """获取单个 HCP 医生画像详情，含交互和仿真统计。"""
+        profiles_repo = HcpProfilesRepository(self._connection())
+        interactions_repo = HcpInteractionsRepository(self._connection())
+        simulations_repo = HcpSimulationsRepository(self._connection())
         row = profiles_repo.get_by_id(hcp_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="HCP profile not found")
@@ -142,30 +103,8 @@ class HcpSandboxService(SandboxSimulationMixin, HcpSandboxSimMixin, BaseService)
         digital_engagement: Optional[float] = None,
         is_active: Optional[int] = None,
     ) -> dict:
-        """Update fields of an existing HCP profile.
-
-        Args:
-            hcp_id: The HCP's ID.
-            name: Optional new name.
-            title: Optional new title.
-            hospital: Optional new hospital.
-            department: Optional new department.
-            specialty: Optional new specialty.
-            city: Optional new city.
-            tier: Optional new tier.
-            traits: Optional new traits dict.
-            prescription_volume: Optional new prescription volume.
-            influence_score: Optional new influence score.
-            digital_engagement: Optional new digital engagement score.
-            is_active: Optional active flag (1 for active, 0 for inactive).
-
-        Returns:
-            A dict representing the updated HCP profile.
-
-        Raises:
-            HTTPException: 404 if the HCP profile is not found.
-        """
-        repo = HcpProfilesRepository(self.db)
+        """更新 HCP 医生画像的指定字段。"""
+        repo = HcpProfilesRepository(self._connection())
         row = repo.get_by_id(hcp_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="HCP profile not found")

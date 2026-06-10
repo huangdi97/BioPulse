@@ -1,19 +1,30 @@
 import axios from 'axios'
 
 export const END_PORTS: Record<string, number> = {
-  cloud: 8000,
-  coach: 8001,
-  opportunity: 8002,
-  assistant: 8003,
-  sales_assistant: 8004,
+  cloud: Number(import.meta.env.VITE_CLOUD_PORT) || 8000,
+  coach: Number(import.meta.env.VITE_COACH_PORT) || 8001,
+  opportunity: Number(import.meta.env.VITE_OPPORTUNITY_PORT) || 8002,
+  assistant: Number(import.meta.env.VITE_ASSISTANT_PORT) || 8003,
+  sales_assistant: Number(import.meta.env.VITE_SALES_ASSISTANT_PORT) || 8004,
 }
 
 export function getApiUrl(end: string, path: string): string {
-  const port = END_PORTS[end] ?? 8000
   if (import.meta.env.DEV) {
     return `/api/${end === 'coach' ? 'sales-coach' : end === 'sales_assistant' ? 'sales-assistant' : end}${path}`
   }
-  return `http://localhost:${port}${path}`
+  const base = import.meta.env.VITE_API_GATEWAY || 'http://localhost:8000'
+  return `${base}${path}`
+}
+
+export async function withFallback<T>(fn: () => Promise<T>, fallback: () => T): Promise<T> {
+  try {
+    return await fn()
+  } catch (err) {
+    if (import.meta.env.DEV) {
+      return fallback()
+    }
+    throw err
+  }
 }
 
 const client = axios.create({

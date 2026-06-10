@@ -20,6 +20,11 @@ const PRESIDENT_MENU = [
   { to: '/admin/president/compliance', label: '合规', icon: ShieldCheck },
   { to: '/admin/president/rankings', label: '排名', icon: Trophy },
   { to: '/admin/president/trend', label: '趋势', icon: TrendingUp },
+  { to: '/admin/president/expense-waste', label: '费用浪费', icon: TrendingUp },
+  { to: '/admin/president/visit-fraud', label: '拜访造假', icon: ShieldCheck },
+  { to: '/admin/president/management-neglect', label: '管理失职', icon: Briefcase },
+  { to: '/admin/president/rectification', label: '整改闭环', icon: ClipboardList },
+  { to: '/admin/president/exclusion-gates', label: '排除闸', icon: ShieldCheck },
 ]
 
 const MANAGER_MENU = [
@@ -125,7 +130,7 @@ export default function ManagementLayout() {
             </Button>
           </div>
         </header>
-        <nav className="flex md:hidden border-b bg-background shrink-0 overflow-x-auto">
+        <nav className="flex md:hidden border-b bg-background dark:bg-gray-900 shrink-0 overflow-x-auto">
           {menu.map((item) => {
             const Icon = item.icon
             return (
@@ -145,7 +150,7 @@ export default function ManagementLayout() {
             )
           })}
         </nav>
-        <header className="hidden md:flex items-center gap-2 px-4 py-2 bg-white border-b shrink-0">
+        <header className="hidden md:flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border-b shrink-0">
           {menu.map((item) => {
             if (!isActive(item.to)) return null
             return (

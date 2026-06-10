@@ -8,7 +8,7 @@ from datetime import datetime
 from fastapi import HTTPException
 from starlette import status
 
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 _RULES_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),

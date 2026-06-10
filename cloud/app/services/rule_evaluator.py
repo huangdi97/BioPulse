@@ -7,15 +7,15 @@ from datetime import datetime
 
 from fastapi import Request
 
+from cloud.app.compliance.engine import ComplianceStrategyService
 from cloud.app.repositories import (
     AuditChainEntriesRepository,
     ComplianceAuditRecordsRepository,
     ComplianceRulesRepository,
 )
-from cloud.app.services.base import BaseService
-from cloud.app.services.compliance_engine import ComplianceStrategyService
 from cloud.app.services.rule_aggregator import RuleAggregatorMixin, _parse_json
 from shared.base import success
+from shared.base_service import BaseService
 from shared.compliance import check_content
 from shared.config import settings as config_settings
 

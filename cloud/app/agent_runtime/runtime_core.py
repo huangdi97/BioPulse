@@ -4,22 +4,30 @@ import time
 import uuid
 from datetime import datetime
 
+from cloud.app.agent_runtime.bulkhead import Bulkhead
+from cloud.app.agent_runtime.circuit_breaker import CircuitBreaker
+from cloud.app.agent_runtime.content_filter import ContentBlocked, ContentFilter
 from cloud.app.agent_runtime.cost_governor import CostGovernor
 from cloud.app.agent_runtime.execution_loop import ExecutionLoopMixin
 from cloud.app.agent_runtime.loop_detector import LoopDetector
 from cloud.app.agent_runtime.memory import Memory
+from cloud.app.agent_runtime.rollback_handler import RollbackHandlerMixin
+from cloud.app.agent_runtime.metrics import agent_active_count, agent_requests_total
 from cloud.app.agent_runtime.models import RuntimeResult
 from cloud.app.agent_runtime.notifier import Notifier
 from cloud.app.agent_runtime.planner import Planner
+from cloud.app.agent_runtime.rate_limiter import RateLimiter
 from cloud.app.agent_runtime.reflector import Reflector
-from cloud.app.agent_runtime.rollback_handler import RollbackHandlerMixin
 from cloud.app.agent_runtime.runtime_core_tools import RuntimeCoreToolsMixin
 from cloud.app.agent_runtime.runtime_helpers import RuntimeHelper
 from cloud.app.agent_runtime.runtime_llm import RuntimeLLM
 from cloud.app.agent_runtime.runtime_state import ApprovalManager, RuntimeState
 from cloud.app.agent_runtime.runtime_tool_exec import RuntimeToolExecMixin
 from cloud.app.agent_runtime.state_snapshot import StateSnapshot
+from cloud.app.agent_runtime.streamer import AgentStreamer
 from cloud.app.agent_runtime.tool_bridge import ToolBridge
+from cloud.app.agent_runtime.tracer import AgentTracer
+from cloud.app.agent_runtime.vector_memory import VectorMemory
 from cloud.app.agent_runtime.verifier import Verifier
 
 
@@ -40,12 +48,86 @@ class RuntimeCore(ExecutionLoopMixin, RollbackHandlerMixin, RuntimeHelper, Runti
         self._reflector_level, self._reflector_light_clean_streak, self._reflector_timeout_seconds = "balanced", 0, 2.0
         self._verifier = Verifier()
         self._trace_data: list[dict] = []
+        self._rate_limiter = RateLimiter()
+        self._circuit_breaker = CircuitBreaker()
+        self._content_filter = ContentFilter()
+        self._tracer = AgentTracer(self._agent_db)
+        self._bulkhead = Bulkhead()
+        self._vector_memory = VectorMemory()
+        self._vector_memory.set_db(self._agent_db)
+        self._streamer: AgentStreamer | None = None
+
+    def set_streamer(self, streamer: AgentStreamer):
+        self._streamer = streamer
 
     def execute(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
+        if not self._bulkhead.acquire(agent_key):
+            return RuntimeResult(
+                status="bulkhead_rejected",
+                result=f"Agent '{agent_key}' is busy, too many concurrent executions. Try again later.",
+                iterations=0,
+                tool_calls=0,
+                logs=[],
+            )
         try:
-            return self._execute_impl(goal, agent_key, context)
+            return self._execute_with_bulkhead(goal, agent_key, context)
+        finally:
+            self._bulkhead.release(agent_key)
+
+    def _execute_with_bulkhead(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
+        trace_id = self._tracer.start_trace(agent_key, self._auth_header or "anonymous", {"goal": goal, "context": context})
+        self._trace_id = trace_id
+        agent_active_count.labels(agent_name=agent_key).inc()
+        if self._streamer:
+            self._streamer.stream(trace_id, "agent.start", {"agent_name": agent_key, "goal": goal, "context": context})
+        try:
+            injection_reason = self._content_filter.check_input(goal)
+            if injection_reason:
+                result = RuntimeResult(
+                    status="blocked",
+                    result=f"Input blocked by safety policy: {injection_reason}",
+                    iterations=0,
+                    tool_calls=0,
+                    logs=[],
+                )
+                self._tracer.end_trace("blocked", result.model_dump())
+                agent_requests_total.labels(agent_name=agent_key, status="blocked").inc()
+                agent_active_count.labels(agent_name=agent_key).dec()
+                return result
+            user_key = f"user_agent:{self._auth_header or 'anonymous'}"
+            self._rate_limiter.check_or_raise(user_key)
+            memories = self._vector_memory.search(agent_key, goal, top_k=3)
+            if memories:
+                context = dict(context or {})
+                context["_vector_memories"] = [
+                    {"key": m["key"], "content": m["content"], "score": m["score"]} for m in memories
+                ]
+            result = self._execute_impl(goal, agent_key, context)
+            if result.status == "success" and result.result:
+                try:
+                    self._content_filter.filter_output(result.result)
+                except ContentBlocked:
+                    result = RuntimeResult(
+                        status="blocked",
+                        result="Output blocked by safety policy",
+                        iterations=result.iterations,
+                        tool_calls=result.tool_calls,
+                        logs=result.logs,
+                        metadata=result.metadata,
+                    )
+                    self._tracer.end_trace("blocked", result.model_dump())
+                    return result
+            self._tracer.end_trace(result.status, result.model_dump())
+            agent_requests_total.labels(agent_name=agent_key, status=result.status).inc()
+            agent_active_count.labels(agent_name=agent_key).dec()
+            if self._streamer:
+                self._streamer.stream(trace_id, "agent.end", {"status": result.status, "result": result.result})
+            return result
         except Exception:
             self._save_snapshot(agent_key, -1, [], [], context or {}, "failed")
+            self._tracer.end_trace("error", {"error": "unhandled exception"})
+            if self._streamer:
+                self._streamer.stream(trace_id, "agent.error", {"error": "unhandled exception"})
             raise
 
     def resume(self, agent_key: str, goal: str, auth_header: str) -> RuntimeResult:

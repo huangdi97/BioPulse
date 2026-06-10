@@ -4,9 +4,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from starlette import status
 
-from cloud.app.services.causal_attribution_service import (
-    CausalAttributionService,
-)
+from cloud.app.services import CausalAttributionService
 from shared.auth_scope import require_scope
 from shared.base import success
 

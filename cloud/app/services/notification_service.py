@@ -11,8 +11,8 @@ from cloud.app.repositories import (
     NotificationsRepository,
     NotificationTemplatesRepository,
 )
-from cloud.app.services.base import BaseService
 from cloud.app.services.notification_builder import NotificationBuilderMixin, _render_template
+from shared.base_service import BaseService
 
 
 def _notification_to_dict(row) -> dict:

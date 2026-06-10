@@ -8,6 +8,7 @@ from datetime import datetime
 from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
 from cloud.app.agent_runtime.guard import sanitize_tool_output
 from cloud.app.agent_runtime.models import RuntimeResult
+from cloud.app.agent_runtime.schema_validator import OutputSchemaValidator
 from cloud.app.agent_runtime.validator import Validator
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,11 @@ class ExecutionLoopMixin:
         return (app["tool"], json.loads(app["params"]) if app["params"] else {}) if app else (None, None)
 
     def _new_context(self, goal, agent_key, context, spec):
+        hot_reloader = getattr(self, '_prompt_hot_reloader', None)
+        if hot_reloader:
+            hot_spec = hot_reloader.get_spec(agent_key)
+            if hot_spec:
+                spec = {**spec, **hot_spec}
         checkpoint = self._load_checkpoint(agent_key, goal)
         if checkpoint:
             messages = checkpoint["messages"]
@@ -67,7 +73,23 @@ class ExecutionLoopMixin:
             if not self._check_budget(c["messages"]):
                 return self._handle_budget_exceeded(c, step, step_start)
             try:
+                streamer = getattr(self, '_streamer', None)
+                trace_id = getattr(self, '_trace_id', None)
+                if streamer and trace_id:
+                    streamer.stream(trace_id, "agent.llm_call", {"step": step, "agent": c["agent_key"]})
                 ai_resp = self._call_ai(c["messages"], spec["default_temperature"], step, force_level=None)
+                if streamer and trace_id:
+                    streamer.stream(trace_id, "agent.llm_result", {"step": step, "reply_preview": ai_resp.get("reply", "")[:200]})
+                validator = OutputSchemaValidator()
+                try:
+                    parsed = json.loads(ai_resp.get("reply", "{}"))
+                    passed, errors = validator.validate(c["agent_key"], parsed)
+                    if not passed:
+                        corrected = validator.coerce(c["agent_key"], parsed)
+                        ai_resp["reply"] = json.dumps(corrected, ensure_ascii=False)
+                        logger.warning("Schema validation for %s failed: %s; coerced output", c["agent_key"], errors)
+                except (json.JSONDecodeError, TypeError):
+                    logger.warning("执行循环异常", exc_info=True)
                 self._accumulate_cost(ai_resp, step)
             except Exception as exc:
                 if self._handle_step_error(c, step, str(exc), duration_ms=int((time.time() - step_start) * 1000)):
@@ -108,9 +130,21 @@ class ExecutionLoopMixin:
         tool_params = self._reflect_before_tool(
             step, c["goal"], c["agent_key"], c["context"], c["messages"], decision, ai_resp, duration_ms, c["logs"]
         )
+        streamer = getattr(self, '_streamer', None)
+        trace_id = getattr(self, '_trace_id', None)
+        if streamer and trace_id:
+            streamer.stream(trace_id, "agent.tool_call", {"step": step, "tool": tool_name, "params": tool_params})
         try:
+            t_start = time.time()
             tool_result = self._tool_registry.call(tool_name, tool_params, self._auth_header, caller_permission=spec.get("max_permission", "read"))
+            t_elapsed = int((time.time() - t_start) * 1000)
             self._verifier.verify(tool_result)
+            if streamer and trace_id:
+                preview = str(tool_result.get("data", ""))[:200]
+                streamer.stream(trace_id, "agent.tool_result", {"step": step, "tool": tool_name, "result_preview": preview})
+            tracer = getattr(self, '_tracer', None)
+            if tracer:
+                tracer.log_tool_call(tool_name, tool_params, str(tool_result.get("data", "")), t_elapsed)
         except Exception as exc:
             if not self._handle_step_error(c, step, str(exc), tool_name, tool_params, duration_ms, ai_resp):
                 raise

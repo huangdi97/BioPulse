@@ -1,7 +1,7 @@
 """导出服务，负责审计日志与客户数据的CSV导出。"""
 
 from cloud.app.repositories import AuditLogsRepository, CustomersRepository
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 from shared.csv_export import export_csv
 
 

@@ -1,4 +1,15 @@
-__test__ = False
+"""MDT smoke tests."""
 
-from cloud.app.tests.test_mdt_collaboration import *  # noqa: F401, F403
-from cloud.app.tests.test_mdt_content import *  # noqa: F401, F403
+
+def test_mdt_engine_service_imports():
+    from cloud.app.services.mdt_engine_service import MdtEngineService
+
+    assert MdtEngineService is not None
+
+
+def test_mdt_engine_service_imports_and_instantiates():
+    from cloud.app.services.mdt_engine_service import MdtEngineService
+
+    service = MdtEngineService(db=None)
+
+    assert isinstance(service, MdtEngineService)

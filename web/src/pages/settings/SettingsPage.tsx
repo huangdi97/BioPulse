@@ -14,6 +14,8 @@ interface ApiEndpoint {
   online: boolean
 }
 
+const API_BASE = import.meta.env.VITE_CLOUD_API || "http://localhost:8000"
+
 const SIDEBAR_ITEMS: { id: TabId; label: string }[] = [
   { id: "profile", label: "个人信息" },
   { id: "api", label: "API 配置" },
@@ -37,11 +39,12 @@ const ABOUT_ROWS = [
 ] as const
 
 const DEFAULT_ENDPOINTS: ApiEndpoint[] = [
-  { name: "Cloud API", url: "http://localhost:8000", online: true },
-  { name: "Assistant API", url: "http://localhost:8003", online: false },
-  { name: "Opportunity API", url: "http://localhost:8002", online: true },
-  { name: "Sales Assistant API", url: "http://localhost:8004", online: false },
-  { name: "Sales Coach API", url: "http://localhost:8001", online: false },
+  { name: "Cloud API", url: `${API_BASE}`, online: true },
+  { name: "Intel API", url: `${import.meta.env.VITE_INTEL_API || "http://localhost:8006"}`, online: false },
+  { name: "Assistant API", url: `${import.meta.env.VITE_ASSISTANT_API || "http://localhost:8003"}`, online: false },
+  { name: "Opportunity API", url: `${import.meta.env.VITE_OPPORTUNITY_API || "http://localhost:8002"}`, online: true },
+  { name: "Sales Assistant API", url: `${import.meta.env.VITE_SALES_ASSISTANT_API || "http://localhost:8004"}`, online: false },
+  { name: "Sales Coach API", url: `${import.meta.env.VITE_SALES_COACH_API || "http://localhost:8001"}`, online: false },
 ]
 
 export default function SettingsPage() {

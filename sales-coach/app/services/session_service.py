@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List
 
 from sales_coach.app.repositories import ModuleRepository, SessionRepository
-from sales_coach.app.services.base import BaseCrudService
+from shared.base_service import BaseCrudService
 
 
 class SessionService(BaseCrudService):

@@ -8,7 +8,7 @@ from pharma_intel.app.services.competitor_service import (
 )
 from shared.base import success
 
-router = APIRouter(prefix="/api/competitor")
+router = APIRouter(prefix="/competitor")
 
 
 @router.get("/intel", tags=["竞争格局"])

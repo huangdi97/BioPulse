@@ -1,6 +1,6 @@
 """脑搜索服务，提供跨记忆类型的统一检索与相关性排序。"""
 
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 
 def _now() -> str:

@@ -2,12 +2,13 @@
 
 import os
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 
 from shared.app_settings import settings
+from shared.auth import get_current_user
 from shared.exception_handlers import register_exception_handlers
 from shared.middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
@@ -28,10 +29,11 @@ app = FastAPI(
 
 app.add_middleware(RequestIDMiddleware)
 register_exception_handlers(app)
+_cors_origins = settings.cors_origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    allow_credentials=_cors_origins != ["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -44,23 +46,23 @@ def startup():
     init_db()
 
 
-from management.app.dashboard_router import router as dashboard_router
 from management.app.employee_router import router as employee_router
-from management.app.health_router import router as health_router
+from management.app.management_dashboard_router import router as dashboard_router
 from management.app.manager_router import router as manager_router
 from management.app.president_router import router as president_router
 from management.app.routers.competitor_dashboard_router import router as competitor_dashboard_router
 from management.app.routers.kpi_comparison_router import router as kpi_comparison_router
 from management.app.routers.trend_analysis_router import router as trend_analysis_router
+from shared.health import router as health_router
 
 app.include_router(health_router)
-app.include_router(dashboard_router)
-app.include_router(employee_router)
-app.include_router(manager_router)
-app.include_router(president_router)
-app.include_router(competitor_dashboard_router)
-app.include_router(kpi_comparison_router)
-app.include_router(trend_analysis_router)
+app.include_router(dashboard_router, dependencies=[Depends(get_current_user)])
+app.include_router(employee_router, dependencies=[Depends(get_current_user)])
+app.include_router(manager_router, dependencies=[Depends(get_current_user)])
+app.include_router(president_router, dependencies=[Depends(get_current_user)])
+app.include_router(competitor_dashboard_router, dependencies=[Depends(get_current_user)])
+app.include_router(kpi_comparison_router, dependencies=[Depends(get_current_user)])
+app.include_router(trend_analysis_router, dependencies=[Depends(get_current_user)])
 
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 if os.path.isdir(STATIC_DIR):
@@ -74,7 +76,9 @@ if os.path.isdir(STATIC_DIR):
     async def catch_all(path_name: str):
         if path_name.startswith("api/") or path_name.startswith("assets/"):
             raise HTTPException(status_code=404)
+        with open(os.path.join(STATIC_DIR, "index.html"), "rb") as f:
+            content = f.read()
         return Response(
-            content=open(os.path.join(STATIC_DIR, "index.html"), "rb").read(),
+            content=content,
             media_type="text/html",
         )

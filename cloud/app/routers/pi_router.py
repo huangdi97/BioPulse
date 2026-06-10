@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from cloud.app.services.pi_service import PiService
-from shared.auth import get_current_user
+from shared.auth_scope import require_scope
+from shared.base import success
 
 router = APIRouter(prefix="/api/pi", tags=["pi"])
 
@@ -42,27 +43,27 @@ class PiUpdate(BaseModel):
 @router.get("/search", summary="搜索PI", description="根据关键词搜索研究者信息", tags=["pi"])
 def search_pi(
     q: str = Query("", description="Search keyword"),
-    current_user: dict = Depends(get_current_user),
+    _: dict = Depends(require_scope("research")),
     service: PiService = Depends(),
 ):
     results = service.search(q)
-    return {"code": 0, "data": results, "message": "success"}
+    return success(data=results)
 
 
 @router.get("/{pi_id}", summary="PI详情", description="获取指定研究者的详细信息", tags=["pi"])
 def get_pi(
     pi_id: int,
-    current_user: dict = Depends(get_current_user),
+    _: dict = Depends(require_scope("research")),
     service: PiService = Depends(),
 ):
     pi = service.get_by_id(pi_id)
-    return {"code": 0, "data": pi, "message": "success"}
+    return success(data=pi)
 
 
 @router.post("", status_code=201, summary="创建PI", description="创建新的研究者信息", tags=["pi"])
 def create_pi(
     body: PiCreate,
-    current_user: dict = Depends(get_current_user),
+    _: dict = Depends(require_scope("research")),
     service: PiService = Depends(),
 ):
     pi = service.create(
@@ -76,16 +77,16 @@ def create_pi(
         total_grants=body.total_grants,
         h_index=body.h_index,
     )
-    return {"code": 0, "data": pi, "message": "success"}
+    return success(data=pi)
 
 
 @router.put("/{pi_id}", summary="更新PI", description="更新指定研究者的信息", tags=["pi"])
 def update_pi(
     pi_id: int,
     body: PiUpdate,
-    current_user: dict = Depends(get_current_user),
+    _: dict = Depends(require_scope("research")),
     service: PiService = Depends(),
 ):
     kwargs = {k: v for k, v in body.model_dump().items() if v is not None}
     pi = service.update(pi_id, **kwargs)
-    return {"code": 0, "data": pi, "message": "success"}
+    return success(data=pi)

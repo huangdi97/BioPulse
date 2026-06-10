@@ -3,10 +3,10 @@
 from fastapi import Depends
 
 from cloud.app.database import get_db
-from cloud.app.services.base import BaseService
 from cloud.app.services.brain_evolution_stage import MemoryEvolutionStage
 from cloud.app.services.brain_folding_stage import MemoryFoldingStage
 from cloud.app.services.brain_unfolding_stage import MemoryUnfoldingStage
+from shared.base_service import BaseService
 
 
 class BrainEvolutionService(BaseService):

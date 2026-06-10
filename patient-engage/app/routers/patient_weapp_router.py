@@ -1,7 +1,8 @@
 """患者微信小程序路由。"""
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
+from shared.auth_scope import require_scope
 from shared.base import success
 
 from ..schemas.patient_compliance import CheckInRequest, ReminderCreateRequest
@@ -11,7 +12,7 @@ router = APIRouter(prefix="/api/patient")
 
 
 @router.post("/reminder", tags=["患者小程序"])
-async def create_patient_reminder(body: ReminderCreateRequest):
+async def create_patient_reminder(body: ReminderCreateRequest, _: dict = Depends(require_scope("visit"))):
     """创建患者用药提醒。"""
     result = await set_reminder(
         body.patient_id,
@@ -23,7 +24,7 @@ async def create_patient_reminder(body: ReminderCreateRequest):
 
 
 @router.post("/checkin", tags=["患者小程序"])
-async def patient_checkin(body: CheckInRequest):
+async def patient_checkin(body: CheckInRequest, _: dict = Depends(require_scope("visit"))):
     """患者用药打卡。"""
     result = await checkin(body.reminder_id, body.confirmed)
     return success(data=result)

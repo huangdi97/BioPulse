@@ -2,9 +2,9 @@
 
 from typing import Optional
 
-from cloud.app.services.base import BaseService
+from cloud.app.services import CoachAssessor
+from shared.base_service import BaseService
 
-from .training_coach_assessor import CoachAssessor
 from .training_coach_recommender import CoachRecommender
 
 

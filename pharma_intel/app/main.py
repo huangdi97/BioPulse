@@ -2,13 +2,12 @@
 
 import time
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from pharma_intel.app.competitor_router import router as competitor_router
 from pharma_intel.app.conference_router import router as conference_router
-from pharma_intel.app.health_router import router as health_router
 from pharma_intel.app.intel_router import router as intel_router
 from pharma_intel.app.kol_router import router as kol_router
 from pharma_intel.app.pipeline_router import router as pipeline_router
@@ -17,7 +16,9 @@ from pharma_intel.app.routers.competitor_panel_router import router as competito
 from pharma_intel.app.routers.target_pipeline_router import router as target_pipeline_router
 from pharma_intel.app.target_router import router as target_router
 from shared.app_settings import settings
+from shared.auth import get_current_user
 from shared.exception_handlers import register_exception_handlers
+from shared.health import router as health_router
 from shared.middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 
@@ -37,7 +38,8 @@ app = FastAPI(
         {"name": "KOL", "description": "KOL学术影响力追踪"},
     ],
 )
-app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["*"], allow_headers=["*"])
+_cors_origins = settings.cors_origins
+app.add_middleware(CORSMiddleware, allow_origins=_cors_origins, allow_credentials=_cors_origins != ["*"], allow_methods=["*"], allow_headers=["*"])
 app.add_middleware(RequestIDMiddleware)
 register_exception_handlers(app)
 
@@ -50,15 +52,15 @@ def startup():
 
 
 app.include_router(health_router)
-app.include_router(intel_router)
-app.include_router(kol_router, prefix="/api/v1")
-app.include_router(pipeline_router, prefix="/api/v1")
-app.include_router(target_router, prefix="/api/v1")
-app.include_router(competitor_router, prefix="/api/v1")
-app.include_router(target_pipeline_router)
-app.include_router(competitor_landscape_router)
-app.include_router(competitor_panel_router)
-app.include_router(conference_router)
+app.include_router(intel_router, dependencies=[Depends(get_current_user)])
+app.include_router(kol_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(pipeline_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(target_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(competitor_router, prefix="/api/v1", dependencies=[Depends(get_current_user)])
+app.include_router(target_pipeline_router, dependencies=[Depends(get_current_user)])
+app.include_router(competitor_landscape_router, dependencies=[Depends(get_current_user)])
+app.include_router(competitor_panel_router, dependencies=[Depends(get_current_user)])
+app.include_router(conference_router, dependencies=[Depends(get_current_user)])
 
 try:
     app.mount("/static", StaticFiles(directory="pharma_intel/app/static"), name="static")

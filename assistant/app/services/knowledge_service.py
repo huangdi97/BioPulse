@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from assistant.app.repositories import KnowledgeBaseRepository
-from assistant.app.services.base import BaseCrudService
+from shared.base_service import BaseCrudService
 
 
 class KnowledgeService(BaseCrudService):

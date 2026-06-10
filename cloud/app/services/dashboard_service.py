@@ -5,7 +5,7 @@ from cloud.app.repositories import (
     ContentsRepository,
     UsersRepository,
 )
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 
 class DashboardService(BaseService):
@@ -99,7 +99,10 @@ class DashboardService(BaseService):
         return [{"date": r["date"], "count": r["count"]} for r in rows]
 
     def get_team_ranks(self) -> list:
-        rows = self.db.execute(
+        conn = self._connection()
+        conn.execute("CREATE TABLE IF NOT EXISTS teams (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, is_active INTEGER DEFAULT 1)")
+        conn.execute("CREATE TABLE IF NOT EXISTS user_team (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, team_id INTEGER NOT NULL)")
+        rows = conn.execute(
             "SELECT t.name as team_name, "
             "COUNT(DISTINCT ut.user_id) as score, "
             "COUNT(DISTINCT ut.user_id) as member_count "
@@ -138,7 +141,7 @@ class DashboardService(BaseService):
     def get_pi_sources(self) -> list:
         try:
             self.db.execute("ALTER TABLE pi_profiles ADD COLUMN source TEXT NOT NULL DEFAULT ''")
-        except Exception:
+        except Exception:  # noqa: BLE001  # expected when ALTER TABLE ADD COLUMN fails because column already exists
             pass  # 兼容操作：列已存在时跳过
         rows = self.db.execute(
             "SELECT COALESCE(NULLIF(source, ''), institution) as source, COUNT(*) as count FROM pi_profiles GROUP BY source ORDER BY count DESC"

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Query
 from pharma_intel.app.services.kol_service import search_kol
 from shared.base import success
 
-router = APIRouter(prefix="/api/kol")
+router = APIRouter(prefix="/kol")
 
 
 @router.get("/search", tags=["竞争格局"])

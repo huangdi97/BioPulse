@@ -1,3 +1,9 @@
+"""NMPA 合规检查路由。
+
+路由前缀：/compliance/gov
+核心数据模型：NmpaCheck 与 NMPA 合规检查日志。
+"""
+
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query

@@ -9,7 +9,7 @@ from starlette import status
 
 from cloud.app.repositories.holographic_repository import MemoryAssociationsRepository
 from cloud.app.repositories.memory_entry_repo import MemoryEntriesRepository
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 logger = logging.getLogger(__name__)
 

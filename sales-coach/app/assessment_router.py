@@ -6,6 +6,8 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+from starlette import status
+
 from sales_coach.app.schemas.assessment import RadarChartData
 from sales_coach.app.services.assessment_service import (
     DEFAULT_WEIGHTS,
@@ -14,8 +16,6 @@ from sales_coach.app.services.assessment_service import (
 from sales_coach.app.services.five_dimension_scoring import evaluate_dimensions
 from sales_coach.app.services.reflection_service import generate_reflection_report
 from sales_coach.app.services.session_service import SessionService
-from starlette import status
-
 from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
 

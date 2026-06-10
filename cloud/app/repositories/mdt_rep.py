@@ -64,6 +64,7 @@ class MdtParticipantsRepository(BaseRepository):
             f"INSERT INTO {self.table_name} ({cols_str}) VALUES ({placeholders})",
             values,
         )
+        assert cursor.lastrowid is not None
         return cursor.lastrowid
 
 
@@ -123,6 +124,7 @@ class MdtOpinionsRepository(BaseRepository):
             f"INSERT INTO {self.table_name} ({cols_str}) VALUES ({placeholders})",
             values,
         )
+        assert cursor.lastrowid is not None
         return cursor.lastrowid
 
 

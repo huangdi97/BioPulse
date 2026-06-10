@@ -1,7 +1,10 @@
 """记忆评估服务，负责 AI 评分与 auto_store 逻辑。"""
 
 import json
+import logging
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 from fastapi import HTTPException
 from starlette import status
@@ -84,7 +87,8 @@ class MemoryEvaluatorService:
         ]
         try:
             ai_resp = self.ai_gateway.chat(messages=messages, temperature=0.3, max_tokens=256, user_id=uid)
-        except Exception:
+        except Exception:  # noqa: BLE001  # AI gateway call can fail for many reasons
+            logger.exception("AI importance scoring call failed")
             return {"stored": False, "importance": 0, "error": "AI call failed"}
         raw = ai_resp.get("reply", "0")
         try:

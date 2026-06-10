@@ -6,7 +6,7 @@ from cloud.app.repositories import (
     TrainingModulesRepository,
     TrainingSessionsRepository,
 )
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 DIFFICULTY_LEVELS = ["beginner", "medium", "advanced", "expert"]
 VALID_DIFFICULTIES = {"beginner", "medium", "advanced", "expert"}

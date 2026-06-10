@@ -14,8 +14,8 @@ from PIL import Image
 from pypdf import PdfReader
 
 from assistant.app.repositories import MediaFileRepository
-from assistant.app.services.base import BaseService
 from shared.app_settings import settings
+from shared.base_service import BaseService
 
 logger = logging.getLogger(__name__)
 

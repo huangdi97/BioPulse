@@ -1,6 +1,6 @@
 """单条记忆演化阶段。"""
 
-from cloud.app.services.brain_evolution_common import calc_confidence, now_str
+from datetime import datetime
 
 TABLE_MAP = {
     "episodic": "episodic_memory",
@@ -13,6 +13,17 @@ ALLOWED_FIELDS = {
     "sensory": {"raw_content", "importance"},
     "procedural": {"name", "description", "steps", "trigger_conditions"},
 }
+
+
+def now_str() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def calc_confidence(memory_type: str, importance: float, valence: float = 0.0) -> float:
+    base = importance * 0.6 + abs(valence) * 0.4
+    if memory_type == "episodic":
+        return round(min(base * 1.1, 1.0), 4)
+    return round(min(base, 1.0), 4)
 
 
 class MemoryEvolutionStage:

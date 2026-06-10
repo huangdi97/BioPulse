@@ -11,8 +11,8 @@ from fastapi import HTTPException
 from starlette import status
 
 from sales_assistant.app.repositories import StrategyRepository
-from sales_assistant.app.services.base import BaseService
 from shared.app_settings import settings
+from shared.base_service import BaseService
 
 AI_GATEWAY_URL = f"{settings.cloud_api_base}/ai/chat"
 TIMEOUT_SECONDS = 30

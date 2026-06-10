@@ -13,6 +13,8 @@ import {
   Phone,
   UserPlus,
   ClipboardCheck,
+  FileCheck,
+  Stethoscope,
 } from 'lucide-react'
 
 const END_PORTS = [
@@ -28,7 +30,11 @@ const sidebarItems = [
   { to: '/manager/visits', label: '拜访统计', icon: BarChart3 },
   { to: '/manager/opportunities', label: '商机 Pipeline', icon: Target },
   { to: '/manager/compliance', label: '合规看板', icon: ShieldCheck, disabled: false },
-  { to: '/manager/inspection', label: '飞检准备度', icon: ClipboardCheck },
+  { to: '/manager/inspection', label: '飞检仪表盘', icon: ClipboardCheck },
+  { to: '/manager/inspection/assign', label: '整改分派', icon: ClipboardCheck },
+  { to: '/manager/inspection/review', label: '复查确认', icon: ClipboardCheck },
+  { to: '/manager/approval', label: '报价审批', icon: FileCheck },
+  { to: '/manager/admission', label: '入院Tracker', icon: Stethoscope },
 ]
 
 const bottomTabs = [
@@ -37,6 +43,8 @@ const bottomTabs = [
   { to: '/manager/opportunities', label: '商机', icon: Target },
   { to: '/manager/compliance', label: '合规', icon: ShieldCheck, disabled: false },
   { to: '/manager/inspection', label: '飞检', icon: ClipboardCheck },
+  { to: '/manager/approval', label: '审批', icon: FileCheck },
+  { to: '/manager/admission', label: '入院', icon: Stethoscope },
 ]
 
 export default function ManagerLayout() {
@@ -159,7 +167,7 @@ export default function ManagerLayout() {
         </header>
 
         {/* Desktop top bar (minimal) */}
-        <header className="hidden md:flex items-center justify-between px-4 py-2 bg-white border-b shrink-0">
+        <header className="hidden md:flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-800 border-b shrink-0">
           <nav className="flex items-center gap-1">
             {END_PORTS.map((end) => {
               const Icon = end.icon
@@ -196,7 +204,7 @@ export default function ManagerLayout() {
         </main>
 
         {/* Mobile Bottom Tabs */}
-        <nav className="flex md:hidden border-t bg-background shrink-0">
+        <nav className="flex md:hidden border-t bg-background dark:bg-gray-900 shrink-0">
           {bottomTabs.map((tab) => {
             const Icon = tab.icon
             if (tab.disabled) {

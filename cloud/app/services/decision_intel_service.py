@@ -9,9 +9,9 @@ from typing import Any, Optional
 from fastapi import HTTPException
 from starlette import status
 
-from cloud.app.services.base import BaseService
 from cloud.app.services.decision_logger import DecisionLogger
 from cloud.app.services.intel_analyzer import IntelAnalyzer
+from shared.base_service import BaseService
 from shared.config import settings as config_settings
 
 

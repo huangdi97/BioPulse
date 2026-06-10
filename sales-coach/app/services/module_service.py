@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from sales_coach.app.repositories import ModuleRepository
-from sales_coach.app.services.base import BaseService
+from shared.base_service import BaseService
 
 
 class ModuleService(BaseService):

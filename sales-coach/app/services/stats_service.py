@@ -6,7 +6,7 @@ from collections import defaultdict
 from typing import List
 
 from sales_coach.app.repositories import StatsRepository
-from sales_coach.app.services.base import BaseService
+from shared.base_service import BaseService
 
 logger = logging.getLogger(__name__)
 

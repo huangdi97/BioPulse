@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from assistant.app.repositories import HcpRepository, VisitRecordRepository
-from assistant.app.services.base import BaseCrudService
+from shared.base_service import BaseCrudService
 
 
 class VisitService(BaseCrudService):

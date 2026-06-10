@@ -1,8 +1,11 @@
 """科研轨迹 AI 预测模块，负责构建 LLM 提示词、调用 AI 网关并解析预测结果。"""
 
 import json
+import logging
 
 from cloud.app.services.ai_gateway_service import AiGatewayService
+
+logger = logging.getLogger(__name__)
 from shared.config import settings
 
 DEFAULT_FALLBACK = {
@@ -88,7 +91,8 @@ def call_llm_for_prediction(prompt: str) -> dict:
         if not raw:
             return DEFAULT_FALLBACK
         return parse_prediction_response(raw)
-    except Exception:
+    except Exception:  # noqa: BLE001  # AI gateway call / JSON parsing can fail
+        logger.exception("LLM prediction call failed")
         return DEFAULT_FALLBACK
 
 

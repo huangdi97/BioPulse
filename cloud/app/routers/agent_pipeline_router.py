@@ -6,6 +6,7 @@ from starlette import status
 
 from cloud.app.services.agent_pipeline_service import AgentPipelineService
 from shared.auth_scope import require_scope
+from shared.base import success
 
 router = APIRouter(prefix="/agent/pipelines", tags=["Agent系统"])
 
@@ -35,7 +36,7 @@ def create_pipeline(
 ):
     """创建包含步骤定义的管道。"""
     uid = int(current_user["sub"])
-    return service.create_pipeline(body, uid)
+    return success(data=service.create_pipeline(body, uid))
 
 
 @router.get("", summary="管线列表", description="获取所有Agent管线列表（含步骤数）", tags=["Agent系统"])
@@ -44,7 +45,7 @@ def list_pipelines(
     service: AgentPipelineService = Depends(),
 ):
     """获取所有管道列表（含步骤数）。"""
-    return service.list_pipelines()
+    return success(data=service.list_pipelines())
 
 
 # IMPORTANT: /runs/{run_id} MUST come before /{pipeline_id} to avoid route conflicts
@@ -55,7 +56,7 @@ def get_run(
     service: AgentPipelineService = Depends(),
 ):
     """获取指定运行ID的运行详情及步骤运行记录。"""
-    return service.get_run(run_id)
+    return success(data=service.get_run(run_id))
 
 
 @router.get("/{pipeline_id}", summary="查询管线", description="获取管线详情及其所有步骤", tags=["Agent系统"])
@@ -65,7 +66,7 @@ def get_pipeline(
     service: AgentPipelineService = Depends(),
 ):
     """获取管道详情及其所有步骤。"""
-    return service.get_pipeline(pipeline_id)
+    return success(data=service.get_pipeline(pipeline_id))
 
 
 @router.delete("/{pipeline_id}", summary="删除管线", description="删除管线及其关联的步骤和运行记录", tags=["Agent系统"])
@@ -75,7 +76,7 @@ def delete_pipeline(
     service: AgentPipelineService = Depends(),
 ):
     """删除管道及其关联的步骤和运行记录。"""
-    return service.delete_pipeline(pipeline_id)
+    return success(data=service.delete_pipeline(pipeline_id))
 
 
 @router.post("/{pipeline_id}/run", summary="执行管线", description="执行指定Agent管线，遍历各步骤并记录运行结果", tags=["Agent系统"])
@@ -88,7 +89,7 @@ def run_pipeline(
 ):
     """执行指定管道，遍历各步骤并记录运行结果。"""
     uid = int(current_user["sub"])
-    return service.run_pipeline(pipeline_id, body, request, uid)
+    return success(data=service.run_pipeline(pipeline_id, body, request, uid))
 
 
 @router.get("/{pipeline_id}/runs", summary="运行历史", description="分页查询指定管线的运行历史", tags=["Agent系统"])
@@ -100,4 +101,4 @@ def list_runs(
     service: AgentPipelineService = Depends(),
 ):
     """分页查询指定管道的运行历史。"""
-    return service.list_runs(pipeline_id, page, page_size)
+    return success(data=service.list_runs(pipeline_id, page, page_size))

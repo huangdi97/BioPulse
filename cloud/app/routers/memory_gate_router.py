@@ -174,7 +174,7 @@ def recall(
     return success(data=result)
 
 
-@router.post("/auto-store/{source_type}/{source_id}", tags=["记忆系统"])
+@router.post("/auto-store/{source_type}/{source_id}", status_code=201, tags=["记忆系统"])
 def auto_store(
     source_type: str,
     source_id: str,

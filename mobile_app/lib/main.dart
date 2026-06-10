@@ -8,6 +8,7 @@ import 'package:one_cloud_app/services/auth_service.dart';
 import 'package:one_cloud_app/services/database_service.dart';
 import 'package:one_cloud_app/services/api_client.dart';
 import 'package:one_cloud_app/services/sync_service.dart';
+import 'package:one_cloud_app/constants/app_constants.dart';
 import 'package:one_cloud_app/providers/auth_provider.dart';
 import 'package:one_cloud_app/providers/mode_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,11 +24,11 @@ Future<void> main() async {
   final prefs = await SharedPreferences.getInstance();
   final savedUrls = prefs.getString('backend_urls');
   const defaultUrls = {
-    'sales_assistant': 'http://43.153.166.191:8004',
-    'cloud': 'http://43.153.166.191:8000',
-    'opportunity': 'http://43.153.166.191:8002',
-    'sales_coach': 'http://43.153.166.191:8001',
-    'sync': 'http://43.153.166.191:8000',
+    'sales_assistant': AppConstants.salesAssistantUrl,
+    'cloud': AppConstants.cloudUrl,
+    'opportunity': AppConstants.opportunityUrl,
+    'sales_coach': AppConstants.salesCoachUrl,
+    'sync': AppConstants.syncUrl,
   };
   final urls = savedUrls != null
       ? Map<String, String>.from(jsonDecode(savedUrls) as Map)

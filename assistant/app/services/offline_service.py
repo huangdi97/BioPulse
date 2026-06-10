@@ -1,13 +1,16 @@
 """离线同步服务模块。"""
 
 import json
+import logging
 import os
 from datetime import datetime, timedelta, timezone
 
 import httpx
 
-from assistant.app.services.base import BaseService
+from shared.base_service import BaseService
 from shared.config import settings
+
+logger = logging.getLogger(__name__)
 
 CLOUD_API_URL = settings.cloud_api_url
 OFFLINE_MODE_VAR = "OFFLINE_MODE"
@@ -226,6 +229,7 @@ class OfflineService(BaseService):
             resp = httpx.get(f"{CLOUD_API_URL}/health", timeout=5)
             return resp.is_success
         except Exception:
+            logger.warning("离线服务异常", exc_info=True)
             return False
 
     def _count_unsynced(self) -> int:
@@ -239,6 +243,7 @@ class OfflineService(BaseService):
                 row = self.db.execute(f"SELECT COUNT(*) AS cnt FROM {table}").fetchone()
                 summary[table] = row["cnt"] if row else 0
             except Exception:
+                logger.warning("离线服务同步异常", exc_info=True)
                 summary[table] = 0
         return summary
 

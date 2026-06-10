@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from collections import Counter, defaultdict
 from typing import Any
 
 from cloud.app.crawler.analysis import load_public_opinions
+
+logger = logging.getLogger(__name__)
 
 POSITIVE_WORDS = {
     "利好",
@@ -186,7 +189,7 @@ class SentimentAnalyzer:
             if polarity < -0.1:
                 return "negative"
         except Exception:
-            pass
+            logger.warning("情感分析异常", exc_info=True)
         return "neutral"
 
     def _ratio(self, distribution: Counter, total: int) -> dict[str, float]:

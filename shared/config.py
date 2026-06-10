@@ -24,7 +24,7 @@ class Config(BaseSettings):
     ai_gateway_timeout: int = 120
 
     deepseek_api_key: str = ""
-    jwt_secret_key: str = "dev-secret-key-change-in-production"
+    jwt_secret_key: str = ""  # MUST be set via env in production; empty = fail at startup
     cors_origins: str = "*"
     cloud_db_path: str = "data/cloud.db"
     assistant_db_path: str = "data/assistant.db"

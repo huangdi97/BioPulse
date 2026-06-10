@@ -4,6 +4,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
+from starlette import status
 
 from cloud.app.services.collaboration_service import CollaborationService
 from shared.auth_scope import require_scope
@@ -50,7 +51,7 @@ class RouteRequest(BaseModel):
     routing_strategy: str = "semantic"
 
 
-@router.post("/skills/register", summary="注册Agent技能", description="注册一个新的Agent技能到协作系统", tags=["Agent Collaboration"])
+@router.post("/skills/register", status_code=status.HTTP_201_CREATED, summary="注册Agent技能", description="注册一个新的Agent技能到协作系统", tags=["Agent Collaboration"])
 def register_skill(
     body: SkillRegister,
     current_user: dict = Depends(require_scope("visit")),
@@ -92,7 +93,7 @@ def delete_skill(
     return success(data={"deleted": skill_id})
 
 
-@router.post("/sessions/create", summary="创建协作会话", description="创建一个新的Agent协作会话", tags=["Agent Collaboration"])
+@router.post("/sessions/create", status_code=status.HTTP_201_CREATED, summary="创建协作会话", description="创建一个新的Agent协作会话", tags=["Agent Collaboration"])
 def create_session(
     body: SessionCreate,
     current_user: dict = Depends(require_scope("visit")),
@@ -109,7 +110,7 @@ def create_session(
     return success(data=row)
 
 
-@router.post("/sessions/{session_id}/step", summary="添加会话步骤", description="向指定协作会话添加一个处理步骤", tags=["Agent Collaboration"])
+@router.post("/sessions/{session_id}/step", status_code=status.HTTP_201_CREATED, summary="添加会话步骤", description="向指定协作会话添加一个处理步骤", tags=["Agent Collaboration"])
 def add_session_step(
     session_id: str,
     body: StepAdd,

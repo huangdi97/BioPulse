@@ -7,7 +7,6 @@ from cloud.app.repositories import (
     AuditChainEntriesRepository,
     ComplianceAuditRecordsRepository,
 )
-from cloud.app.services.base import BaseService
 from cloud.app.services.report_formatter import ReportFormatterMixin
 from cloud.app.services.report_templates import (
     ReportTemplateMixin,
@@ -16,6 +15,7 @@ from cloud.app.services.report_templates import (
     _parse_json,
 )
 from shared.base import success
+from shared.base_service import BaseService
 
 
 class ReportGenerator(ReportTemplateMixin, ReportFormatterMixin, BaseService):

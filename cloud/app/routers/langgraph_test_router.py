@@ -2,8 +2,11 @@
 
 import uuid
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+
+from shared.auth_scope import require_scope
+from shared.base import success
 
 router = APIRouter(prefix="/api/langgraph", tags=["langgraph"])
 
@@ -15,7 +18,7 @@ class TestRequest(BaseModel):
 
 
 @router.post("/test", tags=["langgraph"])
-def run_test_graph(body: TestRequest):
+def run_test_graph(body: TestRequest, _: dict = Depends(require_scope("visit"))):
     from cloud.langgraph.graph import get_test_graph
 
     graph = get_test_graph()
@@ -26,12 +29,8 @@ def run_test_graph(body: TestRequest):
         {"messages": [initial_message], "next_agent": "", "metadata": {}},
         config,
     )
-    return {
-        "code": 0,
-        "data": {
-            "thread_id": thread_id,
-            "messages": result["messages"],
-            "status": "completed",
-        },
-        "message": "success",
-    }
+    return success(data={
+        "thread_id": thread_id,
+        "messages": result["messages"],
+        "status": "completed",
+    })

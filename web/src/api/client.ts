@@ -1,4 +1,4 @@
-let baseURL = "http://localhost:8000"
+let baseURL = import.meta.env.VITE_CLOUD_API || "http://localhost:8000"
 let token: string | null = null
 
 export function setBaseURL(url: string) {
@@ -59,7 +59,7 @@ export async function getComplianceKpis(): Promise<KpiCard[]> {
   return fetchApi<KpiCard[]>('/dashboard/compliance')
 }
 
-let intelBaseURL = "http://localhost:8006"
+let intelBaseURL = import.meta.env.VITE_INTEL_API || "http://localhost:8006"
 
 export function setIntelBaseURL(url: string) {
   intelBaseURL = url
@@ -113,6 +113,12 @@ export async function getIntelTargetCategories() {
   const json = await fetchIntelApi<{ code: number; data: string[] }>('/api/intel/targets/categories')
   if (json?.code === 0 && json.data) return ['全部', ...json.data]
   return ['全部']
+}
+
+export async function getTargetPipeline(targetId: string) {
+  const json = await fetchIntelApi<{ code: number; data: any[] }>(`/api/targets/${targetId}/pipeline`)
+  if (json?.code === 0 && json.data) return json.data
+  return []
 }
 
 // ── Competitor Intelligence API ──

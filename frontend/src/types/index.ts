@@ -135,3 +135,27 @@ export interface AuditEntry {
   actor: string
   verified: boolean
 }
+
+export interface ApprovalRecord {
+  id: number
+  quotation_id: string
+  rep_name: string
+  product: string
+  amount: number
+  limit_amount: number
+  status: string
+  review_notes?: string
+  created_at: string
+}
+
+export interface AdmissionRecord {
+  id: number
+  hospital_name: string
+  department: string
+  product: string
+  status: string
+  meeting_date: string | null
+  notes: string
+  rep_name: string
+  created_at: string
+}

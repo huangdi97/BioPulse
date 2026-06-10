@@ -1,9 +1,8 @@
 """知识库种子数据模块，在首次启动时填充默认知识点。"""
 
-import sqlite3
 from datetime import datetime, timezone
 
-from assistant.app.database import DB_PATH
+from assistant.app.database import get_connection
 
 SEED_DATA = [
     {
@@ -80,7 +79,7 @@ SEED_DATA = [
 
 
 def seed_knowledge() -> None:
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     try:
         count = conn.execute("SELECT COUNT(*) FROM knowledge_base").fetchone()[0]
         if count > 0:

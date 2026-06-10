@@ -4,7 +4,7 @@ import json
 import uuid
 from datetime import datetime
 
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 COMPRESSION_TYPES = {
     "tensor_decomposition": {

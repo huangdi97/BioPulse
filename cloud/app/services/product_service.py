@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.repositories.product_repository import ProductRepository
-from cloud.app.services.base import BaseService
+from shared.base_service import BaseService
 
 
 class ProductService(BaseService):

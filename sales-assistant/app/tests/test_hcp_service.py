@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi import HTTPException
 
-from sales_assistant.app.hcp_router import HcpCreate, HcpUpdate
+from sales_assistant.app.sales_assistant_hcp_router import HcpCreate, HcpUpdate
 from sales_assistant.app.services.hcp_service import HcpService
 
 

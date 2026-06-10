@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from starlette import status
 
 from sales_assistant.app.repositories import NoteRepository
-from sales_assistant.app.services.base import BaseCrudService
+from shared.base_service import BaseCrudService
 
 
 class NoteService(BaseCrudService):

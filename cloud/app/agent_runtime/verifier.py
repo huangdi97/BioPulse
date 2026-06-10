@@ -3,8 +3,8 @@
 import json
 import logging
 
-from cloud.app.agent_runtime.check_result import CheckResult, VerificationResult
 from cloud.app.agent_runtime.guard import GuardLayer1
+from cloud.app.agent_runtime.models import CheckResult, VerificationResult
 from cloud.app.agent_runtime.planner import Plan, PlanStep
 from cloud.app.agent_runtime.safety_guard import RuleEngineLLM, SafetyGuard
 from shared.config import settings as config_settings

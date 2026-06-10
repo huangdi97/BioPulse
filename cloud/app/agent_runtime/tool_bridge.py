@@ -75,6 +75,66 @@ class ToolBridge:
                 params={},
                 permission_level="write",
             ),
+            ToolDef(
+                name="collect_related_data",
+                description="收集异常分析所需的费用、拜访、流向、审计和红灯上下文数据",
+                params={},
+                permission_level="read",
+            ),
+            ToolDef(
+                name="run_pattern_analysis",
+                description="对异常证据运行模式分析并输出支持或证伪信号",
+                params={},
+                permission_level="read",
+            ),
+            ToolDef(
+                name="run_causal_inference",
+                description="基于关联数据执行因果归因并给出根因置信度",
+                params={},
+                permission_level="read",
+            ),
+            ToolDef(
+                name="generate_narrative",
+                description="生成发现、原因、建议三段式自然语言根因报告",
+                params={},
+                permission_level="read",
+            ),
+            ToolDef(
+                name="discover_related_patterns",
+                description="扫描历史和其他代表，发现与当前异常相似的跨代表模式",
+                params={},
+                permission_level="read",
+            ),
+            ToolDef(
+                name="verify_expense",
+                description="核查代表费用数据是否符合合规规则",
+                params={},
+                permission_level="read",
+            ),
+            ToolDef(
+                name="verify_visit",
+                description="核查代表拜访数据的真实性与合规性",
+                params={},
+                permission_level="read",
+            ),
+            ToolDef(
+                name="trace_distribution",
+                description="追踪药品流向数据，验证库存与销售一致性",
+                params={},
+                permission_level="read",
+            ),
+            ToolDef(
+                name="triangulation_check",
+                description="执行费用、拜访、流向三角勾稽交叉验证",
+                params={},
+                permission_level="read",
+            ),
+            ToolDef(
+                name="write_audit_log",
+                description="将审计结果写入审计链",
+                params={},
+                permission_level="write",
+            ),
         ]
         brain_tools = [
             ToolDef(

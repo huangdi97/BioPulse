@@ -1,4 +1,4 @@
-"""飞检（飞行检查）准备度仪表盘服务，提供检查清单管理、任务分派、状态追踪与合规预警。"""
+"""飞检（飞行检查）流程管理 —— 任务分派、检查流程、审计追踪。"""
 
 from datetime import date, datetime
 from typing import Optional
@@ -14,6 +14,7 @@ from cloud.app.schemas.flying_inspection import (
     InspectionTask,
     TaskStatus,
 )
+from cloud.app.services.flying_inspection_calculation import compute_dashboard
 
 CHECKLIST = [
     InspectionChecklist(
@@ -160,10 +161,6 @@ HISTORY = [
 ]
 
 
-def _today() -> date:
-    return datetime.now().date()
-
-
 def _now() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
@@ -199,7 +196,7 @@ def _append_history(
         {
             "id": f"hist-{uuid4().hex[:8]}",
             "inspection_id": inspection_id,
-            "date": _today().isoformat(),
+            "date": date.today().isoformat(),
             "event": event,
             "score": score,
             "owner": owner,
@@ -209,21 +206,12 @@ def _append_history(
 
 
 def get_dashboard() -> InspectionDashboard:
-    passed = sum(1 for item in CHECKLIST if item.status == ChecklistStatus.PASSED)
-    total = len(CHECKLIST)
-    failed = sum(1 for item in CHECKLIST if item.status == ChecklistStatus.FAILED)
-    overdue_count = sum(1 for item in CHECKLIST if item.status != ChecklistStatus.PASSED and datetime.fromisoformat(item.deadline).date() < _today())
-    self_check_rate = round(passed / total * 100, 1) if total else 0.0
-    score = max(0, min(100, int(self_check_rate - overdue_count * 8 - failed * 5 + 20)))
-    return InspectionDashboard(
-        self_check_rate=self_check_rate,
-        overdue_count=overdue_count,
-        history_records=HISTORY,
-        score=score,
-    )
+    """委托计算引擎返回飞检准备度仪表盘。"""
+    return compute_dashboard(CHECKLIST, HISTORY)
 
 
 def get_checklist(category: Optional[str] = None) -> list[InspectionChecklist]:
+    """获取检查清单，可按分类筛选。"""
     if not category:
         return CHECKLIST
     return [item for item in CHECKLIST if item.category == category]
@@ -238,6 +226,7 @@ def create_remediation_task(
     who: str = "质量负责人",
     evidence: str = "remediation-task-form",
 ) -> InspectionTask:
+    """创建整改任务并记录审计日志与历史。"""
     task_id = f"task-{uuid4().hex[:8]}"
     task = InspectionTask(
         id=task_id,
@@ -271,6 +260,7 @@ def confirm_remediation(
     who: str = "质量负责人",
     evidence: str = "remediation-evidence",
 ) -> InspectionTask:
+    """确认整改完成，更新任务状态并记录审计评分。"""
     task = TASKS.get(task_id)
     if not task:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Inspection task not found")
@@ -302,6 +292,7 @@ def confirm_remediation(
 
 
 def get_history() -> list[dict]:
+    """获取历史记录列表，每条记录附带完整的审计链。"""
     enriched = []
     for record in HISTORY:
         inspection_id = record.get("inspection_id", DEFAULT_INSPECTION_ID)
@@ -316,6 +307,7 @@ def get_history() -> list[dict]:
 
 
 def get_audit_trail(inspection_id: str) -> dict:
+    """获取指定飞检周期的完整审计追踪链。"""
     trail = AUDIT_TRAILS.get(inspection_id)
     if trail is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Inspection audit trail not found")

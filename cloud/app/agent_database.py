@@ -89,6 +89,56 @@ def init_agent_db() -> None:
             ")"
         )
         conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_runtime_snapshots_trace_step ON agent_runtime_snapshots(trace_id, step)")
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS agent_traces ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "trace_id TEXT NOT NULL UNIQUE, "
+            "agent_name TEXT NOT NULL, "
+            "user_id TEXT DEFAULT '', "
+            "input_data TEXT DEFAULT '{}', "
+            "output_data TEXT DEFAULT '{}', "
+            "status TEXT DEFAULT 'running', "
+            "total_duration_ms INTEGER DEFAULT 0, "
+            "total_prompt_tokens INTEGER DEFAULT 0, "
+            "total_completion_tokens INTEGER DEFAULT 0, "
+            "total_cost REAL DEFAULT 0.0, "
+            "tool_calls_json TEXT DEFAULT '[]', "
+            "llm_calls_json TEXT DEFAULT '[]', "
+            "started_at TEXT DEFAULT (datetime('now')), "
+            "ended_at TEXT"
+            ")"
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_traces_trace_id ON agent_traces(trace_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_traces_agent ON agent_traces(agent_name)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_traces_user ON agent_traces(user_id)")
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS agent_cost_tracking ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "agent_name TEXT NOT NULL, "
+            "model TEXT NOT NULL, "
+            "model_tier TEXT DEFAULT 'cloud_normal', "
+            "input_tokens INTEGER DEFAULT 0, "
+            "output_tokens INTEGER DEFAULT 0, "
+            "cost REAL DEFAULT 0.0, "
+            "trace_id TEXT DEFAULT '', "
+            "timestamp TEXT DEFAULT (datetime('now'))"
+            ")"
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_cost_tracking_agent ON agent_cost_tracking(agent_name)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_cost_tracking_model ON agent_cost_tracking(model)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_cost_tracking_ts ON agent_cost_tracking(timestamp)")
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS prompt_versions ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "agent_name TEXT NOT NULL, "
+            "version_id INTEGER NOT NULL, "
+            "content TEXT NOT NULL, "
+            "created_at TEXT DEFAULT (datetime('now')), "
+            "created_by TEXT DEFAULT 'system', "
+            "UNIQUE(agent_name, version_id)"
+            ")"
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_prompt_versions_agent ON prompt_versions(agent_name)")
         conn.commit()
 
 

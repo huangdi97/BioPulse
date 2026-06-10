@@ -5,7 +5,7 @@ import os
 import sqlite3
 from typing import Generator
 
-from cloud.app.schema import SCHEMA_SQL
+from cloud.app.schemas.ddl import SCHEMA_SQL
 from cloud.app.seeds import (
     seed_agent_data,
     seed_brain_memory,
@@ -49,9 +49,9 @@ DATABASE_URL = settings.database_url
 
 def get_db() -> Generator:
     if DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://"):
-        import psycopg2
+        import psycopg
 
-        conn = PGCompatConnection(psycopg2.connect(DATABASE_URL))
+        conn = PGCompatConnection(psycopg.connect(DATABASE_URL))
         try:
             yield conn
         finally:
@@ -60,53 +60,11 @@ def get_db() -> Generator:
         os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA foreign_keys=ON")
         try:
             yield conn
         finally:
             conn.close()
-
-
-def _ensure_token_budget_tables(conn) -> None:
-    """Create token_budget and token_usage tables if they don't exist (migration)."""
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS token_budget ("
-        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "user_id INTEGER NOT NULL, "
-        "model TEXT NOT NULL, "
-        "daily_used INTEGER NOT NULL DEFAULT 0, "
-        "alert_sent INTEGER NOT NULL DEFAULT 0, "
-        "updated_at TEXT DEFAULT CURRENT_TIMESTAMP"
-        ")"
-    )
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_token_budget_user ON token_budget(user_id, model)")
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS token_usage ("
-        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "user_id INTEGER NOT NULL, "
-        "model TEXT NOT NULL, "
-        "tokens INTEGER NOT NULL DEFAULT 0, "
-        "cost REAL NOT NULL DEFAULT 0.0, "
-        "usage_date TEXT NOT NULL, "
-        "created_at TEXT DEFAULT CURRENT_TIMESTAMP"
-        ")"
-    )
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_token_usage_user ON token_usage(user_id, model, usage_date)")
-    conn.commit()
-
-
-def _ensure_agent_runtime_snapshot_table(conn) -> None:
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS agent_runtime_snapshots ("
-        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-        "trace_id TEXT NOT NULL, "
-        "step INTEGER NOT NULL, "
-        "state_json TEXT NOT NULL, "
-        "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
-        "expires_at TIMESTAMP"
-        ")"
-    )
-    conn.execute("CREATE INDEX IF NOT EXISTS idx_agent_runtime_snapshots_trace_step ON agent_runtime_snapshots(trace_id, step)")
-    conn.commit()
 
 
 def _ensure_effect_metrics_source_sub(conn) -> None:
@@ -123,6 +81,7 @@ def _ensure_effect_metrics_source_sub(conn) -> None:
 def init_db() -> None:
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("PRAGMA foreign_keys=ON")
         conn.row_factory = sqlite3.Row
         _ensure_effect_metrics_source_sub(conn)
         conn.executescript(SCHEMA_SQL)
@@ -158,8 +117,6 @@ def init_db() -> None:
             "timestamp TEXT DEFAULT CURRENT_TIMESTAMP"
             ")"
         )
-        _ensure_token_budget_tables(conn)
-        _ensure_agent_runtime_snapshot_table(conn)
         seed_market_intel(conn)
         seed_agent_data(conn)
         seed_decision_intel(conn)

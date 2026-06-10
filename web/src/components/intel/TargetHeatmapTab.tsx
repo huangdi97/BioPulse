@@ -4,6 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Card, CardContent } from "../ui/Card"
 import { Button } from "../ui/Button"
 import { getIntelTargets, getIntelTargetCategories } from "../../api/client"
+import PipelineAssociation from "./PipelineAssociation"
 import type { Target } from "../../types/intel"
 
 const CHART_COLORS = ['#0f62fe', '#8b5cf6', '#f59e0b', '#10b981', '#da1e28', '#24a148', '#f1c21b', '#525252', '#002d9c', '#6f6f6f']
@@ -113,6 +114,7 @@ getIntelTargetCategories().then(data => {
               <span>临床试验: {selectedTarget.trial_count.toLocaleString()}</span>
               <span>增长率: <span style={{color: selectedTarget.growth >= 0 ? 'var(--clr-success)' : 'var(--clr-error)'}}>{selectedTarget.growth > 0 ? '+' : ''}{selectedTarget.growth}%</span></span>
             </div>
+            <PipelineAssociation targetId={selectedTarget.id} targetName={selectedTarget.name} />
           </CardContent>
         </Card>
       ) : (
