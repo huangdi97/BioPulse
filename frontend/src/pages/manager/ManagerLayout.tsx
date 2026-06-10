@@ -12,6 +12,7 @@ import {
   GraduationCap,
   Phone,
   UserPlus,
+  ClipboardCheck,
 } from 'lucide-react'
 
 const END_PORTS = [
@@ -27,6 +28,7 @@ const sidebarItems = [
   { to: '/manager/visits', label: '拜访统计', icon: BarChart3 },
   { to: '/manager/opportunities', label: '商机 Pipeline', icon: Target },
   { to: '/manager/compliance', label: '合规看板', icon: ShieldCheck, disabled: false },
+  { to: '/manager/inspection', label: '飞检准备度', icon: ClipboardCheck },
 ]
 
 const bottomTabs = [
@@ -34,6 +36,7 @@ const bottomTabs = [
   { to: '/manager/visits', label: '拜访', icon: BarChart3 },
   { to: '/manager/opportunities', label: '商机', icon: Target },
   { to: '/manager/compliance', label: '合规', icon: ShieldCheck, disabled: false },
+  { to: '/manager/inspection', label: '飞检', icon: ClipboardCheck },
 ]
 
 export default function ManagerLayout() {

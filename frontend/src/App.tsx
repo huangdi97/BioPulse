@@ -20,6 +20,9 @@ import ManagerOpportunities from './pages/manager/Opportunities'
 import ComplianceOverview from './pages/manager/ComplianceOverview'
 import ComplianceRecords from './pages/manager/ComplianceRecords'
 import ComplianceDetail from './pages/manager/ComplianceDetail'
+import InspectionDashboard from './pages/manager/InspectionDashboard'
+import InspectionChecklist from './pages/manager/InspectionChecklist'
+import InspectionHistory from './pages/manager/InspectionHistory'
 import Settings from './pages/manager/Settings'
 import ManagementLayout from './layouts/ManagementLayout'
 import PresidentSummary from './pages/admin/president/Summary'
@@ -97,6 +100,9 @@ export default function App() {
                 <Route path="compliance" element={<ComplianceOverview />} />
                 <Route path="compliance/records" element={<ComplianceRecords />} />
                 <Route path="compliance/records/:id" element={<ComplianceDetail />} />
+                <Route path="inspection" element={<InspectionDashboard />} />
+                <Route path="inspection/checklist" element={<InspectionChecklist />} />
+                <Route path="inspection/history" element={<InspectionHistory />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
             </Route>

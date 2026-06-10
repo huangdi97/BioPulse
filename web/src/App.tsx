@@ -7,6 +7,7 @@ import ResearchPage from "./pages/research/ResearchPage"
 import CompliancePage from "./pages/compliance/CompliancePage"
 import TrainingPage from "./pages/coach/TrainingPage"
 import IntelPage from "./pages/intel/IntelPage"
+import ConferencePage from "./pages/conference/ConferencePage"
 import SettingsPage from "./pages/settings/SettingsPage"
 import PricingPage from "./pages/pricing/PricingPage"
 import LoginPage from "./pages/auth/LoginPage"
@@ -54,6 +55,7 @@ export default function App() {
             <Route path="compliance/overview" element={<CompliancePage />} />
             <Route path="coach/training" element={<TrainingPage />} />
             <Route path="intel/analysis" element={<IntelPage />} />
+            <Route path="conference" element={<ConferencePage />} />
             <Route path="settings/system" element={<SettingsPage />} />
             <Route path="pricing" element={<PricingPage />} />
           </Route>

@@ -2,8 +2,9 @@ import { useState } from "react"
 import PaperSearchTab from "../../components/intel/PaperSearchTab"
 import PiProfileTab from "../../components/intel/PiProfileTab"
 import TargetHeatmapTab from "../../components/intel/TargetHeatmapTab"
+import CompetitorIntelTab from "../../components/intel/CompetitorIntelTab"
 
-const TABS = ['论文搜索', 'PI画像', '靶点热度'] as const
+const TABS = ['论文搜索', 'PI画像', '靶点热度', '竞品情报'] as const
 
 export default function IntelPage() {
   const [tab, setTab] = useState(0)
@@ -33,6 +34,7 @@ export default function IntelPage() {
       {tab === 0 && <PaperSearchTab />}
       {tab === 1 && <PiProfileTab />}
       {tab === 2 && <TargetHeatmapTab />}
+      {tab === 3 && <CompetitorIntelTab />}
     </div>
   )
 }

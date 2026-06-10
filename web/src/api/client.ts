@@ -115,6 +115,112 @@ export async function getIntelTargetCategories() {
   return ['全部']
 }
 
+// ── Competitor Intelligence API ──
+
+async function fetchCompetitorApi<T>(path: string, options?: RequestInit): Promise<T | null> {
+  try {
+    const json = await fetchApi<{ code: number; message: string; data: T }>(`/api/competitor${path}`, options)
+    if (json && json.code === 0 && json.data !== undefined) {
+      return json.data
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+export async function getCompetitorProducts(status?: string): Promise<any[]> {
+  const params = status ? `?status=${status}` : ''
+  return (await fetchCompetitorApi<any[]>(`/products${params}`)) || []
+}
+
+export async function getCompetitorSentiment(keyword: string, days = 30): Promise<any> {
+  const params = new URLSearchParams({ keyword, days: String(days) })
+  return fetchCompetitorApi<any>(`/sentiment?${params}`)
+}
+
+export async function getCompetitorVolume(platform = 'weibo'): Promise<any> {
+  return fetchCompetitorApi<any>(`/volume?platform=${platform}`)
+}
+
+export async function getCompetitorPriceAnomaly(productId: string): Promise<any> {
+  return fetchCompetitorApi<any>(`/price/anomaly?product_id=${productId}`)
+}
+
+export async function getCompetitorCompare(productIds: string): Promise<any> {
+  return fetchCompetitorApi<any>(`/compare?product_ids=${productIds}`)
+}
+
+export async function getCompetitorBriefLatest(): Promise<any> {
+  return fetchCompetitorApi<any>('/brief/latest')
+}
+
+export async function getCompetitorBrief(id: string): Promise<any> {
+  return fetchCompetitorApi<any>(`/brief/${id}`)
+}
+
+export async function generateCompetitorBrief(productIds?: string[], days = 7, focus = 'price_sentiment'): Promise<any> {
+  return fetchCompetitorApi<any>('/brief/generate', {
+    method: 'POST',
+    body: JSON.stringify({ product_ids: productIds || [], days, focus }),
+  })
+}
+
+// ── Conference API ──
+
+export async function createConference(data: {
+  title: string
+  type: string
+  date: string
+  duration: number
+  speaker?: string
+}): Promise<any> {
+  try {
+    const json = await fetchApi<{ code: number; message: string; data: any }>('/api/conference', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+    if (json && json.code === 0 && json.data !== undefined) return json.data
+    return json
+  } catch {
+    return null
+  }
+}
+
+export async function inviteConference(conferenceId: string, inviteeIds?: string[]): Promise<any> {
+  try {
+    const json = await fetchApi<{ code: number; message: string; data: any }>(
+      `/api/conference/${conferenceId}/invite`,
+      { method: 'POST', body: JSON.stringify({ invitee_ids: inviteeIds || [] }) }
+    )
+    if (json && json.code === 0 && json.data !== undefined) return json.data
+    return json
+  } catch {
+    return null
+  }
+}
+
+export async function checkinConference(conferenceId: string, hcpId: string): Promise<any> {
+  try {
+    const json = await fetchApi<{ code: number; message: string; data: any }>(
+      `/api/conference/${conferenceId}/checkin`,
+      { method: 'POST', body: JSON.stringify({ hcp_id: hcpId }) }
+    )
+    if (json && json.code === 0 && json.data !== undefined) return json.data
+    return json
+  } catch {
+    return null
+  }
+}
+
+export async function getConferenceAnalytics(conferenceId: string): Promise<any> {
+  try {
+    return await fetchApi<any>(`/api/conference/${conferenceId}/analytics`)
+  } catch {
+    return null
+  }
+}
+
 interface AuthResponse {
   token: string
   user: { id: number; username: string }
