@@ -2,7 +2,6 @@
 
 import json
 import logging
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -17,14 +16,19 @@ from cloud.app.repositories import (
     MemoryGatesRepository,
 )
 from cloud.app.services.holographic_service import HolographicService
-
-
-def _now():
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+from shared.datetime_utils import now as _now
 
 
 class MemoryEvaluatorService:
     def __init__(self, db, ai_gateway=None, holographic_service=None, holographic_service_factory=None):
+        """初始化记忆评估服务。
+
+        参数:
+            db: 数据库连接
+            ai_gateway: 可选，AI 网关服务实例
+            holographic_service: 可选，全息服务实例
+            holographic_service_factory: 可选，全息服务工厂类
+        """
         self.db = db
         self._ai_gateway = ai_gateway
         self._holographic_service = holographic_service
@@ -32,6 +36,7 @@ class MemoryEvaluatorService:
 
     @property
     def ai_gateway(self):
+        """获取 AI 网关服务实例（惰性初始化）。"""
         if self._ai_gateway is None:
             from cloud.app.services.ai_gateway_service import AiGatewayService
 
@@ -40,31 +45,41 @@ class MemoryEvaluatorService:
 
     @property
     def holographic_service(self):
+        """获取全息服务实例（惰性初始化）。"""
         if self._holographic_service is None:
             factory = self._holographic_service_factory or HolographicService
             self._holographic_service = factory(self.db)
         return self._holographic_service
 
     def _load_source(self, source_type: str, source_id: str) -> tuple:
+        """根据来源类型与 ID 加载源数据、标题与内容。
+
+        参数:
+            source_type: 来源类型（insight / case / compliance）
+            source_id: 来源 ID
+
+        返回:
+            (source_data, source_title, source_content) 元组
+        """
         source_data = None
         source_title = ""
         source_content = ""
         if source_type == "insight":
-            repo = CrossCaseInsightsRepository(self.db)
+            repo = CrossCaseInsightsRepository(self._connection())
             row = repo.get_by_id(int(source_id))
             if row:
                 source_title = row.get("title", "")
                 source_content = f"Type: {row.get('insight_type', '')}. Summary: {row.get('summary', '')}. Detail: {row.get('detail', '')}"
                 source_data = row
         elif source_type == "case":
-            repo = DecisionCasesRepository(self.db)
+            repo = DecisionCasesRepository(self._connection())
             row = repo.get_by_id(int(source_id))
             if row:
                 source_title = row.get("name", "")
                 source_content = f"Description: {row.get('description', '')}. Outcome: {row.get('outcome', '')}. Score: {row.get('outcome_score', 0)}"
                 source_data = row
         elif source_type == "compliance":
-            repo = ComplianceAuditRecordsRepository(self.db)
+            repo = ComplianceAuditRecordsRepository(self._connection())
             row = repo.get_by_id(int(source_id))
             if row:
                 source_title = row.get("content", "")[:100]
@@ -73,8 +88,19 @@ class MemoryEvaluatorService:
         return source_data, source_title, source_content
 
     def auto_store(self, source_type: str, source_id: str, uid: int, auth_header: str = "") -> dict:
-        gate_repo = MemoryGatesRepository(self.db)
-        entry_repo = MemoryEntriesRepository(self.db)
+        """通过 AI 评估记忆重要性并自动存储到记忆库。
+
+        参数:
+            source_type: 来源类型
+            source_id: 来源 ID
+            uid: 用户 ID
+            auth_header: 可选，认证头
+
+        返回:
+            包含 stored、importance 等字段的字典
+        """
+        gate_repo = MemoryGatesRepository(self._connection())
+        entry_repo = MemoryEntriesRepository(self._connection())
         gate = gate_repo.find_active_by_source_type(source_type)
         if not gate:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail=f"No active gate for source_type '{source_type}'")

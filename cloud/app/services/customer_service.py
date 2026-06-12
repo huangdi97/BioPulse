@@ -36,7 +36,7 @@ class CustomerService(BaseService):
         user_id: int,
     ) -> dict:
         """创建新客户档案。"""
-        repo = CustomersRepository(self.db)
+        repo = CustomersRepository(self._connection())
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         customer_id = repo.create(
             {
@@ -65,7 +65,7 @@ class CustomerService(BaseService):
         page_size: int = 20,
     ) -> dict:
         """按条件分页查询客户列表。"""
-        repo = CustomersRepository(self.db)
+        repo = CustomersRepository(self._connection())
         conditions = ["1=1"]
         params: list = []
         if name:
@@ -96,7 +96,7 @@ class CustomerService(BaseService):
 
     def get_customer(self, customer_id: int) -> dict:
         """获取指定客户详情。"""
-        repo = CustomersRepository(self.db)
+        repo = CustomersRepository(self._connection())
         return self._get_customer_or_404(repo, customer_id)
 
     def update_customer(
@@ -113,7 +113,7 @@ class CustomerService(BaseService):
         status: Optional[str] = None,
     ) -> dict:
         """更新客户信息字段。"""
-        repo = CustomersRepository(self.db)
+        repo = CustomersRepository(self._connection())
         self._get_customer_or_404(repo, customer_id)
         field_map = {
             "name": name,
@@ -136,6 +136,6 @@ class CustomerService(BaseService):
 
     def delete_customer(self, customer_id: int) -> None:
         """将客户状态置为 inactive。"""
-        repo = CustomersRepository(self.db)
+        repo = CustomersRepository(self._connection())
         self._get_customer_or_404(repo, customer_id)
         repo.update(customer_id, {"status": "inactive"})

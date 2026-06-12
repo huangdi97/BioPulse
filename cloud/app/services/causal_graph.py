@@ -87,7 +87,7 @@ class CausalGraphMixin(CausalInferenceMixin):
 
     def build_graph(self, decision_id: str, include_metrics: bool, user_id: int) -> dict:
         """构建因果图谱并持久化。"""
-        cg_repo = CausalGraphsRepository(self.db)
+        cg_repo = CausalGraphsRepository(self._connection())
         graph_id = _gen_graph_id()
         graph_data = _generate_template_graph(decision_id)
         node_count = len(graph_data["nodes"])
@@ -117,7 +117,7 @@ class CausalGraphMixin(CausalInferenceMixin):
         Raises:
             HTTPException: 图谱不存在时返回 404
         """
-        cg_repo = CausalGraphsRepository(self.db)
+        cg_repo = CausalGraphsRepository(self._connection())
         row = cg_repo.db.execute("SELECT * FROM causal_graphs WHERE graph_id=?", (graph_id,)).fetchone()
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Causal graph not found")
@@ -134,7 +134,7 @@ class CausalGraphMixin(CausalInferenceMixin):
         Returns:
             包含 items、total、page、page_size 的字典
         """
-        cs_repo = CounterfactualScenariosRepository(self.db)
+        cs_repo = CounterfactualScenariosRepository(self._connection())
         conditions = []
         params: list = []
         if strategy_id:

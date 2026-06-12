@@ -59,6 +59,7 @@ class SurgeryService(BaseCrudService):
                 "updated_at": now,
             },
         )
+
         async def _safe_send():
             try:
                 await connection_manager.send_to_user(
@@ -74,6 +75,7 @@ class SurgeryService(BaseCrudService):
                 )
             except Exception:
                 logger.exception("Failed to send WebSocket notification for surgery %s", row_id)
+
         asyncio.create_task(_safe_send())
         return {"id": row_id}
 

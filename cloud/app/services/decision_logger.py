@@ -1,7 +1,6 @@
 """决策日志服务，负责决策案例与流水线运行的记录与查询。"""
 
 import json
-from datetime import datetime
 from typing import Optional
 
 from fastapi import HTTPException
@@ -17,10 +16,7 @@ from cloud.app.services.decision_report import DecisionReportMixin
 from shared.base import validate_columns
 from shared.base_service import BaseService
 from shared.columns import TABLE_CROSS_CASE_INSIGHTS_COLS, TABLE_DECISION_CASES_COLS
-
-
-def _now() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+from shared.datetime_utils import now as _now
 
 
 def _e404(name: str = "Resource"):
@@ -43,17 +39,17 @@ class DecisionLogger(DecisionReportMixin, BaseService):
     ) -> dict:
         ctx = context
         if pipeline_run_id:
-            run_repo = PipelineRunsRepository(self.db)
+            run_repo = PipelineRunsRepository(self._connection())
             run = run_repo.get_by_id(pipeline_run_id)
             if run:
-                step_repo = PipelineStepRunsRepository(self.db)
+                step_repo = PipelineStepRunsRepository(self._connection())
                 steps = step_repo.list_all(
                     conditions=["run_id=?"],
                     params=[pipeline_run_id],
                     order_by="step_order",
                 )
                 ctx = {**ctx, "pipeline_run": run, "step_runs": steps}
-        case_repo = DecisionCasesRepository(self.db)
+        case_repo = DecisionCasesRepository(self._connection())
         case_id = case_repo.create(
             {
                 "name": name,
@@ -79,7 +75,7 @@ class DecisionLogger(DecisionReportMixin, BaseService):
         page: int = 1,
         page_size: int = 20,
     ) -> dict:
-        case_repo = DecisionCasesRepository(self.db)
+        case_repo = DecisionCasesRepository(self._connection())
         total, total_pages, items = case_repo.list_filtered(
             outcome_score_min=outcome_score_min,
             outcome_score_max=outcome_score_max,
@@ -97,7 +93,7 @@ class DecisionLogger(DecisionReportMixin, BaseService):
         }
 
     def get_case(self, case_id: int) -> dict:
-        row = DecisionCasesRepository(self.db).get_active_by_id(case_id)
+        row = DecisionCasesRepository(self._connection()).get_active_by_id(case_id)
         if not row:
             _e404("Case")
         return row
@@ -112,7 +108,7 @@ class DecisionLogger(DecisionReportMixin, BaseService):
         context: Optional[dict] = None,
         tags: Optional[list] = None,
     ) -> dict:
-        case_repo = DecisionCasesRepository(self.db)
+        case_repo = DecisionCasesRepository(self._connection())
         row = case_repo.get_active_by_id(case_id)
         if not row:
             _e404("Case")
@@ -132,7 +128,7 @@ class DecisionLogger(DecisionReportMixin, BaseService):
         return case_repo.get_by_id(case_id)
 
     def delete_case(self, case_id: int) -> None:
-        case_repo = DecisionCasesRepository(self.db)
+        case_repo = DecisionCasesRepository(self._connection())
         row = case_repo.get_active_by_id(case_id)
         if not row:
             _e404("Case")
@@ -145,7 +141,7 @@ class DecisionLogger(DecisionReportMixin, BaseService):
         page: int = 1,
         page_size: int = 20,
     ) -> dict:
-        total, total_pages, items = CrossCaseInsightsRepository(self.db).list_filtered(
+        total, total_pages, items = CrossCaseInsightsRepository(self._connection()).list_filtered(
             insight_type=insight_type,
             confidence_min=confidence_min,
             page=page,
@@ -160,7 +156,7 @@ class DecisionLogger(DecisionReportMixin, BaseService):
         }
 
     def get_insight(self, insight_id: int) -> dict:
-        row = CrossCaseInsightsRepository(self.db).get_active_by_id(insight_id)
+        row = CrossCaseInsightsRepository(self._connection()).get_active_by_id(insight_id)
         if not row:
             _e404("Insight")
         return row
@@ -173,7 +169,7 @@ class DecisionLogger(DecisionReportMixin, BaseService):
         confidence: Optional[float] = None,
         applicability: Optional[str] = None,
     ) -> dict:
-        repo = CrossCaseInsightsRepository(self.db)
+        repo = CrossCaseInsightsRepository(self._connection())
         row = repo.get_active_by_id(insight_id)
         if not row:
             _e404("Insight")

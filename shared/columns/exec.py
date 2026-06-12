@@ -21,20 +21,6 @@ TABLE_AGENT_EXECUTION_TASKS_COLS = frozenset(
     }
 )
 
-TABLE_MCP_AUDIT_LOG_COLS = frozenset(
-    {
-        "id",
-        "tool_name",
-        "user_id",
-        "user_role",
-        "params",
-        "result",
-        "granted",
-        "reason",
-        "created_at",
-    }
-)
-
 TABLE_MCP_TOOLS_COLS = frozenset(
     {
         "id",

@@ -32,7 +32,7 @@ class CollaborationSessionMixin(CollaborationMessageMixin):
         Returns:
             新创建的会话记录字典
         """
-        repo = CollaborationSessionsRepository(self.db)
+        repo = CollaborationSessionsRepository(self._connection())
         sid = f"collab:{uuid.uuid4()}"
         repo.create(
             {
@@ -63,7 +63,7 @@ class CollaborationSessionMixin(CollaborationMessageMixin):
         Returns:
             会话记录列表，按开始时间降序排列
         """
-        repo = CollaborationSessionsRepository(self.db)
+        repo = CollaborationSessionsRepository(self._connection())
         conditions, params = [], []
         if status:
             conditions.append("status=?")
@@ -92,8 +92,8 @@ class CollaborationSessionMixin(CollaborationMessageMixin):
         Raises:
             HTTPException: 会话不存在时返回 404
         """
-        sess_repo = CollaborationSessionsRepository(self.db)
-        steps_repo = CollaborationStepsRepository(self.db)
+        sess_repo = CollaborationSessionsRepository(self._connection())
+        steps_repo = CollaborationStepsRepository(self._connection())
         sess_rows = sess_repo.list_all(conditions=["session_id=?"], params=[session_id])
         if not sess_rows:
             raise HTTPException(status_code=404, detail="Session not found")

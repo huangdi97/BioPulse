@@ -6,8 +6,9 @@ import uuid
 from fastapi import HTTPException
 from starlette import status
 
-from cloud.app.services.a2a_discovery import A2aDiscoveryMixin, _row_to_dict
+from cloud.app.services.a2a_discovery import A2aDiscoveryMixin
 from shared.base_service import BaseService
+from shared.datetime_utils import row_to_dict
 
 
 class A2aRegistryService(A2aDiscoveryMixin, BaseService):
@@ -51,7 +52,7 @@ class A2aRegistryService(A2aDiscoveryMixin, BaseService):
         row = self.db.execute("SELECT * FROM agent_registry WHERE agent_key=?", (agent_key,)).fetchone()
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="agent not found")
-        return _row_to_dict(row)
+        return row_to_dict(row, "capabilities", "metadata", "input_data", "output_data", "detail")
 
     def heartbeat(self, agent_key):
         """更新 Agent 心跳时间并置为在线。
@@ -120,7 +121,7 @@ class A2aRegistryService(A2aDiscoveryMixin, BaseService):
         row = self.db.execute("SELECT * FROM agent_tasks WHERE task_id=?", (task_id,)).fetchone()
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="task not found")
-        return _row_to_dict(row)
+        return row_to_dict(row, "capabilities", "metadata", "input_data", "output_data", "detail")
 
     def list_tasks(self, status=None, agent_key=None, limit=50):
         """按条件查询任务列表。
@@ -141,7 +142,7 @@ class A2aRegistryService(A2aDiscoveryMixin, BaseService):
         sql += " ORDER BY created_at DESC LIMIT ?"
         params.append(limit)
         rows = self.db.execute(sql, params).fetchall()
-        return [_row_to_dict(r) for r in rows]
+        return [row_to_dict(r, "capabilities", "metadata", "input_data", "output_data", "detail") for r in rows]
 
     def _event(self, etype, agent_key, detail=None):
         """向 agent_network_events 表插入一条审计事件记录。

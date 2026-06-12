@@ -4,8 +4,8 @@ import json
 import logging
 import uuid
 
-from cloud.app.agent_runtime.analyzer.models import Hypothesis, RootCauseNarrative, VerificationPlan, VerificationResult
 from cloud.app.agent_runtime.analyzer.classifier import call_llm, extract_json
+from cloud.app.agent_runtime.analyzer.models import Hypothesis, RootCauseNarrative, VerificationPlan, VerificationResult
 from shared.config import settings as config_settings
 
 logger = logging.getLogger(__name__)
@@ -125,13 +125,15 @@ class HypothesisEngine:
             else:
                 hyp.evidence_against = evidence
 
-            results.append(VerificationResult(
-                hypothesis_id=hyp.id,
-                confirmed=confirmed,
-                confidence=confidence,
-                evidence=evidence,
-                narrative=f"假设「{hyp.description}」{'成立' if confirmed else '被证伪'}, 置信度{confidence:.0%}",
-            ))
+            results.append(
+                VerificationResult(
+                    hypothesis_id=hyp.id,
+                    confirmed=confirmed,
+                    confidence=confidence,
+                    evidence=evidence,
+                    narrative=f"假设「{hyp.description}」{'成立' if confirmed else '被证伪'}, 置信度{confidence:.0%}",
+                )
+            )
         return results
 
     def generate_narrative(self, hypotheses: list[Hypothesis], results: list[VerificationResult]) -> RootCauseNarrative:

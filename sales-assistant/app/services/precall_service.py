@@ -13,7 +13,6 @@ from sales_assistant.app.repositories import (
 from shared.ai_gateway import call_ai_gateway
 from shared.base_service import BaseService
 
-TIMEOUT_SECONDS = 30
 logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = (

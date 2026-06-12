@@ -30,7 +30,8 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     try:
         payload = verify_token(token)
         user_id = int(payload["sub"])
-    except Exception:
+    except Exception as e:
+        logger.warning("WebSocket route异常: %s", e, exc_info=True)
         await websocket.close(code=4001)
         return
 
@@ -41,5 +42,6 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
             logger.info("WS message from user %d: %s", user_id, data)
     except WebSocketDisconnect:
         await connection_manager.disconnect(websocket, user_id)
-    except Exception:
+    except Exception as e:
+        logger.warning("WebSocket disconnect异常: %s", e, exc_info=True)
         await connection_manager.disconnect(websocket, user_id)

@@ -30,6 +30,7 @@ ASSISTANT_DB = os.path.join(BASE_DIR, "data", "assistant.db")
 
 # ========== 通用数据 ==========
 
+
 def _get_conn(db_path: str) -> sqlite3.Connection:
     """获取数据库连接（自动创建目录并启用 WAL）。"""
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
@@ -53,9 +54,7 @@ def seed_users(conn: sqlite3.Connection) -> None:
     existing = {
         row["username"]
         for row in conn.execute(
-            "SELECT username FROM users WHERE username IN ({})".format(
-                ",".join("?" for _ in users)
-            ),
+            "SELECT username FROM users WHERE username IN ({})".format(",".join("?" for _ in users)),
             [u[0] for u in users],
         ).fetchall()
     }
@@ -70,14 +69,32 @@ def seed_users(conn: sqlite3.Connection) -> None:
 
 def seed_hcps(conn: sqlite3.Connection) -> None:
     """创建 20 条 HCP 档案。"""
-    names = ["张建国", "李明华", "王芳", "刘伟", "陈静", "赵强", "孙丽", "周涛", "吴敏", "郑浩",
-             "黄磊", "林芳", "郭强", "马丽", "高峰", "宋丹", "秦川", "韩冰", "杨帆", "何琳"]
+    names = [
+        "张建国",
+        "李明华",
+        "王芳",
+        "刘伟",
+        "陈静",
+        "赵强",
+        "孙丽",
+        "周涛",
+        "吴敏",
+        "郑浩",
+        "黄磊",
+        "林芳",
+        "郭强",
+        "马丽",
+        "高峰",
+        "宋丹",
+        "秦川",
+        "韩冰",
+        "杨帆",
+        "何琳",
+    ]
     existing = {
         row["name"]
         for row in conn.execute(
-            "SELECT name FROM hcp_profiles WHERE name IN ({})".format(
-                ",".join("?" for _ in names)
-            ),
+            "SELECT name FROM hcp_profiles WHERE name IN ({})".format(",".join("?" for _ in names)),
             names,
         ).fetchall()
     }
@@ -107,8 +124,7 @@ def seed_hcps(conn: sqlite3.Connection) -> None:
         if hcp[0] in existing:
             continue
         conn.execute(
-            "INSERT INTO hcp_profiles (name, title, hospital, department, specialty, tier, influence_score) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO hcp_profiles (name, title, hospital, department, specialty, tier, influence_score) VALUES (?, ?, ?, ?, ?, ?, ?)",
             hcp,
         )
     conn.commit()
@@ -136,18 +152,11 @@ def seed_visits(conn: sqlite3.Connection) -> None:
     existing = {
         row["content"]
         for row in conn.execute(
-            "SELECT content FROM visits WHERE content IN ({})".format(
-                ",".join("?" for _ in visit_contents)
-            ),
+            "SELECT content FROM visits WHERE content IN ({})".format(",".join("?" for _ in visit_contents)),
             visit_contents,
         ).fetchall()
     }
-    hcp_ids = [
-        row["id"]
-        for row in conn.execute(
-            "SELECT id FROM hcp_profiles LIMIT 10"
-        ).fetchall()
-    ]
+    hcp_ids = [row["id"] for row in conn.execute("SELECT id FROM hcp_profiles LIMIT 10").fetchall()]
     if not hcp_ids or len(hcp_ids) < 10:
         return
 
@@ -155,8 +164,7 @@ def seed_visits(conn: sqlite3.Connection) -> None:
         if v[2] in existing:
             continue
         conn.execute(
-            "INSERT INTO visits (hcp_id, hcp_name, content, visit_type, compliance_status, location) "
-            "VALUES (?, ?, ?, ?, ?, '医院')",
+            "INSERT INTO visits (hcp_id, hcp_name, content, visit_type, compliance_status, location) VALUES (?, ?, ?, ?, ?, '医院')",
             v,
         )
     conn.commit()
@@ -168,9 +176,7 @@ def seed_products(conn: sqlite3.Connection) -> None:
     existing = {
         row["name"]
         for row in conn.execute(
-            "SELECT name FROM products WHERE name IN ({})".format(
-                ",".join("?" for _ in names)
-            ),
+            "SELECT name FROM products WHERE name IN ({})".format(",".join("?" for _ in names)),
             names,
         ).fetchall()
     }
@@ -185,8 +191,7 @@ def seed_products(conn: sqlite3.Connection) -> None:
         if p[0] in existing:
             continue
         conn.execute(
-            "INSERT INTO products (name, category, brand, model, spec, unit_price, keywords) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO products (name, category, brand, model, spec, unit_price, keywords) VALUES (?, ?, ?, ?, ?, ?, ?)",
             (*p,),
         )
     conn.commit()
@@ -194,16 +199,14 @@ def seed_products(conn: sqlite3.Connection) -> None:
 
 # ========== 科研模式 ==========
 
+
 def seed_research_pis(conn: sqlite3.Connection) -> None:
     """创建 10 条 PI 档案（科研模式）。"""
-    names = ["陈院士", "张教授", "李研究员", "王教授", "刘研究员",
-             "赵教授", "孙研究员", "周教授", "吴研究员", "郑教授"]
+    names = ["陈院士", "张教授", "李研究员", "王教授", "刘研究员", "赵教授", "孙研究员", "周教授", "吴研究员", "郑教授"]
     existing = {
         row["name"]
         for row in conn.execute(
-            "SELECT name FROM research_pi_profiles WHERE name IN ({})".format(
-                ",".join("?" for _ in names)
-            ),
+            "SELECT name FROM research_pi_profiles WHERE name IN ({})".format(",".join("?" for _ in names)),
             names,
         ).fetchall()
     }
@@ -223,8 +226,7 @@ def seed_research_pis(conn: sqlite3.Connection) -> None:
         if pi[0] in existing:
             continue
         conn.execute(
-            "INSERT INTO research_pi_profiles (name, institution, research_areas, total_papers, total_grants, h_index) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT INTO research_pi_profiles (name, institution, research_areas, total_papers, total_grants, h_index) VALUES (?, ?, ?, ?, ?, ?)",
             (pi[0], pi[1], json.dumps([pi[2]], ensure_ascii=False), pi[3], pi[4], pi[5]),
         )
     conn.commit()
@@ -232,17 +234,32 @@ def seed_research_pis(conn: sqlite3.Connection) -> None:
 
 def seed_research_products(conn: sqlite3.Connection) -> None:
     """创建 20 个科研产品（试剂/耗材/仪器）。"""
-    names = ["Q5 热启动超保真DNA聚合酶", "RNeasy 迷你纯化试剂盒", "DMEM 高糖培养基", "胎牛血清 FBS",
-             "PVDF 转印膜 0.45μm", "75cm² 细胞培养瓶", "15mL 锥形离心管", "2mL 冻存管",
-             "兔抗人GAPDH 抗体", "BCA 蛋白定量试剂盒", "TRIzol 总RNA提取试剂", "SYBR Green qPCR 预混液",
-             "琼脂糖 标准级", "DAPI 封片剂", "Protease Inhibitor Cocktail", "CO₂ 培养箱",
-             "生物安全柜 Class II", "微量离心机", "Nanodrop 分光光度计", "-80℃ 超低温冰箱"]
+    names = [
+        "Q5 热启动超保真DNA聚合酶",
+        "RNeasy 迷你纯化试剂盒",
+        "DMEM 高糖培养基",
+        "胎牛血清 FBS",
+        "PVDF 转印膜 0.45μm",
+        "75cm² 细胞培养瓶",
+        "15mL 锥形离心管",
+        "2mL 冻存管",
+        "兔抗人GAPDH 抗体",
+        "BCA 蛋白定量试剂盒",
+        "TRIzol 总RNA提取试剂",
+        "SYBR Green qPCR 预混液",
+        "琼脂糖 标准级",
+        "DAPI 封片剂",
+        "Protease Inhibitor Cocktail",
+        "CO₂ 培养箱",
+        "生物安全柜 Class II",
+        "微量离心机",
+        "Nanodrop 分光光度计",
+        "-80℃ 超低温冰箱",
+    ]
     existing = {
         row["name"]
         for row in conn.execute(
-            "SELECT name FROM research_products WHERE name IN ({})".format(
-                ",".join("?" for _ in names)
-            ),
+            "SELECT name FROM research_products WHERE name IN ({})".format(",".join("?" for _ in names)),
             names,
         ).fetchall()
     }
@@ -272,8 +289,7 @@ def seed_research_products(conn: sqlite3.Connection) -> None:
         if p[0] in existing:
             continue
         conn.execute(
-            "INSERT INTO research_products (name, category, brand, model, spec, unit_price, keywords) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO research_products (name, category, brand, model, spec, unit_price, keywords) VALUES (?, ?, ?, ?, ?, ?, ?)",
             p,
         )
     conn.commit()
@@ -283,18 +299,8 @@ def seed_research_visits(conn: sqlite3.Connection, cloud_conn: sqlite3.Connectio
     """创建 5 条科研拜访记录。"""
     if conn.execute("SELECT COUNT(*) FROM research_visits").fetchone()[0] > 0:
         return
-    pi_ids = [
-        row["pi_id"]
-        for row in conn.execute(
-            "SELECT pi_id FROM research_pi_profiles ORDER BY pi_id ASC LIMIT 5"
-        ).fetchall()
-    ]
-    rep_ids = [
-        row["id"]
-        for row in cloud_conn.execute(
-            "SELECT id FROM users WHERE role = 'researcher' LIMIT 2"
-        ).fetchall()
-    ]
+    pi_ids = [row["pi_id"] for row in conn.execute("SELECT pi_id FROM research_pi_profiles ORDER BY pi_id ASC LIMIT 5").fetchall()]
+    rep_ids = [row["id"] for row in cloud_conn.execute("SELECT id FROM users WHERE role = 'researcher' LIMIT 2").fetchall()]
     if not pi_ids or not rep_ids:
         return
     visits = [
@@ -306,8 +312,7 @@ def seed_research_visits(conn: sqlite3.Connection, cloud_conn: sqlite3.Connectio
     ]
     for v in visits:
         conn.execute(
-            "INSERT INTO research_visits (pi_id, rep_id, visit_date, notes, status) "
-            "VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO research_visits (pi_id, rep_id, visit_date, notes, status) VALUES (?, ?, ?, ?, ?)",
             v,
         )
     conn.commit()
@@ -315,15 +320,14 @@ def seed_research_visits(conn: sqlite3.Connection, cloud_conn: sqlite3.Connectio
 
 # ========== 跟台助手 ==========
 
+
 def seed_surgery_reminders(conn: sqlite3.Connection) -> None:
     """创建 10 场手术预约（跟台助手）。"""
     patients = ["王建国", "李秀英", "赵强", "孙丽华", "周明", "吴芳", "郑伟", "黄丽", "马超", "林小红"]
     existing = {
         row["patient_name"]
         for row in conn.execute(
-            "SELECT patient_name FROM surgery_reminder WHERE patient_name IN ({})".format(
-                ",".join("?" for _ in patients)
-            ),
+            "SELECT patient_name FROM surgery_reminder WHERE patient_name IN ({})".format(",".join("?" for _ in patients)),
             patients,
         ).fetchall()
     }
@@ -356,9 +360,7 @@ def seed_device_products(conn: sqlite3.Connection) -> None:
     existing = {
         row["name"]
         for row in conn.execute(
-            "SELECT name FROM products WHERE name IN ({})".format(
-                ",".join("?" for _ in names)
-            ),
+            "SELECT name FROM products WHERE name IN ({})".format(",".join("?" for _ in names)),
             names,
         ).fetchall()
     }
@@ -373,8 +375,7 @@ def seed_device_products(conn: sqlite3.Connection) -> None:
         if p[0] in existing:
             continue
         conn.execute(
-            "INSERT INTO products (name, category, brand, model, spec, unit_price, keywords) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO products (name, category, brand, model, spec, unit_price, keywords) VALUES (?, ?, ?, ?, ?, ?, ?)",
             p,
         )
     conn.commit()

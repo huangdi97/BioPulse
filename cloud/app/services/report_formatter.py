@@ -31,7 +31,7 @@ class ReportFormatterMixin:
         Returns:
             分页结果
         """
-        repo = TrainingCorrectionsRepository(self.db)
+        repo = TrainingCorrectionsRepository(self._connection())
         conditions, params = [], []
         if category:
             conditions.append("category=?")
@@ -70,7 +70,7 @@ class ReportFormatterMixin:
         Returns:
             更新后的纠偏记录
         """
-        repo = TrainingCorrectionsRepository(self.db)
+        repo = TrainingCorrectionsRepository(self._connection())
         row = repo.get_by_id(correction_id)
         if not row:
             _n404("Correction")

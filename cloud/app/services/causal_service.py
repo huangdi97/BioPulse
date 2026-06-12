@@ -49,8 +49,8 @@ class CausalService(CausalGraphMixin, BaseService):
         Raises:
             HTTPException: HCP 实体不存在时返回 404
         """
-        kg_repo = KgEntitiesRepository(self.db)
-        em_repo = EpisodicMemoryRepository(self.db)
+        kg_repo = KgEntitiesRepository(self._connection())
+        em_repo = EpisodicMemoryRepository(self._connection())
         hcp_row = kg_repo.db.execute(
             "SELECT * FROM kg_entities WHERE entity_id=? AND status='active'",
             (hcp_entity_id,),

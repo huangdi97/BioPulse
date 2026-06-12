@@ -6,6 +6,8 @@ import threading
 import urllib.request
 from datetime import datetime
 
+from shared.ai_gateway import INTERNAL_API_TIMEOUT
+
 logger = logging.getLogger(__name__)
 
 
@@ -24,14 +26,17 @@ class Notifier:
         self._channels: dict[str, callable] = {}
 
     def register_channel(self, name: str, handler: callable) -> None:
+        """注册通知通道处理器。"""
         self._channels[name] = handler
 
     def notify(self, agent_key: str, goal: str, status: str, elapsed_seconds: float, cost: dict) -> None:
+        """发送 Agent 执行完成通知。"""
         message = f"[Agent] {agent_key} | {status} | 耗时:{elapsed_seconds:.1f}s | Token:{cost.get('total_tokens', 0)}"
         logger.info(message)
         self.send(message, priority="normal", channels=[NotificationChannel.IN_APP])
 
     def send(self, message: str, priority: str = "normal", channels: list[str] | None = None) -> None:
+        """发送消息到指定通道。"""
         channels = channels or [NotificationChannel.IN_APP]
         for channel in channels:
             handler = self._channels.get(channel)
@@ -43,6 +48,7 @@ class Notifier:
                 logger.warning("WEBHOOK channel not configured for message: %s", message[:100])
 
     def send_approval_request(self, agent_name: str, action: str, detail: dict) -> str:
+        """发送审批请求。"""
         if not self._agent_db:
             logger.warning("Cannot send approval: no database connection")
             return ""
@@ -66,7 +72,7 @@ class Notifier:
         body = json.dumps({"text": message, "priority": priority}).encode("utf-8")
         try:
             req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST")
-            with urllib.request.urlopen(req, timeout=10):
+            with urllib.request.urlopen(req, timeout=INTERNAL_API_TIMEOUT):
                 pass
         except Exception:
             logger.exception("Failed to send webhook notification to %s", url)
@@ -85,14 +91,14 @@ class Notifier:
         return request_id
 
     def check_approval_status(self, request_id: str) -> str | None:
+        """检查审批请求状态。"""
         if not self._agent_db:
             return None
-        row = self._agent_db.execute(
-            "SELECT status FROM agent_runtime_approvals WHERE trace_id=?", (request_id,)
-        ).fetchone()
+        row = self._agent_db.execute("SELECT status FROM agent_runtime_approvals WHERE trace_id=?", (request_id,)).fetchone()
         return row["status"] if row else None
 
     def set_webhook_channel(self, name: str, url: str) -> None:
+        """设置 Webhook 通知通道。"""
         self._channels[name] = lambda msg, priority=None: self._send_webhook(url, msg, priority or "normal")
 
 

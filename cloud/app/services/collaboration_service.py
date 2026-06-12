@@ -41,7 +41,7 @@ class CollaborationService(CollaborationSessionMixin, BaseService):
         Returns:
             新创建的技能记录字典
         """
-        repo = AgentSkillsRepository(self.db)
+        repo = AgentSkillsRepository(self._connection())
         row_id = repo.create(
             {
                 "skill_name": skill_name,
@@ -65,7 +65,7 @@ class CollaborationService(CollaborationSessionMixin, BaseService):
         Returns:
             技能记录列表，按优先级升序排列
         """
-        repo = AgentSkillsRepository(self.db)
+        repo = AgentSkillsRepository(self._connection())
         conditions, params = [], []
         if agent_role:
             conditions.append("agent_role=?")
@@ -88,7 +88,7 @@ class CollaborationService(CollaborationSessionMixin, BaseService):
         Raises:
             HTTPException: 技能不存在时返回 404
         """
-        repo = AgentSkillsRepository(self.db)
+        repo = AgentSkillsRepository(self._connection())
         row = repo.get_by_id(skill_id)
         if not row:
             raise HTTPException(status_code=404, detail="Skill not found")
@@ -115,7 +115,7 @@ class CollaborationService(CollaborationSessionMixin, BaseService):
         Raises:
             HTTPException: 无匹配技能时返回 404
         """
-        repo = AgentSkillsRepository(self.db)
+        repo = AgentSkillsRepository(self._connection())
         if entity_type:
             like = f"%{entity_type}%"
             skills = repo.list_all(
@@ -143,9 +143,9 @@ class CollaborationService(CollaborationSessionMixin, BaseService):
         Returns:
             包含技能统计、会话统计、步骤统计、热门 Agent 角色及最近会话的字典
         """
-        skills_repo = AgentSkillsRepository(self.db)
-        sess_repo = CollaborationSessionsRepository(self.db)
-        steps_repo = CollaborationStepsRepository(self.db)
+        skills_repo = AgentSkillsRepository(self._connection())
+        sess_repo = CollaborationSessionsRepository(self._connection())
+        steps_repo = CollaborationStepsRepository(self._connection())
 
         total_skills = skills_repo.count()
         active_skills = skills_repo.count(conditions=["enabled=1"])

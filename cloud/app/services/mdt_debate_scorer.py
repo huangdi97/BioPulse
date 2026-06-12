@@ -3,10 +3,12 @@
 import json
 import urllib.request
 
+from shared.ai_gateway import LLM_INFERENCE_TIMEOUT
 from shared.config import settings as config_settings
 
 
 def _call_ai(messages: list[dict], auth_header: str) -> dict:
+    """调用 AI 网关进行辩论评分。"""
     with urllib.request.urlopen(
         urllib.request.Request(
             f"{config_settings.ai_chat_url}",
@@ -14,12 +16,13 @@ def _call_ai(messages: list[dict], auth_header: str) -> dict:
             headers={"Content-Type": "application/json", "Authorization": auth_header},
             method="POST",
         ),
-        timeout=120,
+        timeout=LLM_INFERENCE_TIMEOUT,
     ) as rp:
         return json.loads(rp.read().decode("utf-8")).get("data", {})
 
 
 def _parse_json(raw: str, default=None):
+    """安全解析 JSON 字符串，失败返回默认值。"""
     try:
         return json.loads(raw)
     except (json.JSONDecodeError, TypeError):
@@ -27,6 +30,7 @@ def _parse_json(raw: str, default=None):
 
 
 def parse_ai_opinion(reply: str) -> dict:
+    """解析 AI 回复中的辩论观点。"""
     parsed = _parse_json(reply, {})
     if isinstance(parsed, dict):
         return {
@@ -46,6 +50,7 @@ def parse_ai_opinion(reply: str) -> dict:
 
 
 def parse_consensus_json(raw: str | None) -> dict:
+    """解析共识结果的 JSON 字符串。"""
     if not raw:
         return {}
     try:

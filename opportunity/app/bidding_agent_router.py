@@ -193,7 +193,7 @@ def schedule_bidding_scan():
         service = BiddingAgentService()
         service.run_scheduled_scan()
     except Exception:
-        logger.exception("定时扫描任务异常")
+        logger.exception("投标路由异常")
 
 
 from apscheduler.schedulers.background import BackgroundScheduler

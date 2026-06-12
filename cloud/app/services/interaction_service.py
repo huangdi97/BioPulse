@@ -24,8 +24,8 @@ class InteractionService(BaseService):
         conducted_at: Optional[str],
         user_id: int,
     ) -> dict:
-        customers_repo = CustomersRepository(self.db)
-        interactions_repo = CustomerInteractionsRepository(self.db)
+        customers_repo = CustomersRepository(self._connection())
+        interactions_repo = CustomerInteractionsRepository(self._connection())
         if not customers_repo.exists(customer_id):
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Customer not found")
         data = {
@@ -40,7 +40,7 @@ class InteractionService(BaseService):
         return interactions_repo.get_by_id(row_id)
 
     def list_customer_interactions(self, customer_id: int) -> list:
-        return CustomerInteractionsRepository(self.db).list_by_customer_id(customer_id)
+        return CustomerInteractionsRepository(self._connection()).list_by_customer_id(customer_id)
 
     def list_interactions(
         self,
@@ -49,7 +49,7 @@ class InteractionService(BaseService):
         page: int = 1,
         page_size: int = 20,
     ) -> dict:
-        interactions_repo = CustomerInteractionsRepository(self.db)
+        interactions_repo = CustomerInteractionsRepository(self._connection())
         total, total_pages, items = interactions_repo.list_filtered(type_=type_, conducted_by=conducted_by, page=page, page_size=page_size)
         return {
             "items": items,
@@ -59,7 +59,7 @@ class InteractionService(BaseService):
         }
 
     def update_interaction(self, interaction_id: int, updates: dict) -> dict:
-        interactions_repo = CustomerInteractionsRepository(self.db)
+        interactions_repo = CustomerInteractionsRepository(self._connection())
         row = interactions_repo.get_by_id(interaction_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Interaction not found")
@@ -69,7 +69,7 @@ class InteractionService(BaseService):
         return interactions_repo.get_by_id(interaction_id)
 
     def delete_interaction(self, interaction_id: int) -> None:
-        interactions_repo = CustomerInteractionsRepository(self.db)
+        interactions_repo = CustomerInteractionsRepository(self._connection())
         if not interactions_repo.get_by_id(interaction_id):
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Interaction not found")
         interactions_repo.delete(interaction_id)

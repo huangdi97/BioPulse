@@ -7,6 +7,8 @@ from typing import Optional
 import httpx
 import yaml
 
+from shared.ai_gateway import INTERNAL_API_TIMEOUT
+
 logger = logging.getLogger(__name__)
 
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -125,7 +127,7 @@ class L1RuleCache:
         results = {}
         for mode in ("pharma", "research"):
             try:
-                resp = httpx.get(f"{self.cloud_api_base}/compliance/rules/{mode}", timeout=10)
+                resp = httpx.get(f"{self.cloud_api_base}/compliance/rules/{mode}", timeout=INTERNAL_API_TIMEOUT)
                 if resp.status_code == 200:
                     data = resp.json()
                     rules = data.get("data", data.get("rules", data))

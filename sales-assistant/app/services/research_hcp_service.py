@@ -76,6 +76,14 @@ _EXPERIMENTS: dict[str, list[ExperimentMethod]] = {
 
 
 def _fallback_papers(hcp_id: str) -> list[PaperInfo]:
+    """生成默认论文列表（当指定 HCP 无论文数据时使用）。
+
+    Args:
+        hcp_id: HCP 唯一标识符。
+
+    Returns:
+        包含一条默认论文信息的列表。
+    """
     return [
         PaperInfo(
             id=f"paper-{hcp_id}-001",
@@ -89,10 +97,26 @@ def _fallback_papers(hcp_id: str) -> list[PaperInfo]:
 
 
 def get_papers(hcp_id: str) -> list[PaperInfo]:
+    """获取指定 HCP 的论文列表。
+
+    Args:
+        hcp_id: HCP 唯一标识符。
+
+    Returns:
+        论文信息列表，若无数据则返回默认值。
+    """
     return _PAPERS.get(hcp_id, _fallback_papers(hcp_id))
 
 
 def get_grants(hcp_id: str) -> list[GrantInfo]:
+    """获取指定 HCP 的科研基金信息。
+
+    Args:
+        hcp_id: HCP 唯一标识符。
+
+    Returns:
+        基金信息列表，若无数据则返回默认值。
+    """
     return _GRANTS.get(
         hcp_id,
         [
@@ -109,6 +133,14 @@ def get_grants(hcp_id: str) -> list[GrantInfo]:
 
 
 def calc_h_index(papers: list[PaperInfo]) -> int:
+    """计算 H 指数。
+
+    Args:
+        papers: 论文信息列表。
+
+    Returns:
+        计算所得的 H 指数值。
+    """
     citations = sorted((paper.citations for paper in papers), reverse=True)
     h_index = 0
     for idx, citation_count in enumerate(citations, start=1):
@@ -120,6 +152,14 @@ def calc_h_index(papers: list[PaperInfo]) -> int:
 
 
 def extract_experiment_methods(hcp_id: str) -> list[ExperimentMethod]:
+    """获取指定 HCP 的实验方法列表。
+
+    Args:
+        hcp_id: HCP 唯一标识符。
+
+    Returns:
+        实验方法信息列表，若无数据则返回默认值。
+    """
     return _EXPERIMENTS.get(
         hcp_id,
         [
@@ -134,6 +174,14 @@ def extract_experiment_methods(hcp_id: str) -> list[ExperimentMethod]:
 
 
 def get_comprehensive_score(profile: ResearchProfile) -> float:
+    """计算 HCP 研究综合评分。
+
+    Args:
+        profile: HCP 研究画像对象。
+
+    Returns:
+        综合评分值（满分 100）。
+    """
     paper_score = min(len(profile.papers) * 12, 36)
     grant_score = min(len(profile.grants) * 14, 28)
     h_index_score = min(profile.h_index * 4, 24)
@@ -142,6 +190,16 @@ def get_comprehensive_score(profile: ResearchProfile) -> float:
 
 
 def enrich_research_profile(hcp_id: str) -> ResearchProfile:
+    """丰富 HCP 研究画像数据。
+
+    综合获取论文、基金、实验方法等信息，并计算 H 指数、影响因子和综合评分。
+
+    Args:
+        hcp_id: HCP 唯一标识符。
+
+    Returns:
+        包含完整研究画像数据的 ResearchProfile 对象。
+    """
     papers = get_papers(hcp_id)
     grants = get_grants(hcp_id)
     experiments = extract_experiment_methods(hcp_id)

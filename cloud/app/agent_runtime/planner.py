@@ -104,6 +104,7 @@ class Planner:
             result = llm._call_ai(messages, temperature=0.2, force_level=5)
             return result.get("reply", "")
         except Exception:
+            logger.warning("Planner异常", exc_info=True)
             return ""
 
     @staticmethod

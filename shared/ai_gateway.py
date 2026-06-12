@@ -9,6 +9,8 @@ from shared.app_settings import settings
 
 AI_GATEWAY_URL = f"{settings.cloud_api_base}/ai/chat"
 TIMEOUT_SECONDS = 30
+INTERNAL_API_TIMEOUT = 10
+LLM_INFERENCE_TIMEOUT = 120
 logger = logging.getLogger(__name__)
 
 

@@ -23,7 +23,7 @@ def test_rate_limiter_rejects_over_limit():
 def test_rate_limiter_recovers_after_window():
     rl = RateLimiter()
     rl.set_limit("test_key", 2, 1)
-    with patch('cloud.app.agent_runtime.rate_limiter.time.time', side_effect=[0, 0, 0, 1.1]):
+    with patch("cloud.app.agent_runtime.rate_limiter.time.time", side_effect=[0, 0, 0, 1.1]):
         rl.check("test_key")
         rl.check("test_key")
         assert rl.check("test_key") is False

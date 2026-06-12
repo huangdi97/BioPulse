@@ -38,6 +38,7 @@ class SignalCollector:
                         result = await result
                     results.append(result)
             except Exception:
+                logger.warning("Signal collector异常", exc_info=True)
                 results.append(None)
         return results
 

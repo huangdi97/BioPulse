@@ -21,6 +21,13 @@ class VisitCreate(BaseModel):
     location_mode: str = ""
 
 
+@router.get("", tags=["拜访"])
+def list_visits(user: dict = Depends(require_scope("visit"))):
+    service = VisitService()
+    records = service.list_visits()
+    return success(data=records)
+
+
 @router.post("", status_code=status.HTTP_201_CREATED, tags=["拜访"])
 def create_visit(body: VisitCreate, user: dict = Depends(require_scope("visit"))):
     service = VisitService()

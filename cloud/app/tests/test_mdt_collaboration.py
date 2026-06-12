@@ -175,13 +175,13 @@ class TestTeamUpdate:
 class TestVisitRouter:
     def test_get_visits(self, client, auth_token):
         resp = client.get(
-            "/visit/",
+            "/api/visit",
             headers={"Authorization": f"Bearer {auth_token}"},
         )
         assert resp.status_code == 200
 
     def test_visit_auth_required(self, client):
-        resp = client.post("/visit", json={"hcp_id": 1, "hcp_name": "x", "content": "y"})
+        resp = client.post("/api/visit", json={"hcp_id": 1, "hcp_name": "x", "content": "y"})
         assert resp.status_code == 401
 
 

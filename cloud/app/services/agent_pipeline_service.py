@@ -71,7 +71,7 @@ class AgentPipelineService(PipelineRunQueryMixin, PipelineExecutorMixin, BaseSer
         Raises:
             HTTPException: 流水线不存在时返回 404
         """
-        repo = AgentPipelinesRepository(self.db)
+        repo = AgentPipelinesRepository(self._connection())
         row = repo.get_by_id(pid)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Pipeline not found")
@@ -88,8 +88,8 @@ class AgentPipelineService(PipelineRunQueryMixin, PipelineExecutorMixin, BaseSer
             创建的流水线记录
         """
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        pipelines_repo = AgentPipelinesRepository(self.db)
-        steps_repo = PipelineStepsRepository(self.db)
+        pipelines_repo = AgentPipelinesRepository(self._connection())
+        steps_repo = PipelineStepsRepository(self._connection())
         pid = pipelines_repo.create(
             {
                 "name": body.name,
@@ -109,7 +109,7 @@ class AgentPipelineService(PipelineRunQueryMixin, PipelineExecutorMixin, BaseSer
                     "custom_prompt_override": s.custom_prompt_override,
                 }
             )
-        return success(data=self._pd(pipelines_repo.get_by_id(pid)))
+        return self._pd(pipelines_repo.get_by_id(pid))
 
     def list_pipelines(self) -> ApiResponse:
         """列出所有流水线（含步骤数）。
@@ -117,7 +117,7 @@ class AgentPipelineService(PipelineRunQueryMixin, PipelineExecutorMixin, BaseSer
         Returns:
             流水线列表
         """
-        pipelines_repo = AgentPipelinesRepository(self.db)
+        pipelines_repo = AgentPipelinesRepository(self._connection())
         rows = pipelines_repo.list_all(order_by="created_at DESC")
         pipeline_ids = [r["id"] for r in rows]
         step_counts = {}
@@ -129,7 +129,7 @@ class AgentPipelineService(PipelineRunQueryMixin, PipelineExecutorMixin, BaseSer
             ).fetchall()
             step_counts = {r["pipeline_id"]: r["cnt"] for r in count_rows}
         result = [{**self._pd(r), "step_count": step_counts.get(r["id"], 0)} for r in rows]
-        return success(data=result)
+        return result
 
     def get_pipeline(self, pipeline_id: int) -> ApiResponse:
         """获取流水线详情（含步骤列表）。
@@ -140,10 +140,10 @@ class AgentPipelineService(PipelineRunQueryMixin, PipelineExecutorMixin, BaseSer
         Returns:
             流水线记录含步骤
         """
-        steps_repo = PipelineStepsRepository(self.db)
+        steps_repo = PipelineStepsRepository(self._connection())
         row = self._p404(pipeline_id)
         steps = steps_repo.list_all(conditions=["pipeline_id=?"], params=[pipeline_id], order_by="step_order ASC")
-        return success(data={**self._pd(row), "steps": [self._sd(s) for s in steps]})
+        return {**self._pd(row), "steps": [self._sd(s) for s in steps]}
 
     def delete_pipeline(self, pipeline_id: int) -> ApiResponse:
         """删除流水线及其关联的步骤和运行记录。
@@ -154,7 +154,7 @@ class AgentPipelineService(PipelineRunQueryMixin, PipelineExecutorMixin, BaseSer
         Returns:
             成功响应
         """
-        pipelines_repo = AgentPipelinesRepository(self.db)
+        pipelines_repo = AgentPipelinesRepository(self._connection())
         self._p404(pipeline_id)
         self.db.execute("DELETE FROM pipeline_steps WHERE pipeline_id=?", (pipeline_id,))
         self.db.execute("DELETE FROM pipeline_runs WHERE pipeline_id=?", (pipeline_id,))

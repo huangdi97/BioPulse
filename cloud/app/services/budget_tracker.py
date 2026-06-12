@@ -103,9 +103,7 @@ class BudgetTracker:
         conn = _connect()
         try:
             rows = conn.execute(
-                "SELECT user_id, model, COALESCE(SUM(tokens), 0) AS total "
-                "FROM token_usage WHERE usage_date=? "
-                "GROUP BY user_id, model",
+                "SELECT user_id, model, COALESCE(SUM(tokens), 0) AS total FROM token_usage WHERE usage_date=? GROUP BY user_id, model",
                 (today,),
             ).fetchall()
             usage_map = {(r["user_id"], r["model"]): r["total"] for r in rows}

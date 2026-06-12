@@ -12,7 +12,7 @@ class TestWorldTreeRouter:
             },
             headers={"Authorization": f"Bearer {auth_token}"},
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         data = resp.json()["data"]
         assert data["name"] is not None
         assert "id" in data

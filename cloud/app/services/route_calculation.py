@@ -10,10 +10,10 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.repositories import AgentRolesRepository, RouteLogsRepository, RouteRulesRepository, RouteStatsRepository
+from shared.ai_gateway import TIMEOUT_SECONDS
 from shared.config import settings
 
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
-TIMEOUT_SECONDS = 30
 
 
 def _call_deepseek(messages: list, temperature: float, max_tokens: int) -> dict:
@@ -75,10 +75,10 @@ class RouteCalculationMixin:
             包含角色名称、AI 回复、置信度、延迟及匹配规则信息的字典
         """
         start = time.time()
-        rules_repo = RouteRulesRepository(self.db)
-        logs_repo = RouteLogsRepository(self.db)
-        stats_repo = RouteStatsRepository(self.db)
-        roles_repo = AgentRolesRepository(self.db)
+        rules_repo = RouteRulesRepository(self._connection())
+        logs_repo = RouteLogsRepository(self._connection())
+        stats_repo = RouteStatsRepository(self._connection())
+        roles_repo = AgentRolesRepository(self._connection())
         rules = rules_repo.list_active_ordered()
         matched = None
         for r in rules:

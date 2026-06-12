@@ -3,25 +3,22 @@
 import hashlib
 import json
 import urllib.request
-from datetime import datetime
 
 from fastapi import Request
 
-from cloud.app.compliance.engine import ComplianceStrategyService
+from cloud.app.compliance.strategy_service import ComplianceStrategyService
 from cloud.app.repositories import (
     AuditChainEntriesRepository,
     ComplianceAuditRecordsRepository,
     ComplianceRulesRepository,
 )
 from cloud.app.services.rule_aggregator import RuleAggregatorMixin, _parse_json
+from shared.ai_gateway import LLM_INFERENCE_TIMEOUT
 from shared.base import success
 from shared.base_service import BaseService
 from shared.compliance import check_content
 from shared.config import settings as config_settings
-
-
-def _now() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+from shared.datetime_utils import now as _now
 
 
 def _call_ai(messages: list[dict], auth_header: str) -> dict:
@@ -32,7 +29,7 @@ def _call_ai(messages: list[dict], auth_header: str) -> dict:
         headers={"Content-Type": "application/json", "Authorization": auth_header},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=120) as rp:
+    with urllib.request.urlopen(req, timeout=LLM_INFERENCE_TIMEOUT) as rp:
         return json.loads(rp.read().decode("utf-8")).get("data", {})
 
 
@@ -48,9 +45,9 @@ class RuleEvaluator(RuleAggregatorMixin, BaseService):
 
     def scan(self, body, request: Request, uid: int) -> dict:
         n = _now()
-        rules_repo = ComplianceRulesRepository(self.db)
-        audit_repo = ComplianceAuditRecordsRepository(self.db)
-        chain_repo = AuditChainEntriesRepository(self.db)
+        rules_repo = ComplianceRulesRepository(self._connection())
+        audit_repo = ComplianceAuditRecordsRepository(self._connection())
+        chain_repo = AuditChainEntriesRepository(self._connection())
         rules_rows = rules_repo.list_all()
         rules = [
             {

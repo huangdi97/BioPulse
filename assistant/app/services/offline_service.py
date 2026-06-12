@@ -229,7 +229,7 @@ class OfflineService(BaseService):
             resp = httpx.get(f"{CLOUD_API_URL}/health", timeout=5)
             return resp.is_success
         except Exception:
-            logger.warning("离线服务异常", exc_info=True)
+            logger.exception("同步异常")
             return False
 
     def _count_unsynced(self) -> int:
@@ -243,7 +243,7 @@ class OfflineService(BaseService):
                 row = self.db.execute(f"SELECT COUNT(*) AS cnt FROM {table}").fetchone()
                 summary[table] = row["cnt"] if row else 0
             except Exception:
-                logger.warning("离线服务同步异常", exc_info=True)
+                logger.exception("清理异常")
                 summary[table] = 0
         return summary
 

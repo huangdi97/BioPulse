@@ -1,7 +1,7 @@
 """Shared HCP CRUD helpers for assistant and sales-assistant services."""
 
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Optional
 
 from shared.base_service import BaseService
 

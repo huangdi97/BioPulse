@@ -19,7 +19,7 @@ class TestRequest(BaseModel):
 
 @router.post("/test", tags=["langgraph"])
 def run_test_graph(body: TestRequest, _: dict = Depends(require_scope("visit"))):
-    from cloud.langgraph.graph import get_test_graph
+    from cloud.lg_utils.graph import get_test_graph
 
     graph = get_test_graph()
     thread_id = str(uuid.uuid4())
@@ -29,8 +29,10 @@ def run_test_graph(body: TestRequest, _: dict = Depends(require_scope("visit")))
         {"messages": [initial_message], "next_agent": "", "metadata": {}},
         config,
     )
-    return success(data={
-        "thread_id": thread_id,
-        "messages": result["messages"],
-        "status": "completed",
-    })
+    return success(
+        data={
+            "thread_id": thread_id,
+            "messages": result["messages"],
+            "status": "completed",
+        }
+    )

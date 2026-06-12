@@ -17,7 +17,6 @@ from shared.base_service import BaseService
 from shared.columns import TABLE_ROUTE_RULES_COLS
 
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
-TIMEOUT_SECONDS = 30
 
 
 class RouteService(RouteCalculationMixin, RouteOptimizationMixin, BaseService):
@@ -54,7 +53,7 @@ class RouteService(RouteCalculationMixin, RouteOptimizationMixin, BaseService):
             新创建的路由规则记录字典
         """
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        rules_repo = RouteRulesRepository(self.db)
+        rules_repo = RouteRulesRepository(self._connection())
         rule_id = rules_repo.create(
             {
                 "name": name,
@@ -79,7 +78,7 @@ class RouteService(RouteCalculationMixin, RouteOptimizationMixin, BaseService):
         Returns:
             路由规则记录列表，按优先级排序
         """
-        rules_repo = RouteRulesRepository(self.db)
+        rules_repo = RouteRulesRepository(self._connection())
         return rules_repo.list_all_ordered()
 
     def update_rule(
@@ -107,7 +106,7 @@ class RouteService(RouteCalculationMixin, RouteOptimizationMixin, BaseService):
         Raises:
             HTTPException: 规则不存在时返回 404
         """
-        rules_repo = RouteRulesRepository(self.db)
+        rules_repo = RouteRulesRepository(self._connection())
         existing = rules_repo.get_by_id(rule_id)
         if not existing:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Rule not found")
@@ -131,7 +130,7 @@ class RouteService(RouteCalculationMixin, RouteOptimizationMixin, BaseService):
         Raises:
             HTTPException: 规则不存在时返回 404
         """
-        rules_repo = RouteRulesRepository(self.db)
+        rules_repo = RouteRulesRepository(self._connection())
         existing = rules_repo.get_by_id(rule_id)
         if not existing:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Rule not found")
@@ -159,7 +158,7 @@ class RouteService(RouteCalculationMixin, RouteOptimizationMixin, BaseService):
         Returns:
             包含 items、total、page、page_size、total_pages 的字典
         """
-        logs_repo = RouteLogsRepository(self.db)
+        logs_repo = RouteLogsRepository(self._connection())
         total, total_pages, items = logs_repo.list_filtered(
             role_id=role_id,
             source=source,
@@ -188,7 +187,7 @@ class RouteService(RouteCalculationMixin, RouteOptimizationMixin, BaseService):
         Raises:
             HTTPException: 日志不存在时返回 404
         """
-        logs_repo = RouteLogsRepository(self.db)
+        logs_repo = RouteLogsRepository(self._connection())
         row = logs_repo.get_by_id(log_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Log not found")

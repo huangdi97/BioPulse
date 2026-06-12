@@ -33,7 +33,7 @@ class NotificationBuilderMixin:
     """通知构建混入类，提供模板 CRUD 操作。"""
 
     def create_template(self, name: str, title_template: str, body_template: str, category: str) -> dict:
-        tmpl_repo = NotificationTemplatesRepository(self.db)
+        tmpl_repo = NotificationTemplatesRepository(self._connection())
         row_id = tmpl_repo.create(
             {
                 "name": name,
@@ -46,19 +46,19 @@ class NotificationBuilderMixin:
         return _template_to_dict(row)
 
     def list_templates(self) -> list:
-        tmpl_repo = NotificationTemplatesRepository(self.db)
+        tmpl_repo = NotificationTemplatesRepository(self._connection())
         rows = tmpl_repo.list_all(order_by="created_at DESC")
         return [_template_to_dict(r) for r in rows]
 
     def get_template(self, template_id: int) -> dict:
-        tmpl_repo = NotificationTemplatesRepository(self.db)
+        tmpl_repo = NotificationTemplatesRepository(self._connection())
         row = tmpl_repo.get_by_id(template_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Template not found")
         return _template_to_dict(row)
 
     def update_template(self, template_id: int, **updates) -> dict:
-        tmpl_repo = NotificationTemplatesRepository(self.db)
+        tmpl_repo = NotificationTemplatesRepository(self._connection())
         existing = tmpl_repo.get_by_id(template_id)
         if not existing:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Template not found")
@@ -74,7 +74,7 @@ class NotificationBuilderMixin:
         return _template_to_dict(row)
 
     def delete_template(self, template_id: int) -> None:
-        tmpl_repo = NotificationTemplatesRepository(self.db)
+        tmpl_repo = NotificationTemplatesRepository(self._connection())
         existing = tmpl_repo.get_by_id(template_id)
         if not existing:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Template not found")

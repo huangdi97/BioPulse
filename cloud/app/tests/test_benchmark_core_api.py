@@ -148,7 +148,7 @@ class TestCoreAPIPerformance:
 
     def test_langgraph_execution(self, benchmark):
         try:
-            from cloud.langgraph.graph import get_test_graph
+            from cloud.lg_utils.graph import get_test_graph
         except ImportError:
             pytest.skip("langgraph not installed")
 

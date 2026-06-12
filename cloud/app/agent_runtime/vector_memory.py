@@ -36,7 +36,9 @@ class VectorMemory:
         return self._local_db
 
     def set_db(self, db):
+        """设置外部数据库连接。"""
         self._external_db = db
+        self._ensure_table()
 
     def _ensure_table(self):
         try:
@@ -61,6 +63,7 @@ class VectorMemory:
         if self._model is None:
             try:
                 from sentence_transformers import SentenceTransformer
+
                 self._model = SentenceTransformer(self.EMBEDDING_MODEL)
             except ImportError:
                 logger.warning("sentence-transformers not installed, using fallback embedding")
@@ -84,11 +87,11 @@ class VectorMemory:
         return dot
 
     def store(self, agent_name: str, key: str, content: str, metadata: dict = None):
+        """存储向量记忆条目。"""
         embedding = self._get_embedding(content)
         conn = self._get_connection()
         conn.execute(
-            "INSERT OR REPLACE INTO agent_vector_memory (agent_name, key, content, embedding, metadata, created_at) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
+            "INSERT OR REPLACE INTO agent_vector_memory (agent_name, key, content, embedding, metadata, created_at) VALUES (?, ?, ?, ?, ?, ?)",
             (
                 agent_name,
                 key,
@@ -101,6 +104,7 @@ class VectorMemory:
         conn.commit()
 
     def search(self, agent_name: str, query: str, top_k: int = 5) -> list[dict]:
+        """语义搜索向量记忆。"""
         query_emb = self._get_embedding(query)
         conn = self._get_connection()
         rows = conn.execute(
@@ -111,17 +115,23 @@ class VectorMemory:
         for row in rows:
             stored_emb = self._deserialize_embedding(row["embedding"]) if row["embedding"] else [0.0] * 384
             score = self._cosine_similarity(query_emb, stored_emb)
-            scored.append((score, {
-                "key": row["key"],
-                "content": row["content"],
-                "metadata": json.loads(row["metadata"]) if row["metadata"] else {},
-                "created_at": row["created_at"],
-                "score": round(score, 4),
-            }))
+            scored.append(
+                (
+                    score,
+                    {
+                        "key": row["key"],
+                        "content": row["content"],
+                        "metadata": json.loads(row["metadata"]) if row["metadata"] else {},
+                        "created_at": row["created_at"],
+                        "score": round(score, 4),
+                    },
+                )
+            )
         scored.sort(key=lambda x: x[0], reverse=True)
         return [item[1] for item in scored[:top_k]]
 
     def recall(self, agent_name: str, key: str) -> str | None:
+        """按 key 精确召回向量记忆内容。"""
         conn = self._get_connection()
         row = conn.execute(
             "SELECT content FROM agent_vector_memory WHERE agent_name=? AND key=?",

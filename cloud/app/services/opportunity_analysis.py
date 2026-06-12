@@ -32,7 +32,7 @@ class OpportunityAnalysisMixin:
         Returns:
             包含 pipeline 列表的字典，每项含 stage、count、total_value
         """
-        opp_repo = OpportunitiesRepository(self.db)
+        opp_repo = OpportunitiesRepository(self._connection())
         rows = self.db.execute(
             f"""SELECT stage, COUNT(*) as count, SUM(estimated_value) as total_value
             FROM {opp_repo.table_name} WHERE is_active = 1 AND stage != 'lost'
@@ -73,7 +73,7 @@ class OpportunityAnalysisMixin:
 
         self._validate_stage_transition(row["stage"], stage)
 
-        opp_repo = OpportunitiesRepository(self.db)
+        opp_repo = OpportunitiesRepository(self._connection())
         probability = self._stage_probability(stage)
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 

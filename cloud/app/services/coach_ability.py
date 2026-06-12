@@ -77,7 +77,7 @@ class CoachAbility(CoachSuggestionMixin):
         created_by: int,
     ) -> dict:
         """创建培训模块。"""
-        modules_repo = TrainingModulesRepository(self.db)
+        modules_repo = TrainingModulesRepository(self._connection())
         module_id = modules_repo.create(
             {
                 "title": title,
@@ -95,7 +95,7 @@ class CoachAbility(CoachSuggestionMixin):
 
     def list_modules(self, category: Optional[str] = None, difficulty: Optional[str] = None) -> list:
         """按分类和难度列出培训模块。"""
-        modules_repo = TrainingModulesRepository(self.db)
+        modules_repo = TrainingModulesRepository(self._connection())
         conditions = ["is_active=1"]
         params = []
         if category:
@@ -119,8 +119,8 @@ class CoachAbility(CoachSuggestionMixin):
         difficulty_used: str,
     ) -> dict:
         """创建培训记录并计算下一难度。"""
-        modules_repo = TrainingModulesRepository(self.db)
-        sessions_repo = TrainingSessionsRepository(self.db)
+        modules_repo = TrainingModulesRepository(self._connection())
+        sessions_repo = TrainingSessionsRepository(self._connection())
 
         mod = modules_repo.get_by_id(module_id)
         if not mod or not mod.get("is_active"):
@@ -150,7 +150,7 @@ class CoachAbility(CoachSuggestionMixin):
         page_size: int = 20,
     ) -> dict:
         """分页查询培训记录。"""
-        sessions_repo = TrainingSessionsRepository(self.db)
+        sessions_repo = TrainingSessionsRepository(self._connection())
         conditions = []
         params = []
         if user_id is not None:
@@ -176,7 +176,7 @@ class CoachAbility(CoachSuggestionMixin):
 
     def get_session(self, session_id: int) -> dict:
         """获取培训记录详情。"""
-        sessions_repo = TrainingSessionsRepository(self.db)
+        sessions_repo = TrainingSessionsRepository(self._connection())
         row = sessions_repo.get_by_id(session_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Session not found")

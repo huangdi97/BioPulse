@@ -39,7 +39,7 @@ class NmpaService(BaseService):
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         content_summary = content[:200]
         log_id = f"nmpa:{uuid4()}"
-        repo = NmpaComplianceLogsRepository(self.db)
+        repo = NmpaComplianceLogsRepository(self._connection())
         row_id = repo.create(
             {
                 "log_id": log_id,
@@ -62,7 +62,7 @@ class NmpaService(BaseService):
         check_result: Optional[str] = None,
         human_review_required: Optional[int] = None,
     ) -> list:
-        repo = NmpaComplianceLogsRepository(self.db)
+        repo = NmpaComplianceLogsRepository(self._connection())
         rows = repo.list_filtered(
             document_type=document_type,
             check_result=check_result,

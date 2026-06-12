@@ -43,8 +43,8 @@ class SoapDecisionParserMixin(SoapDecisionValidatorMixin):
         Returns:
             创建的决策记录
         """
-        templates_repo = SoapTemplatesRepository(self.db)
-        decisions_repo = SoapDecisionsRepository(self.db)
+        templates_repo = SoapTemplatesRepository(self._connection())
+        decisions_repo = SoapDecisionsRepository(self._connection())
         if template_id:
             tmpl = templates_repo.get_by_id(template_id)
             if not tmpl or not tmpl.get("is_active"):
@@ -88,7 +88,7 @@ class SoapDecisionParserMixin(SoapDecisionValidatorMixin):
         Returns:
             分页决策列表
         """
-        decisions_repo = SoapDecisionsRepository(self.db)
+        decisions_repo = SoapDecisionsRepository(self._connection())
         total, tp, items = decisions_repo.list_active_filtered(status=status, priority=priority, tag=tag, page=page, page_size=page_size)
         return PaginatedResponse(
             items=[_row(r, ["tags"]) for r in items],
@@ -107,7 +107,7 @@ class SoapDecisionParserMixin(SoapDecisionValidatorMixin):
         Returns:
             决策记录
         """
-        decisions_repo = SoapDecisionsRepository(self.db)
+        decisions_repo = SoapDecisionsRepository(self._connection())
         row = decisions_repo.get_by_id(decision_id)
         if not row or not row.get("is_active"):
             raise HTTPException(http_status.HTTP_404_NOT_FOUND, detail="Decision not found")
@@ -137,7 +137,7 @@ class SoapDecisionParserMixin(SoapDecisionValidatorMixin):
         Returns:
             更新后的决策记录
         """
-        decisions_repo = SoapDecisionsRepository(self.db)
+        decisions_repo = SoapDecisionsRepository(self._connection())
         row = decisions_repo.get_by_id(decision_id)
         if not row or not row.get("is_active"):
             raise HTTPException(http_status.HTTP_404_NOT_FOUND, detail="Decision not found")

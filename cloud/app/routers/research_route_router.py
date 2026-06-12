@@ -53,10 +53,12 @@ def post_estimate(
 ):
     distance = haversine(body.from_lat, body.from_lng, body.to_lat, body.to_lng)
     time_est = estimate_travel_time(distance)
-    return success(data={
-        "distance_km": round(distance, 2),
-        "travel_time_hours": time_est,
-    })
+    return success(
+        data={
+            "distance_km": round(distance, 2),
+            "travel_time_hours": time_est,
+        }
+    )
 
 
 __all__ = ["route_router", "EstimateRequest", "OptimizeRequest", "PointItem"]

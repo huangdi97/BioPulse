@@ -71,8 +71,8 @@ class MarketplaceBenchmarkMixin:
         Returns:
             含 industry_comparison 和 agent_rankings 的基准报告
         """
-        bench_repo = BenchmarkReportsRepository(self.db)
-        metrics_repo = EffectMetricsRepository(self.db)
+        bench_repo = BenchmarkReportsRepository(self._connection())
+        metrics_repo = EffectMetricsRepository(self._connection())
 
         period_start = None
         period_end = None
@@ -160,7 +160,7 @@ class MarketplaceBenchmarkMixin:
         Returns:
             基准报告列表
         """
-        bench_repo = BenchmarkReportsRepository(self.db)
+        bench_repo = BenchmarkReportsRepository(self._connection())
         rows = bench_repo.list_by_report_type(report_type=report_type)
         result = []
         for r in rows:

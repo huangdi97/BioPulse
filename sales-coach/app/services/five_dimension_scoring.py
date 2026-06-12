@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any, Optional
 
 from sales_coach.app.schemas.assessment import FiveDimensionScore, RadarChartData
+from sales_coach.app.services._shared import parse_numeric_id
 from shared.base_service import BaseService
 
 DIMENSIONS = ("empathy", "data_citation", "closing", "objection_handling", "compliance")
@@ -49,7 +50,7 @@ class FiveDimensionScoringService(BaseService):
 
     def get_progress_curve(self, user_id: str, dimension: str, period: str = "month") -> list[dict]:
         normalized_dimension = dimension if dimension in DIMENSIONS else "compliance"
-        user_pk = _parse_numeric_id(user_id)
+        user_pk = parse_numeric_id(user_id)
         if user_pk is None:
             return []
         conn = self._connection()
@@ -179,13 +180,6 @@ def _clamp(value: Any) -> float:
 
 def _parse_conversation_id(conversation_id: str) -> Optional[int]:
     match = re.search(r"(\d+)$", str(conversation_id))
-    if not match:
-        return None
-    return int(match.group(1))
-
-
-def _parse_numeric_id(user_id: str) -> Optional[int]:
-    match = re.search(r"(\d+)$", str(user_id))
     if not match:
         return None
     return int(match.group(1))

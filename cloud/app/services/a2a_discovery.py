@@ -1,28 +1,10 @@
 """A2A 能力发现方法，包含 Agent 搜索与事件查询。"""
 
-import json
 import logging
 
+from shared.datetime_utils import row_to_dict
+
 logger = logging.getLogger(__name__)
-
-
-def _row_to_dict(row):
-    """将数据库行对象转换为字典，自动解析 JSON 字段。
-
-    Args:
-        row: 数据库行对象。
-
-    Returns:
-        字典，其中 capabilities, metadata, input_data, output_data, detail 字段已从 JSON 解析。
-    """
-    d = dict(row)
-    for col in ("capabilities", "metadata", "input_data", "output_data", "detail"):
-        if col in d and isinstance(d[col], str) and d[col]:
-            try:
-                d[col] = json.loads(d[col])
-            except (json.JSONDecodeError, TypeError):
-                logger.warning("Failed to parse A2A registry JSON field '%s'", col, exc_info=True)
-    return d
 
 
 class A2aDiscoveryMixin:
@@ -52,7 +34,7 @@ class A2aDiscoveryMixin:
             params.append(f'%"{capability}"%')
         sql += " ORDER BY CASE WHEN status='online' THEN 0 ELSE 1 END, created_at DESC"
         rows = self.db.execute(sql, params).fetchall()
-        return [_row_to_dict(r) for r in rows]
+        return [row_to_dict(r, "capabilities", "metadata", "input_data", "output_data", "detail") for r in rows]
 
     def list_events(self, event_type=None, agent_key=None, limit=50):
         """查询 Agent 网络事件。
@@ -76,4 +58,4 @@ class A2aDiscoveryMixin:
         sql += " ORDER BY created_at DESC LIMIT ?"
         params.append(limit)
         rows = self.db.execute(sql, params).fetchall()
-        return [_row_to_dict(r) for r in rows]
+        return [row_to_dict(r, "capabilities", "metadata", "input_data", "output_data", "detail") for r in rows]

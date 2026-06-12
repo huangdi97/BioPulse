@@ -71,8 +71,8 @@ class SageLinkingService:
                         result["details"]["episodic_to_semantic"].append(
                             {"session_id": sid, "count": len(mids)},
                         )
-        except Exception as e:
-            logger.warning("sage_linking: episodic_to_semantic failed %s", e)
+        except Exception:
+            logger.exception("链接异常")
 
         try:
             sem_items = bms.semantic_search("", limit=1000).get("items", [])
@@ -91,11 +91,11 @@ class SageLinkingService:
                                 {"memory_ids": [a["id"], b_item["id"]], "common_areas": common},
                             )
                             paired.update([a["id"], b_item["id"]])
-        except Exception as e:
-            logger.warning("sage_linking: semantic_to_procedural failed %s", e)
+        except Exception:
+            logger.exception("链接异常2")
 
         try:
-            wt_repo = WorldTreeNodesRepository(self.db)
+            wt_repo = WorldTreeNodesRepository(self._connection())
             wts = WorldTreeService(db=self.db)
             nodes = {n["name"].lower(): n["id"] for n in wt_repo.list_active_sorted()}
             sem_for_link = bms.semantic_search("", limit=1000).get("items", [])
@@ -108,18 +108,18 @@ class SageLinkingService:
                         result["details"]["world_tree_links"].append(
                             {"node_id": nodes[title], "memory_id": sem["id"]},
                         )
-                    except Exception as e:
-                        logger.warning("sage_linking: world_tree link_memory failed %s", e)
+                    except Exception:
+                        logger.exception("链接异常3")
                         result["pending_manual"] += 1
-        except Exception as e:
-            logger.warning("sage_linking: world_tree linking block failed %s", e)
+        except Exception:
+            logger.exception("链接异常4")
 
         return result
 
     def get_status(self) -> dict:
         """返回各记忆组件计数、评分分布及最近一次评分/进化/链接时间。"""
         bms = BrainMemoryService(db=self.db)
-        wt_repo = WorldTreeNodesRepository(self.db)
+        wt_repo = WorldTreeNodesRepository(self._connection())
 
         ep_res = bms.episodic_list(page=1, page_size=1)
         sem_res = bms.semantic_search("", limit=1)

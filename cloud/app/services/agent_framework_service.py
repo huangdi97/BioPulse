@@ -8,6 +8,7 @@ from starlette import status
 
 from cloud.app.services.agent_execution import AgentExecutionMixin
 from shared.base_service import BaseService
+from shared.datetime_utils import row_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class AgentFrameworkService(AgentExecutionMixin, BaseService):
             sql += " AND domain=?"
             params.append(domain)
         rows = self.db.execute(sql, params).fetchall()
-        return [self._row_to_dict(r) for r in rows]
+        return [row_to_dict(r, "capabilities", "default_config", "triggers", "endpoints", "config_overrides", "metrics") for r in rows]
 
     def get_template(self, template_key):
         """获取指定模板。
@@ -41,7 +42,7 @@ class AgentFrameworkService(AgentExecutionMixin, BaseService):
         row = self.db.execute("SELECT * FROM agent_role_templates WHERE template_key=?", (template_key,)).fetchone()
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="template not found")
-        return self._row_to_dict(row)
+        return row_to_dict(row, "capabilities", "default_config", "triggers", "endpoints", "config_overrides", "metrics")
 
     def create_template(self, key, name, description, domain, capabilities, default_config, triggers, endpoints):
         """创建角色模板。
@@ -92,7 +93,7 @@ class AgentFrameworkService(AgentExecutionMixin, BaseService):
             sql += " AND template_key=?"
             params.append(template_key)
         rows = self.db.execute(sql, params).fetchall()
-        return [self._row_to_dict(r) for r in rows]
+        return [row_to_dict(r, "capabilities", "default_config", "triggers", "endpoints", "config_overrides", "metrics") for r in rows]
 
     def get_instance(self, instance_key):
         """获取指定实例。
@@ -103,7 +104,7 @@ class AgentFrameworkService(AgentExecutionMixin, BaseService):
         row = self.db.execute("SELECT * FROM agent_instances WHERE instance_key=?", (instance_key,)).fetchone()
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="instance not found")
-        return self._row_to_dict(row)
+        return row_to_dict(row, "capabilities", "default_config", "triggers", "endpoints", "config_overrides", "metrics")
 
     def create_instance(self, instance_key, template_key, display_name, bind_to_end, config_overrides):
         """创建 Agent 实例，可选自动注册到 A2A。
@@ -142,21 +143,3 @@ class AgentFrameworkService(AgentExecutionMixin, BaseService):
             self.db.commit()
             instance = self.get_instance(instance_key)
         return instance
-
-    def _row_to_dict(self, row):
-        """将数据库行对象转换为字典，自动解析 JSON 字段。
-
-        Args:
-            row: 数据库行对象。
-
-        Returns:
-            字典，其中 capabilities, default_config, triggers, endpoints, config_overrides, metrics 字段已从 JSON 解析。
-        """
-        d = dict(row)
-        for col in ("capabilities", "default_config", "triggers", "endpoints", "config_overrides", "metrics"):
-            if col in d and isinstance(d[col], str) and d[col]:
-                try:
-                    d[col] = json.loads(d[col])
-                except (json.JSONDecodeError, TypeError):
-                    logger.warning("Failed to parse agent framework JSON field '%s'", col, exc_info=True)
-        return d

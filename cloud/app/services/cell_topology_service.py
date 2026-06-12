@@ -1,25 +1,15 @@
 """Cell 拓扑服务，分析 Agent 网络拓扑结构并生成优化建议。"""
 
-import json
 import logging
 
 from shared.base_service import BaseService
+from shared.datetime_utils import row_to_dict
 
 logger = logging.getLogger(__name__)
 
 
 class CellTopologyService(BaseService):
     """CellTopology 服务类。"""
-
-    def _row_to_dict(self, row) -> dict:
-        d = dict(row)
-        for col in ("known_cells", "routing_table", "task_history", "capabilities"):
-            if col in d and isinstance(d[col], str) and d[col]:
-                try:
-                    d[col] = json.loads(d[col])
-                except (json.JSONDecodeError, TypeError):
-                    logger.warning("Failed to parse cell topology JSON field '%s'", col, exc_info=True)
-        return d
 
     def analyze_topology(self) -> dict:
         """analyze_topology 操作。
@@ -33,7 +23,7 @@ class CellTopologyService(BaseService):
             "LEFT JOIN agent_registry r ON c.agent_instance_key = r.agent_key "
             "ORDER BY c.created_at DESC"
         ).fetchall()
-        cell_list = [self._row_to_dict(r) for r in cells]
+        cell_list = [row_to_dict(r, "known_cells", "routing_table", "task_history", "capabilities") for r in cells]
 
         interaction_matrix: dict[str, dict[str, int]] = {}
         cell_routes: dict[str, int] = {}

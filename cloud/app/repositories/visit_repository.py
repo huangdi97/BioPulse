@@ -46,3 +46,7 @@ class VisitRepository:
     def get_visit(self, visit_id: int) -> Optional[dict]:
         row = self.db.execute("SELECT * FROM visits WHERE id = ?", (visit_id,)).fetchone()
         return dict(row) if row else None
+
+    def list_visits(self) -> list[dict]:
+        rows = self.db.execute("SELECT * FROM visits ORDER BY id DESC").fetchall()
+        return [dict(r) for r in rows]

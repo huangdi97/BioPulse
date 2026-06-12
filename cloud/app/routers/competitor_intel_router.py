@@ -81,13 +81,15 @@ def _split_product_ids(product_ids: str) -> list[str]:
 def _price_trend(product_id: str, days: int) -> dict:
     monitored = price_monitor(product_id, "jiangsu")
     trend = _price_points(product_id, monitored["province"], days=days)
-    return success(data={
-        "product_id": product_id,
-        "days": days,
-        "currency": monitored["currency"],
-        "province": monitored["province"],
-        "trend": trend,
-    })
+    return success(
+        data={
+            "product_id": product_id,
+            "days": days,
+            "currency": monitored["currency"],
+            "province": monitored["province"],
+            "trend": trend,
+        }
+    )
 
 
 @router.post("/crawl", status_code=status.HTTP_201_CREATED, tags=["竞品情报"])
@@ -202,18 +204,20 @@ def sentiment(keyword: str = Query(...), days: int = Query(30, ge=1, le=365), cu
 
 @router.get("/volume", tags=["竞品情报"])
 def volume(platform: str = Query("weibo"), current_user: dict = Depends(require_scope("visit"))):
-    return success(data={
-        "platform": platform,
-        "series": [
-            {"date": "2026-06-03", "mentions": 1280},
-            {"date": "2026-06-04", "mentions": 1365},
-            {"date": "2026-06-05", "mentions": 1492},
-            {"date": "2026-06-06", "mentions": 1418},
-            {"date": "2026-06-07", "mentions": 1586},
-            {"date": "2026-06-08", "mentions": 1724},
-            {"date": "2026-06-09", "mentions": 1688},
-        ],
-    })
+    return success(
+        data={
+            "platform": platform,
+            "series": [
+                {"date": "2026-06-03", "mentions": 1280},
+                {"date": "2026-06-04", "mentions": 1365},
+                {"date": "2026-06-05", "mentions": 1492},
+                {"date": "2026-06-06", "mentions": 1418},
+                {"date": "2026-06-07", "mentions": 1586},
+                {"date": "2026-06-08", "mentions": 1724},
+                {"date": "2026-06-09", "mentions": 1688},
+            ],
+        }
+    )
 
 
 @router.get("/compare", tags=["竞品情报"])

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Optional
-from shared.base_service import BaseService
 
+from shared.base_service import BaseService
 
 STATUSES = ["待提交", "药事会排期", "审批中", "已通过", "已驳回"]
 
@@ -9,8 +9,7 @@ STATUSES = ["待提交", "药事会排期", "审批中", "已通过", "已驳回
 class AdmissionService(BaseService):
     def create(self, data: dict) -> dict[str, Any]:
         self.db.execute(
-            "INSERT INTO admission_records (hospital_name, department, product, status, meeting_date, notes, rep_id) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO admission_records (hospital_name, department, product, status, meeting_date, notes, rep_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
             (
                 data["hospital_name"],
                 data.get("department", ""),

@@ -1,11 +1,15 @@
 """L4 安全守卫与 LLM 规则引擎。"""
 
 import json
+import logging
 import os
 import urllib.request
 
 from cloud.app.agent_runtime.models import CheckResult
+from shared.ai_gateway import LLM_INFERENCE_TIMEOUT
 from shared.config import settings as config_settings
+
+logger = logging.getLogger(__name__)
 
 
 class SafetyGuard:
@@ -95,6 +99,7 @@ class RuleEngineLLM:
                 detail = f"{rule_id}: {detail}"
             return CheckResult(name="rule_engine_llm", passed=not violated, detail=detail)
         except Exception:
+            logger.warning("Safety guard异常，使用回退", exc_info=True)
             return fallback
 
     def _static_fallback(self, input_data: dict, static_checks: list[CheckResult] | None = None) -> CheckResult:
@@ -125,7 +130,7 @@ class RuleEngineLLM:
             headers={"Content-Type": "application/json", "Authorization": ""},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=120) as rp:
+        with urllib.request.urlopen(req, timeout=LLM_INFERENCE_TIMEOUT) as rp:
             return self._extract_reply(json.loads(rp.read().decode("utf-8")))
 
     @staticmethod

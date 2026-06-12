@@ -51,7 +51,7 @@ class CausalInferenceMixin:
         Returns:
             包含 simulations 列表和 total 计数的字典
         """
-        cs_repo = CounterfactualScenariosRepository(self.db)
+        cs_repo = CounterfactualScenariosRepository(self._connection())
         results: list[dict] = []
         for sc in scenarios:
             sim = _linear_simulate(sc)

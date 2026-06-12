@@ -35,7 +35,7 @@ class ConnectionManager:
             try:
                 await ws.send_json(message)
             except Exception:
-                logger.warning("WS连接管理异常", exc_info=True)
+                logger.exception("连接异常")
                 dead.append(ws)
         if dead:
             async with self._lock:
@@ -53,7 +53,7 @@ class ConnectionManager:
             try:
                 await ws.send_json(message)
             except Exception:
-                logger.warning("WS连接清理异常", exc_info=True)
+                logger.exception("断开异常")
                 dead.append(ws)
         if dead:
             async with self._lock:

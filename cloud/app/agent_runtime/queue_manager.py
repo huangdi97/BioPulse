@@ -28,6 +28,7 @@ class AgentQueueManager:
         self._db.commit()
 
     def enqueue(self, agent_key: str, goal: str, scheduled_at: str) -> int:
+        """将任务加入队列。"""
         cur = self._db.execute(
             "INSERT INTO agent_task_queue (agent_key, goal, scheduled_at) VALUES (?, ?, ?)",
             (agent_key, goal, scheduled_at),
@@ -36,6 +37,7 @@ class AgentQueueManager:
         return cur.lastrowid
 
     def dequeue(self) -> dict | None:
+        """从队列取出一个待执行任务。"""
         cur = self._db.execute(
             "SELECT * FROM agent_task_queue WHERE status='pending' AND scheduled_at <= datetime('now') ORDER BY scheduled_at LIMIT 1"
         )
@@ -53,6 +55,7 @@ class AgentQueueManager:
         return task
 
     def complete(self, task_id: int, result: str) -> None:
+        """标记任务为已完成。"""
         self._db.execute(
             "UPDATE agent_task_queue SET status='completed', completed_at=datetime('now'), result=? WHERE id=?",
             (result, task_id),
@@ -60,6 +63,7 @@ class AgentQueueManager:
         self._db.commit()
 
     def fail(self, task_id: int, error: str) -> None:
+        """标记任务为失败。"""
         self._db.execute(
             "UPDATE agent_task_queue SET status='failed', completed_at=datetime('now'), error=? WHERE id=?",
             (error, task_id),
@@ -67,10 +71,12 @@ class AgentQueueManager:
         self._db.commit()
 
     def list_pending(self) -> list[dict]:
+        """列出所有待执行任务。"""
         cur = self._db.execute("SELECT * FROM agent_task_queue WHERE status='pending' ORDER BY scheduled_at")
         return [dict(r) for r in cur.fetchall()]
 
     def list_by_agent(self, agent_key: str, limit: int = 20) -> list[dict]:
+        """列出指定 Agent 的任务。"""
         cur = self._db.execute(
             "SELECT * FROM agent_task_queue WHERE agent_key=? ORDER BY id DESC LIMIT ?",
             (agent_key, limit),
@@ -78,5 +84,6 @@ class AgentQueueManager:
         return [dict(r) for r in cur.fetchall()]
 
     def recover(self) -> None:
+        """恢复所有运行中任务为待执行状态。"""
         self._db.execute("UPDATE agent_task_queue SET status='pending', started_at=NULL WHERE status='running'")
         self._db.commit()

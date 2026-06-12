@@ -9,7 +9,7 @@ class ExportService(BaseService):
     """导出服务，提供审计日志与客户信息的CSV导出功能。"""
 
     def export_audit_logs(self) -> dict:
-        items = AuditLogsRepository(self.db).get_all()
+        items = AuditLogsRepository(self._connection()).get_all()
         columns = [
             "id",
             "user_id",
@@ -25,7 +25,7 @@ class ExportService(BaseService):
         return {"file_path": file_path, "row_count": len(items)}
 
     def export_customers(self) -> dict:
-        items = CustomersRepository(self.db).get_all()
+        items = CustomersRepository(self._connection()).get_all()
         columns = [
             "id",
             "name",

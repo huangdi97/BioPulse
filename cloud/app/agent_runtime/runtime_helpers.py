@@ -97,6 +97,7 @@ class RuntimeHelper:
         return (latest["plan"], latest["results"], latest["context"])
 
     def rollback_to(self, snapshot_id):
+        """回滚到指定快照。"""
         data = self._restore_from_snapshot(snapshot_id)
         if data is None:
             return None
@@ -110,7 +111,9 @@ class RuntimeHelper:
         return None
 
     def list_snapshots(self, agent_key, limit=10):
+        """列出指定 agent 的快照列表。"""
         return self._snapshot_manager.list_snapshots(agent_key, limit)
 
     def get_cost_usage(self) -> dict:
+        """获取当前成本使用详情。"""
         return self._cost_governor.get_usage()

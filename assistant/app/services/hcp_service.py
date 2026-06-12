@@ -41,6 +41,7 @@ class HcpService(BaseHcpService, BaseCrudService):
             if not row or row["is_active"] != 1:
                 from fastapi import HTTPException
                 from starlette import status
+
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
             return dict(row)
         finally:
@@ -54,6 +55,7 @@ class HcpService(BaseHcpService, BaseCrudService):
             if not row or row["is_active"] != 1:
                 from fastapi import HTTPException
                 from starlette import status
+
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
             updates = body.model_dump(exclude_unset=True)
             if not updates:
@@ -71,6 +73,7 @@ class HcpService(BaseHcpService, BaseCrudService):
             if not row or row["is_active"] != 1:
                 from fastapi import HTTPException
                 from starlette import status
+
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
             repo.soft_delete(hcp_id)
         finally:

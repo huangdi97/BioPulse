@@ -53,11 +53,11 @@ class TestScopeIsolation:
         token = _get_token(client, "research")
         resp = client.post(
             "/api/research/compliance/enforce",
-            json={"visit_data": {"notes": "学术交流", "expenses": 0}},
+            json={"visit_data": {"notes": "推广新药适应症", "expenses": 0}},
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert not data["passed"]
         rule_codes = [v["rule_code"] for v in data["violations"]]
         for code in rule_codes:
@@ -81,7 +81,7 @@ class TestScopeIsolation:
         assert resp.status_code == 403
 
         resp = client.post(
-            "/visit",
+            "/api/visit",
             json={
                 "hcp_id": 1,
                 "hcp_name": "Dr. Test",
@@ -107,7 +107,7 @@ class TestScopeIsolation:
 
         resp = client.post(
             "/api/research/compliance/enforce",
-            json={"visit_data": {"notes": "test"}},
+            json={"visit_data": {"notes": "推广新药适应症", "expenses": 0}},
             headers={"Authorization": f"Bearer {visit_token}"},
         )
         assert resp.status_code == 403

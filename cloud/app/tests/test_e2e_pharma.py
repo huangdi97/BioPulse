@@ -22,6 +22,7 @@ class TestPharmaE2E:
             "rep_verified": True,
             "location_type": "hospital",
             "call_type": "常规拜访",
+            "non_compete_waived": True,
         }
         resp = client.post(
             "/api/compliance/enforce",
@@ -29,7 +30,7 @@ class TestPharmaE2E:
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["passed"] is True
         assert len(data["violations"]) == 0
 
@@ -49,7 +50,7 @@ class TestPharmaE2E:
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["passed"] is False
         assert len(data["violations"]) > 0
 
@@ -57,11 +58,11 @@ class TestPharmaE2E:
         token = _register_and_get_visit_token(client)
         resp = client.post(
             "/api/compliance/enforce",
-            json={"visit_data": {}},
+            json={"visit_data": {"non_compete_waived": True}},
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["passed"] is True
         assert len(data["violations"]) == 0
 
@@ -74,6 +75,7 @@ class TestPharmaE2E:
             "rep_verified": True,
             "location_type": "hospital",
             "call_type": "普通",
+            "non_compete_waived": True,
         }
         resp = client.post(
             "/api/compliance/enforce",
@@ -81,7 +83,7 @@ class TestPharmaE2E:
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["passed"] is True
         assert len(data["violations"]) == 0
 
@@ -95,6 +97,7 @@ class TestPharmaE2E:
             "rep_verified": True,
             "location_type": "hospital",
             "call_type": "常规拜访",
+            "non_compete_waived": True,
         }
         resp = client.post(
             "/api/compliance/enforce",
@@ -102,7 +105,7 @@ class TestPharmaE2E:
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["passed"] is True
 
     def test_compliance_dashboard(self, client):
@@ -114,6 +117,7 @@ class TestPharmaE2E:
             "rep_verified": True,
             "location_type": "hospital",
             "call_type": "常规拜访",
+            "non_compete_waived": True,
         }
         client.post(
             "/api/compliance/enforce",
@@ -125,7 +129,7 @@ class TestPharmaE2E:
             headers={"Authorization": f"Bearer {token}"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert data["total_violations_today"] > 0
 
     def test_full_visit_compliance_flow(self, client):
@@ -147,7 +151,7 @@ class TestPharmaE2E:
         hcp_id = hcp["id"]
 
         visit_resp = client.post(
-            "/visit",
+            "/api/visit",
             json={
                 "hcp_id": hcp_id,
                 "hcp_name": "Dr. Liu Ming",
@@ -158,7 +162,7 @@ class TestPharmaE2E:
             },
             headers={"Authorization": f"Bearer {token}"},
         )
-        assert visit_resp.status_code == 200
+        assert visit_resp.status_code == 201
 
         enforce_resp = client.post(
             "/api/compliance/enforce",
@@ -170,12 +174,13 @@ class TestPharmaE2E:
                     "rep_verified": True,
                     "location_type": "hospital",
                     "call_type": "常规拜访",
+                    "non_compete_waived": True,
                 }
             },
             headers={"Authorization": f"Bearer {token}"},
         )
         assert enforce_resp.status_code == 200
-        data = enforce_resp.json()
+        data = enforce_resp.json()["data"]
         assert data["passed"] is True
         assert len(data["violations"]) == 0
 
@@ -204,7 +209,7 @@ class TestPharmaE2E:
         hcp_id = hcp["id"]
 
         visit_resp = client.post(
-            "/visit",
+            "/api/visit",
             json={
                 "hcp_id": hcp_id,
                 "hcp_name": "Dr. Wang Fang",
@@ -215,7 +220,7 @@ class TestPharmaE2E:
             },
             headers={"Authorization": f"Bearer {token}"},
         )
-        assert visit_resp.status_code == 200
+        assert visit_resp.status_code == 201
 
         enforce_resp = client.post(
             "/api/compliance/enforce",
@@ -232,7 +237,7 @@ class TestPharmaE2E:
             headers={"Authorization": f"Bearer {token}"},
         )
         assert enforce_resp.status_code == 200
-        data = enforce_resp.json()
+        data = enforce_resp.json()["data"]
         assert data["passed"] is False
         assert len(data["violations"]) > 0
         rule_codes = [v["rule_code"] for v in data["violations"]]
@@ -243,5 +248,5 @@ class TestPharmaE2E:
             headers={"Authorization": f"Bearer {token}"},
         )
         assert dashboard_resp.status_code == 200
-        dashboard_data = dashboard_resp.json()
+        dashboard_data = dashboard_resp.json()["data"]
         assert dashboard_data["total_violations_today"] > 0

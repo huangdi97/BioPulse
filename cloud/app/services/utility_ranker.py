@@ -15,13 +15,13 @@ class UtilityRankerMixin:
     """效用排名混入类，提供排名查询与睡眠巩固操作。"""
 
     def utility_rankings(self, min_utility: float = 0.0, limit: int = 20) -> list[dict]:
-        mus_repo = MemoryUtilityScoresRepository(self.db)
+        mus_repo = MemoryUtilityScoresRepository(self._connection())
         return mus_repo.list_ranked(min_utility=min_utility, limit=limit)
 
     def sleep_consolidate(self) -> dict:
-        entry_repo = MemoryEntriesRepository(self.db)
-        log_repo = SleepConsolidationLogsRepository(self.db)
-        link_repo = NodeMemoryLinksRepository(self.db)
+        entry_repo = MemoryEntriesRepository(self._connection())
+        log_repo = SleepConsolidationLogsRepository(self._connection())
+        link_repo = NodeMemoryLinksRepository(self._connection())
 
         rows = link_repo.memory_entries_with_utility()
         archived = merged = promoted = pruned = 0
@@ -108,5 +108,5 @@ class UtilityRankerMixin:
         }
 
     def sleep_history(self) -> list[dict]:
-        log_repo = SleepConsolidationLogsRepository(self.db)
+        log_repo = SleepConsolidationLogsRepository(self._connection())
         return log_repo.list_recent(limit=10)

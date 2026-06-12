@@ -9,7 +9,7 @@ from shared.base_service import BaseService
 
 class UserService(BaseService):
     def list_users(self) -> list:
-        users_repo = UsersRepository(self.db)
+        users_repo = UsersRepository(self._connection())
         rows = users_repo.list_all(order_by="id ASC")
         return [
             {
@@ -23,7 +23,7 @@ class UserService(BaseService):
         ]
 
     def get_user(self, user_id: int) -> dict:
-        users_repo = UsersRepository(self.db)
+        users_repo = UsersRepository(self._connection())
         row = users_repo.get_by_id(user_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -36,7 +36,7 @@ class UserService(BaseService):
         }
 
     def update_user(self, user_id: int, updates: dict) -> None:
-        users_repo = UsersRepository(self.db)
+        users_repo = UsersRepository(self._connection())
         row = users_repo.get_by_id(user_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -44,7 +44,7 @@ class UserService(BaseService):
             users_repo.update(user_id, updates)
 
     def delete_user(self, user_id: int) -> None:
-        users_repo = UsersRepository(self.db)
+        users_repo = UsersRepository(self._connection())
         row = users_repo.get_by_id(user_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found")

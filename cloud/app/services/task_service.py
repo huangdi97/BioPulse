@@ -1,6 +1,5 @@
 """任务服务管理任务的创建、查询与生命周期。"""
 
-from datetime import datetime
 from typing import Optional
 
 from fastapi import HTTPException
@@ -14,22 +13,42 @@ from cloud.app.repositories import (
 from shared.base import validate_columns
 from shared.base_service import BaseService
 from shared.columns import TABLE_BOARD_TASKS_COLS
-
-
-def _now() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+from shared.datetime_utils import now as _now
 
 
 class TaskService(BaseService):
     def _get_board_or_404(self, board_id: int) -> dict:
-        boards_repo = TaskBoardsRepository(self.db)
+        """根据 board_id 获取看板，不存在时抛出 404 异常。
+
+        参数:
+            board_id: 看板 ID
+
+        返回:
+            看板字典
+
+        抛出:
+            HTTPException: 看板不存在时抛出 404
+        """
+        boards_repo = TaskBoardsRepository(self._connection())
         row = boards_repo.get_active_by_id(board_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Board not found")
         return row
 
     def _get_task_or_404(self, board_id: int, task_id: int) -> dict:
-        tasks_repo = BoardTasksRepository(self.db)
+        """根据 board_id 与 task_id 获取任务，不存在时抛出 404 异常。
+
+        参数:
+            board_id: 看板 ID
+            task_id: 任务 ID
+
+        返回:
+            任务字典
+
+        抛出:
+            HTTPException: 任务不存在时抛出 404
+        """
+        tasks_repo = BoardTasksRepository(self._connection())
         row = tasks_repo.get_by_board_and_id(board_id, task_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Task not found")
@@ -47,9 +66,25 @@ class TaskService(BaseService):
         sort_order: int,
         user_id: int,
     ) -> dict:
+        """创建新任务，若指派了负责人则发送通知。
+
+        参数:
+            board_id: 所属看板 ID
+            title: 任务标题
+            description: 任务描述
+            status_filter: 任务状态
+            priority: 优先级
+            assignee_id: 可选，负责人用户 ID
+            due_date: 可选，截止日期
+            sort_order: 排序序号
+            user_id: 创建者用户 ID
+
+        返回:
+            创建完成的任务字典
+        """
         self._get_board_or_404(board_id)
-        tasks_repo = BoardTasksRepository(self.db)
-        notif_repo = NotificationsRepository(self.db)
+        tasks_repo = BoardTasksRepository(self._connection())
+        notif_repo = NotificationsRepository(self._connection())
         now = _now()
         task_id = tasks_repo.create(
             {
@@ -78,8 +113,17 @@ class TaskService(BaseService):
         return tasks_repo.get_by_id(task_id)
 
     def list_tasks(self, board_id: int, status_filter: Optional[str] = None) -> list:
+        """查询指定看板下的任务列表，可按状态筛选。
+
+        参数:
+            board_id: 看板 ID
+            status_filter: 可选，按状态过滤
+
+        返回:
+            任务字典列表
+        """
         self._get_board_or_404(board_id)
-        tasks_repo = BoardTasksRepository(self.db)
+        tasks_repo = BoardTasksRepository(self._connection())
         return tasks_repo.list_by_board(board_id, status_filter=status_filter)
 
     def update_task(
@@ -94,8 +138,24 @@ class TaskService(BaseService):
         due_date: Optional[str] = None,
         sort_order: Optional[int] = None,
     ) -> dict:
+        """更新任务字段，仅更新提供了值的非 None 字段。
+
+        参数:
+            board_id: 看板 ID
+            task_id: 任务 ID
+            title: 可选，新标题
+            description: 可选，新描述
+            status_filter: 可选，新状态
+            priority: 可选，新优先级
+            assignee_id: 可选，新负责人
+            due_date: 可选，新截止日期
+            sort_order: 可选，新排序序号
+
+        返回:
+            更新后的任务字典
+        """
         self._get_task_or_404(board_id, task_id)
-        tasks_repo = BoardTasksRepository(self.db)
+        tasks_repo = BoardTasksRepository(self._connection())
         updates = {}
         if title is not None:
             updates["title"] = title
@@ -118,10 +178,24 @@ class TaskService(BaseService):
         return tasks_repo.get_by_board_and_id(board_id, task_id)
 
     def delete_task(self, board_id: int, task_id: int) -> None:
+        """软删除指定任务。
+
+        参数:
+            board_id: 看板 ID
+            task_id: 待删除的任务 ID
+        """
         self._get_task_or_404(board_id, task_id)
-        tasks_repo = BoardTasksRepository(self.db)
+        tasks_repo = BoardTasksRepository(self._connection())
         tasks_repo.soft_delete(task_id)
 
     def my_tasks(self, user_id: int) -> list:
-        tasks_repo = BoardTasksRepository(self.db)
+        """查询指定用户被指派的所有任务。
+
+        参数:
+            user_id: 用户 ID
+
+        返回:
+            任务字典列表
+        """
+        tasks_repo = BoardTasksRepository(self._connection())
         return tasks_repo.list_by_assignee(user_id)

@@ -24,9 +24,9 @@ class RecommendStrategyMixin:
         Returns:
             A list of dicts representing the generated recommendation records.
         """
-        behaviors_repo = UserBehaviorsRepository(self.db)
-        recs_repo = RecommendationsRepository(self.db)
-        kg_repo = KgEntitiesRepository(self.db)
+        behaviors_repo = UserBehaviorsRepository(self._connection())
+        recs_repo = RecommendationsRepository(self._connection())
+        kg_repo = KgEntitiesRepository(self._connection())
         behavior_count = behaviors_repo.count_by_user(user_id)
         results = []
         if behavior_count >= 3:
@@ -87,7 +87,7 @@ class RecommendStrategyMixin:
         Returns:
             A PaginatedResponse containing recommendation items.
         """
-        recs_repo = RecommendationsRepository(self.db)
+        recs_repo = RecommendationsRepository(self._connection())
         total, _, items = recs_repo.list_filtered(
             user_id=user_id,
             rec_type=rec_type,

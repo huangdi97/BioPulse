@@ -21,6 +21,11 @@ CLOUD_COMPETITOR_PRODUCTS_URL = f"{settings.cloud_api_base}/api/competitor/produ
 
 
 def _load_cloud_products() -> list[dict[str, Any]]:
+    """从云端竞品API获取竞品列表。
+
+    Returns:
+        list[dict[str, Any]]: 竞品字典列表。
+    """
     try:
         response = httpx.get(CLOUD_COMPETITOR_PRODUCTS_URL, timeout=5.0)
         response.raise_for_status()
@@ -46,6 +51,15 @@ def _load_cloud_products() -> list[dict[str, Any]]:
 
 
 def _select_products_for_hcp(hcp_id: str, products: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """根据HCP ID筛选相关竞品。
+
+    Args:
+        hcp_id: HCP标识符。
+        products: 竞品列表。
+
+    Returns:
+        list[dict[str, Any]]: 筛选后的竞品列表。
+    """
     active_products = [item for item in products if item.get("status") in {"active", "watchlist"}]
     if not active_products:
         return []
@@ -57,6 +71,14 @@ def _select_products_for_hcp(hcp_id: str, products: list[dict[str, Any]]) -> lis
 
 
 def _recent_activity(product: dict[str, Any]) -> str:
+    """生成竞品近期活动描述文本。
+
+    Args:
+        product: 竞品字典。
+
+    Returns:
+        str: 近期活动描述。
+    """
     coverage = product.get("province_coverage") or []
     category = product.get("category") or "重点品类"
     status_text = "观察名单" if product.get("status") == "watchlist" else "活跃监控"
@@ -64,6 +86,14 @@ def _recent_activity(product: dict[str, Any]) -> str:
 
 
 def _price_change(product: dict[str, Any]) -> str:
+    """根据竞品状态和覆盖省份生成价格变化描述。
+
+    Args:
+        product: 竞品字典。
+
+    Returns:
+        str: 价格变化描述。
+    """
     coverage = product.get("province_coverage") or []
     if product.get("status") == "watchlist":
         return "价格与准入信号需重点复核"
@@ -73,6 +103,14 @@ def _price_change(product: dict[str, Any]) -> str:
 
 
 def _key_message(product: dict[str, Any]) -> str:
+    """生成竞品关键信息策略文本。
+
+    Args:
+        product: 竞品字典。
+
+    Returns:
+        str: 关键信息策略描述。
+    """
     indication = product.get("indication") or "核心适应症"
     coverage = product.get("province_coverage") or []
     region_text = "、".join(coverage[:2]) if coverage else "重点区域"
@@ -80,6 +118,14 @@ def _key_message(product: dict[str, Any]) -> str:
 
 
 def _to_brief(product: dict[str, Any]) -> CompetitorBrief:
+    """将竞品字典转换为CompetitorBrief对象。
+
+    Args:
+        product: 竞品字典。
+
+    Returns:
+        CompetitorBrief: 竞品简报对象。
+    """
     return CompetitorBrief(
         product_id=str(product.get("id") or ""),
         product_name=str(product.get("name") or ""),
@@ -91,6 +137,14 @@ def _to_brief(product: dict[str, Any]) -> CompetitorBrief:
 
 
 def _build_change_summary(products: list[dict[str, Any]]) -> list[str]:
+    """生成竞品变化摘要文本列表。
+
+    Args:
+        products: 竞品列表。
+
+    Returns:
+        list[str]: 变化摘要文本列表。
+    """
     status_counts = Counter(str(item.get("status") or "unknown") for item in products)
     categories = Counter(str(item.get("category") or "unknown") for item in products)
     watched = [item for item in products if item.get("status") == "watchlist"]
@@ -103,6 +157,14 @@ def _build_change_summary(products: list[dict[str, Any]]) -> list[str]:
 
 
 def _build_recent_news(products: list[dict[str, Any]]) -> list[str]:
+    """生成竞品近期新闻文本列表。
+
+    Args:
+        products: 竞品列表。
+
+    Returns:
+        list[str]: 近期新闻文本列表。
+    """
     news = []
     for product in products[:3]:
         coverage = product.get("province_coverage") or []
@@ -112,6 +174,14 @@ def _build_recent_news(products: list[dict[str, Any]]) -> list[str]:
 
 
 def _build_price_trend(products: list[dict[str, Any]]) -> list[dict[str, str | float]]:
+    """生成竞品近7天价格趋势数据。
+
+    Args:
+        products: 竞品列表。
+
+    Returns:
+        list[dict[str, str | float]]: 每日价格指数趋势列表。
+    """
     today = date.today()
     product_count = max(len(products), 1)
     watchlist_count = sum(1 for item in products if item.get("status") == "watchlist")

@@ -12,11 +12,11 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.services.token_budget_service import TokenBudgetService
+from shared.ai_gateway import TIMEOUT_SECONDS
 from shared.base_service import BaseService
 from shared.config import settings
 
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
-TIMEOUT_SECONDS = 30
 
 _semantic_cache = None
 
@@ -25,6 +25,11 @@ class AiGatewayService(BaseService):
     """AI 网关服务，负责调用 DeepSeek API 并记录 Token 用量。"""
 
     def _get_api_key(self) -> str:
+        """获取 DeepSeek API 密钥，若未配置则抛出 503 异常。
+
+        返回:
+            str: API 密钥字符串
+        """
         key = settings.deepseek_api_key
         if not key:
             raise HTTPException(
@@ -34,6 +39,14 @@ class AiGatewayService(BaseService):
         return key
 
     def _extract_reply(self, payload: dict) -> str:
+        """从 DeepSeek API 响应中提取回复文本。
+
+        参数:
+            payload: API 返回的 JSON 响应字典
+
+        返回:
+            提取出的回复字符串，无 choices 时返回空字符串
+        """
         choices = payload.get("choices", [])
         if not choices:
             return ""
@@ -41,6 +54,14 @@ class AiGatewayService(BaseService):
         return message.get("content", "")
 
     def _select_model(self, messages: list[dict]) -> str:
+        """根据消息长度与复杂度选择模型。
+
+        参数:
+            messages: 对话消息列表
+
+        返回:
+            模型名称字符串
+        """
         total_chars = sum(len(m.get("content", "")) for m in messages)
         complex_keywords = ["分析", "评估", "推理", "比较", "生成报告"]
         has_complex_keyword = any(keyword in " ".join(m.get("content", "") for m in messages) for keyword in complex_keywords)
@@ -49,6 +70,18 @@ class AiGatewayService(BaseService):
         return "deepseek-chat"
 
     def chat(self, messages: list[dict], temperature: float, max_tokens: int, user_id: int, model_override: str | None = None) -> dict:
+        """调用 DeepSeek API 进行对话，包含语义缓存与 Token 用量记录。
+
+        参数:
+            messages: 对话消息列表
+            temperature: 生成温度
+            max_tokens: 最大生成 token 数
+            user_id: 用户 ID，用于记录用量
+            model_override: 可选，强制指定模型
+
+        返回:
+            包含 reply 和 usage 的字典
+        """
         global _semantic_cache
         if _semantic_cache is None:
             from cloud.app.services.semantic_cache_service import SemanticCache
@@ -113,6 +146,14 @@ EMBEDDING_DIM = 128
 
 
 def get_embedding(text: str) -> list[float] | None:
+    """计算文本的 trigram 哈希嵌入向量（L2 归一化）。
+
+    参数:
+        text: 输入文本
+
+    返回:
+        归一化后的嵌入向量列表，失败时返回 None
+    """
     try:
         vec = [0.0] * EMBEDDING_DIM
         for i in range(len(text) - 2):

@@ -58,8 +58,8 @@ class CoachRecommender(BaseService):
         return "beginner"
 
     def recommend(self, user_id: int) -> dict:
-        sessions_repo = TrainingSessionsRepository(self.db)
-        modules_repo = TrainingModulesRepository(self.db)
+        sessions_repo = TrainingSessionsRepository(self._connection())
+        modules_repo = TrainingModulesRepository(self._connection())
 
         rows = sessions_repo.list_all(conditions=["user_id=?"], params=[user_id], order_by="created_at DESC")
         rows = rows[:3]

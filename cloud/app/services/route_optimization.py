@@ -12,7 +12,7 @@ class RouteOptimizationMixin:
         Returns:
             包含角色名称的统计记录列表
         """
-        stats_repo = RouteStatsRepository(self.db)
+        stats_repo = RouteStatsRepository(self._connection())
         return stats_repo.list_with_role_name()
 
     def get_dashboard(self) -> dict:
@@ -21,7 +21,7 @@ class RouteOptimizationMixin:
         Returns:
             包含总执行次数、角色分布、平均延迟和最近日志的字典
         """
-        logs_repo = RouteLogsRepository(self.db)
+        logs_repo = RouteLogsRepository(self._connection())
         total = logs_repo.count()
         if total == 0:
             return {

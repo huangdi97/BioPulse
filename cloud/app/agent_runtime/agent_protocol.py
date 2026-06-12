@@ -68,7 +68,10 @@ class AgentMessageBus:
     def send(self, message: AgentMessage):
         logger.info(
             "AgentMessageBus send: %s -> %s type=%s trace=%s",
-            message.source, message.target, message.msg_type, message.trace_id,
+            message.source,
+            message.target,
+            message.msg_type,
+            message.trace_id,
         )
         targets = [message.target] if message.target != "*" else list(self._handlers.keys())
         for target in targets:

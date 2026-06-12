@@ -1,10 +1,7 @@
 """脑搜索服务，提供跨记忆类型的统一检索与相关性排序。"""
 
 from shared.base_service import BaseService
-
-
-def _now() -> str:
-    """return datetime.now().strftime("%Y-%m-%d %H:%M:%S")"""
+from shared.datetime_utils import now as _now
 
 
 class BrainSearchService(BaseService):

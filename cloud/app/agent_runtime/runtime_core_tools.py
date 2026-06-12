@@ -44,14 +44,14 @@ class RuntimeCoreToolsMixin:
         summary = self.get_cost_usage()
         self._cost_tracker["total_cost"] = summary["total_cost"]
         self._cost_tracker["step_costs"] = summary["step_costs"]
-        db = getattr(self, '_agent_db', None)
+        db = getattr(self, "_agent_db", None)
         if db:
             self._cost_governor.record_call(
-                agent_name=getattr(self, '_trace_id', 'unknown'),
+                agent_name=getattr(self, "_trace_id", "unknown"),
                 model=ai_resp.get("model_tier", "cloud_normal"),
                 input_tokens=cost.get("input_tokens", 0),
                 output_tokens=cost.get("output_tokens", 0),
                 cost=cost.get("cost", 0.0),
-                trace_id=getattr(self, '_trace_id', ''),
+                trace_id=getattr(self, "_trace_id", ""),
                 db=db,
             )

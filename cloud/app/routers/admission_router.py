@@ -1,7 +1,9 @@
 from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from starlette import status
+
 from cloud.app.services.admission_service import AdmissionService
 from shared.auth_scope import require_scope
 from shared.base import success

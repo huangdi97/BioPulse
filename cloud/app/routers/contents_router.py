@@ -48,7 +48,9 @@ class PaginatedContents(BaseModel):
     page_size: int
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, summary="创建内容", description="创建一个新的内容条目，包含标题、正文、分类和标签。", tags=["contents"])
+@router.post(
+    "/", status_code=status.HTTP_201_CREATED, summary="创建内容", description="创建一个新的内容条目，包含标题、正文、分类和标签。", tags=["contents"]
+)
 def create_content(
     body: ContentCreate,
     current_user: dict = Depends(require_scope("visit")),

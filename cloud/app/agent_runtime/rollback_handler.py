@@ -29,6 +29,10 @@ class RollbackHandlerMixin:
         restored_state = {**state, "trace_id": new_trace_id, "step": target_step, "status": "rolled_back", "rolled_back_from": trace_id}
         self._save_checkpoint(agent_key, goal, restored_state)
         result = self.execute(goal, agent_key, restored_state.get("context"))
+        new_trace_id = result.metadata.get("trace_id", self._trace_id)
+        # 重新保存 checkpoint 到实际执行 trace_id 下
+        restored_state = {**state, "trace_id": new_trace_id, "step": target_step, "status": "rolled_back", "rolled_back_from": trace_id}
+        self._save_checkpoint(agent_key, goal, restored_state)
         return {
             "trace_id": new_trace_id,
             "source_trace_id": trace_id,

@@ -11,6 +11,7 @@ class Memory:
         self._agent_db = agent_db
 
     def get(self, agent_key: str, key: str, user_id: int = 0) -> any:
+        """获取 Agent 短期记忆值。"""
         row = self._agent_db.execute(
             "SELECT value, value_type FROM agent_brains WHERE agent_key=? AND user_id=? AND key=?",
             (agent_key, user_id, key),
@@ -26,6 +27,7 @@ class Memory:
         return row["value"]
 
     def set(self, agent_key: str, key: str, value: any, user_id: int = 0):
+        """设置 Agent 短期记忆值。"""
         if isinstance(value, str):
             value_type = "str"
         elif isinstance(value, (int, float)):
@@ -44,6 +46,7 @@ class Memory:
         self._agent_db.commit()
 
     def delete(self, agent_key: str, key: str, user_id: int = 0):
+        """删除 Agent 短期记忆值。"""
         self._agent_db.execute(
             "DELETE FROM agent_brains WHERE agent_key=? AND user_id=? AND key=?",
             (agent_key, user_id, key),
@@ -51,6 +54,7 @@ class Memory:
         self._agent_db.commit()
 
     def search(self, agent_key: str, keyword: str, limit: int = 5) -> list[dict]:
+        """搜索 Agent 短期记忆。"""
         rows = self._agent_db.execute(
             "SELECT key, value, value_type FROM agent_brains WHERE agent_key=? AND (key LIKE ? OR value LIKE ?) ORDER BY updated_at DESC LIMIT ?",
             (agent_key, f"%{keyword}%", f"%{keyword}%", limit),
@@ -65,6 +69,7 @@ class AgentMemory:
         self._business_db = business_db
 
     def save(self, agent_key: str, session_id: str, entry: dict) -> None:
+        """保存 Agent 长期记忆条目。"""
         self._business_db.execute(
             "INSERT INTO memory_gates (agent_key, session_id, content, created_at) VALUES (?, ?, ?, ?)",
             (agent_key, session_id, json.dumps(entry), datetime.now().isoformat()),
@@ -72,6 +77,7 @@ class AgentMemory:
         self._business_db.commit()
 
     def load(self, agent_key: str, limit: int = 5) -> list[dict]:
+        """加载 Agent 长期记忆。"""
         cur = self._business_db.execute(
             "SELECT * FROM memory_gates WHERE agent_key = ? ORDER BY created_at DESC LIMIT ?",
             (agent_key, limit),
@@ -79,6 +85,7 @@ class AgentMemory:
         return [dict(r) for r in cur.fetchall()]
 
     def search(self, agent_key: str, keyword: str, limit: int = 5) -> list[dict]:
+        """搜索 Agent 长期记忆。"""
         rows = self._business_db.execute(
             "SELECT * FROM memory_gates WHERE agent_key=? AND content LIKE ? ORDER BY created_at DESC LIMIT ?",
             (agent_key, f"%{keyword}%", limit),
@@ -86,6 +93,7 @@ class AgentMemory:
         return [dict(r) for r in rows]
 
     def get_session(self, agent_key: str, session_id: str) -> dict:
+        """获取指定 session 的全部记忆条目。"""
         cur = self._business_db.execute(
             "SELECT * FROM memory_gates WHERE agent_key = ? AND session_id = ? ORDER BY created_at",
             (agent_key, session_id),

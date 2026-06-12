@@ -9,7 +9,7 @@ from starlette import status
 
 from shared.app_settings import settings
 from shared.auth_scope import require_scope
-from shared.base import success, error
+from shared.base import error, success
 from shared.error_code import ErrorCode
 
 GATEWAY_ROUTES: dict[str, str] = {
@@ -75,16 +75,20 @@ def execute(body: ExecuteRequest, request: Request, _: dict = Depends(require_sc
     return _http_forward(method, path, body.params, auth_header)
 
 
-@router.post("/tools/register", status_code=status.HTTP_201_CREATED, summary="注册工具", description="向网关注册一个新的Agent工具路由", tags=["Agent Gateway"])
+@router.post(
+    "/tools/register", status_code=status.HTTP_201_CREATED, summary="注册工具", description="向网关注册一个新的Agent工具路由", tags=["Agent Gateway"]
+)
 def register_tool(body: RegisterRequest, _: dict = Depends(require_scope("visit"))):
     GATEWAY_ROUTES[body.tool_name] = f"{body.method.upper()} {body.url}"
-    return success(data={
-        "tool_name": body.tool_name,
-        "method": body.method.upper(),
-        "url": body.url,
-        "description": body.description,
-        "permission_level": body.permission_level,
-    })
+    return success(
+        data={
+            "tool_name": body.tool_name,
+            "method": body.method.upper(),
+            "url": body.url,
+            "description": body.description,
+            "permission_level": body.permission_level,
+        }
+    )
 
 
 @router.get("/tools", summary="工具列表", description="获取所有已注册的Agent工具名称列表", tags=["Agent Gateway"])

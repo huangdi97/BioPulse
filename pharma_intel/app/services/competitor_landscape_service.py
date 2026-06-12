@@ -69,6 +69,15 @@ def get_landscape_matrix(
     therapy_area: Optional[str] = None,
     competitor_ids: Optional[list[str]] = None,
 ) -> LandscapeComparison:
+    """获取竞争格局矩阵，可按治疗领域或竞对 ID 列表筛选。
+
+    参数:
+        therapy_area: 可选，治疗领域筛选。
+        competitor_ids: 可选，竞对 ID 列表筛选。
+
+    返回:
+        LandscapeComparison 对象，包含符合条件的竞对列表。
+    """
     competitors = COMPETITORS
     if therapy_area:
         needle = therapy_area.lower()
@@ -80,6 +89,14 @@ def get_landscape_matrix(
 
 
 def get_radar_chart_data(target_id: str) -> RadarData:
+    """根据靶点 ID 获取雷达图数据，包含相关竞对的各维度评分。
+
+    参数:
+        target_id: 靶点 ID。
+
+    返回:
+        RadarData 对象，包含维度列表和竞对评分序列。
+    """
     competitor_ids = TARGET_COMPETITOR_MAP.get(target_id, [])
     comparison = get_landscape_matrix(competitor_ids=competitor_ids)
     dimensions = list(LandscapeDimension)

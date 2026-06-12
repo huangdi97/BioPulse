@@ -127,6 +127,19 @@ CREATE TABLE IF NOT EXISTS sync_queue (
 CREATE INDEX IF NOT EXISTS idx_sync_client ON sync_queue(client_id, status);
 CREATE INDEX IF NOT EXISTS idx_sync_status ON sync_queue(status);
 
+CREATE TABLE IF NOT EXISTS offline_sync_log (
+    id {pk},
+    entity_type TEXT NOT NULL,
+    entity_id TEXT,
+    action TEXT NOT NULL,
+    payload TEXT,
+    synced INTEGER DEFAULT 0,
+    synced_at TEXT,
+    retry_count INTEGER DEFAULT 0,
+    error_msg TEXT,
+    created_at TEXT
+);
+
 CREATE TABLE IF NOT EXISTS media_file (
     id {pk},
     file_type TEXT NOT NULL,

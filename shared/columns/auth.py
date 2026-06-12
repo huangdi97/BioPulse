@@ -1,14 +1,3 @@
-TABLE_API_TOKENS_COLS = frozenset(
-    {
-        "id",
-        "user_id",
-        "token_hash",
-        "name",
-        "is_active",
-        "created_at",
-    }
-)
-
 TABLE_SYSTEM_CONFIGS_COLS = frozenset(
     {
         "id",

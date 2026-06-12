@@ -34,7 +34,7 @@ class RuleAggregatorMixin:
         page,
         page_size,
     ) -> dict:
-        repo = ComplianceAuditRecordsRepository(self.db)
+        repo = ComplianceAuditRecordsRepository(self._connection())
         conditions, params = [], []
         if message_type:
             conditions.append("message_type=?")
@@ -70,7 +70,7 @@ class RuleAggregatorMixin:
         )
 
     def get_record(self, record_id: int) -> dict:
-        repo = ComplianceAuditRecordsRepository(self.db)
+        repo = ComplianceAuditRecordsRepository(self._connection())
         row = repo.get_by_id(record_id)
         if not row:
             _n404("Record")

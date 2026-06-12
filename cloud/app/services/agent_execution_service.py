@@ -18,6 +18,8 @@ logger = logging.getLogger(__name__)
 
 
 class AgentExecutionService:
+    """Agent 执行任务服务，管理 Agent 任务的提交、查询与审批。"""
+
     @staticmethod
     def _conn():
         c = sqlite3.connect(DB_PATH)

@@ -13,10 +13,10 @@ from cloud.app.repositories import (
     TrainingSessionsRepository,
     UsersRepository,
 )
+from shared.ai_gateway import TIMEOUT_SECONDS
 from shared.config import settings
 
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
-TIMEOUT_SECONDS = 30
 
 ATTR_COLS = [
     "id",
@@ -86,8 +86,8 @@ class CoachGap:
         return choices[0].get("message", {}).get("content", "") if choices else ""
 
     def analyze_attribution(self, att_id: int) -> dict:
-        attrs_repo = TrainingAttributionsRepository(self.db)
-        users_repo = UsersRepository(self.db)
+        attrs_repo = TrainingAttributionsRepository(self._connection())
+        users_repo = UsersRepository(self._connection())
 
         attr_row = attrs_repo.get_by_id(att_id)
         if not attr_row:
@@ -126,8 +126,8 @@ class CoachGap:
         return self._rd(row, ATTR_COLS)
 
     def dashboard(self) -> dict:
-        modules_repo = TrainingModulesRepository(self.db)
-        sessions_repo = TrainingSessionsRepository(self.db)
+        modules_repo = TrainingModulesRepository(self._connection())
+        sessions_repo = TrainingSessionsRepository(self._connection())
 
         tm = modules_repo.count(conditions=["is_active=1"])
         ts = sessions_repo.count()

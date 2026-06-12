@@ -121,4 +121,4 @@ router.include_router(quotation_router)
 
 router.include_router(quotation_workflow_router)
 
-__all__ = ["router", 'quotation_router', 'quotation_workflow_router']
+__all__ = ["router", "quotation_router", "quotation_workflow_router"]

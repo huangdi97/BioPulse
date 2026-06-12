@@ -13,12 +13,11 @@ from starlette.exceptions import HTTPException
 from starlette.requests import Request
 
 from sales_assistant.app.services.research_hcp_service import enrich_research_profile, get_grants, get_papers
+from shared.ai_gateway import TIMEOUT_SECONDS
 from shared.app_settings import settings
 from shared.auth_scope import require_scope
 
 router = APIRouter(prefix="/api/research/hcp")
-
-TIMEOUT_SECONDS = 30.0
 
 
 class PiCreate(BaseModel):

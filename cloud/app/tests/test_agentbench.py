@@ -4,13 +4,13 @@ from pathlib import Path
 
 import pytest
 
-from cloud.app.agent_runtime.analyzer import Analyzer, Hypothesis, RootCauseNarrative
 from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
+from cloud.app.agent_runtime.analyzer import Analyzer, Hypothesis, RootCauseNarrative
+from cloud.app.agent_runtime.content_filter import ContentFilter
 from cloud.app.agent_runtime.cost_governor import CostGovernor
 from cloud.app.agent_runtime.loop_detector import LoopDetector
 from cloud.app.agent_runtime.planner import Plan, PlanGenerator, PlanStep
 from cloud.app.agent_runtime.safety_guard import SafetyGuard
-from cloud.app.agent_runtime.content_filter import ContentFilter
 from cloud.app.agent_runtime.verifier import Verifier
 from cloud.app.services.compliance_engine import ComplianceEnforcer
 
@@ -72,6 +72,7 @@ def _matches_type(value, expected_type: str) -> bool:
 
 # ── Existing Golden Tests (11 tests) ──
 
+
 @pytest.mark.parametrize("case", _load_cases("compliance_cases.json"), ids=_case_ids("compliance_cases.json"))
 def test_compliance_golden(case):
     db = _memory_db()
@@ -121,6 +122,7 @@ def test_response_format_golden(case):
 # ── Compliance Agent L4 Cycle (5 tests) ──
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 def test_compliance_l4_normal_flow():
     """Compliance L4 normal flow: trigger → plan → verify → complete."""
     spec = AGENT_SPECS.get("compliance_monitor")
@@ -136,6 +138,7 @@ def test_compliance_l4_normal_flow():
 def test_compliance_l4_red_light_trigger():
     """Compliance L4 red light trigger: triangulation with score >= 0.8 triggers red_light."""
     from cloud.app.compliance.triangulation import TriangulationEngine
+
     engine = TriangulationEngine()
     result = engine.check(
         expense_data=[{"expense": 1000, "trend": "up"}],
@@ -150,6 +153,7 @@ def test_compliance_l4_red_light_trigger():
 def test_compliance_l4_degrade_fallback():
     """Compliance L4: when triangulation fails, fallback to individual checks and degrade gracefully."""
     from cloud.app.compliance.triangulation import TriangulationEngine
+
     engine = TriangulationEngine()
     result = engine.check(
         expense_data=None,
@@ -178,9 +182,11 @@ def test_compliance_l4_tool_failure():
 # ── Triangulation Cross-Validation (5 tests) ──
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 def test_triangulation_expense_anomaly():
     """Expense anomaly: expense up + visit down + flow down → expense_waste."""
     from cloud.app.compliance.triangulation import TriangulationEngine
+
     engine = TriangulationEngine()
     result = engine.check(
         expense_data=[{"expense": 500, "trend": "up"}],
@@ -194,6 +200,7 @@ def test_triangulation_expense_anomaly():
 def test_triangulation_visit_anomaly():
     """Visit anomaly: visits up but flow flat → visit_fraud."""
     from cloud.app.compliance.triangulation import TriangulationEngine
+
     engine = TriangulationEngine()
     result = engine.check(
         expense_data=[],
@@ -207,6 +214,7 @@ def test_triangulation_visit_anomaly():
 def test_triangulation_channel_stuffing():
     """Channel stuffing: cross-region distribution mismatch."""
     from cloud.app.compliance.triangulation import TriangulationEngine
+
     engine = TriangulationEngine()
     result = engine.check(
         expense_data=[],
@@ -220,6 +228,7 @@ def test_triangulation_channel_stuffing():
 def test_triangulation_fake_activity():
     """Fake activity: expense and visits up but flow down."""
     from cloud.app.compliance.triangulation import TriangulationEngine
+
     engine = TriangulationEngine()
     result = engine.check(
         expense_data=[{"expense": 800, "trend": "up"}],
@@ -233,6 +242,7 @@ def test_triangulation_fake_activity():
 def test_triangulation_multi_evidence_backtrack():
     """Multi-evidence backtrack: verify correlated records are returned."""
     from cloud.app.compliance.triangulation import TriangulationEngine
+
     engine = TriangulationEngine()
     result = engine.check(
         expense_data=[{"expense": 300, "trend": "up", "rep_id": "R001"}],
@@ -249,6 +259,7 @@ def test_triangulation_multi_evidence_backtrack():
 # ══════════════════════════════════════════════════════════════════════════════
 # ── SafetyGuard Three-Layer (3 tests) ──
 # ══════════════════════════════════════════════════════════════════════════════
+
 
 def test_safetyguard_layer1_injection():
     """Layer1: content filter blocks prompt injection."""
@@ -275,9 +286,11 @@ def test_safetyguard_layer3_side_effect():
 # ── EDAC Event Bus (3 tests) ──
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 def test_edac_publish_subscribe():
     """EDAC: publish event and verify subscriber receives it."""
     from cloud.app.agent_runtime.agent_protocol import AgentMessage, AgentMessageBus
+
     bus = AgentMessageBus()
     received = []
 
@@ -294,6 +307,7 @@ def test_edac_publish_subscribe():
 def test_edac_broadcast_multi_agent():
     """EDAC: broadcast event to multiple agents via individual sends."""
     from cloud.app.agent_runtime.agent_protocol import AgentMessage, AgentMessageBus
+
     bus = AgentMessageBus()
     received_a, received_b = [], []
 
@@ -325,6 +339,7 @@ def test_edac_event_timeout():
 # ── CostGovernor Budget Intercept (2 tests) ──
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 def test_cost_governor_budget_sufficient():
     """CostGovernor: budget sufficient → allow."""
     governor = CostGovernor(max_cost=100.0)
@@ -346,9 +361,11 @@ def test_cost_governor_budget_exceeded():
 # ── LoopDetector Loop Circuit Breaker (2 tests) ──
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 def test_loop_detector_simple():
     """LoopDetector: detect simple repeated pattern."""
     from cloud.app.agent_runtime.models import AgentDecision
+
     detector = LoopDetector()
     for _ in range(3):
         detector.record(AgentDecision(action="call_tool", tool="query_bidding", params={}))
@@ -359,6 +376,7 @@ def test_loop_detector_simple():
 def test_loop_detector_self_circuit_breaker():
     """LoopDetector: 3 self-loops trigger circuit breaker."""
     from cloud.app.agent_runtime.models import AgentDecision
+
     detector = LoopDetector()
     for _ in range(6):
         detector.record(AgentDecision(action="call_tool", tool="analyze_with_llm", params={"input": "loop"}))
@@ -369,6 +387,7 @@ def test_loop_detector_self_circuit_breaker():
 # ══════════════════════════════════════════════════════════════════════════════
 # ── Analysis Hypothesis Verification Loop (3 tests) ──
 # ══════════════════════════════════════════════════════════════════════════════
+
 
 def test_analyzer_generate_hypotheses():
     """Analyzer: generate hypotheses from red light event."""
@@ -405,9 +424,11 @@ def test_analyzer_full_hypothesis_loop():
 # ── Compliance Trigger & Agent Specs (1 test) ──
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 def test_compliance_trigger_build_plan():
     """Compliance trigger: build_compliance_plan generates 5-step structured plan."""
     from cloud.app.agent_runtime.compliance_trigger import build_compliance_plan
+
     plan = build_compliance_plan("test task", {"rep_id": "R001"})
     assert len(plan) == 5
     step_actions = [s["action"] for s in plan]
@@ -415,6 +436,7 @@ def test_compliance_trigger_build_plan():
 
 
 # ── Plan Validation (1 test) ──
+
 
 def test_plan_validation_dependency_check():
     """Plan validation: dependency integrity check fails for missing deps."""

@@ -21,7 +21,7 @@ class AuditService(BaseService):
         ip_address: str = "",
     ) -> None:
         """创建一条审计日志记录。"""
-        repo = AuditLogsRepository(self.db)
+        repo = AuditLogsRepository(self._connection())
         repo.create(
             {
                 "user_id": user_id,
@@ -44,7 +44,7 @@ class AuditService(BaseService):
         page_size: int = 20,
     ) -> dict:
         """按条件分页查询审计日志。"""
-        repo = AuditLogsRepository(self.db)
+        repo = AuditLogsRepository(self._connection())
         conds, pars = [], []
         if entity_type:
             conds.append("entity_type=?")
@@ -75,7 +75,7 @@ class AuditService(BaseService):
 
     def get_stats(self) -> dict:
         """获取审计日志统计，含按操作分组的计数和近 7 日趋势。"""
-        repo = AuditLogsRepository(self.db)
+        repo = AuditLogsRepository(self._connection())
         action_stats = repo.execute("SELECT action, COUNT(*) as cnt FROM audit_logs GROUP BY action").fetchall()
         cutoff = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
         trend = repo.execute(

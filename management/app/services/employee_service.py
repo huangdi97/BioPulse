@@ -1,8 +1,13 @@
 """员工服务模块。提供员工个人资料、任务、合规、绩效和趋势数据查询。"""
 
+import logging
+
 import httpx
 
+from shared.ai_gateway import INTERNAL_API_TIMEOUT
 from shared.app_settings import settings
+
+logger = logging.getLogger(__name__)
 
 CLOUD_API = settings.cloud_api_base
 
@@ -10,9 +15,10 @@ CLOUD_API = settings.cloud_api_base
 async def _fetch_dashboard() -> dict:
     async with httpx.AsyncClient() as client:
         try:
-            resp = await client.get(f"{CLOUD_API}/api/demo/dashboard", timeout=10)
+            resp = await client.get(f"{CLOUD_API}/api/demo/dashboard", timeout=INTERNAL_API_TIMEOUT)
             return resp.json() if resp.status_code == 200 else {}
         except Exception:
+            logger.warning("Employee service数据获取异常", exc_info=True)
             return {}
 
 

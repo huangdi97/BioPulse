@@ -34,6 +34,7 @@ except ModuleNotFoundError:
             self.code = code
             self.message = message
 
+
 from .planner import CollectionPlan, CollectionStep
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
@@ -153,10 +154,10 @@ class InfoCollector:
         Raises:
             AppException: 工具名不支持时抛出。
         """
-        from .collector_hcp import query_hcp_profile
-        from .collector_visit import query_visit_history
-        from .collector_intel import query_competitor_intel, query_market_intel
         from .collector_causal import run_causal_attribution
+        from .collector_hcp import query_hcp_profile
+        from .collector_intel import query_competitor_intel, query_market_intel
+        from .collector_visit import query_visit_history
 
         handlers = {
             "query_hcp_profile": lambda args: query_hcp_profile(self.db, args),

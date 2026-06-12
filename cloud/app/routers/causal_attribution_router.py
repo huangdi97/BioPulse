@@ -72,6 +72,7 @@ def get_attribution(
     try:
         data = service.get_attribution(opp_id)
     except Exception:
+        logger.exception("Causal attribution路由异常")
         data = service.refresh_attribution(opp_id)
     return success(data=data)
 

@@ -37,9 +37,15 @@ class BDPipelineService:
         self._db.commit()
 
     def create(
-        self, lead_id: str, lead_name: str, company: str = "",
-        amount: float = 0.0, probability: float = 0.0,
-        owner: str = "", score: float = 0.0, tier: str = "cold",
+        self,
+        lead_id: str,
+        lead_name: str,
+        company: str = "",
+        amount: float = 0.0,
+        probability: float = 0.0,
+        owner: str = "",
+        score: float = 0.0,
+        tier: str = "cold",
         notes: str = "",
     ) -> dict[str, Any]:
         """Create a new pipeline entry."""
@@ -69,7 +75,9 @@ class BDPipelineService:
         return [dict(r) for r in self._db.execute(query, params).fetchall()]
 
     def update_stage(
-        self, lead_id: str, stage: str,
+        self,
+        lead_id: str,
+        stage: str,
         amount: float | None = None,
         probability: float | None = None,
         notes: str | None = None,
@@ -102,8 +110,7 @@ class BDPipelineService:
     def summary(self) -> dict[str, Any]:
         """Return pipeline summary metrics."""
         rows = self._db.execute(
-            "SELECT stage, COUNT(*) as count, SUM(amount) as total_amount, AVG(probability) as avg_probability "
-            "FROM bd_pipeline GROUP BY stage"
+            "SELECT stage, COUNT(*) as count, SUM(amount) as total_amount, AVG(probability) as avg_probability FROM bd_pipeline GROUP BY stage"
         ).fetchall()
         total = sum((r["total_amount"] or 0.0) * (r["avg_probability"] or 0.0) for r in rows)
         return {

@@ -12,10 +12,7 @@ from cloud.app.repositories import (
     FederatedNodesRepository,
 )
 from shared.base_service import BaseService
-
-
-def _now() -> str:
-    return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+from shared.datetime_utils import now as _now
 
 
 def _since_datetime(days: int) -> str:
@@ -50,7 +47,7 @@ class TrustAuditService(BaseService):
         Returns:
             描述
         """
-        repo = FederatedNodesRepository(self.db)
+        repo = FederatedNodesRepository(self._connection())
         row = repo.get_by_node_id(node_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Node not found")
@@ -107,8 +104,8 @@ class TrustAuditService(BaseService):
         Returns:
             描述
         """
-        block_repo = AuditChainBlocksRepository(self.db)
-        node_repo = FederatedNodesRepository(self.db)
+        block_repo = AuditChainBlocksRepository(self._connection())
+        node_repo = FederatedNodesRepository(self._connection())
 
         if node_id:
             node_row = node_repo.get_by_node_id(node_id)
@@ -142,7 +139,7 @@ class TrustAuditService(BaseService):
         Returns:
             描述
         """
-        block_repo = AuditChainBlocksRepository(self.db)
+        block_repo = AuditChainBlocksRepository(self._connection())
         blocks = block_repo.list_all(order_by="id ASC")
 
         valid = True
@@ -188,6 +185,6 @@ class TrustAuditService(BaseService):
         Returns:
             描述
         """
-        block_repo = AuditChainBlocksRepository(self.db)
+        block_repo = AuditChainBlocksRepository(self._connection())
         rows = block_repo.get_chain(node_id=node_id, limit=limit)
         return [_block_to_dict(r) for r in rows]

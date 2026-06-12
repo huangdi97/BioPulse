@@ -1,13 +1,15 @@
 """Compliance package public exports."""
 
 from .audit import EnforcerAudit, _l1_payload
-from .engine import ComplianceEnforcer, ComplianceEngine, ComplianceStrategyService, ResearchComplianceEnforcer
+from .engine import ComplianceEnforcer, ComplianceEngine
 from .red_light import NotificationRecord, RedLightEvent, RedLightManager
+from .research_enforcer import ResearchComplianceEnforcer
 from .rules import DetectionRule, EnforcerEngine, Violation
 from .service import ComplianceService
-from .v2_service import ComplianceV, ComplianceV2Service
+from .strategy_service import ComplianceStrategyService
 from .triangulation.decision import TriangulationFinding, TriangulationResult
 from .triangulation.engine import TriangulationEngine
+from .v2_service import ComplianceV, ComplianceV2Service
 
 __all__ = [
     "ComplianceEnforcer",

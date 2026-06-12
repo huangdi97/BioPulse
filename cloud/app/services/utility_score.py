@@ -11,6 +11,7 @@ from cloud.app.repositories import (
     NodeMemoryLinksRepository,
 )
 from cloud.app.services.utility_ranker import UtilityRankerMixin
+from shared.datetime_utils import now as _now
 
 
 class UtilityScoreMixin(UtilityRankerMixin):
@@ -40,16 +41,16 @@ class UtilityScoreMixin(UtilityRankerMixin):
 
     def score_memory(self, memory_id: int) -> dict:
         """对单条记忆条目计算并写入效用评分。"""
-        entry_repo = MemoryEntriesRepository(self.db)
-        mus_repo = MemoryUtilityScoresRepository(self.db)
-        link_repo = NodeMemoryLinksRepository(self.db)
+        entry_repo = MemoryEntriesRepository(self._connection())
+        mus_repo = MemoryUtilityScoresRepository(self._connection())
+        link_repo = NodeMemoryLinksRepository(self._connection())
 
         entry = entry_repo.find_active_by_id(memory_id)
         if not entry:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Memory entry not found")
         conn_count = link_repo.count_by_node(memory_id)
         u = self._calc_utility(entry, conn_count)
-        now = self._now()
+        now = _now()
         mus_repo.upsert_score(
             {
                 "memory_entry_id": memory_id,
@@ -68,12 +69,12 @@ class UtilityScoreMixin(UtilityRankerMixin):
 
     def score_all(self) -> dict:
         """批量计算所有活跃记忆条目的效用评分。"""
-        entry_repo = MemoryEntriesRepository(self.db)
-        mus_repo = MemoryUtilityScoresRepository(self.db)
-        link_repo = NodeMemoryLinksRepository(self.db)
+        entry_repo = MemoryEntriesRepository(self._connection())
+        mus_repo = MemoryUtilityScoresRepository(self._connection())
+        link_repo = NodeMemoryLinksRepository(self._connection())
 
         rows = entry_repo.list_active_ordered(order_by="id")
-        now = self._now()
+        now = _now()
         processed = 0
         for r in rows:
             conn_count = link_repo.count_by_node(r["id"])
@@ -94,7 +95,3 @@ class UtilityScoreMixin(UtilityRankerMixin):
             processed += 1
         self.db.commit()
         return {"processed_count": processed}
-
-    @staticmethod
-    def _now() -> str:
-        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")

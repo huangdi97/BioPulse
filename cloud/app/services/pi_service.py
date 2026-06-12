@@ -13,11 +13,11 @@ class PiService(BaseService):
     """PI 服务，提供学术 PI 的搜索、详情查询、创建与更新。"""
 
     def search(self, q: str) -> list:
-        repo = PiRepository(self.db)
+        repo = PiRepository(self._connection())
         return repo.search(q)
 
     def get_by_id(self, pi_id: int) -> dict:
-        repo = PiRepository(self.db)
+        repo = PiRepository(self._connection())
         pi = repo.get_by_id(pi_id)
         if not pi:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="PI not found")
@@ -35,7 +35,7 @@ class PiService(BaseService):
         total_grants: int = 0,
         h_index: int = 0,
     ) -> dict:
-        repo = PiRepository(self.db)
+        repo = PiRepository(self._connection())
         pi_id = repo.create(
             name=name,
             institution=institution,
@@ -50,7 +50,7 @@ class PiService(BaseService):
         return repo.get_by_id(pi_id)
 
     def update(self, pi_id: int, **kwargs) -> dict:
-        repo = PiRepository(self.db)
+        repo = PiRepository(self._connection())
         if not kwargs:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

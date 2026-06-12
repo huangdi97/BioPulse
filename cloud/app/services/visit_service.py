@@ -62,6 +62,10 @@ class VisitService:
         )
         record["follow_up_task_id"] = task_id
 
+    def list_visits(self) -> list[dict]:
+        self.repo.init_table()
+        return self.repo.list_visits()
+
     def get_visit(self, visit_id: int) -> dict:
         self.repo.init_table()
         record = self.repo.get_visit(visit_id)

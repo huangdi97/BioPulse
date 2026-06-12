@@ -61,7 +61,7 @@ class IntelAnalyzerMixin:
         page: int = 1,
         page_size: int = 20,
     ) -> PaginatedResponse:
-        items_repo = MarketIntelItemsRepository(self.db)
+        items_repo = MarketIntelItemsRepository(self._connection())
         conds, pars = [], []
         if item_type:
             conds.append("mi.item_type=?")
@@ -103,8 +103,8 @@ class IntelAnalyzerMixin:
         )
 
     def get_item(self, item_id: int) -> dict:
-        items_repo = MarketIntelItemsRepository(self.db)
-        sources_repo = MarketIntelSourcesRepository(self.db)
+        items_repo = MarketIntelItemsRepository(self._connection())
+        sources_repo = MarketIntelSourcesRepository(self._connection())
         row = items_repo.get_by_id(item_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="market_intel_items not found")
@@ -114,7 +114,7 @@ class IntelAnalyzerMixin:
         return d
 
     def update_item_status(self, item_id: int, status_value: str) -> None:
-        items_repo = MarketIntelItemsRepository(self.db)
+        items_repo = MarketIntelItemsRepository(self._connection())
         existing = items_repo.get_by_id(item_id)
         if not existing:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="market_intel_items not found")
@@ -122,7 +122,7 @@ class IntelAnalyzerMixin:
         items_repo.update_fields(item_id, {"status": status_value, "updated_at": now})
 
     def analyze_item(self, item_id: int, request: Request) -> dict:
-        items_repo = MarketIntelItemsRepository(self.db)
+        items_repo = MarketIntelItemsRepository(self._connection())
         row = items_repo.get_by_id(item_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="market_intel_items not found")
@@ -168,7 +168,7 @@ class IntelAnalyzerMixin:
         return {"analysis": ai_result}
 
     def dashboard(self) -> dict:
-        items_repo = MarketIntelItemsRepository(self.db)
+        items_repo = MarketIntelItemsRepository(self._connection())
         t = items_repo.count()
         u = items_repo.count(conditions=["status='unread'"])
         bt = items_repo.count_by_field("item_type")

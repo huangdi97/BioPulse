@@ -4,6 +4,7 @@ import time
 from threading import Lock
 
 from fastapi import APIRouter
+
 from shared.base import success
 
 
@@ -61,15 +62,17 @@ class MetricsCollector:
             recent_count = sum(1 for ts in self._recent_timestamps if now - ts <= 60)
             self._recent_timestamps = [ts for ts in self._recent_timestamps if now - ts <= 60]
 
-            return success(data={
-                "total_requests": total,
-                "status_counts": dict(self._status_counts),
-                "method_counts": dict(self._method_counts),
-                "latency_p50_ms": _percentile(50, buckets),
-                "latency_p95_ms": _percentile(95, buckets),
-                "latency_p99_ms": _percentile(99, buckets),
-                "requests_last_minute": recent_count,
-            })
+            return success(
+                data={
+                    "total_requests": total,
+                    "status_counts": dict(self._status_counts),
+                    "method_counts": dict(self._method_counts),
+                    "latency_p50_ms": _percentile(50, buckets),
+                    "latency_p95_ms": _percentile(95, buckets),
+                    "latency_p99_ms": _percentile(99, buckets),
+                    "requests_last_minute": recent_count,
+                }
+            )
 
 
 router = APIRouter(prefix="/api", tags=["monitoring"])

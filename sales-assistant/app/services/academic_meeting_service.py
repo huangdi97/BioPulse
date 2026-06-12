@@ -30,14 +30,24 @@ _LOCK = Lock()
 
 
 def _now_iso() -> str:
+    """返回当前 UTC 时间的 ISO 格式字符串。"""
     return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _new_id(prefix: str) -> str:
+    """生成指定前缀的唯一 ID。
+
+    参数:
+        prefix: ID 前缀字符串。
+
+    返回:
+        格式为 "{prefix}-{uuid的8位hex}" 的唯一 ID。
+    """
     return f"{prefix}-{uuid4().hex[:8]}"
 
 
 def _trace(meeting_id: str, action: str, detail: str) -> ComplianceTrace:
+    """记录一条合规追踪记录。"""
     item = ComplianceTrace(
         id=_new_id("trace"),
         meeting_id=meeting_id,
@@ -50,6 +60,7 @@ def _trace(meeting_id: str, action: str, detail: str) -> ComplianceTrace:
 
 
 def _get_meeting(meeting_id: str) -> Meeting:
+    """根据 ID 获取会议，不存在时抛出 404 异常。"""
     meeting = _MEETINGS.get(meeting_id)
     if not meeting:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Meeting not found")
@@ -57,10 +68,12 @@ def _get_meeting(meeting_id: str) -> Meeting:
 
 
 def list_meetings() -> list[Meeting]:
+    """返回所有会议的列表。"""
     return list(_MEETINGS.values())
 
 
 def create_meeting(body: MeetingCreate) -> Meeting:
+    """创建学术会议。"""
     with _LOCK:
         meeting_id = _new_id("meeting")
         meeting = Meeting(
@@ -78,6 +91,7 @@ def create_meeting(body: MeetingCreate) -> Meeting:
 
 
 def update_meeting(meeting_id: str, body: MeetingCreate) -> Meeting:
+    """更新指定会议的信息。"""
     with _LOCK:
         _get_meeting(meeting_id)
         meeting = Meeting(
@@ -95,6 +109,7 @@ def update_meeting(meeting_id: str, body: MeetingCreate) -> Meeting:
 
 
 def delete_meeting(meeting_id: str) -> dict[str, str]:
+    """删除指定会议及其所有关联数据。"""
     with _LOCK:
         _get_meeting(meeting_id)
         _MEETINGS.pop(meeting_id, None)
@@ -106,6 +121,7 @@ def delete_meeting(meeting_id: str) -> dict[str, str]:
 
 
 def invite_hcp(meeting_id: str, body: MeetingInviteCreate) -> MeetingInvitation:
+    """邀请 HCP 参与会议。"""
     with _LOCK:
         _get_meeting(meeting_id)
         invitation = MeetingInvitation(
@@ -120,6 +136,7 @@ def invite_hcp(meeting_id: str, body: MeetingInviteCreate) -> MeetingInvitation:
 
 
 def checkin_hcp(meeting_id: str, body: MeetingCheckInCreate) -> MeetingCheckIn:
+    """记录 HCP 签到。"""
     with _LOCK:
         _get_meeting(meeting_id)
         checkin = MeetingCheckIn(
@@ -135,6 +152,7 @@ def checkin_hcp(meeting_id: str, body: MeetingCheckInCreate) -> MeetingCheckIn:
 
 
 def push_content(meeting_id: str, body: MeetingContentCreate) -> MeetingContent:
+    """向指定 HCP 推送会议内容。"""
     with _LOCK:
         _get_meeting(meeting_id)
         content = MeetingContent(
@@ -151,6 +169,7 @@ def push_content(meeting_id: str, body: MeetingContentCreate) -> MeetingContent:
 
 
 def get_effectiveness(meeting_id: str) -> MeetingEffectiveness:
+    """获取会议效果评估（签到率、内容推送量、效果评分）。"""
     _get_meeting(meeting_id)
     invited_count = len(_INVITATIONS.get(meeting_id, []))
     checked_in_count = len(_CHECKINS.get(meeting_id, []))
@@ -168,5 +187,6 @@ def get_effectiveness(meeting_id: str) -> MeetingEffectiveness:
 
 
 def get_compliance_traces(meeting_id: str) -> list[ComplianceTrace]:
+    """获取会议的合规追踪记录列表。"""
     _get_meeting(meeting_id)
     return _TRACES.get(meeting_id, [])

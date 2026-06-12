@@ -13,7 +13,12 @@ class AllModelsFailedError(RuntimeError):
 
 FALLBACK_CHAIN = [
     {"provider": "deepseek", "model": "deepseek-v4-flash", "env_key": "DEEPSEEK_API_KEY", "url": "https://api.deepseek.com/v1/chat/completions"},
-    {"provider": "openrouter", "model": "openrouter/anthropic/claude-sonnet-4", "env_key": "OPENROUTER_API_KEY", "url": "https://openrouter.ai/api/v1/chat/completions"},
+    {
+        "provider": "openrouter",
+        "model": "openrouter/anthropic/claude-sonnet-4",
+        "env_key": "OPENROUTER_API_KEY",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+    },
     {"provider": "openai", "model": "openai/gpt-4o-mini", "env_key": "OPENAI_API_KEY", "url": "https://api.openai.com/v1/chat/completions"},
 ]
 

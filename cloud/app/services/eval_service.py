@@ -30,6 +30,15 @@ class EvalService:
     }
 
     def evaluate(self, agent_key: str, test_cases: list[dict]) -> dict:
+        """对指定 agent 执行一组测试用例的评估。
+
+        参数:
+            agent_key: Agent 标识键。
+            test_cases: 测试用例字典列表。
+
+        返回:
+            包含总计、通过数、失败数和详细结果的字典。
+        """
         preset_tools = self._get_allowed_tools(agent_key)
         details = []
         passed = 0
@@ -51,12 +60,28 @@ class EvalService:
         }
 
     def run_regression(self, agent_key: str) -> dict:
+        """运行预设回归测试用例对指定 agent 进行评估。
+
+        参数:
+            agent_key: Agent 标识键。
+
+        返回:
+            包含执行结果的字典，若无预设用例则返回空结果。
+        """
         test_cases = self.PRESET_CASES.get(agent_key, [])
         if not test_cases:
             return {"total": 0, "passed": 0, "failed": 0, "details": []}
         return self.evaluate(agent_key, test_cases)
 
     def _get_allowed_tools(self, agent_key: str) -> frozenset:
+        """获取指定 agent 预设用例中允许使用的工具集合。
+
+        参数:
+            agent_key: Agent 标识键。
+
+        返回:
+            允许的工具名称的不可变集合。
+        """
         preset = self.PRESET_CASES.get(agent_key)
         if not preset:
             return frozenset()
@@ -66,6 +91,16 @@ class EvalService:
         return frozenset(tools)
 
     def _evaluate_one(self, tc: dict, allowed_tools: frozenset, index: int) -> dict:
+        """评估单个测试用例，检查预期工具是否在允许列表中。
+
+        参数:
+            tc: 测试用例字典。
+            allowed_tools: 允许的工具集合。
+            index: 测试用例索引。
+
+        返回:
+            包含用例编号、输入、是否通过及原因说明的字典。
+        """
         expected_tools = tc.get("expected_tools", [])
 
         if allowed_tools:

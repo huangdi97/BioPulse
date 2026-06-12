@@ -5,10 +5,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 
 from cloud.app.repositories import MemoryEntriesRepository
-
-
-def _now() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+from shared.datetime_utils import now as _now
 
 
 class ProceduralMemoryWriter:
@@ -34,7 +31,7 @@ class ProceduralMemoryWriter:
             },
             ensure_ascii=False,
         )
-        eid = MemoryEntriesRepository(self.db).create(
+        eid = MemoryEntriesRepository(self._connection()).create(
             {
                 "title": pattern_name,
                 "content": content,
@@ -49,13 +46,13 @@ class ProceduralMemoryWriter:
                 "updated_at": n,
             }
         )
-        fetched = MemoryEntriesRepository(self.db).get_by_id(eid)
+        fetched = MemoryEntriesRepository(self._connection()).get_by_id(eid)
         if fetched:
             self._auto_associate(eid, fetched)
         return {"id": eid, "pattern_name": pattern_name, "success_rate": success_rate}
 
     def memory_decay(self, hours_threshold: int = 72) -> dict:
-        me_repo = MemoryEntriesRepository(self.db)
+        me_repo = MemoryEntriesRepository(self._connection())
         cutoff = (datetime.now() - timedelta(hours=hours_threshold)).strftime("%Y-%m-%d %H:%M:%S")
         rows = me_repo.db.execute(
             "SELECT id FROM memory_entries WHERE is_active=1 AND (last_accessed IS NULL OR last_accessed < ?) AND created_at < ?",

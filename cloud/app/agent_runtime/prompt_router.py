@@ -32,9 +32,7 @@ def update_prompt(agent_name: str, body: UpdatePromptRequest, user=Depends(requi
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Unknown agent: {agent_name}")
     db = _get_db()
     try:
-        row = db.execute(
-            "SELECT MAX(version_id) as max_ver FROM prompt_versions WHERE agent_name=?", (agent_name,)
-        ).fetchone()
+        row = db.execute("SELECT MAX(version_id) as max_ver FROM prompt_versions WHERE agent_name=?", (agent_name,)).fetchone()
         next_ver = (row["max_ver"] or 0) + 1
         db.execute(
             "INSERT INTO prompt_versions (agent_name, version_id, content, created_by) VALUES (?, ?, ?, ?)",
@@ -63,14 +61,10 @@ def list_versions(agent_name: str, user=Depends(require_scope("visit"))):
 def rollback_prompt(agent_name: str, version_id: int, user=Depends(require_scope("visit"))):
     db = _get_db()
     try:
-        row = db.execute(
-            "SELECT content FROM prompt_versions WHERE agent_name=? AND version_id=?", (agent_name, version_id)
-        ).fetchone()
+        row = db.execute("SELECT content FROM prompt_versions WHERE agent_name=? AND version_id=?", (agent_name, version_id)).fetchone()
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Version {version_id} not found")
-        max_row = db.execute(
-            "SELECT MAX(version_id) as max_ver FROM prompt_versions WHERE agent_name=?", (agent_name,)
-        ).fetchone()
+        max_row = db.execute("SELECT MAX(version_id) as max_ver FROM prompt_versions WHERE agent_name=?", (agent_name,)).fetchone()
         next_ver = (max_row["max_ver"] or 0) + 1
         db.execute(
             "INSERT INTO prompt_versions (agent_name, version_id, content, created_by) VALUES (?, ?, ?, ?)",
@@ -91,12 +85,8 @@ def diff_prompt(
 ):
     db = _get_db()
     try:
-        row1 = db.execute(
-            "SELECT content FROM prompt_versions WHERE agent_name=? AND version_id=?", (agent_name, v1)
-        ).fetchone()
-        row2 = db.execute(
-            "SELECT content FROM prompt_versions WHERE agent_name=? AND version_id=?", (agent_name, v2)
-        ).fetchone()
+        row1 = db.execute("SELECT content FROM prompt_versions WHERE agent_name=? AND version_id=?", (agent_name, v1)).fetchone()
+        row2 = db.execute("SELECT content FROM prompt_versions WHERE agent_name=? AND version_id=?", (agent_name, v2)).fetchone()
         if not row1:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Version {v1} not found")
         if not row2:

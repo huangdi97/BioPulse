@@ -91,9 +91,7 @@ class ApprovalRequestManager:
         return cur.rowcount > 0
 
     def get_pending_requests(self) -> list[ApprovalRequest]:
-        rows = self._db.execute(
-            "SELECT * FROM agent_runtime_approvals WHERE status='pending' ORDER BY created_at ASC"
-        ).fetchall()
+        rows = self._db.execute("SELECT * FROM agent_runtime_approvals WHERE status='pending' ORDER BY created_at ASC").fetchall()
         return [
             ApprovalRequest(
                 request_id=r["trace_id"],

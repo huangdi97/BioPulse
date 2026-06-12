@@ -33,8 +33,8 @@ class CollaborationMessageMixin:
         Raises:
             HTTPException: 会话不存在时返回 404
         """
-        sess_repo = CollaborationSessionsRepository(self.db)
-        steps_repo = CollaborationStepsRepository(self.db)
+        sess_repo = CollaborationSessionsRepository(self._connection())
+        steps_repo = CollaborationStepsRepository(self._connection())
 
         sess_rows = sess_repo.list_all(conditions=["session_id=?"], params=[session_id])
         if not sess_rows:
@@ -95,8 +95,8 @@ class CollaborationMessageMixin:
         Raises:
             HTTPException: 步骤不存在时返回 404
         """
-        steps_repo = CollaborationStepsRepository(self.db)
-        sess_repo = CollaborationSessionsRepository(self.db)
+        steps_repo = CollaborationStepsRepository(self._connection())
+        sess_repo = CollaborationSessionsRepository(self._connection())
 
         step = steps_repo.list_all(conditions=["id=?", "session_id=?"], params=[step_id, session_id])
         if not step:

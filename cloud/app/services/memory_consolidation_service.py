@@ -13,6 +13,15 @@ from shared.base_service import BaseService
 
 
 def _calc_utility(valence: float, intensity: float) -> float:
+    """计算记忆的效用值（价效乘积）。
+
+    参数:
+        valence: 情感价
+        intensity: 强度
+
+    返回:
+        效用值
+    """
     return valence * intensity
 
 
@@ -20,10 +29,18 @@ class MemoryConsolidationService(BaseService):
     """记忆巩固服务，将高价值情景记忆转化为知识图谱实体。"""
 
     def trigger_consolidation(self, triggered_by: str) -> dict:
+        """触发记忆巩固流程：评分、择优、知识图谱化及日志记录。
+
+        参数:
+            triggered_by: 触发来源描述
+
+        返回:
+            包含 promoted、pruned、total 的字典
+        """
         started = datetime.now()
-        ep_repo = EpisodicMemoryRepository(self.db)
-        kg_repo = KgEntitiesRepository(self.db)
-        log_repo = MemoryConsolidationLogRepository(self.db)
+        ep_repo = EpisodicMemoryRepository(self._connection())
+        kg_repo = KgEntitiesRepository(self._connection())
+        log_repo = MemoryConsolidationLogRepository(self._connection())
 
         rows = ep_repo.find_unconsolidated()
         if not rows:
@@ -78,12 +95,25 @@ class MemoryConsolidationService(BaseService):
         return {"promoted": promoted, "pruned": pruned, "total": total}
 
     def consolidation_status(self) -> list:
-        log_repo = MemoryConsolidationLogRepository(self.db)
+        """查询最近的巩固日志。
+
+        返回:
+            最近 5 条巩固日志列表
+        """
+        log_repo = MemoryConsolidationLogRepository(self._connection())
         return log_repo.list_recent(limit=5)
 
     def evaluate_memory(self, agent_id: str) -> dict:
-        ep_repo = EpisodicMemoryRepository(self.db)
-        log_repo = MemoryConsolidationLogRepository(self.db)
+        """评估指定智能体的记忆健康度综合得分。
+
+        参数:
+            agent_id: 智能体标识
+
+        返回:
+            包含 episodic_count、retrievals_7d、consolidation_rate、composite_score 的字典
+        """
+        ep_repo = EpisodicMemoryRepository(self._connection())
+        log_repo = MemoryConsolidationLogRepository(self._connection())
 
         now = datetime.now()
         seven_days_ago = (now - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
@@ -110,7 +140,12 @@ class MemoryConsolidationService(BaseService):
         }
 
     def evaluate_trend(self) -> dict:
-        log_repo = MemoryConsolidationLogRepository(self.db)
+        """查询过去 7 天的记忆巩固趋势。
+
+        返回:
+            包含按天聚合的 trend_by_day 字典
+        """
+        log_repo = MemoryConsolidationLogRepository(self._connection())
         seven_days_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d 00:00:00")
         rows = log_repo.trend_since(seven_days_ago)
 

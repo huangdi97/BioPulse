@@ -38,7 +38,7 @@ class MarketplaceService(MarketplaceBenchmarkMixin, BaseService):
         Returns:
             含 metric_id 的确认信息
         """
-        metrics_repo = EffectMetricsRepository(self.db)
+        metrics_repo = EffectMetricsRepository(self._connection())
         metric_id = f"em:{uuid4().hex[:12]}"
         now = datetime.utcnow().isoformat()
         metrics_repo.create(
@@ -64,7 +64,7 @@ class MarketplaceService(MarketplaceBenchmarkMixin, BaseService):
         Returns:
             按 agent_role+metric_type 分组的汇总数据
         """
-        metrics_repo = EffectMetricsRepository(self.db)
+        metrics_repo = EffectMetricsRepository(self._connection())
         rows = metrics_repo.dashboard(agent_role=agent_role)
         result = []
         for r in rows:
@@ -100,7 +100,7 @@ class MarketplaceService(MarketplaceBenchmarkMixin, BaseService):
         Returns:
             含 item_id 的确认信息
         """
-        marketplace_repo = AgentMarketplaceRepository(self.db)
+        marketplace_repo = AgentMarketplaceRepository(self._connection())
         item_id = f"mp:{uuid4().hex[:12]}"
         now = datetime.utcnow().isoformat()
         marketplace_repo.create(
@@ -137,7 +137,7 @@ class MarketplaceService(MarketplaceBenchmarkMixin, BaseService):
         Returns:
             模板列表
         """
-        marketplace_repo = AgentMarketplaceRepository(self.db)
+        marketplace_repo = AgentMarketplaceRepository(self._connection())
         rows = marketplace_repo.list_filtered(category=category, price_model=price_model, enabled=enabled)
         result = []
         for r in rows:

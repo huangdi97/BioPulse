@@ -15,6 +15,14 @@ class OLAPService:
     }
 
     def __init__(self, rows: Iterable[dict[str, Any]] | None = None) -> None:
+        """初始化 OLAP 服务，将输入行转换为列表。
+
+        参数:
+            rows: 可选，可迭代的字典行数据。
+
+        返回:
+            None
+        """
         self.rows = list(rows or [])
 
     def query(
@@ -26,6 +34,19 @@ class OLAPService:
         date_to: str | None = None,
         limit: int = 100,
     ) -> list[dict[str, Any]]:
+        """执行多维聚合查询，按维度分组并计算指标。
+
+        参数:
+            dimensions: 维度字段列表，默认为 ["activity_date"]。
+            metrics: 指标及其聚合方式字典，默认为 DEFAULT_METRICS。
+            filters: 筛选条件字典。
+            date_from: 起始日期筛选。
+            date_to: 结束日期筛选。
+            limit: 返回结果数量上限，默认为 100。
+
+        返回:
+            聚合结果字典列表。
+        """
         dimensions = dimensions or ["activity_date"]
         metrics = metrics or self.DEFAULT_METRICS
         filtered_rows = self._filter_rows(filters or {}, date_from, date_to)
@@ -52,6 +73,18 @@ class OLAPService:
         filters: dict[str, Any] | None = None,
         date_column: str = "activity_date",
     ) -> str:
+        """根据维度、指标和筛选条件构建 SQL 查询语句。
+
+        参数:
+            fact_table: 事实表名，默认为 "fact_business_activity_daily"。
+            dimensions: 维度字段列表，默认为 [date_column, "team_id"]。
+            metrics: 指标及其聚合方式字典，默认为 DEFAULT_METRICS。
+            filters: 筛选条件字典。
+            date_column: 日期列名，默认为 "activity_date"。
+
+        返回:
+            生成的 SQL 查询字符串。
+        """
         dimensions = dimensions or [date_column, "team_id"]
         metrics = metrics or self.DEFAULT_METRICS
         select_parts = [*dimensions]
@@ -68,6 +101,16 @@ class OLAPService:
         date_from: str | None,
         date_to: str | None,
     ) -> list[dict[str, Any]]:
+        """根据筛选条件和日期范围过滤数据行。
+
+        参数:
+            filters: 字段精确匹配筛选条件。
+            date_from: 起始日期（含）。
+            date_to: 结束日期（含）。
+
+        返回:
+            过滤后的行字典列表。
+        """
         rows = []
         for row in self.rows:
             if any(row.get(key) != value for key, value in filters.items()):
@@ -82,6 +125,16 @@ class OLAPService:
 
     @staticmethod
     def _aggregate(rows: list[dict[str, Any]], metric: str, aggregation: str) -> float | int:
+        """对指定指标在行数据上执行聚合计算。
+
+        参数:
+            rows: 数据行列表。
+            metric: 指标字段名。
+            aggregation: 聚合方式（count/avg/min/max/sum）。
+
+        返回:
+            聚合计算结果（float 或 int）。
+        """
         values = [row.get(metric, 0) or 0 for row in rows]
         if aggregation == "count":
             return len(values)

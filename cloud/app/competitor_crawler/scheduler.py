@@ -32,8 +32,12 @@ class CrawlerScheduler:
         self._jobs.clear()
 
     def add_cron_job(
-        self, job_id: str, func: Callable, cron_expr: str,
-        args: list[Any] | None = None, kwargs: dict[str, Any] | None = None,
+        self,
+        job_id: str,
+        func: Callable,
+        cron_expr: str,
+        args: list[Any] | None = None,
+        kwargs: dict[str, Any] | None = None,
     ) -> str | None:
         """Add a job with a cron expression (e.g. '0 6 * * *' for daily 6am)."""
         if job_id in self._jobs:
@@ -42,8 +46,11 @@ class CrawlerScheduler:
         if len(parts) != 5:
             return None
         trigger = CronTrigger(
-            minute=parts[0], hour=parts[1], day=parts[2],
-            month=parts[3], day_of_week=parts[4],
+            minute=parts[0],
+            hour=parts[1],
+            day=parts[2],
+            month=parts[3],
+            day_of_week=parts[4],
             timezone=timezone.utc,
         )
         self._scheduler.add_job(func, trigger, args=args or [], kwargs=kwargs or {}, id=job_id)
@@ -51,8 +58,12 @@ class CrawlerScheduler:
         return job_id
 
     def add_interval_job(
-        self, job_id: str, func: Callable, minutes: int,
-        args: list[Any] | None = None, kwargs: dict[str, Any] | None = None,
+        self,
+        job_id: str,
+        func: Callable,
+        minutes: int,
+        args: list[Any] | None = None,
+        kwargs: dict[str, Any] | None = None,
     ) -> str | None:
         """Add a job with an interval in minutes."""
         if job_id in self._jobs:

@@ -17,6 +17,7 @@ class RedisEventBackend:
     """Redis Streams 事件后端。"""
 
     def __init__(self, redis_url: str):
+        """初始化 Redis 事件后端，建立连接池。"""
         self._available = False
         self._pool = None
         self._client = None
@@ -31,6 +32,7 @@ class RedisEventBackend:
             self._available = False
 
     def is_available(self) -> bool:
+        """检查 Redis 后端是否可用。"""
         return self._available
 
     def deliver(
@@ -43,6 +45,7 @@ class RedisEventBackend:
         source_end: str,
         payload_json: str,
     ) -> list:
+        """将事件投递到指定目标端点的 Redis Stream。"""
         results = []
         if not self._available or not self._client:
             for target in targets:
@@ -116,6 +119,7 @@ class RedisEventBackend:
         return results
 
     def subscribe(self, target_end: str, event_types: list, callback_url: str = "") -> dict:
+        """订阅指定端点的事件类型并创建消费者组。"""
         if not self._available or not self._client:
             return {
                 "acknowledged": True,

@@ -4,4 +4,5 @@ class TestHealth:
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "ok"
-        assert data["service"] == "pharma-intel"
+        assert data["uptime"] >= 0
+        assert "version" in data

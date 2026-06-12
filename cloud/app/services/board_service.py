@@ -49,7 +49,7 @@ class BoardService(BaseService):
 
     def _get_board_or_404(self, board_id: int):
         """按ID查找看板，不存在则返回404。"""
-        boards_repo = TaskBoardsRepository(self.db)
+        boards_repo = TaskBoardsRepository(self._connection())
         rows = boards_repo.list_all(conditions=["id=?", "is_active=1"], params=[board_id])
         if not rows:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Board not found")
@@ -58,7 +58,7 @@ class BoardService(BaseService):
     def create_board(self, name: str, description: str, owner_id: int) -> dict:
         """创建新看板。"""
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        boards_repo = TaskBoardsRepository(self.db)
+        boards_repo = TaskBoardsRepository(self._connection())
         board_id = boards_repo.create(
             {
                 "name": name,
@@ -73,7 +73,7 @@ class BoardService(BaseService):
 
     def list_boards(self) -> list:
         """获取所有活跃看板列表。"""
-        boards_repo = TaskBoardsRepository(self.db)
+        boards_repo = TaskBoardsRepository(self._connection())
         rows = boards_repo.list_all(
             conditions=["is_active=1"],
             order_by="created_at DESC",
@@ -93,7 +93,7 @@ class BoardService(BaseService):
     ) -> dict:
         """更新看板名称或描述。"""
         self._get_board_or_404(board_id)
-        boards_repo = TaskBoardsRepository(self.db)
+        boards_repo = TaskBoardsRepository(self._connection())
         updates = {}
         if name is not None:
             updates["name"] = name
@@ -109,13 +109,13 @@ class BoardService(BaseService):
     def delete_board(self, board_id: int) -> None:
         """软删除指定看板。"""
         self._get_board_or_404(board_id)
-        boards_repo = TaskBoardsRepository(self.db)
+        boards_repo = TaskBoardsRepository(self._connection())
         boards_repo.soft_delete(board_id)
 
     def kanban_view(self, board_id: int) -> dict:
         """获取看板的Kanban列视图。"""
         board_row = self._get_board_or_404(board_id)
-        tasks_repo = BoardTasksRepository(self.db)
+        tasks_repo = BoardTasksRepository(self._connection())
         rows = tasks_repo.list_all(
             conditions=["board_id=?", "is_active=1"],
             params=[board_id],

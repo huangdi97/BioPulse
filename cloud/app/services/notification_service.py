@@ -16,6 +16,14 @@ from shared.base_service import BaseService
 
 
 def _notification_to_dict(row) -> dict:
+    """将数据库行转换为通知字典。
+
+    Args:
+        row: 数据库查询结果行
+
+    Returns:
+        通知信息字典
+    """
     return {
         "id": row["id"],
         "user_id": row["user_id"],
@@ -46,6 +54,24 @@ class NotificationService(NotificationBuilderMixin, BaseService):
         ref_type: Optional[str] = None,
         ref_id: Optional[int] = None,
     ) -> dict:
+        """发送通知，支持直接指定内容或使用模板。
+
+        Args:
+            user_id: 目标用户ID
+            template_name: 模板名称（可选）
+            title: 通知标题（可选）
+            body: 通知正文（可选）
+            category: 通知分类（可选）
+            context: 模板渲染上下文（可选）
+            ref_type: 关联对象类型（可选）
+            ref_id: 关联对象ID（可选）
+
+        Returns:
+            创建的通知字典
+
+        Raises:
+            HTTPException: 模板不存在或缺少必要参数时返回对应错误
+        """
         title = title
         body_text = body
         category = category
@@ -97,13 +123,24 @@ class NotificationService(NotificationBuilderMixin, BaseService):
         page: int = 1,
         page_size: int = 20,
     ) -> dict:
+        """查询通知列表，支持按已读状态筛选和分页。
+
+        Args:
+            user_id: 用户ID
+            is_read: 已读状态筛选（可选）
+            page: 页码
+            page_size: 每页数量
+
+        Returns:
+            包含 items、total、page、page_size 的字典
+        """
         conditions = ["user_id=?"]
         params = [user_id]
         if is_read is not None:
             conditions.append("is_read=?")
             params.append(is_read)
 
-        notif_repo = NotificationsRepository(self.db)
+        notif_repo = NotificationsRepository(self._connection())
         total, _, items = notif_repo.paginate(
             page=page,
             page_size=page_size,
@@ -119,7 +156,19 @@ class NotificationService(NotificationBuilderMixin, BaseService):
         }
 
     def mark_read(self, notification_id: int, user_id: int) -> dict:
-        notif_repo = NotificationsRepository(self.db)
+        """将通知标记为已读。
+
+        Args:
+            notification_id: 通知ID
+            user_id: 用户ID
+
+        Returns:
+            更新后的通知字典
+
+        Raises:
+            HTTPException: 通知不存在时返回404
+        """
+        notif_repo = NotificationsRepository(self._connection())
         db = self.db
         placeholders = ", ".join(notif_repo.cols)
         row = db.execute(
@@ -134,6 +183,14 @@ class NotificationService(NotificationBuilderMixin, BaseService):
         return _notification_to_dict(row)
 
     def unread_count(self, user_id: int) -> dict:
-        notif_repo = NotificationsRepository(self.db)
+        """查询用户未读通知数量。
+
+        Args:
+            user_id: 用户ID
+
+        Returns:
+            包含未读计数的字典
+        """
+        notif_repo = NotificationsRepository(self._connection())
         count = notif_repo.count(conditions=["user_id=?", "is_read=0"], params=[user_id])
         return {"count": count}

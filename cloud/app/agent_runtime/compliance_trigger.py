@@ -81,7 +81,11 @@ def compliance_monitor_trigger(
 
     logger.info(
         "Compliance L4 trigger: agent=%s status=%s iterations=%d tool_calls=%d elapsed=%.2fs",
-        agent_key, result.status, result.iterations, result.tool_calls, elapsed,
+        agent_key,
+        result.status,
+        result.iterations,
+        result.tool_calls,
+        elapsed,
     )
 
     return {

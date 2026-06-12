@@ -1,5 +1,6 @@
 """Agent运行时核心模块，提供"规划-决策-反思-执行-验证"五阶段执行循环；通过RuntimeState状态管理与StateSnapshot快照回滚机制保障任务可靠执行。"""
 
+import logging
 import time
 import uuid
 from datetime import datetime
@@ -11,13 +12,13 @@ from cloud.app.agent_runtime.cost_governor import CostGovernor
 from cloud.app.agent_runtime.execution_loop import ExecutionLoopMixin
 from cloud.app.agent_runtime.loop_detector import LoopDetector
 from cloud.app.agent_runtime.memory import Memory
-from cloud.app.agent_runtime.rollback_handler import RollbackHandlerMixin
 from cloud.app.agent_runtime.metrics import agent_active_count, agent_requests_total
 from cloud.app.agent_runtime.models import RuntimeResult
 from cloud.app.agent_runtime.notifier import Notifier
 from cloud.app.agent_runtime.planner import Planner
 from cloud.app.agent_runtime.rate_limiter import RateLimiter
 from cloud.app.agent_runtime.reflector import Reflector
+from cloud.app.agent_runtime.rollback_handler import RollbackHandlerMixin
 from cloud.app.agent_runtime.runtime_core_tools import RuntimeCoreToolsMixin
 from cloud.app.agent_runtime.runtime_helpers import RuntimeHelper
 from cloud.app.agent_runtime.runtime_llm import RuntimeLLM
@@ -29,6 +30,8 @@ from cloud.app.agent_runtime.tool_bridge import ToolBridge
 from cloud.app.agent_runtime.tracer import AgentTracer
 from cloud.app.agent_runtime.vector_memory import VectorMemory
 from cloud.app.agent_runtime.verifier import Verifier
+
+logger = logging.getLogger(__name__)
 
 
 class RuntimeCore(ExecutionLoopMixin, RollbackHandlerMixin, RuntimeHelper, RuntimeLLM, RuntimeCoreToolsMixin, RuntimeToolExecMixin):
@@ -58,9 +61,11 @@ class RuntimeCore(ExecutionLoopMixin, RollbackHandlerMixin, RuntimeHelper, Runti
         self._streamer: AgentStreamer | None = None
 
     def set_streamer(self, streamer: AgentStreamer):
+        """设置事件流推送器。"""
         self._streamer = streamer
 
     def execute(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
+        """执行 Agent 任务，包含舱壁隔离与执行循环。"""
         if not self._bulkhead.acquire(agent_key):
             return RuntimeResult(
                 status="bulkhead_rejected",
@@ -99,9 +104,7 @@ class RuntimeCore(ExecutionLoopMixin, RollbackHandlerMixin, RuntimeHelper, Runti
             memories = self._vector_memory.search(agent_key, goal, top_k=3)
             if memories:
                 context = dict(context or {})
-                context["_vector_memories"] = [
-                    {"key": m["key"], "content": m["content"], "score": m["score"]} for m in memories
-                ]
+                context["_vector_memories"] = [{"key": m["key"], "content": m["content"], "score": m["score"]} for m in memories]
             result = self._execute_impl(goal, agent_key, context)
             if result.status == "success" and result.result:
                 try:
@@ -124,6 +127,7 @@ class RuntimeCore(ExecutionLoopMixin, RollbackHandlerMixin, RuntimeHelper, Runti
                 self._streamer.stream(trace_id, "agent.end", {"status": result.status, "result": result.result})
             return result
         except Exception:
+            logger.exception("Runtime core异常")
             self._save_snapshot(agent_key, -1, [], [], context or {}, "failed")
             self._tracer.end_trace("error", {"error": "unhandled exception"})
             if self._streamer:
@@ -131,6 +135,7 @@ class RuntimeCore(ExecutionLoopMixin, RollbackHandlerMixin, RuntimeHelper, Runti
             raise
 
     def resume(self, agent_key: str, goal: str, auth_header: str) -> RuntimeResult:
+        """从检查点恢复 Agent 任务执行。"""
         checkpoint = self._load_checkpoint(agent_key, goal)
         if not checkpoint:
             return RuntimeResult(status="error", result="no checkpoint found", iterations=0, tool_calls=0, logs=[])
@@ -145,11 +150,13 @@ class RuntimeCore(ExecutionLoopMixin, RollbackHandlerMixin, RuntimeHelper, Runti
         return self.execute(goal, agent_key, checkpoint.get("context"))
 
     def get_status(self) -> dict:
+        """获取运行时状态统计。"""
         cur = self._agent_db.execute("SELECT status, COUNT(*) as cnt FROM agent_runtime_logs GROUP BY status")
         return {**self._stats, "by_status": {r["status"]: r["cnt"] for r in cur.fetchall()}}
 
     @property
     def brain(self) -> Memory:
+        """获取 Agent 脑状态存储器。"""
         return self._brain
 
     def _notify(self, c, status):

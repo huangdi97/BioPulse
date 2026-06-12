@@ -1,10 +1,8 @@
 """场景难度推荐服务。"""
 
-import re
-from typing import Optional
-
 from sales_coach.app.scenario_library import FIXED_SCENARIOS
 from sales_coach.app.schemas.scenario import Scenario, ScenarioRecommendation
+from sales_coach.app.services._shared import parse_numeric_id
 from shared.base_service import BaseService
 
 _LEVEL_TO_DIFFICULTY = {
@@ -46,7 +44,7 @@ class ScenarioRecommenderService(BaseService):
             self._close_connection(conn)
 
     def _average_score(self, conn, user_id: str) -> float:
-        numeric_id = _parse_numeric_id(user_id)
+        numeric_id = parse_numeric_id(user_id)
         if numeric_id is None:
             return 0.0
         row = conn.execute(
@@ -85,10 +83,3 @@ def _score_to_level(score: float) -> str:
     if score <= 80:
         return "intermediate"
     return "advanced"
-
-
-def _parse_numeric_id(user_id: str) -> Optional[int]:
-    match = re.search(r"(\d+)$", str(user_id))
-    if not match:
-        return None
-    return int(match.group(1))

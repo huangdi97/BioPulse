@@ -106,7 +106,7 @@ class TestServiceCompliance:
 class TestServiceNotifications:
     def test_notifications_mark_read_invalid_id(self, client, auth_token):
         resp = client.patch(
-            "/notifications/99999999",
+            "/notifications/99999999/read",
             json={"is_read": True},
             headers={"Authorization": f"Bearer {auth_token}"},
         )
@@ -114,7 +114,7 @@ class TestServiceNotifications:
 
     def test_notifications_mark_read_missing_body(self, client, auth_token):
         resp = client.patch(
-            "/notifications/1",
+            "/notifications/1/read",
             headers={"Authorization": f"Bearer {auth_token}"},
         )
         assert resp.status_code in (200, 422, 404)
@@ -129,7 +129,7 @@ class TestServiceSettings:
 
     def test_settings_response_format(self, client, auth_token):
         resp = client.get(
-            "/settings/",
+            "/admin/settings",
             headers={"Authorization": f"Bearer {auth_token}"},
         )
         assert resp.status_code == 200

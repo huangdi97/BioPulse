@@ -47,7 +47,7 @@ class AgentRoleService(BaseService):
             描述
         """
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        repo = AgentRolesRepository(self.db)
+        repo = AgentRolesRepository(self._connection())
         rid = repo.create(
             {
                 "name": body.name,
@@ -77,7 +77,7 @@ class AgentRoleService(BaseService):
         Returns:
             描述
         """
-        repo = AgentRolesRepository(self.db)
+        repo = AgentRolesRepository(self._connection())
         conds, pars = [], []
         if is_active is not None:
             conds.append("is_active=?")
@@ -99,7 +99,7 @@ class AgentRoleService(BaseService):
         Returns:
             描述
         """
-        repo = AgentRolesRepository(self.db)
+        repo = AgentRolesRepository(self._connection())
         row = self._404(repo, role_id)
         return self._rd(row)
 
@@ -112,7 +112,7 @@ class AgentRoleService(BaseService):
         Returns:
             描述
         """
-        repo = AgentRolesRepository(self.db)
+        repo = AgentRolesRepository(self._connection())
         self._404(repo, role_id)
         updates = {}
         for f in [
@@ -149,6 +149,6 @@ class AgentRoleService(BaseService):
         Returns:
             描述
         """
-        repo = AgentRolesRepository(self.db)
+        repo = AgentRolesRepository(self._connection())
         self._404(repo, role_id)
         repo.soft_delete(role_id)

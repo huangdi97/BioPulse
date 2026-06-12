@@ -70,9 +70,13 @@ class CrawlerStorage:
             "INSERT INTO crawler_metadata (source_type, keyword, url, title, summary, author, publish_date, raw_json) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (
-                source_type, keyword, url,
-                data.get("title", ""), data.get("summary", ""),
-                data.get("author", ""), data.get("publish_date", ""),
+                source_type,
+                keyword,
+                url,
+                data.get("title", ""),
+                data.get("summary", ""),
+                data.get("author", ""),
+                data.get("publish_date", ""),
                 json.dumps(data, ensure_ascii=False),
             ),
         )

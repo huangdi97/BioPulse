@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, Depends, File, UploadFile
 from starlette import status
-from cloud.app.models.asr_models import UploadResponse, TranscriptResponse, SummaryResponse
+
+from cloud.app.models.asr_models import SummaryResponse, TranscriptResponse, UploadResponse
 from cloud.app.services.asr_service import AsrService
 from shared.auth_scope import require_scope
 from shared.base import success
@@ -15,6 +16,7 @@ async def upload_audio(
     _: dict = Depends(require_scope("visit")),
 ):
     import os
+
     os.makedirs("uploads/audio", exist_ok=True)
     file_path = f"uploads/audio/{file.filename}"
     content = await file.read()
@@ -29,6 +31,7 @@ def get_transcript(task_id: str, service: AsrService = Depends()):
     result = service.get_transcript(task_id)
     if not result:
         from fastapi import HTTPException
+
         raise HTTPException(404, "task not found")
     return success(data=TranscriptResponse(**result))
 
@@ -38,5 +41,6 @@ def get_summary(task_id: str, service: AsrService = Depends()):
     result = service.get_summary(task_id)
     if not result:
         from fastapi import HTTPException
+
         raise HTTPException(404, "task not found")
     return success(data=SummaryResponse(**result))

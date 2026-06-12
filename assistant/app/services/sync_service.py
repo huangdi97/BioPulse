@@ -1,6 +1,7 @@
 """数据同步服务模块。"""
 
 import json
+import logging
 from datetime import datetime, timezone
 from typing import Dict, List
 
@@ -14,6 +15,8 @@ from shared.columns import (
     TABLE_TASK_COLS,
     TABLE_VISIT_RECORD_COLS,
 )
+
+logger = logging.getLogger(__name__)
 
 ENTITY_TABLE_MAP: Dict[str, str] = {
     "hcp": "hcp",
@@ -246,6 +249,7 @@ class SyncService(BaseService):
                 return {"operation_id": 0, "status": "synced", "server_entity_id": op.entity_id}
             return {"operation_id": 0, "status": "failed", "server_entity_id": None}
         except Exception:
+            logger.exception("同步失败")
             return {"operation_id": 0, "status": "failed", "server_entity_id": None}
 
     def _collect_table_changes(self, table: str, since: str) -> dict:

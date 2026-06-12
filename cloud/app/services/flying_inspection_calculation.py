@@ -21,12 +21,7 @@ def compute_dashboard(
     passed = sum(1 for item in checklist if item.status == ChecklistStatus.PASSED)
     total = len(checklist)
     failed = sum(1 for item in checklist if item.status == ChecklistStatus.FAILED)
-    overdue_count = sum(
-        1
-        for item in checklist
-        if item.status != ChecklistStatus.PASSED
-        and datetime.fromisoformat(item.deadline).date() <= _today()
-    )
+    overdue_count = sum(1 for item in checklist if item.status != ChecklistStatus.PASSED and datetime.fromisoformat(item.deadline).date() <= _today())
     self_check_rate = round(passed / total * 100, 1) if total else 0.0
     score = max(0, min(100, int(self_check_rate - overdue_count * 8 - failed * 5 + 20)))
     return InspectionDashboard(

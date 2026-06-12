@@ -62,7 +62,7 @@ class IntelCollectorMixin:
 
     def create_source(self, name: str, source_type: str, target_keywords: list, user_id: int) -> dict:
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        sources_repo = MarketIntelSourcesRepository(self.db)
+        sources_repo = MarketIntelSourcesRepository(self._connection())
         row_id = sources_repo.create(
             {
                 "name": name,
@@ -77,7 +77,7 @@ class IntelCollectorMixin:
         return sd(row)
 
     def list_sources(self, source_type: Optional[str] = None, is_active: Optional[int] = None) -> list:
-        sources_repo = MarketIntelSourcesRepository(self.db)
+        sources_repo = MarketIntelSourcesRepository(self._connection())
         conditions, params = [], []
         if source_type:
             conditions.append("source_type=?")
@@ -100,7 +100,7 @@ class IntelCollectorMixin:
         target_keywords: Optional[list] = None,
         is_active: Optional[int] = None,
     ) -> dict:
-        sources_repo = MarketIntelSourcesRepository(self.db)
+        sources_repo = MarketIntelSourcesRepository(self._connection())
         existing = sources_repo.get_by_id(source_id)
         if not existing:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="market_intel_sources not found")
@@ -120,8 +120,8 @@ class IntelCollectorMixin:
         return sd(row)
 
     def delete_source(self, source_id: int) -> None:
-        sources_repo = MarketIntelSourcesRepository(self.db)
-        items_repo = MarketIntelItemsRepository(self.db)
+        sources_repo = MarketIntelSourcesRepository(self._connection())
+        items_repo = MarketIntelItemsRepository(self._connection())
         existing = sources_repo.get_by_id(source_id)
         if not existing:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="market_intel_sources not found")
@@ -129,8 +129,8 @@ class IntelCollectorMixin:
         sources_repo.delete(source_id)
 
     def collect_source(self, source_id: int, user_id: int) -> dict:
-        sources_repo = MarketIntelSourcesRepository(self.db)
-        items_repo = MarketIntelItemsRepository(self.db)
+        sources_repo = MarketIntelSourcesRepository(self._connection())
+        items_repo = MarketIntelItemsRepository(self._connection())
         src = sources_repo.get_by_id(source_id)
         if not src:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="market_intel_sources not found")
@@ -138,8 +138,8 @@ class IntelCollectorMixin:
         return {"collected_count": 3}
 
     def collect_all(self, user_id: int) -> dict:
-        sources_repo = MarketIntelSourcesRepository(self.db)
-        items_repo = MarketIntelItemsRepository(self.db)
+        sources_repo = MarketIntelSourcesRepository(self._connection())
+        items_repo = MarketIntelItemsRepository(self._connection())
         sources = sources_repo.list_active()
         for src in sources:
             _do_collect(items_repo, src, user_id)

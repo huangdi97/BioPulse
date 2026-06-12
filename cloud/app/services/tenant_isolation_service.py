@@ -59,6 +59,7 @@ class TenantContextMiddleware(BaseHTTPMiddleware):
     """Extract tenant_id from JWT and bind it to request-local context."""
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
+        """从请求中提取 tenant_id 并绑定到请求上下文。"""
         tenant_id = TenantIsolationService.extract_tenant_from_request(request)
         token = CURRENT_TENANT.set(tenant_id)
         request.state.tenant_id = tenant_id
@@ -85,14 +86,17 @@ class TenantIsolationService:
 
     @staticmethod
     def current_tenant() -> str:
+        """返回当前请求的 tenant_id，无则返回默认租户。"""
         return CURRENT_TENANT.get() or TenantIsolationService.DEFAULT_TENANT
 
     @staticmethod
     def set_current_tenant(tenant_id: str) -> None:
+        """设置当前请求的 tenant_id 到上下文变量。"""
         CURRENT_TENANT.set(tenant_id)
 
     @staticmethod
     def extract_tenant_from_request(request: Request) -> str:
+        """从请求的 JWT 或 x-tenant-id 头中提取租户 ID。"""
         auth_header = request.headers.get("authorization", "")
         if auth_header.lower().startswith("bearer "):
             claims = _decode_jwt_payload(auth_header.split(" ", 1)[1].strip())
@@ -102,10 +106,12 @@ class TenantIsolationService:
         return request.headers.get("x-tenant-id", TenantIsolationService.DEFAULT_TENANT)
 
     def tenant_column_ddl(self, table_name: str, column_type: str = "TEXT") -> str:
+        """生成给指定表添加 tenant_id 列的 DDL 语句。"""
         table_name = _validate_identifier(table_name)
         return f"ALTER TABLE {table_name} ADD COLUMN tenant_id {column_type} NOT NULL DEFAULT '{self.current_tenant()}';"
 
     def rls_policy_ddl(self, table_name: str) -> list[str]:
+        """生成指定表启用行级安全策略的 DDL 语句列表。"""
         table_name = _validate_identifier(table_name)
         return [
             f"ALTER TABLE {table_name} ENABLE ROW LEVEL SECURITY;",
@@ -113,6 +119,7 @@ class TenantIsolationService:
         ]
 
     def tenant_filter_clause(self, alias: str | None = None, placeholder: str = ":tenant_id") -> str:
+        """生成 tenant_id 过滤条件子句，支持表别名。"""
         column = f"{_validate_identifier(alias)}.tenant_id" if alias else "tenant_id"
         return f"{column} = {placeholder}"
 
@@ -142,9 +149,11 @@ class TenantIsolationService:
         return min(indexes) if indexes else None
 
     def scoped_params(self, params: dict[str, Any] | None = None) -> dict[str, Any]:
+        """合并参数与当前租户 ID，确保查询带上租户范围。"""
         return {**(params or {}), "tenant_id": self.current_tenant()}
 
     def schema_name_for_tenant(self, tenant_id: str | None = None, purpose: str = "compliance") -> str:
+        """根据租户 ID 和用途生成标准化 schema 名称。"""
         raw = tenant_id or self.current_tenant()
         normalized = re.sub(r"[^A-Za-z0-9_]", "_", raw).strip("_").lower()
         if not normalized:
@@ -152,6 +161,7 @@ class TenantIsolationService:
         return f"{purpose}_{normalized}"
 
     def compliance_schema_ddl(self, tenant_id: str | None = None) -> list[str]:
+        """生成租户隔离的 compliance schema 及表的 DDL 语句列表。"""
         schema = self.schema_name_for_tenant(tenant_id=tenant_id, purpose="compliance")
         statements = [f"CREATE SCHEMA IF NOT EXISTS {schema};"]
         statements.extend(
@@ -163,6 +173,7 @@ class TenantIsolationService:
         return statements
 
     def isolation_status(self) -> dict[str, Any]:
+        """返回当前多租户隔离配置状态，包含 RLS 和 schema 策略详情。"""
         tenant_id = self.current_tenant()
         return {
             "tenant_id": tenant_id,
@@ -191,4 +202,5 @@ router = APIRouter(prefix="/api/tenant/isolation", tags=["多租户隔离"])
 
 @router.get("/status", tags=["多租户隔离"])
 def tenant_isolation_status():
+    """返回当前租户隔离状态（API 端点）。"""
     return TenantIsolationService().isolation_status()

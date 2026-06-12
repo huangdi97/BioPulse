@@ -19,6 +19,8 @@ from shared.columns import TABLE_OPPORTUNITIES_COLS
 
 
 class OpportunityService(OpportunityAnalysisMixin, BaseService):
+    """销售机会业务服务，组合机会分析能力与基础 CRUD。"""
+
     def create_opportunity(
         self,
         customer_id: int,
@@ -52,7 +54,7 @@ class OpportunityService(OpportunityAnalysisMixin, BaseService):
         Raises:
             HTTPException: 当客户不存在、客户非活跃或阶段非法时抛出。
         """
-        cust_repo = CustomersRepository(self.db)
+        cust_repo = CustomersRepository(self._connection())
         placeholders = ", ".join(cust_repo.cols)
         customer = self.db.execute(
             f"SELECT {placeholders} FROM {cust_repo.table_name} WHERE id=? AND status='active'",
@@ -67,7 +69,7 @@ class OpportunityService(OpportunityAnalysisMixin, BaseService):
             )
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         probability = self._stage_probability(stage)
-        opp_repo = OpportunitiesRepository(self.db)
+        opp_repo = OpportunitiesRepository(self._connection())
         row_id = opp_repo.create(
             {
                 "customer_id": customer_id,
@@ -113,7 +115,7 @@ class OpportunityService(OpportunityAnalysisMixin, BaseService):
         Raises:
             HTTPException: 当底层数据库查询失败时由调用栈抛出。
         """
-        opp_repo = OpportunitiesRepository(self.db)
+        opp_repo = OpportunitiesRepository(self._connection())
         conditions = ["is_active = 1"]
         params: list = []
         if stage:
@@ -189,7 +191,7 @@ class OpportunityService(OpportunityAnalysisMixin, BaseService):
             HTTPException: 当机会不存在、阶段非法或阶段流转不允许时抛出。
         """
         get_opp_or_404(self.db, opp_id)
-        opp_repo = OpportunitiesRepository(self.db)
+        opp_repo = OpportunitiesRepository(self._connection())
         updates = {}
         field_map = {
             "name": name,
@@ -238,5 +240,5 @@ class OpportunityService(OpportunityAnalysisMixin, BaseService):
             HTTPException: 当机会不存在时抛出404。
         """
         get_opp_or_404(self.db, opp_id)
-        opp_repo = OpportunitiesRepository(self.db)
+        opp_repo = OpportunitiesRepository(self._connection())
         opp_repo.soft_delete(opp_id)

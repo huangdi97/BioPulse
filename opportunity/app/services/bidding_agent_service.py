@@ -1,5 +1,6 @@
 """投标代理服务，用于自动处理投标流程和智能投标建议。"""
 
+import logging
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
@@ -8,6 +9,8 @@ from starlette import status
 from opportunity.app.repositories import BiddingAgentConfigRepository
 from opportunity.app.services.bidding_agent_llm import BiddingAgentLLM
 from shared.base_service import BaseCrudService
+
+logger = logging.getLogger(__name__)
 
 
 class BiddingAgentService(BiddingAgentLLM, BaseCrudService):
@@ -154,6 +157,7 @@ class BiddingAgentService(BiddingAgentLLM, BaseCrudService):
                         started_at,
                     )
                 except Exception as e:
+                    logger.exception("Agent执行异常")
                     errors.append({"config_id": config["id"], "error": str(e)})
                     self._log_scan_result(conn, config["id"], "failed", 0, 0, str(e), started_at)
             return {

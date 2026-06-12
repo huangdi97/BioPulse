@@ -36,7 +36,7 @@ def test_half_open_recovers():
     def fail():
         raise ValueError("fail")
 
-    with patch('cloud.app.agent_runtime.circuit_breaker.time.time', side_effect=[0, 0, 0, 0, 0, 1.1]):
+    with patch("cloud.app.agent_runtime.circuit_breaker.time.time", side_effect=[0, 0, 0, 0, 0, 1.1]):
         for _ in range(2):
             try:
                 cb.call(fail)
@@ -54,7 +54,7 @@ def test_half_open_fails_again():
     def fail():
         raise ValueError("fail")
 
-    with patch('cloud.app.agent_runtime.circuit_breaker.time.time', side_effect=[0, 0, 0, 0, 0, 1.1, 1.1, 1.1, 1.1, 1.1]):
+    with patch("cloud.app.agent_runtime.circuit_breaker.time.time", side_effect=[0, 0, 0, 0, 0, 1.1, 1.1, 1.1, 1.1, 1.1]):
         for _ in range(2):
             try:
                 cb.call(fail)

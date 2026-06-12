@@ -42,7 +42,7 @@ class OrchestrateService(BaseService):
 
     def create_template(self, template_name: str, description: str, steps: list[dict], user_id: int) -> dict:
         """创建一个新的编排模板。"""
-        tmpl_repo = OrchestrationTemplatesRepository(self.db)
+        tmpl_repo = OrchestrationTemplatesRepository(self._connection())
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         row_id = tmpl_repo.create(
             {
@@ -59,7 +59,7 @@ class OrchestrateService(BaseService):
 
     def list_templates(self, enabled: Optional[int] = None) -> list:
         """查询编排模板列表，可选按启用状态过滤。"""
-        tmpl_repo = OrchestrationTemplatesRepository(self.db)
+        tmpl_repo = OrchestrationTemplatesRepository(self._connection())
         conditions = []
         params = []
         if enabled is not None:
@@ -74,7 +74,7 @@ class OrchestrateService(BaseService):
 
     def run_orchestration(self, template_name: str, context: dict) -> dict:
         """根据模板名称执行多步骤协同编排流程。"""
-        tmpl_repo = OrchestrationTemplatesRepository(self.db)
+        tmpl_repo = OrchestrationTemplatesRepository(self._connection())
         placeholders = ", ".join(tmpl_repo.cols)
         tmpl = self.db.execute(
             f"SELECT {placeholders} FROM {tmpl_repo.table_name} WHERE template_name=? AND enabled=1",
@@ -90,7 +90,7 @@ class OrchestrateService(BaseService):
         session_id = f"orch:{uuid.uuid4()}"
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        sess_repo = CollaborationSessionsRepository(self.db)
+        sess_repo = CollaborationSessionsRepository(self._connection())
         sess_repo.create(
             {
                 "session_id": session_id,
@@ -104,7 +104,7 @@ class OrchestrateService(BaseService):
             }
         )
 
-        step_repo = CollaborationStepsRepository(self.db)
+        step_repo = CollaborationStepsRepository(self._connection())
         for i, step in enumerate(steps):
             order = i + 1
             agent_role = step.get("agent_role", "")
@@ -122,7 +122,7 @@ class OrchestrateService(BaseService):
                 }
             )
 
-        task_repo = AgentExecutionTasksRepository(self.db)
+        task_repo = AgentExecutionTasksRepository(self._connection())
         for step in steps:
             agent_role = step.get("agent_role", "")
             action = step.get("action", "process")

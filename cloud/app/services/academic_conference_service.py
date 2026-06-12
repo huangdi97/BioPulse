@@ -1,6 +1,5 @@
 """Academic conference lifecycle service."""
 
-from datetime import datetime
 from threading import Lock
 from uuid import uuid4
 
@@ -15,17 +14,26 @@ from cloud.app.schemas.academic_conference import (
     MeetingCreate,
     MeetingStatus,
 )
+from shared.datetime_utils import now as _now
 
 _LOCK = Lock()
+
 _MEETINGS: dict[str, Meeting] = {}
 _CHECKINS: dict[str, set[str]] = {}
 
 
-def _now() -> str:
-    return datetime.now().isoformat(timespec="seconds")
-
-
 def _trace(step: str, who: str, what: str, evidence: str) -> dict[str, str]:
+    """创建审计追踪记录。
+
+    Args:
+        step: 步骤名称
+        who: 操作者
+        what: 操作描述
+        evidence: 证据标识
+
+    Returns:
+        追踪记录字典
+    """
     return {
         "step": step,
         "who": who,
@@ -36,6 +44,17 @@ def _trace(step: str, who: str, what: str, evidence: str) -> dict[str, str]:
 
 
 def _get_meeting(meeting_id: str) -> Meeting:
+    """根据ID获取会议，不存在则返回404。
+
+    Args:
+        meeting_id: 会议ID
+
+    Returns:
+        会议对象
+
+    Raises:
+        HTTPException: 会议不存在时返回404
+    """
     meeting = _MEETINGS.get(meeting_id)
     if not meeting:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Conference not found")
@@ -43,6 +62,14 @@ def _get_meeting(meeting_id: str) -> Meeting:
 
 
 def create_meeting(data: MeetingCreate) -> Meeting:
+    """创建学术会议。
+
+    Args:
+        data: 会议创建请求数据
+
+    Returns:
+        创建的会议对象
+    """
     with _LOCK:
         meeting_id = f"conf-{uuid4().hex[:8]}"
         meeting = Meeting(
@@ -69,6 +96,15 @@ def create_meeting(data: MeetingCreate) -> Meeting:
 
 
 def invite_meeting(meeting_id: str, request: ConferenceInviteRequest) -> Meeting:
+    """发送会议邀请。
+
+    Args:
+        meeting_id: 会议ID
+        request: 邀请请求数据（包含邀请者列表和渠道）
+
+    Returns:
+        更新后的会议对象
+    """
     with _LOCK:
         meeting = _get_meeting(meeting_id)
         invitee_count = len(request.invitee_ids) or 120
@@ -92,6 +128,15 @@ def invite_meeting(meeting_id: str, request: ConferenceInviteRequest) -> Meeting
 
 
 def checkin_meeting(meeting_id: str, request: ConferenceCheckinRequest) -> Meeting:
+    """会议签到。
+
+    Args:
+        meeting_id: 会议ID
+        request: 签到请求数据（包含HCP ID）
+
+    Returns:
+        更新后的会议对象
+    """
     with _LOCK:
         meeting = _get_meeting(meeting_id)
         checked_in = _CHECKINS.setdefault(meeting_id, set())
@@ -117,6 +162,14 @@ def checkin_meeting(meeting_id: str, request: ConferenceCheckinRequest) -> Meeti
 
 
 def get_analytics(meeting_id: str) -> dict:
+    """获取会议分析数据并归档。
+
+    Args:
+        meeting_id: 会议ID
+
+    Returns:
+        包含会议数据、分析追踪和合规归档信息的字典
+    """
     with _LOCK:
         meeting = _get_meeting(meeting_id)
         invited_count = meeting.invited_count or 120

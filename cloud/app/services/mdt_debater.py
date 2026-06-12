@@ -1,7 +1,6 @@
 """MDT辩论服务，负责多学科团队辩论会话的管理与AI辩论编排。"""
 
 import logging
-from datetime import datetime
 
 from fastapi import HTTPException
 from starlette import status
@@ -14,15 +13,14 @@ from cloud.app.repositories import (
 )
 from cloud.app.services.mdt_debate_scorer import _call_ai, parse_ai_opinion, parse_consensus_json
 from shared.base_service import BaseService
+from shared.datetime_utils import now as _now
 
 logger = logging.getLogger(__name__)
 from shared.base import success
 
 
 class MdtDebater(BaseService):
-    @staticmethod
-    def _now() -> str:
-        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    """MDT 辩论服务，管理多学科团队辩论会话与 AI 辩论编排。"""
 
     def create_session(self, body, uid: int) -> dict:
         """创建一个MDT辩论会话并写入参与者。
@@ -37,10 +35,10 @@ class MdtDebater(BaseService):
         Raises:
             HTTPException: 当底层仓储写入失败时由调用栈抛出。
         """
-        n = self._now()
-        sessions_repo = MdtSessionsRepository(self.db)
-        participants_repo = MdtParticipantsRepository(self.db)
-        roles_repo = AgentRolesRepository(self.db)
+        n = _now()
+        sessions_repo = MdtSessionsRepository(self._connection())
+        participants_repo = MdtParticipantsRepository(self._connection())
+        roles_repo = AgentRolesRepository(self._connection())
         sid = sessions_repo.create(
             {
                 "title": body.title,
@@ -85,7 +83,7 @@ class MdtDebater(BaseService):
         Raises:
             HTTPException: 当数据库分页查询失败时由调用栈抛出。
         """
-        sessions_repo = MdtSessionsRepository(self.db)
+        sessions_repo = MdtSessionsRepository(self._connection())
         conditions, params = [], []
         if status_filter:
             conditions.append("status=?")
@@ -111,9 +109,9 @@ class MdtDebater(BaseService):
         Raises:
             HTTPException: 当会话不存在时抛出404。
         """
-        sessions_repo = MdtSessionsRepository(self.db)
-        participants_repo = MdtParticipantsRepository(self.db)
-        opinions_repo = MdtOpinionsRepository(self.db)
+        sessions_repo = MdtSessionsRepository(self._connection())
+        participants_repo = MdtParticipantsRepository(self._connection())
+        opinions_repo = MdtOpinionsRepository(self._connection())
         s = sessions_repo.get_by_id(session_id)
         if not s:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="MDT Session not found")
@@ -135,10 +133,10 @@ class MdtDebater(BaseService):
         Raises:
             HTTPException: 当会话不存在、已完成或没有参与者时抛出。
         """
-        sessions_repo = MdtSessionsRepository(self.db)
-        participants_repo = MdtParticipantsRepository(self.db)
-        opinions_repo = MdtOpinionsRepository(self.db)
-        roles_repo = AgentRolesRepository(self.db)
+        sessions_repo = MdtSessionsRepository(self._connection())
+        participants_repo = MdtParticipantsRepository(self._connection())
+        opinions_repo = MdtOpinionsRepository(self._connection())
+        roles_repo = AgentRolesRepository(self._connection())
         s = sessions_repo.get_by_id(session_id)
         if not s:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="MDT Session not found")
@@ -177,7 +175,7 @@ class MdtDebater(BaseService):
                             "key_points": parsed["key_points"],
                             "ai_response_raw": reply,
                             "tokens_used": ai.get("usage", {}).get("total_tokens", 0),
-                            "created_at": self._now(),
+                            "created_at": _now(),
                         }
                     )
                     results.append(
@@ -191,7 +189,7 @@ class MdtDebater(BaseService):
                 except Exception:  # noqa: BLE001  # AI call / JSON parse / DB ops can fail
                     logger.exception("Debate AI call failed for participant %s round %d", p["id"], current_round)
                     results.append({"participant_id": p["id"], "round": current_round, "error": "AI call failed"})
-        sessions_repo.update_fields(session_id, {"round_count": current_round, "updated_at": self._now()})
+        sessions_repo.update_fields(session_id, {"round_count": current_round, "updated_at": _now()})
         return success({"round": current_round, "results": results})
 
     def get_opinions(self, session_id: int, round_number: int | None = None) -> dict:
@@ -207,8 +205,8 @@ class MdtDebater(BaseService):
         Raises:
             HTTPException: 当会话不存在时抛出404。
         """
-        sessions_repo = MdtSessionsRepository(self.db)
-        opinions_repo = MdtOpinionsRepository(self.db)
+        sessions_repo = MdtSessionsRepository(self._connection())
+        opinions_repo = MdtOpinionsRepository(self._connection())
         s = sessions_repo.get_by_id(session_id)
         if not s:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="MDT Session not found")
@@ -229,8 +227,8 @@ class MdtDebater(BaseService):
         Raises:
             HTTPException: 当会话不存在时抛出404。
         """
-        sessions_repo = MdtSessionsRepository(self.db)
-        opinions_repo = MdtOpinionsRepository(self.db)
+        sessions_repo = MdtSessionsRepository(self._connection())
+        opinions_repo = MdtOpinionsRepository(self._connection())
         s = sessions_repo.get_by_id(session_id)
         if not s:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="MDT Session not found")

@@ -11,11 +11,11 @@ from fastapi import HTTPException
 from starlette import status
 
 from sales_assistant.app.repositories import StrategyRepository
+from shared.ai_gateway import TIMEOUT_SECONDS
 from shared.app_settings import settings
 from shared.base_service import BaseService
 
 AI_GATEWAY_URL = f"{settings.cloud_api_base}/ai/chat"
-TIMEOUT_SECONDS = 30
 logger = logging.getLogger(__name__)
 
 
@@ -167,6 +167,7 @@ class StrategyService(BaseService):
                 reply = json.loads(resp.read()).get("data", {}).get("reply", "")
             parsed = json.loads(reply) if reply else {}
         except Exception:
+            logger.exception("Strategy service parse异常")
             parsed = {}
         repo = StrategyRepository(self.db)
         strategy_id = repo.create(
@@ -242,6 +243,7 @@ class StrategyService(BaseService):
             predicted = float(ai.get("effectiveness", similar_avg_eff or 0.5))
             confidence = ai.get("confidence", "中")
         except Exception:
+            logger.exception("Strategy service predict异常")
             predicted = similar_avg_eff or 0.5
             confidence = "低"
         return {

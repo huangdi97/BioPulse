@@ -11,8 +11,8 @@ class PipelineRunQueryMixin:
     """流水线运行查询混入类，提供运行记录查询与分页。"""
 
     def get_run(self, run_id: int) -> dict:
-        runs_repo = PipelineRunsRepository(self.db)
-        step_runs_repo = PipelineStepRunsRepository(self.db)
+        runs_repo = PipelineRunsRepository(self._connection())
+        step_runs_repo = PipelineStepRunsRepository(self._connection())
         row = runs_repo.get_by_id(run_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Run not found")
@@ -25,7 +25,7 @@ class PipelineRunQueryMixin:
         )
 
     def list_runs(self, pipeline_id: int, page: int, page_size: int) -> dict:
-        runs_repo = PipelineRunsRepository(self.db)
+        runs_repo = PipelineRunsRepository(self._connection())
         total, total_pages, rows = runs_repo.paginate(
             page=page,
             page_size=page_size,

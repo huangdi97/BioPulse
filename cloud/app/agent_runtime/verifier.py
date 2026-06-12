@@ -22,6 +22,7 @@ class Verifier:
         self._rule_engine_llm = RuleEngineLLM(llm_url=llm_url, guard=self._guard)
 
     def verify(self, result: dict) -> bool:
+        """验证工具执行结果。"""
         if result is None:
             raise ValueError("tool result is None")
         if result.get("needs_approval"):
@@ -31,6 +32,7 @@ class Verifier:
         return True
 
     def verify_step(self, step: PlanStep, result: dict) -> VerificationResult:
+        """验证单个步骤的执行结果。"""
         checks: list[CheckResult] = []
         checks.append(self._layer1_assertions(step, result))
         layer1_result = self._layer1.predict(step.description)
@@ -60,6 +62,7 @@ class Verifier:
         return VerificationResult(passed=passed, checks=checks, confidence=confidence)
 
     def verify_global(self, plan: Plan, results: list[dict]) -> bool:
+        """验证整个计划的完成条件。"""
         if not plan.completion_conditions:
             return True
         prompt = (
@@ -128,6 +131,7 @@ class Verifier:
             result = llm._call_ai(messages, temperature=0.1, force_level=2)
             return result.get("reply", "")
         except Exception:
+            logger.warning("Verifier异常", exc_info=True)
             return ""
 
     @staticmethod

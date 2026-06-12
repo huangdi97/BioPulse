@@ -7,6 +7,18 @@ from cloud.app.research_database import get_research_db
 
 
 def submit_for_approval(quotation_id: int, submitter: str):
+    """提交报价单以供审批，将状态从草稿更新为待审批并记录审计日志。
+
+    参数:
+        quotation_id: 报价单 ID。
+        submitter: 提交者标识。
+
+    返回:
+        None
+
+    异常:
+        ValueError: 报价单不存在或状态不是 draft。
+    """
     db = get_research_db()
     try:
         row = db.execute("SELECT * FROM research_quotations WHERE quotation_id = ?", (quotation_id,)).fetchone()
@@ -37,6 +49,18 @@ def submit_for_approval(quotation_id: int, submitter: str):
 
 
 def approve(quotation_id: int, reviewer: str):
+    """审批报价单，将状态从待审批更新为已批准并记录审计日志。
+
+    参数:
+        quotation_id: 报价单 ID。
+        reviewer: 审批者标识。
+
+    返回:
+        None
+
+    异常:
+        ValueError: 报价单不存在或状态不是 pending_approval。
+    """
     db = get_research_db()
     try:
         row = db.execute("SELECT * FROM research_quotations WHERE quotation_id = ?", (quotation_id,)).fetchone()
@@ -67,6 +91,19 @@ def approve(quotation_id: int, reviewer: str):
 
 
 def reject(quotation_id: int, reviewer: str, reason: str):
+    """驳回报价单，将状态从待审批更新为已驳回，附带原因并记录审计日志。
+
+    参数:
+        quotation_id: 报价单 ID。
+        reviewer: 审批者标识。
+        reason: 驳回原因。
+
+    返回:
+        None
+
+    异常:
+        ValueError: 报价单不存在或状态不是 pending_approval。
+    """
     db = get_research_db()
     try:
         row = db.execute("SELECT * FROM research_quotations WHERE quotation_id = ?", (quotation_id,)).fetchone()

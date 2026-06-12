@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def _float(value: Any) -> Optional[float]:
+    """将值转为 float，失败返回 None。"""
     try:
         return float(value) if value is not None else 0.0
     except (TypeError, ValueError):
@@ -15,10 +16,12 @@ def _float(value: Any) -> Optional[float]:
 
 
 def _count(row: Any) -> int:
+    """从查询结果行提取计数值。"""
     return int(row["c"] if hasattr(row, "keys") and "c" in row.keys() else row[0])
 
 
 def _compare(value: Any, operator: str, threshold: Any) -> bool:
+    """比较值与阈值，支持 gt/gte/lt/lte/eq。"""
     current = _float(value)
     expected = _float(threshold)
     if current is None or expected is None:
@@ -32,9 +35,8 @@ def _compare(value: Any, operator: str, threshold: Any) -> bool:
     }.get(operator, False)
 
 
-def _match_value_threshold(
-    rule: dict[str, Any], data: dict[str, Any], condition: dict[str, Any], threshold: Any
-) -> Optional[dict[str, Any]]:
+def _match_value_threshold(rule: dict[str, Any], data: dict[str, Any], condition: dict[str, Any], threshold: Any) -> Optional[dict[str, Any]]:
+    """检查字段值是否超出阈值，超则返回违规记录。"""
     field = condition.get("field")
     value, expected = _float(data.get(field)), _float(threshold)
     if value is not None and expected is not None and _compare(value, condition.get("operator", "gt"), expected):
@@ -42,9 +44,8 @@ def _match_value_threshold(
     return None
 
 
-def _match_flag_check(
-    rule: dict[str, Any], data: dict[str, Any], condition: dict[str, Any]
-) -> Optional[dict[str, Any]]:
+def _match_flag_check(rule: dict[str, Any], data: dict[str, Any], condition: dict[str, Any]) -> Optional[dict[str, Any]]:
+    """检查标志字段值是否与期望一致，不一致则返回违规记录。"""
     field = condition.get("field")
     expected = condition.get("expected")
     if data.get(field) != expected:
@@ -55,6 +56,7 @@ def _match_flag_check(
 def _match_frequency_count(
     db: Any, rule: dict[str, Any], data: dict[str, Any], condition: dict[str, Any], threshold: Any
 ) -> Optional[dict[str, Any]]:
+    """检查实体在时间窗口内拜访频率是否超阈值。"""
     field = condition.get("field")
     entity_id = data.get(field)
     if entity_id is None:
@@ -72,9 +74,8 @@ def _match_frequency_count(
     return None
 
 
-def _match_concentration_check(
-    db: Any, rule: dict[str, Any], data: dict[str, Any], condition: dict[str, Any]
-) -> Optional[dict[str, Any]]:
+def _match_concentration_check(db: Any, rule: dict[str, Any], data: dict[str, Any], condition: dict[str, Any]) -> Optional[dict[str, Any]]:
+    """检查某字段值在总拜访中的占比是否超阈值。"""
     field = condition.get("field")
     value = data.get(field)
     if value is None:
@@ -84,11 +85,7 @@ def _match_concentration_check(
     total = _count(db.execute("SELECT COUNT(*) AS c FROM visits WHERE created_at >= ?", (since,)).fetchone())
     if total <= 0:
         return None
-    matched = _count(
-        db.execute(
-            f"SELECT COUNT(*) AS c FROM visits WHERE {field} = ? AND created_at >= ?", (value, since)
-        ).fetchone()
-    )
+    matched = _count(db.execute(f"SELECT COUNT(*) AS c FROM visits WHERE {field} = ? AND created_at >= ?", (value, since)).fetchone())
     ratio = matched / total
     threshold = condition.get("ratio_threshold", 0.8)
     if ratio >= threshold:
@@ -96,9 +93,8 @@ def _match_concentration_check(
     return None
 
 
-def _match_citation_check(
-    rule: dict[str, Any], data: dict[str, Any], condition: dict[str, Any]
-) -> Optional[dict[str, Any]]:
+def _match_citation_check(rule: dict[str, Any], data: dict[str, Any], condition: dict[str, Any]) -> Optional[dict[str, Any]]:
+    """检查引用字段是否与期望值一致，不一致则返回违规记录。"""
     field = condition.get("field")
     expected = condition.get("expected")
     if data.get(field) != expected:
@@ -106,9 +102,8 @@ def _match_citation_check(
     return None
 
 
-def _match_expiry_check(
-    rule: dict[str, Any], data: dict[str, Any], condition: dict[str, Any]
-) -> Optional[dict[str, Any]]:
+def _match_expiry_check(rule: dict[str, Any], data: dict[str, Any], condition: dict[str, Any]) -> Optional[dict[str, Any]]:
+    """检查资质是否临近到期，在预警期内则返回违规记录。"""
     field = condition.get("field")
     expiry = data.get(field)
     if not expiry:
@@ -124,9 +119,8 @@ def _match_expiry_check(
     return None
 
 
-def _match_discount_check(
-    rule: dict[str, Any], data: dict[str, Any], condition: dict[str, Any], threshold: Any
-) -> Optional[dict[str, Any]]:
+def _match_discount_check(rule: dict[str, Any], data: dict[str, Any], condition: dict[str, Any], threshold: Any) -> Optional[dict[str, Any]]:
+    """检查折扣率是否低于或超过阈值。"""
     field = condition.get("field")
     value, expected = _float(data.get(field)), _float(threshold)
     value = 1.0 if value is None else value
@@ -139,6 +133,7 @@ def _match_discount_check(
 
 
 def _l2_violation(rule: dict[str, Any], detail: str) -> dict[str, Any]:
+    """构造 L2 违规结果字典。"""
     return {
         "rule_id": rule.get("id"),
         "rule_name": rule.get("name"),

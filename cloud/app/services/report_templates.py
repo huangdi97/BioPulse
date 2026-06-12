@@ -8,12 +8,10 @@ from fastapi import HTTPException, Request
 from starlette import status
 
 from cloud.app.repositories import ComplianceAuditRecordsRepository, TrainingCorrectionsRepository
+from shared.ai_gateway import LLM_INFERENCE_TIMEOUT
 from shared.base import success
 from shared.config import settings as config_settings
-
-
-def _now() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+from shared.datetime_utils import now as _now
 
 
 def _n404(name="Resource"):
@@ -35,7 +33,7 @@ def _call_ai(messages: list[dict], auth_header: str) -> dict:
         headers={"Content-Type": "application/json", "Authorization": auth_header},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=120) as rp:
+    with urllib.request.urlopen(req, timeout=LLM_INFERENCE_TIMEOUT) as rp:
         return json.loads(rp.read().decode("utf-8")).get("data", {})
 
 
@@ -124,8 +122,8 @@ class ReportTemplateMixin:
         Returns:
             含 title、description、category、severity 的纠偏记录
         """
-        audit_repo = ComplianceAuditRecordsRepository(self.db)
-        corrections_repo = TrainingCorrectionsRepository(self.db)
+        audit_repo = ComplianceAuditRecordsRepository(self._connection())
+        corrections_repo = TrainingCorrectionsRepository(self._connection())
         row = audit_repo.get_by_id(record_id)
         if not row:
             _n404("Record")
@@ -180,6 +178,6 @@ class ReportTemplateMixin:
         Returns:
             仪表盘统计数据
         """
-        audit_repo = ComplianceAuditRecordsRepository(self.db)
-        corrections_repo = TrainingCorrectionsRepository(self.db)
+        audit_repo = ComplianceAuditRecordsRepository(self._connection())
+        corrections_repo = TrainingCorrectionsRepository(self._connection())
         return success(data=build_dashboard_data(self.db, audit_repo, corrections_repo))

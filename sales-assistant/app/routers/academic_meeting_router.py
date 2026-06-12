@@ -3,8 +3,6 @@
 from fastapi import APIRouter, Depends
 from starlette import status
 
-from shared.auth_scope import require_scope
-
 from sales_assistant.app.schemas.academic_meeting import (
     Meeting,
     MeetingCheckIn,
@@ -26,6 +24,7 @@ from sales_assistant.app.services.academic_meeting_service import (
     push_content,
     update_meeting,
 )
+from shared.auth_scope import require_scope
 
 router = APIRouter(prefix="/api/meetings", tags=["学术会议"])
 

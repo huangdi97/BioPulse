@@ -6,13 +6,14 @@ import os
 import httpx
 
 from cloud.app.agent_runtime.secret_manager import SecretManager
+from shared.ai_gateway import LLM_INFERENCE_TIMEOUT
 from shared.config import settings as config_settings
 
 logger = logging.getLogger(__name__)
 
 
 def raw_llm_call(request_body: dict, auth_header: str) -> dict:
-    with httpx.Client(timeout=120.0) as client:
+    with httpx.Client(timeout=LLM_INFERENCE_TIMEOUT) as client:
         resp = client.post(
             f"{config_settings.ai_chat_url}",
             json=request_body,
@@ -26,7 +27,7 @@ def raw_llm_call(request_body: dict, auth_header: str) -> dict:
 
 
 async def raw_llm_call_async(request_body: dict, auth_header: str) -> dict:
-    async with httpx.AsyncClient(timeout=120.0) as client:
+    async with httpx.AsyncClient(timeout=LLM_INFERENCE_TIMEOUT) as client:
         resp = await client.post(
             f"{config_settings.ai_chat_url}",
             json=request_body,
@@ -59,7 +60,7 @@ def call_local(config, messages: list[dict], temperature: float, fallback_fn) ->
         "options": {"temperature": temperature},
     }
     try:
-        with httpx.Client(timeout=120.0) as client:
+        with httpx.Client(timeout=LLM_INFERENCE_TIMEOUT) as client:
             resp = client.post(
                 config.ai_local_endpoint,
                 json=body,
@@ -93,7 +94,7 @@ async def call_local_async(config, messages: list[dict], temperature: float, fal
         "options": {"temperature": temperature},
     }
     try:
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        async with httpx.AsyncClient(timeout=LLM_INFERENCE_TIMEOUT) as client:
             resp = await client.post(
                 config.ai_local_endpoint,
                 json=body,
@@ -131,7 +132,7 @@ def call_provider(messages: list[dict], temperature: float, provider: dict) -> d
         "max_tokens": 2048,
     }
     try:
-        with httpx.Client(timeout=120.0) as client:
+        with httpx.Client(timeout=LLM_INFERENCE_TIMEOUT) as client:
             resp = client.post(
                 provider["url"],
                 json=body,
@@ -168,7 +169,7 @@ async def call_provider_async(messages: list[dict], temperature: float, provider
         "max_tokens": 2048,
     }
     try:
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        async with httpx.AsyncClient(timeout=LLM_INFERENCE_TIMEOUT) as client:
             resp = await client.post(
                 provider["url"],
                 json=body,

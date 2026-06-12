@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 try:
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
     HAS_CRYPTO = True
 except ImportError:
     HAS_CRYPTO = False
@@ -47,6 +48,7 @@ class SecretManager:
         return self._local_db
 
     def set_db(self, db):
+        """设置外部数据库连接。"""
         self._external_db = db
 
     def _ensure_table(self):
@@ -84,10 +86,12 @@ class SecretManager:
                 aesgcm = AESGCM(self._storage_key)
                 return aesgcm.decrypt(bytes.fromhex(data["nonce"]), bytes.fromhex(data["ct"]), None).decode("utf-8")
             except Exception:
+                logger.warning("Secret manager解密异常，尝试直接解码", exc_info=True)
                 return blob.decode("utf-8")
         return blob.decode("utf-8")
 
     def set(self, key_name: str, value: str):
+        """设置并加密存储密钥。"""
         conn = self._get_connection()
         now = datetime.now().isoformat()
         encrypted = self._encrypt(value)
@@ -105,6 +109,7 @@ class SecretManager:
         logger.info("Secret %s updated", key_name)
 
     def get(self, key_name: str) -> str | None:
+        """获取并解密密钥值。"""
         conn = self._get_connection()
         row = conn.execute("SELECT encrypted_value FROM agent_secrets WHERE key_name=?", (key_name,)).fetchone()
         if not row:
@@ -112,14 +117,17 @@ class SecretManager:
         return self._decrypt(row["encrypted_value"])
 
     def list_keys(self) -> list[str]:
+        """列出所有密钥名称。"""
         conn = self._get_connection()
         rows = conn.execute("SELECT key_name FROM agent_secrets ORDER BY key_name").fetchall()
         return [r["key_name"] for r in rows]
 
     def rotate(self, key_name: str, new_value: str):
+        """轮换密钥值。"""
         self.set(key_name, new_value)
 
     def delete(self, key_name: str):
+        """删除指定密钥。"""
         conn = self._get_connection()
         conn.execute("DELETE FROM agent_secrets WHERE key_name=?", (key_name,))
         conn.commit()

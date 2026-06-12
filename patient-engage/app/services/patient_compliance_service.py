@@ -4,14 +4,12 @@ from datetime import datetime, time, timedelta, timezone
 from typing import Any
 from uuid import uuid4
 
+from shared.datetime_utils import utc_now
+
 from ..schemas.patient_compliance import CheckInRecord, ComplianceReport, PatientReminder
 
 _REMINDERS: dict[str, PatientReminder] = {}
 _CHECKINS: list[CheckInRecord] = []
-
-
-def _utc_now() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 def _ensure_demo_data(patient_id: str) -> None:
@@ -33,7 +31,7 @@ def _ensure_demo_data(patient_id: str) -> None:
     )
     _REMINDERS[reminder.id] = reminder
 
-    now = _utc_now()
+    now = utc_now()
     for days_ago in range(1, 7):
         _CHECKINS.append(
             CheckInRecord(
@@ -59,7 +57,7 @@ def _coerce_time(value: Any) -> time | None:
 
 
 def _next_reminder_from_schedule(schedule: dict[str, Any]) -> datetime:
-    now = _utc_now()
+    now = utc_now()
 
     explicit = schedule.get("next_reminder")
     if isinstance(explicit, str):
@@ -125,7 +123,7 @@ async def checkin(reminder_id: str, confirmed: bool = True) -> dict[str, Any]:
         id=f"CHK-{uuid4().hex[:10]}",
         patient_id=patient_id,
         reminder_id=reminder_id,
-        checkin_time=_utc_now(),
+        checkin_time=utc_now(),
         confirmed=confirmed,
     )
     _CHECKINS.append(record)
@@ -151,7 +149,7 @@ async def get_compliance_report(patient_id: str, period: str = "7d") -> dict[str
     _ensure_demo_data(patient_id)
 
     days = _period_to_days(period)
-    since = _utc_now() - timedelta(days=days)
+    since = utc_now() - timedelta(days=days)
     patient_reminders = [r for r in _REMINDERS.values() if r.patient_id == patient_id]
     patient_checkins = [c for c in _CHECKINS if c.patient_id == patient_id and c.confirmed and c.checkin_time >= since]
 
@@ -172,7 +170,7 @@ async def get_compliance_report(patient_id: str, period: str = "7d") -> dict[str
         "active_reminders": len([r for r in patient_reminders if r.status == "active"]),
         "expected_doses": expected_doses,
         "confirmed_doses": taken_doses,
-        "generated_at": _utc_now().isoformat(),
+        "generated_at": utc_now().isoformat(),
     }
     return data
 
@@ -188,7 +186,7 @@ def _period_to_days(period: str) -> int:
 
 
 def _build_weekly_report(patient_id: str, days: int) -> list[dict[str, Any]]:
-    now = _utc_now()
+    now = utc_now()
     weeks = max((days + 6) // 7, 1)
     reminders_per_day = max(
         len([r for r in _REMINDERS.values() if r.patient_id == patient_id]),

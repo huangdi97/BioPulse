@@ -27,10 +27,10 @@ class FedAggregator(BaseService):
         Raises:
             HTTPException: 当底层仓储查询失败时由调用栈抛出。
         """
-        node_repo = FederatedNodesRepository(self.db)
-        round_repo = FederatedRoundsRepository(self.db)
-        audit_repo = AuditLogsRepository(self.db)
-        contrib_repo = FedAuditContributionsRepository(self.db)
+        node_repo = FederatedNodesRepository(self._connection())
+        round_repo = FederatedRoundsRepository(self._connection())
+        audit_repo = AuditLogsRepository(self._connection())
+        contrib_repo = FedAuditContributionsRepository(self._connection())
         all_nodes = node_repo.get_all()
         total = len(all_nodes)
         online = sum(1 for n in all_nodes if n["status"] == "online")
@@ -113,8 +113,8 @@ class FedAggregator(BaseService):
         Raises:
             HTTPException: 当底层日志查询失败时由调用栈抛出。
         """
-        audit_repo = AuditLogsRepository(self.db)
-        contrib_repo = FedAuditContributionsRepository(self.db)
+        audit_repo = AuditLogsRepository(self._connection())
+        contrib_repo = FedAuditContributionsRepository(self._connection())
         since = since_datetime(days) if days else None
         if since:
             audit_cond = ["created_at>=?"]
@@ -140,7 +140,7 @@ class FedAggregator(BaseService):
         Raises:
             HTTPException: 当节点查询失败时由调用栈抛出。
         """
-        repo = FederatedNodesRepository(self.db)
+        repo = FederatedNodesRepository(self._connection())
         all_nodes = repo.get_all()
         result = []
         for n in all_nodes:

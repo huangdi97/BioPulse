@@ -12,6 +12,7 @@ EVAL_SAMPLE_RATE = 0.01
 
 
 def is_json(text: str) -> bool:
+    """检查字符串是否为合法 JSON。"""
     try:
         json.loads(text)
         return True
@@ -20,6 +21,7 @@ def is_json(text: str) -> bool:
 
 
 def contains_harmful(text: str) -> bool:
+    """检查文本是否包含有害内容。"""
     return check_output(text) is not None
 
 
@@ -50,18 +52,22 @@ class AgentEvaluator:
 
     @property
     def sample_rate(self) -> float:
+        """获取评估采样率。"""
         return self._sample_rate
 
     @sample_rate.setter
     def sample_rate(self, rate: float):
+        """设置评估采样率。"""
         self._sample_rate = max(0.0, min(1.0, rate))
 
     @property
     def auto_eval(self) -> bool:
+        """获取自动评估模式状态。"""
         return self._auto_eval
 
     @auto_eval.setter
     def auto_eval(self, enabled: bool):
+        """启用或禁用自动评估模式。"""
         self._auto_eval = enabled
 
     def _ensure_table(self):
@@ -87,6 +93,7 @@ class AgentEvaluator:
             logger.exception("Failed to create eval_results table")
 
     def evaluate(self, agent_name: str, input_data: dict, output_data: dict, expected: dict | None = None, trace_id: str = "") -> dict:
+        """评估 Agent 输出质量。"""
         if not self._auto_eval and not self.should_sample():
             return {"sampled": False, "score": 0.0, "passed": False}
         results = {}
@@ -95,6 +102,7 @@ class AgentEvaluator:
             try:
                 passed = metric_fn(output_data.get("result", ""), metric_expected)
             except Exception:
+                logger.warning("Evaluator指标评估异常", exc_info=True)
                 passed = False
             results[metric_name] = passed
         passed_all = all(results.values())
@@ -135,6 +143,7 @@ class AgentEvaluator:
             logger.exception("Failed to save eval result")
 
     def get_dashboard(self) -> dict:
+        """获取所有 Agent 的评估看板数据。"""
         if not self._db:
             return {"agents": []}
         rows = self._db.execute(
@@ -156,17 +165,20 @@ class AgentEvaluator:
                 (agent_name,),
             ).fetchall()
             scores = [tr["score"] for tr in reversed(trend_rows)]
-            agents.append({
-                "agent_name": agent_name,
-                "avg_score": r["avg_score"],
-                "total_evals": r["total_evals"],
-                "passed_count": r["passed_count"],
-                "pass_rate": round(r["passed_count"] / max(r["total_evals"], 1) * 100, 2),
-                "first_eval": r["first_eval"],
-                "last_eval": r["last_eval"],
-                "recent_scores": scores,
-            })
+            agents.append(
+                {
+                    "agent_name": agent_name,
+                    "avg_score": r["avg_score"],
+                    "total_evals": r["total_evals"],
+                    "passed_count": r["passed_count"],
+                    "pass_rate": round(r["passed_count"] / max(r["total_evals"], 1) * 100, 2),
+                    "first_eval": r["first_eval"],
+                    "last_eval": r["last_eval"],
+                    "recent_scores": scores,
+                }
+            )
         return {"agents": agents}
 
     def should_sample(self) -> bool:
+        """判断当前是否应采样评估。"""
         return random.random() < self._sample_rate

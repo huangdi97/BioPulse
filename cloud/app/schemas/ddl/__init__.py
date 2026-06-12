@@ -3,6 +3,7 @@
 from .agent import AGENT_SQL
 from .audit import AUDIT_SQL
 from .auth import AUTH_SQL
+from .batch3 import BATCH3_SQL
 from .collab import COLLAB_SQL
 from .content import CONTENT_SQL
 from .customer import CUSTOMER_SQL
@@ -24,7 +25,6 @@ from .training import TRAINING_SQL
 from .userprofile import USERPROFILE_SQL
 from .workingmem import WORKINGMEM_SQL
 from .worldtree import WORLDTREE_SQL
-from .batch3 import BATCH3_SQL
 
 SCHEMA_SQL = (
     AUTH_SQL

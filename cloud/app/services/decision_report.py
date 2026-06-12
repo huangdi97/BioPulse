@@ -11,9 +11,9 @@ class DecisionReportMixin:
     """决策报表混入类，提供汇总统计与仪表盘功能。"""
 
     def dashboard(self) -> dict:
-        case_repo = DecisionCasesRepository(self.db)
-        analysis_repo = CausalAnalysesRepository(self.db)
-        insight_repo = CrossCaseInsightsRepository(self.db)
+        case_repo = DecisionCasesRepository(self._connection())
+        analysis_repo = CausalAnalysesRepository(self._connection())
+        insight_repo = CrossCaseInsightsRepository(self._connection())
         total_cases = case_repo.count_active()
         analyzed = analysis_repo.count_distinct_case_ids()
         score_dist = case_repo.score_distribution()

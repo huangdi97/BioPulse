@@ -7,7 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from shared.auth import get_current_user
 from shared.exception_handlers import register_exception_handlers
-
 from shared.middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 

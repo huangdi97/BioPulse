@@ -10,7 +10,7 @@ class TestComplianceCheck:
             },
             headers={"Authorization": f"Bearer {auth_token}"},
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         data = resp.json()["data"]
         assert data["compliance_score"] < 1.0
         assert data["status"] == "pending_review"
@@ -26,7 +26,7 @@ class TestComplianceCheck:
             },
             headers={"Authorization": f"Bearer {auth_token}"},
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         data = resp.json()["data"]
         assert data["compliance_score"] >= 0.8
 
@@ -44,7 +44,7 @@ class TestAuditLogs:
             },
             headers={"Authorization": f"Bearer {auth_token}"},
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 201
 
         resp = client.post(
             "/audit/logs",
@@ -57,7 +57,7 @@ class TestAuditLogs:
             },
             headers={"Authorization": f"Bearer {auth_token}"},
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 201
 
         resp = client.get(
             "/audit/logs",
@@ -128,7 +128,7 @@ class TestAuditLogPagination:
                 },
                 headers=headers,
             )
-            assert resp.status_code == 200
+            assert resp.status_code == 201
 
         resp = client.get(
             "/audit/logs?page=1&page_size=2",
@@ -147,7 +147,7 @@ class TestComplianceDashboardRouter:
             headers={"Authorization": f"Bearer {auth_token}"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert "total_violations_today" in data
 
     def test_rep_violations(self, client, auth_token):
@@ -156,7 +156,7 @@ class TestComplianceDashboardRouter:
             headers={"Authorization": f"Bearer {auth_token}"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert "rep_id" in data
         assert "violations" in data
 
@@ -182,7 +182,7 @@ class TestEnforcerRouter:
             headers={"Authorization": f"Bearer {auth_token}"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert "violations" in data
         assert "passed" in data
 
@@ -192,7 +192,7 @@ class TestEnforcerRouter:
             headers={"Authorization": f"Bearer {auth_token}"},
         )
         assert resp.status_code == 200
-        data = resp.json()
+        data = resp.json()["data"]
         assert "rules" in data
 
     def test_enforce_auth_required(self, client):

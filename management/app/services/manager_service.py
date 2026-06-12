@@ -1,19 +1,15 @@
 """经理服务模块。提供团队统计、成员、合规和绩效数据的聚合查询。"""
 
+import logging
+
 import httpx
 
+from management.app.services._shared import fetch
 from shared.app_settings import settings
 
+logger = logging.getLogger(__name__)
+
 CLOUD_API = settings.cloud_api_base
-
-
-async def _fetch(path: str) -> dict:
-    async with httpx.AsyncClient() as client:
-        try:
-            resp = await client.get(f"{CLOUD_API}{path}", timeout=10)
-            return resp.json() if resp.status_code == 200 else {}
-        except Exception:
-            return {}
 
 
 async def get_team_stats(team_id: int) -> dict:
@@ -25,9 +21,9 @@ async def get_team_stats(team_id: int) -> dict:
     Returns:
         dict: 包含 team_id、overview、users、compliance 的字典。
     """
-    dashboard = await _fetch("/api/demo/dashboard")
-    users = await _fetch("/api/demo/dashboard/users")
-    compliance = await _fetch("/api/demo/dashboard/compliance")
+    dashboard = await fetch("/api/demo/dashboard")
+    users = await fetch("/api/demo/dashboard/users")
+    compliance = await fetch("/api/demo/dashboard/compliance")
     return {
         "team_id": team_id,
         "overview": dashboard,
@@ -45,7 +41,7 @@ async def get_team_members(team_id: int) -> dict:
     Returns:
         dict: 包含 team_id、members 列表和 total 计数的字典。
     """
-    data = await _fetch("/api/demo/dashboard")
+    data = await fetch("/api/demo/dashboard")
     members = data.get("members", []) if data else []
     return {
         "team_id": team_id,
@@ -63,7 +59,7 @@ async def get_team_compliance(team_id: int) -> dict:
     Returns:
         dict: 包含 team_id 和 compliance 合规信息的字典。
     """
-    data = await _fetch("/api/demo/dashboard/compliance")
+    data = await fetch("/api/demo/dashboard/compliance")
     if not data:
         return {"team_id": team_id, "compliance": {}}
     return {
@@ -81,7 +77,7 @@ async def get_team_performance(team_id: int) -> dict:
     Returns:
         dict: 包含 team_id 和 performance 绩效信息的字典。
     """
-    dashboard = await _fetch("/api/demo/dashboard")
+    dashboard = await fetch("/api/demo/dashboard")
     perf = dashboard.get("performance", {}) if dashboard else {}
     return {
         "team_id": team_id,

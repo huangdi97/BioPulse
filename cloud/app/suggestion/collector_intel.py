@@ -107,4 +107,5 @@ def safe_market_items(db: sqlite3.Connection, keywords: list[str], limit: int) -
         page = service.list_items(keyword=keyword, page=1, page_size=limit)
         return list(page.items)
     except Exception:
+        logger.warning("Intel collector异常", exc_info=True)
         return []

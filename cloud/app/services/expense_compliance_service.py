@@ -64,17 +64,42 @@ _VISIT_REP = {"visit-001": "rep-001"}
 
 
 def _normalize_item(expense_item: ExpenseItem) -> ExpenseItem:
+    """规范化费用项，确保 budget_category 有值。
+
+    参数:
+        expense_item: 原始费用项
+
+    返回:
+        规范化后的费用项
+    """
     if expense_item.budget_category is None:
         return expense_item.model_copy(update={"budget_category": expense_item.category})
     return expense_item
 
 
 def _budget_for(rep_id: str, category: ExpenseCategory) -> Budget:
+    """获取指定代表与类别的预算对象。
+
+    参数:
+        rep_id: 代表 ID
+        category: 费用类别
+
+    返回:
+        对应的 Budget 对象
+    """
     budgets = _BUDGETS.setdefault(rep_id, deepcopy(_BUDGETS["rep-001"]))
     return budgets[category]
 
 
 def suggest_alternative(expense_item: ExpenseItem) -> str:
+    """根据费用类别与金额给出合规改进建议。
+
+    参数:
+        expense_item: 费用项
+
+    返回:
+        建议字符串
+    """
     item = _normalize_item(expense_item)
     if item.category == ExpenseCategory.GIFT:
         return "礼品费用易触发合规风险，建议改为other并补充业务必要性说明。"
@@ -85,6 +110,15 @@ def suggest_alternative(expense_item: ExpenseItem) -> str:
 
 
 def check_expense(visit_id: str, expense_item: ExpenseItem) -> ExpenseCheckResult:
+    """检查费用是否合规：预算余额和单笔阈值。
+
+    参数:
+        visit_id: 拜访 ID
+        expense_item: 费用项
+
+    返回:
+        ExpenseCheckResult，包含状态、原因和建议
+    """
     item = _normalize_item(expense_item.model_copy(update={"visit_id": visit_id}))
     rep_id = _VISIT_REP.get(visit_id, "rep-001")
     budget = _budget_for(rep_id, item.budget_category or item.category)
@@ -117,5 +151,14 @@ def check_expense(visit_id: str, expense_item: ExpenseItem) -> ExpenseCheckResul
 
 
 def get_budget_status(rep_id: str, period: str = _DEFAULT_PERIOD) -> BudgetStatus:
+    """获取指定代表在给定期间的预算状态。
+
+    参数:
+        rep_id: 代表 ID
+        period: 期间，格式 YYYY-MM
+
+    返回:
+        BudgetStatus 对象
+    """
     budgets = [budget.model_copy(update={"period": period}) for budget in _BUDGETS.setdefault(rep_id, deepcopy(_BUDGETS["rep-001"])).values()]
     return BudgetStatus(rep_id=rep_id, period=period, budgets=budgets)

@@ -31,7 +31,7 @@ class TestHolographicRouter:
             json={"memory_id_b": id_b, "relation_type": "cross_ref", "weight": 0.9},
             headers={"Authorization": f"Bearer {auth_token}"},
         )
-        assert resp.status_code == 200, resp.text
+        assert resp.status_code == 201, resp.text
         data = resp.json()["data"]
         assert data["relation_type"] == "cross_ref"
         assert data["weight"] == 0.9
@@ -43,9 +43,9 @@ class TestHolographicRouter:
         params = {"memory_id_b": id_b, "relation_type": "related"}
         headers = {"Authorization": f"Bearer {auth_token}"}
         r1 = client.post(f"/memory/{id_a}/associate", json=params, headers=headers)
-        assert r1.status_code == 200
+        assert r1.status_code == 201
         r2 = client.post(f"/memory/{id_a}/associate", json=params, headers=headers)
-        assert r2.status_code == 200
+        assert r2.status_code == 201
         assert r1.json()["data"]["id"] == r2.json()["data"]["id"]
 
     def test_get_associations(self, client, auth_token):

@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import Any, Optional
+
 from shared.base_service import BaseService
 
 
@@ -35,15 +36,11 @@ class ApprovalService(BaseService):
         }
 
     def get_pending(self) -> list[dict[str, Any]]:
-        rows = self.db.execute(
-            "SELECT * FROM quotation_approvals WHERE status = 'pending_approval' ORDER BY created_at DESC"
-        ).fetchall()
+        rows = self.db.execute("SELECT * FROM quotation_approvals WHERE status = 'pending_approval' ORDER BY created_at DESC").fetchall()
         return [dict(r) for r in rows]
 
     def review(self, quotation_id: str, action: str, notes: str = "", reviewer: int = 1) -> Optional[dict[str, Any]]:
-        row = self.db.execute(
-            "SELECT * FROM quotation_approvals WHERE quotation_id = ?", (quotation_id,)
-        ).fetchone()
+        row = self.db.execute("SELECT * FROM quotation_approvals WHERE quotation_id = ?", (quotation_id,)).fetchone()
         if not row:
             return None
 

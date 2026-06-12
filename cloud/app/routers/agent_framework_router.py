@@ -127,7 +127,9 @@ def get_instance(
     return success(data=service.get_instance(instance_key))
 
 
-@router.post("/instances", status_code=status.HTTP_201_CREATED, summary="创建实例", description="基于模板创建一个新的Agent实例", tags=["Agent Framework"])
+@router.post(
+    "/instances", status_code=status.HTTP_201_CREATED, summary="创建实例", description="基于模板创建一个新的Agent实例", tags=["Agent Framework"]
+)
 def create_instance(
     body: InstanceCreate,
     service: AgentFrameworkService = Depends(),

@@ -1,15 +1,11 @@
 """World tree search, path management, and data conversion utilities."""
 
 import json
-from datetime import datetime
 
 from fastapi import HTTPException
 
 from cloud.app.repositories import WorldTreeNodesRepository
-
-
-def _now() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+from shared.datetime_utils import now as _now
 
 
 def _n404(name: str = "Node") -> HTTPException:

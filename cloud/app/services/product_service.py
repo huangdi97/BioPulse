@@ -11,11 +11,11 @@ class ProductService(BaseService):
     """产品服务，提供产品搜索与创建功能。"""
 
     def search(self, q: str = "", category: str = "") -> list:
-        repo = ProductRepository(self.db)
+        repo = ProductRepository(self._connection())
         return repo.search(q=q, category=category)
 
     def get_by_id(self, product_id: int) -> dict:
-        repo = ProductRepository(self.db)
+        repo = ProductRepository(self._connection())
         product = repo.get_by_id(product_id)
         if not product:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
@@ -33,7 +33,7 @@ class ProductService(BaseService):
         tech_params: dict | None = None,
         cert_status: str = "",
     ) -> dict:
-        repo = ProductRepository(self.db)
+        repo = ProductRepository(self._connection())
         product_id = repo.create(
             name=name,
             category=category,

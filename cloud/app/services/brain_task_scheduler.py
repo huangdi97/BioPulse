@@ -4,10 +4,7 @@ import json
 import random
 from datetime import datetime, timedelta
 
-
-def _now() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+from shared.datetime_utils import now as _now
 
 KEYWORD_MAP = [
     (["urgent", "紧急", "违规", "violation"], 0.85, 0.9),

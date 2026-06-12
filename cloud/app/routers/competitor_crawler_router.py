@@ -69,8 +69,7 @@ async def crawl_status(current_user: dict = Depends(require_scope("visit"))) -> 
     sources = list_sources()
     jobs = _scheduler.get_jobs()
     return [
-        {"name": name, "cron": cfg.crawl_frequency_minutes, "enabled": True, "scheduled": f"{cfg.name}" in str(jobs)}
-        for name, cfg in sources.items()
+        {"name": name, "cron": cfg.crawl_frequency_minutes, "enabled": True, "scheduled": f"{cfg.name}" in str(jobs)} for name, cfg in sources.items()
     ]
 
 

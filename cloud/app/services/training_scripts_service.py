@@ -16,7 +16,19 @@ logger = logging.getLogger(__name__)
 
 
 class TrainingScriptsService(BaseService):
+    """培训脚本服务，管理培训脚本的提取、查询与 ROI 分析。"""
+
     def extract_scripts(self, source_agent_role: str, min_score: float, user_id: int) -> dict:
+        """从完成的协作会话中提取培训脚本。
+
+        Args:
+            source_agent_role: 源代理角色。
+            min_score: 最低评分阈值。
+            user_id: 创建用户 ID。
+
+        Returns:
+            包含创建数量和新脚本列表的字典。
+        """
         rows = self.db.execute(
             """SELECT cs.session_id, cs.source_agent_role, cs.result_summary,
                       cs.total_steps, cs.completed_steps, cs.involved_agents
@@ -28,7 +40,7 @@ class TrainingScriptsService(BaseService):
             (source_agent_role,),
         ).fetchall()
 
-        scripts_repo = TrainingScriptsRepository(self.db)
+        scripts_repo = TrainingScriptsRepository(self._connection())
         now = datetime.now(timezone.utc).isoformat()
         created = []
 
@@ -94,7 +106,19 @@ class TrainingScriptsService(BaseService):
         difficulty: Optional[str] = None,
         target_roles: Optional[str] = None,
     ) -> dict:
-        scripts_repo = TrainingScriptsRepository(self.db)
+        """分页查询培训脚本列表。
+
+        Args:
+            page: 页码，默认 1。
+            page_size: 每页条数，默认 20。
+            source_agent_role: 按源代理角色筛选。
+            difficulty: 按难度筛选。
+            target_roles: 按目标角色筛选。
+
+        Returns:
+            包含分页结果的字典。
+        """
+        scripts_repo = TrainingScriptsRepository(self._connection())
 
         conditions = []
         params = []
@@ -125,7 +149,16 @@ class TrainingScriptsService(BaseService):
         }
 
     def analyze_roi(self, period_start: str, period_end: str) -> dict:
-        roi_repo = TrainingRoiAnalysisRepository(self.db)
+        """分析指定时间段内的培训投资回报率。
+
+        Args:
+            period_start: 统计开始时间。
+            period_end: 统计结束时间。
+
+        Returns:
+            包含 ROI 分析结果的字典。
+        """
+        roi_repo = TrainingRoiAnalysisRepository(self._connection())
         now = datetime.now(timezone.utc).isoformat()
 
         training_row = self.db.execute(
@@ -176,7 +209,16 @@ class TrainingScriptsService(BaseService):
         }
 
     def list_roi(self, page: int = 1, page_size: int = 20) -> dict:
-        roi_repo = TrainingRoiAnalysisRepository(self.db)
+        """分页查询 ROI 分析记录。
+
+        Args:
+            page: 页码，默认 1。
+            page_size: 每页条数，默认 20。
+
+        Returns:
+            包含分页记录的字典。
+        """
+        roi_repo = TrainingRoiAnalysisRepository(self._connection())
 
         total, total_pages, rows = roi_repo.paginate(
             page=page,

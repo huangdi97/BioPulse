@@ -54,6 +54,7 @@ class MediaService(BaseService):
             try:
                 Image.open(BytesIO(raw)).verify()
             except Exception:
+                logger.exception("媒体处理异常")
                 raise HTTPException(status_code=400, detail="Invalid image file")
             save_dir = IMAGE_DIR
             file_type = "image"

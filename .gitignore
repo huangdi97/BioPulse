@@ -160,3 +160,4 @@ data/export/
 data/test_*.db
 .coverage
 data/safety_audit.log
+wiki/*

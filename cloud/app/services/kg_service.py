@@ -21,6 +21,17 @@ def _bfs_expand(
     seed_eids,
     max_depth,
 ):
+    """使用 BFS 算法扩展知识图谱中的实体与关系。
+
+    Args:
+        entities_repo: 实体仓库对象。
+        relations_repo: 关系仓库对象。
+        seed_eids: 起始实体 ID 集合。
+        max_depth: 最大遍历深度。
+
+    Returns:
+        (实体字典, 关系字典) 的元组。
+    """
     visited_entities: set = set()
     visited_relations: set = set()
     ent_dict: dict = {}
@@ -61,7 +72,19 @@ class KgService(BaseService):
     """知识图谱服务，提供知识图谱的实体管理、关系管理与图搜索功能。"""
 
     def create_entity(self, data, user: dict) -> dict:
-        entities_repo = KgEntitiesRepository(self.db)
+        """创建知识图谱实体。
+
+        Args:
+            data: 实体创建数据。
+            user: 用户信息字典。
+
+        Returns:
+            新创建的实体字典。
+
+        Raises:
+            HTTPException 409: 实体 ID 已存在。
+        """
+        entities_repo = KgEntitiesRepository(self._connection())
         entity_id = data.entity_id or f"kg:{data.entity_type}:{uuid.uuid4()}"
         if entities_repo.exists_entity_id(entity_id):
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Entity ID already exists")
@@ -81,12 +104,33 @@ class KgService(BaseService):
         return entities_repo.get_by_entity_id(entity_id)
 
     def list_entities(self, entity_type=None, name=None, status_="active") -> list:
-        entities_repo = KgEntitiesRepository(self.db)
+        """查询实体列表，支持按类型、名称和状态筛选。
+
+        Args:
+            entity_type: 实体类型筛选。
+            name: 实体名称筛选。
+            status_: 实体状态筛选，默认 "active"。
+
+        Returns:
+            实体字典列表。
+        """
+        entities_repo = KgEntitiesRepository(self._connection())
         return entities_repo.list_filtered(entity_type=entity_type, name=name, status_=status_)
 
     def get_entity(self, entity_id: str) -> dict:
-        entities_repo = KgEntitiesRepository(self.db)
-        relations_repo = KgRelationsRepository(self.db)
+        """根据 ID 获取实体及其关联关系。
+
+        Args:
+            entity_id: 实体 ID。
+
+        Returns:
+            包含实体和关系列表的字典。
+
+        Raises:
+            HTTPException 404: 实体不存在。
+        """
+        entities_repo = KgEntitiesRepository(self._connection())
+        relations_repo = KgRelationsRepository(self._connection())
         row = entities_repo.get_by_entity_id(entity_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entity not found")
@@ -94,15 +138,37 @@ class KgService(BaseService):
         return {"entity": row, "relations": rels}
 
     def delete_entity(self, entity_id: str) -> dict:
-        entities_repo = KgEntitiesRepository(self.db)
+        """软删除指定实体。
+
+        Args:
+            entity_id: 实体 ID。
+
+        Returns:
+            包含实体 ID 和状态的字典。
+
+        Raises:
+            HTTPException 404: 实体不存在。
+        """
+        entities_repo = KgEntitiesRepository(self._connection())
         if not entities_repo.exists_entity_id(entity_id):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entity not found")
         entities_repo.soft_delete_by_entity_id(entity_id)
         return {"entity_id": entity_id, "status": "inactive"}
 
     def create_relation(self, data) -> dict:
-        entities_repo = KgEntitiesRepository(self.db)
-        relations_repo = KgRelationsRepository(self.db)
+        """创建实体间的关系。
+
+        Args:
+            data: 关系创建数据。
+
+        Returns:
+            新创建的关系字典。
+
+        Raises:
+            HTTPException 404: 源或目标实体不存在。
+        """
+        entities_repo = KgEntitiesRepository(self._connection())
+        relations_repo = KgRelationsRepository(self._connection())
         for label, eid in [
             ("Source", data.source_entity_id),
             ("Target", data.target_entity_id),
@@ -127,20 +193,49 @@ class KgService(BaseService):
         return relations_repo.get_by_id(row_id)
 
     def list_relations(self, source=None, target=None, relation_type=None) -> list:
-        relations_repo = KgRelationsRepository(self.db)
+        """查询关系列表，支持按源实体、目标实体和关系类型筛选。
+
+        Args:
+            source: 源实体 ID 筛选。
+            target: 目标实体 ID 筛选。
+            relation_type: 关系类型筛选。
+
+        Returns:
+            关系字典列表。
+        """
+        relations_repo = KgRelationsRepository(self._connection())
         return relations_repo.list_filtered(source=source, target=target, relation_type=relation_type)
 
     def delete_relation(self, relation_id: int) -> dict:
-        relations_repo = KgRelationsRepository(self.db)
+        """删除指定关系。
+
+        Args:
+            relation_id: 关系 ID。
+
+        Returns:
+            包含关系 ID 和删除状态的字典。
+
+        Raises:
+            HTTPException 404: 关系不存在。
+        """
+        relations_repo = KgRelationsRepository(self._connection())
         if not relations_repo.get_by_id(relation_id):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Relation not found")
         relations_repo.delete(relation_id)
         return {"relation_id": relation_id, "deleted": True}
 
     def search_kg(self, data) -> dict:
-        entities_repo = KgEntitiesRepository(self.db)
-        relations_repo = KgRelationsRepository(self.db)
-        cache_repo = KgSearchCacheRepository(self.db)
+        """搜索知识图谱，基于查询文本进行 BFS 扩展。
+
+        Args:
+            data: 搜索参数（包含 query、entity_types、max_depth、limit 等）。
+
+        Returns:
+            包含实体和关系列表的字典。
+        """
+        entities_repo = KgEntitiesRepository(self._connection())
+        relations_repo = KgRelationsRepository(self._connection())
+        cache_repo = KgSearchCacheRepository(self._connection())
         seeds = [r["entity_id"] for r in entities_repo.search_by_name_and_types(data.query, entity_types=data.entity_types, limit=data.limit)]
         ent_dict, rel_dict = _bfs_expand(entities_repo, relations_repo, seeds, data.max_depth)
         qhash = hashlib.md5(json.dumps(data.model_dump(), sort_keys=True).encode()).hexdigest()
@@ -161,8 +256,20 @@ class KgService(BaseService):
         }
 
     def get_subgraph(self, entity_id: str, max_depth: int = 2) -> dict:
-        entities_repo = KgEntitiesRepository(self.db)
-        relations_repo = KgRelationsRepository(self.db)
+        """获取指定实体的子图（BFS 扩展）。
+
+        Args:
+            entity_id: 中心实体 ID。
+            max_depth: 最大扩展深度，默认 2。
+
+        Returns:
+            包含实体和关系列表的字典。
+
+        Raises:
+            HTTPException 404: 实体不存在。
+        """
+        entities_repo = KgEntitiesRepository(self._connection())
+        relations_repo = KgRelationsRepository(self._connection())
         entity = entities_repo.get_by_entity_id(entity_id)
         if not entity or entity.get("status") != "active":
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entity not found")
@@ -173,8 +280,13 @@ class KgService(BaseService):
         }
 
     def dashboard(self) -> dict:
-        entities_repo = KgEntitiesRepository(self.db)
-        relations_repo = KgRelationsRepository(self.db)
+        """获取知识图谱仪表盘统计数据。
+
+        Returns:
+            包含各类统计数据的字典。
+        """
+        entities_repo = KgEntitiesRepository(self._connection())
+        relations_repo = KgRelationsRepository(self._connection())
         return {
             "total_entities": entities_repo.count_active(),
             "total_relations": relations_repo.count_all(),

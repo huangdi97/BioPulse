@@ -32,6 +32,13 @@ class RuleCreate(BaseModel):
     max_value: Optional[float] = None
 
 
+class RuleUpdate(BaseModel):
+    name: Optional[str] = None
+    category: Optional[str] = None
+    keyword: Optional[str] = None
+    max_value: Optional[float] = None
+
+
 class RuleResponse(BaseModel):
     id: int
     name: str
@@ -72,6 +79,24 @@ def list_rules(
 ) -> Any:
     """List all compliance rules."""
     return success(data=service.list_rules())
+
+
+@router.patch("/rules/{rule_id:int}", summary="更新合规规则", description="更新指定规则的参数", tags=["compliance"])
+def update_rule(
+    rule_id: int,
+    body: RuleUpdate,
+    current_user: dict = Depends(require_scope("visit")),
+    service: ComplianceService = Depends(),
+) -> Any:
+    """Update a compliance rule by ID."""
+    result = service.update_rule(
+        rule_id=rule_id,
+        name=body.name,
+        category=body.category,
+        keyword=body.keyword,
+        max_value=body.max_value,
+    )
+    return success(data=result)
 
 
 @router.delete("/rules/{rule_id:int}", summary="删除合规规则", description="根据规则ID删除指定的合规规则", tags=["compliance"])

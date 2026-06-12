@@ -36,10 +36,7 @@ class Narrator:
         anomaly_ref = refs[0] if refs else f"verification:{result.anomaly_id}"
         confidence_text = f"{int(result.confidence * 100)}%"
 
-        discovery_sentence = (
-            f"发现：系统对异常 {result.anomaly_id} 完成了 {result.rounds} 轮验证，"
-            f"当前根因置信度为 {confidence_text}。"
-        )
+        discovery_sentence = f"发现：系统对异常 {result.anomaly_id} 完成了 {result.rounds} 轮验证，当前根因置信度为 {confidence_text}。"
         cause_sentence = f"原因：最可能的根因是{result.root_cause}"
         if result.converged:
             cause_sentence += " 该结论已达到80%置信度收敛条件。"

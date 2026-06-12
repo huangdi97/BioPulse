@@ -39,7 +39,7 @@ class ContentService(BaseService):
 
     def create_content(self, title: str, body: str, category: str, tags: List[str], user_id: int) -> dict:
         """创建内容并执行合规检查。"""
-        repo = ContentsRepository(self.db)
+        repo = ContentsRepository(self._connection())
         tags_str = json.dumps(tags, ensure_ascii=False)
 
         result = check_content(body, DEFAULT_RULES)
@@ -77,7 +77,7 @@ class ContentService(BaseService):
 
     def get_content(self, content_id: int) -> dict:
         """获取指定内容详情。"""
-        repo = ContentsRepository(self.db)
+        repo = ContentsRepository(self._connection())
         row = repo.get_by_id(content_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Content not found")
@@ -91,7 +91,7 @@ class ContentService(BaseService):
         page_size: int = 20,
     ) -> dict:
         """按状态和分类分页查询内容。"""
-        repo = ContentsRepository(self.db)
+        repo = ContentsRepository(self._connection())
         conditions: List[str] = []
         params: list = []
 
@@ -126,7 +126,7 @@ class ContentService(BaseService):
         status_field: Optional[str],
     ) -> dict:
         """更新内容字段并重新检查合规性。"""
-        repo = ContentsRepository(self.db)
+        repo = ContentsRepository(self._connection())
         row = repo.get_by_id(content_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Content not found")
@@ -160,7 +160,7 @@ class ContentService(BaseService):
 
     def delete_content(self, content_id: int) -> None:
         """归档指定内容（已审批内容不可归档）。"""
-        repo = ContentsRepository(self.db)
+        repo = ContentsRepository(self._connection())
         row = repo.get_by_id(content_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Content not found")

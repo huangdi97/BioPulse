@@ -24,15 +24,3 @@ for _sub in _SUBPROJECT_APPS:
     _app_dir = os.path.join(PROJECT_ROOT, _sub, "app")
     if os.path.isdir(_app_dir) and _app_dir not in sys.path:
         sys.path.insert(0, _app_dir)
-
-# 注册所有子项目的 conftest 为 pytest 插件
-# 这些子项目的 conftest 已被重命名为 conftest_<project>.py
-# 需要通过 pytest_plugins 显式注册
-pytest_plugins = [
-    "sales_assistant.app.tests.conftest_sales_assistant",
-    "sales_coach.app.tests.conftest_sales_coach",
-    "assistant.app.tests.conftest_assistant",
-    "management.app.tests.conftest_management",
-    "opportunity.app.tests.conftest_opportunity",
-    "pharma_intel.app.tests.conftest_pharma_intel",
-]

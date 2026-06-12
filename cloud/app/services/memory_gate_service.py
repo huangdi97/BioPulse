@@ -1,7 +1,6 @@
 """记忆门控服务，集成门控仓库配置阈值与保留策略实现记忆筛选，条目仓库与全息服务提供持久化存储与语义关联，评估服务基于内容特征自动评分排序，支撑高效精准的记忆召回。"""
 
 import json
-from datetime import datetime
 from typing import Optional
 
 from fastapi import Depends, HTTPException
@@ -16,10 +15,7 @@ from cloud.app.repositories import (
 from cloud.app.services.holographic_service import HolographicService
 from cloud.app.services.memory_evaluator_service import MemoryEvaluatorService
 from shared.base_service import BaseService
-
-
-def _now():
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+from shared.datetime_utils import now as _now
 
 
 class MemoryGateService(BaseService):
@@ -59,7 +55,7 @@ class MemoryGateService(BaseService):
         self, name: str, source_type: str, importance_threshold: float = 0.5, ttl_days: int = 90, retention_policy: str = "normal"
     ) -> dict:
         """创建记忆门控配置，指定阈值、TTL 与保留策略。"""
-        repo = MemoryGatesRepository(self.db)
+        repo = MemoryGatesRepository(self._connection())
         gate_id = repo.create(
             {
                 "name": name,
@@ -81,7 +77,7 @@ class MemoryGateService(BaseService):
 
     def list_gates(self) -> list[dict]:
         """列出所有记忆门控配置。"""
-        repo = MemoryGatesRepository(self.db)
+        repo = MemoryGatesRepository(self._connection())
         return repo.list_ordered()
 
     def create_entry(
@@ -96,7 +92,7 @@ class MemoryGateService(BaseService):
         uid: int,
     ) -> dict:
         """创建记忆条目并触发全息自动关联。"""
-        repo = MemoryEntriesRepository(self.db)
+        repo = MemoryEntriesRepository(self._connection())
         now = _now()
         tags = json.dumps(context_tags, ensure_ascii=False)
         entry_id = repo.create(
@@ -137,12 +133,12 @@ class MemoryGateService(BaseService):
         page_size: int = 20,
     ) -> tuple[int, int, list[dict]]:
         """分页查询记忆条目，支持按类型、重要度和关键词筛选。"""
-        repo = MemoryEntriesRepository(self.db)
+        repo = MemoryEntriesRepository(self._connection())
         return repo.list_filtered(memory_type=memory_type, importance_min=importance_min, keyword=keyword, page=page, page_size=page_size)
 
     def get_entry(self, entry_id: int) -> dict:
         """获取单条记忆条目详情并递增访问计数。"""
-        repo = MemoryEntriesRepository(self.db)
+        repo = MemoryEntriesRepository(self._connection())
         row = repo.find_active_by_id(entry_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Entry not found")
@@ -153,8 +149,8 @@ class MemoryGateService(BaseService):
 
     def recall(self, query: str, memory_types: list[str], min_importance: float, max_results: int) -> dict:
         """按查询条件召回记忆条目，记录召回日志。"""
-        entry_repo = MemoryEntriesRepository(self.db)
-        recall_repo = MemoryRecallLogRepository(self.db)
+        entry_repo = MemoryEntriesRepository(self._connection())
+        recall_repo = MemoryRecallLogRepository(self._connection())
         conditions, params = ["is_active = 1", "importance >= ?"], [min_importance]
         if memory_types:
             placeholders = ",".join("?" for _ in memory_types)
@@ -185,14 +181,11 @@ class MemoryGateService(BaseService):
 
     def dashboard(self) -> dict:
         """获取记忆系统仪表盘，包含总数、类型分布、热门标签与近期召回日志。"""
-        entry_repo = MemoryEntriesRepository(self.db)
-        recall_repo = MemoryRecallLogRepository(self.db)
+        entry_repo = MemoryEntriesRepository(self._connection())
+        recall_repo = MemoryRecallLogRepository(self._connection())
         total = entry_repo.count_active()
         type_rows = entry_repo.by_type_stats()
-        by_type = [
-            {"memory_type": r["memory_type"], "count": r["cnt"], "avg_importance": round(r["avg_imp"], 4)}
-            for r in type_rows
-        ]
+        by_type = [{"memory_type": r["memory_type"], "count": r["cnt"], "avg_importance": round(r["avg_imp"], 4)} for r in type_rows]
         tag_counter = {}
         entries = entry_repo.all_context_tags_active()
         for e in entries:

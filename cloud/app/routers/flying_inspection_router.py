@@ -48,26 +48,30 @@ def inspection_checklist(category: Optional[str] = Query(None, description="检�
 
 @router.post("/task", status_code=status.HTTP_201_CREATED, tags=["飞检准备度"])
 def inspection_task_create(body: RemediationTaskCreate, _: dict = Depends(require_scope("visit"))):
-    return success(data=create_remediation_task(
-        title=body.title,
-        description=body.description,
-        assignee=body.assignee,
-        deadline=body.deadline,
-        inspection_id=body.inspection_id,
-        who=body.who,
-        evidence=body.evidence,
-    ))
+    return success(
+        data=create_remediation_task(
+            title=body.title,
+            description=body.description,
+            assignee=body.assignee,
+            deadline=body.deadline,
+            inspection_id=body.inspection_id,
+            who=body.who,
+            evidence=body.evidence,
+        )
+    )
 
 
 @router.put("/task/{task_id}/confirm", tags=["飞检准备度"])
 def inspection_task_confirm(task_id: str, body: RemediationConfirm | None = None, _: dict = Depends(require_scope("visit"))):
     request = body or RemediationConfirm()
-    return success(data=confirm_remediation(
-        task_id,
-        inspection_id=request.inspection_id,
-        who=request.who,
-        evidence=request.evidence,
-    ))
+    return success(
+        data=confirm_remediation(
+            task_id,
+            inspection_id=request.inspection_id,
+            who=request.who,
+            evidence=request.evidence,
+        )
+    )
 
 
 @router.get("/history", tags=["飞检准备度"])

@@ -91,7 +91,7 @@ class BiddingAgentLLM(BaseService):
                         {"config_id": config["id"]},
                     )
                 except Exception:
-                    logger.exception("发送通知失败")
+                    logger.exception("LLM调用异常")
         return {"items_found": found, "items_parsed": parsed}
 
     def _log_scan_result(
@@ -185,6 +185,7 @@ class BiddingAgentLLM(BaseService):
                         started_at,
                     )
                 except Exception as e:
+                    logger.exception("评分异常")
                     self._log_scan_result(conn, config["id"], "failed", 0, 0, str(e), started_at)
                 conn.commit()
         finally:

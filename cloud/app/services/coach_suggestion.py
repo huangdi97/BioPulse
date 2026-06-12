@@ -16,7 +16,7 @@ class CoachSuggestionMixin:
         metric_after: float,
         period_days: int,
     ) -> dict:
-        attrs_repo = TrainingAttributionsRepository(self.db)
+        attrs_repo = TrainingAttributionsRepository(self._connection())
         cp = round((metric_after - metric_before) / metric_before, 4) if metric_before else 0.0
         att_id = attrs_repo.create(
             {
@@ -48,7 +48,7 @@ class CoachSuggestionMixin:
         )
 
     def list_attributions(self, user_id: Optional[int] = None, metric_name: Optional[str] = None) -> list:
-        attrs_repo = TrainingAttributionsRepository(self.db)
+        attrs_repo = TrainingAttributionsRepository(self._connection())
         conditions = []
         params = []
         if user_id is not None:

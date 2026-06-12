@@ -25,7 +25,7 @@ class ExecutionLoopMixin:
         return (app["tool"], json.loads(app["params"]) if app["params"] else {}) if app else (None, None)
 
     def _new_context(self, goal, agent_key, context, spec):
-        hot_reloader = getattr(self, '_prompt_hot_reloader', None)
+        hot_reloader = getattr(self, "_prompt_hot_reloader", None)
         if hot_reloader:
             hot_spec = hot_reloader.get_spec(agent_key)
             if hot_spec:
@@ -73,8 +73,8 @@ class ExecutionLoopMixin:
             if not self._check_budget(c["messages"]):
                 return self._handle_budget_exceeded(c, step, step_start)
             try:
-                streamer = getattr(self, '_streamer', None)
-                trace_id = getattr(self, '_trace_id', None)
+                streamer = getattr(self, "_streamer", None)
+                trace_id = getattr(self, "_trace_id", None)
                 if streamer and trace_id:
                     streamer.stream(trace_id, "agent.llm_call", {"step": step, "agent": c["agent_key"]})
                 ai_resp = self._call_ai(c["messages"], spec["default_temperature"], step, force_level=None)
@@ -130,8 +130,8 @@ class ExecutionLoopMixin:
         tool_params = self._reflect_before_tool(
             step, c["goal"], c["agent_key"], c["context"], c["messages"], decision, ai_resp, duration_ms, c["logs"]
         )
-        streamer = getattr(self, '_streamer', None)
-        trace_id = getattr(self, '_trace_id', None)
+        streamer = getattr(self, "_streamer", None)
+        trace_id = getattr(self, "_trace_id", None)
         if streamer and trace_id:
             streamer.stream(trace_id, "agent.tool_call", {"step": step, "tool": tool_name, "params": tool_params})
         try:
@@ -142,7 +142,7 @@ class ExecutionLoopMixin:
             if streamer and trace_id:
                 preview = str(tool_result.get("data", ""))[:200]
                 streamer.stream(trace_id, "agent.tool_result", {"step": step, "tool": tool_name, "result_preview": preview})
-            tracer = getattr(self, '_tracer', None)
+            tracer = getattr(self, "_tracer", None)
             if tracer:
                 tracer.log_tool_call(tool_name, tool_params, str(tool_result.get("data", "")), t_elapsed)
         except Exception as exc:

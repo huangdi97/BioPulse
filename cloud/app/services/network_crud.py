@@ -7,6 +7,8 @@ import uuid
 from fastapi import HTTPException
 from starlette import status
 
+from shared.datetime_utils import row_to_dict
+
 logger = logging.getLogger(__name__)
 
 
@@ -88,7 +90,7 @@ class NetworkCrudMixin:
             params.append(f'%"{capability}"%')
         sql += " ORDER BY c.created_at DESC"
         rows = self.db.execute(sql, params).fetchall()
-        return [self._row_to_dict(r) for r in rows]
+        return [row_to_dict(r, "known_cells", "routing_table", "task_history", "capabilities") for r in rows]
 
     def get_network_topology(self) -> dict:
         """返回细胞网络完整拓扑（节点列表 + 路由表）。"""
@@ -98,7 +100,7 @@ class NetworkCrudMixin:
             "LEFT JOIN agent_registry r ON c.agent_instance_key = r.agent_key "
             "ORDER BY c.created_at DESC"
         ).fetchall()
-        cell_list = [self._row_to_dict(r) for r in cells]
+        cell_list = [row_to_dict(r, "known_cells", "routing_table", "task_history", "capabilities") for r in cells]
         routing_map: dict[str, list[str]] = {}
         for cell in cell_list:
             known = json.loads(cell.get("known_cells", "[]"))
@@ -118,7 +120,7 @@ class NetworkCrudMixin:
             "LEFT JOIN agent_registry r ON c.agent_instance_key = r.agent_key "
             "ORDER BY c.created_at DESC"
         ).fetchall()
-        cell_list = [self._row_to_dict(r) for r in cells]
+        cell_list = [row_to_dict(r, "known_cells", "routing_table", "task_history", "capabilities") for r in cells]
 
         nodes: list[dict] = []
         edges: list[dict] = []
@@ -182,14 +184,4 @@ class NetworkCrudMixin:
         row = self.db.execute("SELECT * FROM agent_cell_network WHERE cell_key=?", (cell_key,)).fetchone()
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="cell not found")
-        return self._row_to_dict(row)
-
-    def _row_to_dict(self, row) -> dict:
-        d = dict(row)
-        for col in ("known_cells", "routing_table", "task_history", "capabilities"):
-            if col in d and isinstance(d[col], str) and d[col]:
-                try:
-                    d[col] = json.loads(d[col])
-                except (json.JSONDecodeError, TypeError):
-                    logger.warning("Failed to parse network cell JSON field '%s'", col, exc_info=True)
-        return d
+        return row_to_dict(row, "known_cells", "routing_table", "task_history", "capabilities")

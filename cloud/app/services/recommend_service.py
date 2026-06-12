@@ -33,7 +33,7 @@ class RecommendService(RecommendStrategyMixin, BaseService):
         """Create or upsert a user recommendation profile."""
         pct = json.dumps(preferred_content_types, ensure_ascii=False)
         tags = json.dumps(custom_tags, ensure_ascii=False)
-        profiles_repo = UserProfilesRepository(self.db)
+        profiles_repo = UserProfilesRepository(self._connection())
         row = profiles_repo.upsert_profile(user_id, persona_type, specialization, experience_level, pct, tags)
         return row
 
@@ -43,7 +43,7 @@ class RecommendService(RecommendStrategyMixin, BaseService):
         Raises:
             HTTPException: 404 if the profile is not found.
         """
-        profiles_repo = UserProfilesRepository(self.db)
+        profiles_repo = UserProfilesRepository(self._connection())
         row = profiles_repo.get_by_user_id(user_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
@@ -63,7 +63,7 @@ class RecommendService(RecommendStrategyMixin, BaseService):
         Raises:
             HTTPException: 404 if the profile is not found.
         """
-        profiles_repo = UserProfilesRepository(self.db)
+        profiles_repo = UserProfilesRepository(self._connection())
         existing = profiles_repo.get_by_user_id(user_id)
         if not existing:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found")
@@ -100,7 +100,7 @@ class RecommendService(RecommendStrategyMixin, BaseService):
         duration_seconds: int,
     ) -> dict:
         """Log a user behavior event for the recommendation engine."""
-        behaviors_repo = UserBehaviorsRepository(self.db)
+        behaviors_repo = UserBehaviorsRepository(self._connection())
         meta = json.dumps(metadata, ensure_ascii=False)
         row_id = behaviors_repo.create(
             {
@@ -133,7 +133,7 @@ class RecommendService(RecommendStrategyMixin, BaseService):
         Raises:
             HTTPException: 404 if the recommendation is not found.
         """
-        recs_repo = RecommendationsRepository(self.db)
+        recs_repo = RecommendationsRepository(self._connection())
         row = recs_repo.get_by_id(rec_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recommendation not found")
@@ -145,7 +145,7 @@ class RecommendService(RecommendStrategyMixin, BaseService):
         Raises:
             HTTPException: 404 if the recommendation is not found.
         """
-        recs_repo = RecommendationsRepository(self.db)
+        recs_repo = RecommendationsRepository(self._connection())
         row = recs_repo.get_by_id(rec_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recommendation not found")

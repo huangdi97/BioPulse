@@ -1,19 +1,15 @@
 """总裁服务模块。提供全局概览、合规总览、团队排名和趋势报告。"""
 
+import logging
+
 import httpx
 
+from management.app.services._shared import fetch
 from shared.app_settings import settings
 
+logger = logging.getLogger(__name__)
+
 CLOUD_API = settings.cloud_api_base
-
-
-async def _fetch(path: str) -> dict:
-    async with httpx.AsyncClient() as client:
-        try:
-            resp = await client.get(f"{CLOUD_API}{path}", timeout=10)
-            return resp.json() if resp.status_code == 200 else {}
-        except Exception:
-            return {}
 
 
 async def get_summary() -> dict:
@@ -22,9 +18,9 @@ async def get_summary() -> dict:
     Returns:
         dict: 包含 dashboard、users、compliance 的全局概览字典。
     """
-    dashboard = await _fetch("/api/demo/dashboard")
-    users = await _fetch("/api/demo/dashboard/users")
-    compliance = await _fetch("/api/demo/dashboard/compliance")
+    dashboard = await fetch("/api/demo/dashboard")
+    users = await fetch("/api/demo/dashboard/users")
+    compliance = await fetch("/api/demo/dashboard/compliance")
     return {
         "dashboard": dashboard,
         "users": users,
@@ -38,7 +34,7 @@ async def get_compliance_overview() -> dict:
     Returns:
         dict: 包含 compliance_overview 合规总览数据的字典。
     """
-    data = await _fetch("/api/demo/dashboard/compliance")
+    data = await fetch("/api/demo/dashboard/compliance")
     if not data:
         return {"compliance_overview": {}}
     return {"compliance_overview": data}
@@ -50,8 +46,8 @@ async def get_team_rankings() -> dict:
     Returns:
         dict: 包含 rankings 排名列表和 user_stats 用户统计的字典。
     """
-    dashboard = await _fetch("/api/demo/dashboard")
-    users = await _fetch("/api/demo/dashboard/users")
+    dashboard = await fetch("/api/demo/dashboard")
+    users = await fetch("/api/demo/dashboard/users")
     teams = dashboard.get("teams", []) if dashboard else []
     return {
         "rankings": sorted(teams, key=lambda t: t.get("score", 0), reverse=True),
@@ -65,8 +61,8 @@ async def get_trend_report() -> dict:
     Returns:
         dict: 包含 trend 和 compliance_trend 趋势数据的字典。
     """
-    dashboard = await _fetch("/api/demo/dashboard")
-    compliance = await _fetch("/api/demo/dashboard/compliance")
+    dashboard = await fetch("/api/demo/dashboard")
+    compliance = await fetch("/api/demo/dashboard/compliance")
     return {
         "trend": dashboard.get("trend", {}) if dashboard else {},
         "compliance_trend": compliance.get("trend", {}) if compliance else {},

@@ -13,19 +13,23 @@ class ToolBridge:
     """工具注册中心，管理工具定义、权限校验、调用转发与熔断恢复。"""
 
     def __init__(self):
+        """初始化工具注册中心和熔断状态。"""
         self._tools: dict[str, ToolDef] = {}
         self._brain = None
         self._failure_counts: dict[str, int] = {}
         self._breaker_expiry: dict[str, float] = {}
 
     def register_tool(self, tool: ToolDef) -> None:
+        """注册一个工具定义到注册中心。"""
         tool.permission_level = getattr(tool, "permission_level", "read")
         self._tools[tool.name] = tool
 
     def set_brain(self, brain):
+        """设置 Brain 引用以支持 Agent 内部状态读写。"""
         self._brain = brain
 
     def register_default_tools(self) -> None:
+        """注册默认的工具集合，包含业务工具和 Agent 脑工具。"""
         defaults = [
             ToolDef(
                 name="query_bidding",
@@ -135,6 +139,36 @@ class ToolBridge:
                 params={},
                 permission_level="write",
             ),
+            ToolDef(
+                name="query_hcp_profile",
+                description="查询 HCP 画像信息（专长、评分、历史互动）",
+                params={},
+                permission_level="read",
+            ),
+            ToolDef(
+                name="query_visit_history",
+                description="查询 HCP 历史拜访记录（次数、时间、内容）",
+                params={},
+                permission_level="read",
+            ),
+            ToolDef(
+                name="query_competitor_intel",
+                description="查询竞品情报（活动、新品、市场份额）",
+                params={},
+                permission_level="read",
+            ),
+            ToolDef(
+                name="run_causal_attribution",
+                description="执行因果归因分析（输入拜访+市场数据，输出根因置信度）",
+                params={},
+                permission_level="read",
+            ),
+            ToolDef(
+                name="generate_brief",
+                description="生成结构化 Pre-call Brief 文档",
+                params={},
+                permission_level="write",
+            ),
         ]
         brain_tools = [
             ToolDef(
@@ -154,6 +188,7 @@ class ToolBridge:
             self.register_tool(t)
 
     def call(self, tool_name: str, params: dict, auth_header: str, caller_permission: str = "read") -> dict:
+        """执行工具调用，包含权限校验、熔断检查和重试。"""
         now = time.time()
         if tool_name in self._breaker_expiry:
             if now < self._breaker_expiry[tool_name]:
@@ -190,6 +225,7 @@ class ToolBridge:
         data = json.dumps(payload).encode("utf-8")
 
         def _do_post():
+            """执行 HTTP POST 请求并返回 JSON 结果。"""
             req = urllib.request.Request(
                 url,
                 data=data,
@@ -213,6 +249,7 @@ class ToolBridge:
         return {"success": False, "data": None, "error": result["error"]}
 
     def list_tools(self) -> list[dict]:
+        """返回所有已注册工具的列表。"""
         return [{"name": t.name, "description": t.description, "permission_level": t.permission_level} for t in self._tools.values()]
 
 

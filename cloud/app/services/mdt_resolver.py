@@ -2,7 +2,6 @@
 
 import json
 import urllib.request
-from datetime import datetime
 
 from fastapi import HTTPException
 from starlette import status
@@ -15,17 +14,15 @@ from cloud.app.repositories import (
 from shared.base import success
 from shared.base_service import BaseService
 from shared.config import settings as config_settings
+from shared.datetime_utils import now as _now
 
 
 class MdtResolver(BaseService):
     """MDT解析服务，提供观点汇总、共识分析与决策生成功能。"""
 
     @staticmethod
-    def _now() -> str:
-        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    @staticmethod
     def _call_ai(messages: list[dict], auth_header: str) -> dict:
+        """调用 AI 网关执行共识分析。"""
         with urllib.request.urlopen(
             urllib.request.Request(
                 f"{config_settings.ai_chat_url}",
@@ -39,6 +36,7 @@ class MdtResolver(BaseService):
 
     @staticmethod
     def _parse_json(raw: str, default=None):
+        """安全解析 JSON 字符串，失败返回默认值。"""
         try:
             return json.loads(raw)
         except (json.JSONDecodeError, TypeError):
@@ -54,8 +52,8 @@ class MdtResolver(BaseService):
         Returns:
             描述
         """
-        sessions_repo = MdtSessionsRepository(self.db)
-        opinions_repo = MdtOpinionsRepository(self.db)
+        sessions_repo = MdtSessionsRepository(self._connection())
+        opinions_repo = MdtOpinionsRepository(self._connection())
         s = sessions_repo.get_by_id(session_id)
         if not s:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="MDT Session not found")
@@ -86,7 +84,7 @@ class MdtResolver(BaseService):
                     "consensus": consensus_text,
                     "consensus_json": consensus_json,
                     "status": "completed",
-                    "updated_at": self._now(),
+                    "updated_at": _now(),
                 },
             )
         except Exception:  # noqa: BLE001  # multiple operations (JSON, DB) could fail in consensus generation
@@ -99,9 +97,9 @@ class MdtResolver(BaseService):
         Returns:
             描述
         """
-        sessions_repo = MdtSessionsRepository(self.db)
-        participants_repo = MdtParticipantsRepository(self.db)
-        opinions_repo = MdtOpinionsRepository(self.db)
+        sessions_repo = MdtSessionsRepository(self._connection())
+        participants_repo = MdtParticipantsRepository(self._connection())
+        opinions_repo = MdtOpinionsRepository(self._connection())
         total = sessions_repo.count()
         completed = sessions_repo.count_completed()
         by_status = sessions_repo.count_by_field("status")

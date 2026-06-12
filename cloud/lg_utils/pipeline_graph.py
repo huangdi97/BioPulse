@@ -6,6 +6,7 @@ from typing import Optional, TypedDict
 
 from langgraph.graph import END, StateGraph
 
+from shared.ai_gateway import LLM_INFERENCE_TIMEOUT
 from shared.app_settings import settings
 
 
@@ -64,7 +65,7 @@ def step_executor(state: PipelineState) -> dict:
             headers={"Content-Type": "application/json", "Authorization": auth_header},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=120) as rp:
+        with urllib.request.urlopen(req, timeout=LLM_INFERENCE_TIMEOUT) as rp:
             resp = json.loads(rp.read().decode("utf-8"))
             ai_raw = resp.get("data", {}).get("reply", "")
             usage = resp.get("data", {}).get("usage", {})

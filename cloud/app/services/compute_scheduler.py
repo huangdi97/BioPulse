@@ -36,7 +36,7 @@ class ComputeSchedulerMixin:
 
     def init_federated(self, model_name: str, num_rounds: int, aggregation_method: str) -> list:
         """初始化多轮联邦学习任务。"""
-        repo = FederatedRoundsRepository(self.db)
+        repo = FederatedRoundsRepository(self._connection())
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         for rn in range(1, num_rounds + 1):
             round_id = f"fl:{uuid4()}"
@@ -59,7 +59,7 @@ class ComputeSchedulerMixin:
 
     def submit_federated(self, round_id: str, participant_id: str, metrics: dict, update_summary: str) -> dict:
         """提交联邦学习参与方更新。"""
-        repo = FederatedRoundsRepository(self.db)
+        repo = FederatedRoundsRepository(self._connection())
         rows = repo.list_all(conditions=["round_id=?"], params=[round_id])
         if not rows:
             raise HTTPException(
@@ -84,7 +84,7 @@ class ComputeSchedulerMixin:
 
     def list_federated_rounds(self, model_name=None, status_filter=None) -> list:
         """查询联邦学习轮次列表。"""
-        repo = FederatedRoundsRepository(self.db)
+        repo = FederatedRoundsRepository(self._connection())
         conditions, params = [], []
         if model_name:
             conditions.append("model_name=?")
@@ -101,7 +101,7 @@ class ComputeSchedulerMixin:
 
     def prove_contribution(self, contribution_id: int, prover_sub: str) -> dict:
         """证明贡献记录的真实性。"""
-        repo = FedAuditContributionsRepository(self.db)
+        repo = FedAuditContributionsRepository(self._connection())
         row = repo.get_by_id(contribution_id)
         if not row:
             raise HTTPException(
@@ -123,7 +123,7 @@ class ComputeSchedulerMixin:
 
     def verify_contribution(self, contribution_id: int) -> dict:
         """验证贡献记录是否存在及可信。"""
-        repo = FedAuditContributionsRepository(self.db)
+        repo = FedAuditContributionsRepository(self._connection())
         row = repo.get_by_id(contribution_id)
         if not row:
             raise HTTPException(

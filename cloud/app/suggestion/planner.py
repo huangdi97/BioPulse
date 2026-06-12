@@ -32,6 +32,7 @@ except ModuleNotFoundError:
             self.code = code
             self.message = message
 
+
 CollectionMode = Literal["parallel", "sequential"]
 
 

@@ -8,10 +8,10 @@ from collections.abc import Callable
 from fastapi import HTTPException
 from starlette import status
 
+from shared.ai_gateway import TIMEOUT_SECONDS
 from shared.config import settings
 
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
-TIMEOUT_SECONDS = 30
 
 DEFAULT_RESULT = {
     "expected_outcome": "",
@@ -24,6 +24,7 @@ DEFAULT_RESULT = {
 
 
 def _call_ai(system_prompt: str, user_prompt: str) -> str:
+    """调用 DeepSeek API 执行 HCP 模拟。"""
     api_key = settings.deepseek_api_key
     if not api_key:
         raise HTTPException(
@@ -58,6 +59,7 @@ def _call_ai(system_prompt: str, user_prompt: str) -> str:
 
 
 def build_simulation_prompts(hcp_row: dict, int_rows: list[dict], scenario: str, strategy: str) -> tuple[str, str]:
+    """构建 HCP 模拟的 system 和 user 提示词。"""
     system_prompt = "你是一名HCP行为模拟专家。请基于HCP档案和历史互动记录，模拟该HCP在给定场景下的行为反应。以JSON格式输出："
     user_prompt = (
         f"HCP档案：\n{json.dumps(hcp_row, ensure_ascii=False, indent=2)}\n\n"
@@ -76,6 +78,7 @@ def simulate_hcp_response(
     strategy: str,
     call_ai: Callable[[str, str], str] = _call_ai,
 ) -> dict:
+    """模拟单个 HCP 的行为响应。"""
     system_prompt, user_prompt = build_simulation_prompts(hcp_row, int_rows, scenario, strategy)
     try:
         ai_raw = call_ai(system_prompt, user_prompt)
@@ -94,6 +97,7 @@ def build_simulation_record(
     user_id: int,
     call_ai: Callable[[str, str], str] = _call_ai,
 ) -> dict:
+    """构建 HCP 模拟结果记录的完整字典。"""
     result = simulate_hcp_response(hcp_row, int_rows, scenario, strategy, call_ai=call_ai)
     sim_data = json.dumps(
         {"scenario": scenario, "strategy": strategy, "profile_id": hcp_id},

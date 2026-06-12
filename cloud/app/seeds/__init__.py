@@ -22,3 +22,30 @@ from .seed_s6 import seed_s6
 from .seed_soap_decision import seed_soap_decision
 from .seed_training_coach import seed_training_coach
 from .seed_world_tree import seed_world_tree
+
+__all__ = [
+    "seed_agent_data",
+    "seed_brain_memory",
+    "seed_collaboration",
+    "seed_compliance_v2",
+    "seed_decision_intel",
+    "seed_event_bus",
+    "seed_hcp_sandbox",
+    "seed_holographic",
+    "seed_kg",
+    "seed_market_intel",
+    "seed_mdt_engine",
+    "seed_memory_gates",
+    "seed_memory_s1",
+    "seed_memory_utility",
+    "seed_recommend",
+    "seed_route_rules",
+    "seed_s2",
+    "seed_s3",
+    "seed_s4",
+    "seed_s5",
+    "seed_s6",
+    "seed_soap_decision",
+    "seed_training_coach",
+    "seed_world_tree",
+]

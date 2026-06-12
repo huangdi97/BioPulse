@@ -8,7 +8,7 @@ from fastapi import HTTPException, Request
 from starlette import status
 
 from cloud.app.repositories import PipelineRunsRepository, PipelineStepRunsRepository
-from cloud.langgraph.pipeline_graph import get_pipeline_graph
+from cloud.lg_utils.pipeline_graph import get_pipeline_graph
 from shared.base import success
 
 
@@ -30,8 +30,8 @@ class PipelineExecutorMixin:
         Returns:
             含 run_id、status 和 step_results 的执行结果
         """
-        runs_repo = PipelineRunsRepository(self.db)
-        step_runs_repo = PipelineStepRunsRepository(self.db)
+        runs_repo = PipelineRunsRepository(self._connection())
+        step_runs_repo = PipelineStepRunsRepository(self._connection())
 
         self._p404(pipeline_id)
         steps = self.db.execute(

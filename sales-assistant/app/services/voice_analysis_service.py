@@ -13,10 +13,10 @@ from starlette import status
 
 from sales_assistant.app.database import get_db
 from sales_assistant.app.schemas.voice_analysis import VoiceAnalysisResult
+from shared.ai_gateway import TIMEOUT_SECONDS
 from shared.app_settings import settings
 
 AI_GATEWAY_URL = f"{settings.cloud_api_base}/ai/chat"
-TIMEOUT_SECONDS = 30
 logger = logging.getLogger(__name__)
 
 

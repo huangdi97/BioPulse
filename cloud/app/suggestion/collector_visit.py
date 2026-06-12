@@ -46,6 +46,7 @@ def safe_visit_rows(db: sqlite3.Connection, hcp_id: str, limit: int) -> list[dic
         ).fetchall()
         return [dict(row) for row in rows]
     except Exception:
+        logger.warning("Visit collector异常", exc_info=True)
         return []
 
 

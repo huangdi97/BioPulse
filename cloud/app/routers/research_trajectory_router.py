@@ -27,7 +27,9 @@ def get_pi_trajectory(
     return success(data)
 
 
-@trajectory_router.post("/pi/{pi_id}/predict", summary="Predict Pi Trajectory", description="预测PI未来指定天数的科研轨迹", tags=["Research Trajectory"])
+@trajectory_router.post(
+    "/pi/{pi_id}/predict", summary="Predict Pi Trajectory", description="预测PI未来指定天数的科研轨迹", tags=["Research Trajectory"]
+)
 def predict_pi_trajectory(
     pi_id: int,
     body: PredictRequest = None,

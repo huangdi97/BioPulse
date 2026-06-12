@@ -7,7 +7,7 @@ import hmac
 import json
 import os
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime
 from threading import Lock
 from uuid import uuid4
 
@@ -27,14 +27,13 @@ _LOCK = Lock()
 _SIGNATURES: dict[str, ElectronicSignature] = {}
 _DOCUMENTS: dict[str, SignedDocument] = {}
 _AUDIT_TRAILS: dict[str, list[AuditTrail]] = {}
+from shared.datetime_utils import now as _now
+
 _SIGNING_SECRET = os.getenv("PART11_HMAC_SECRET", "part11-demo-hmac-secret").encode()
+
 _PASSWORD_HASHES = {
     "user-001": hashlib.sha256("secure_pwd".encode()).hexdigest(),
 }
-
-
-def _now() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 def _password_valid(user_id: str, password: str) -> bool:

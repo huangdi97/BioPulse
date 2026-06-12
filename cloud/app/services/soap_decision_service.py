@@ -31,7 +31,7 @@ class SoapDecisionService(SoapDecisionParserMixin, BaseService):
         Returns:
             创建的模板记录
         """
-        templates_repo = SoapTemplatesRepository(self.db)
+        templates_repo = SoapTemplatesRepository(self._connection())
         tmpl_id = templates_repo.create(
             {
                 "name": name,
@@ -56,7 +56,7 @@ class SoapDecisionService(SoapDecisionParserMixin, BaseService):
         Returns:
             模板列表
         """
-        templates_repo = SoapTemplatesRepository(self.db)
+        templates_repo = SoapTemplatesRepository(self._connection())
         rows = templates_repo.list_active(category=category)
         return [_row(r, ["structure"]) for r in rows]
 
@@ -69,7 +69,7 @@ class SoapDecisionService(SoapDecisionParserMixin, BaseService):
         Returns:
             更新后的决策记录
         """
-        decisions_repo = SoapDecisionsRepository(self.db)
+        decisions_repo = SoapDecisionsRepository(self._connection())
         row = decisions_repo.get_by_id(decision_id)
         if not row or not row.get("is_active"):
             raise HTTPException(http_status.HTTP_404_NOT_FOUND, detail="Decision not found")
@@ -95,7 +95,7 @@ class SoapDecisionService(SoapDecisionParserMixin, BaseService):
         Returns:
             已裁定的决策记录
         """
-        decisions_repo = SoapDecisionsRepository(self.db)
+        decisions_repo = SoapDecisionsRepository(self._connection())
         row = decisions_repo.get_by_id(decision_id)
         if not row or not row.get("is_active"):
             raise HTTPException(http_status.HTTP_404_NOT_FOUND, detail="Decision not found")
@@ -126,8 +126,8 @@ class SoapDecisionService(SoapDecisionParserMixin, BaseService):
         Returns:
             含总数、状态分布、优先级分布和最近决策的字典
         """
-        decisions_repo = SoapDecisionsRepository(self.db)
-        opinions_repo = AsyncMdtOpinionsRepository(self.db)
+        decisions_repo = SoapDecisionsRepository(self._connection())
+        opinions_repo = AsyncMdtOpinionsRepository(self._connection())
         total = decisions_repo.count_active()
         by_status = decisions_repo.count_by_status()
         by_priority = decisions_repo.count_by_priority()

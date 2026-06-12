@@ -18,6 +18,7 @@ def _run_agent_task(task: dict) -> dict:
         if not spec:
             return {"status": "error", "result": f"unknown agent_key: {agent_key}"}
         import sqlite3 as _sqlite3
+
         from cloud.app.database import DB_PATH as _DB_PATH
 
         conn = _sqlite3.connect(_DB_PATH)
@@ -58,6 +59,7 @@ class AgentWorker:
             future = self._pool.submit(lambda: True)
             return future.result(timeout=5)
         except Exception:
+            logger.warning("Agent worker异常", exc_info=True)
             return False
 
     def shutdown(self):

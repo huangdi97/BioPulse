@@ -45,7 +45,7 @@ class ComputeService(ComputeSchedulerMixin, BaseService):
     """隐私计算服务，提供可信计算任务、联邦学习及贡献验证功能。"""
 
     def create_job(self, compute_type: str, sensitivity_level: str, data_summary: str, user_id: int) -> dict:
-        repo = PrivacyComputeJobsRepository(self.db)
+        repo = PrivacyComputeJobsRepository(self._connection())
         job_id = f"pc:{uuid4()}"
         scheme = SCHEME_MAP.get(sensitivity_level, "DP+FL")
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
@@ -65,7 +65,7 @@ class ComputeService(ComputeSchedulerMixin, BaseService):
         return _job_to_dict(row)
 
     def list_jobs(self, status_filter: Optional[str] = None, compute_type: Optional[str] = None) -> list:
-        repo = PrivacyComputeJobsRepository(self.db)
+        repo = PrivacyComputeJobsRepository(self._connection())
         conditions, params = [], []
         if status_filter:
             conditions.append("status=?")
@@ -81,7 +81,7 @@ class ComputeService(ComputeSchedulerMixin, BaseService):
         return [_job_to_dict(r) for r in rows]
 
     def get_job(self, job_id: str) -> dict:
-        repo = PrivacyComputeJobsRepository(self.db)
+        repo = PrivacyComputeJobsRepository(self._connection())
         rows = repo.list_all(conditions=["job_id=?"], params=[job_id])
         if not rows:
             raise HTTPException(

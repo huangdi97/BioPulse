@@ -13,7 +13,7 @@ class TestContentCRUD:
             },
             headers={"Authorization": f"Bearer {auth_token}"},
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         data = resp.json()["data"]
         content_id = data["id"]
         assert data["title"] == "Test Content"
@@ -47,7 +47,7 @@ class TestContentUpdateDelete:
             },
             headers={"Authorization": f"Bearer {auth_token}"},
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         content_id = resp.json()["data"]["id"]
 
         resp = client.patch(
@@ -77,7 +77,7 @@ class TestContentUpdateDelete:
             },
             headers={"Authorization": f"Bearer {auth_token}"},
         )
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         content_id = resp.json()["data"]["id"]
 
         resp = client.delete(

@@ -3,18 +3,15 @@
 import json
 import urllib.request
 from collections.abc import Callable
-from datetime import datetime
 
 from cloud.app.repositories import (
     EpisodicMemoryRepository,
     MemoryConsolidationLogRepository,
     MemoryEntriesRepository,
 )
+from shared.ai_gateway import LLM_INFERENCE_TIMEOUT
 from shared.config import settings as config_settings
-
-
-def _now() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+from shared.datetime_utils import now as _now
 
 
 def _call_ai(messages: list[dict], auth_header: str) -> dict:
@@ -25,7 +22,7 @@ def _call_ai(messages: list[dict], auth_header: str) -> dict:
         headers={"Content-Type": "application/json", "Authorization": auth_header},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=120) as rp:
+    with urllib.request.urlopen(req, timeout=LLM_INFERENCE_TIMEOUT) as rp:
         return json.loads(rp.read().decode("utf-8")).get("data", {})
 
 
@@ -113,7 +110,7 @@ class EpisodicMemoryWriter:
     ) -> dict:
         """存储情景记忆条目并检测干扰性遗忘。"""
         n = _now()
-        em = EpisodicMemoryRepository(self.db)
+        em = EpisodicMemoryRepository(self._connection())
         new_id = em.create(
             {
                 "event_type": event_type,
@@ -146,7 +143,7 @@ class EpisodicMemoryWriter:
                 if (old["valence"] or 0.0) * (valence or 0.0) < 0:
                     interference += 1
         if interference:
-            MemoryConsolidationLogRepository(self.db).create(
+            MemoryConsolidationLogRepository(self._connection()).create(
                 {
                     "consolidation_type": "interference_forgetting",
                     "source_table": "episodic_memory",
@@ -172,8 +169,8 @@ class EpisodicMemoryWriter:
 
     def episodic_consolidate(self, memory_id: int, auth_header: str) -> dict:
         """巩固指定情景记忆为长期记忆条目，调用 AI 提炼洞察并触发自动关联。"""
-        em_repo = EpisodicMemoryRepository(self.db)
-        me_repo = MemoryEntriesRepository(self.db)
+        em_repo = EpisodicMemoryRepository(self._connection())
+        me_repo = MemoryEntriesRepository(self._connection())
         row = em_repo.get_by_id(memory_id)
         if not row:
             from fastapi import HTTPException
@@ -233,7 +230,7 @@ class EpisodicMemoryWriter:
     ) -> dict:
         """基于情景记忆生成语义抽象条目并触发自动关联。"""
         rows = (
-            EpisodicMemoryRepository(self.db)
+            EpisodicMemoryRepository(self._connection())
             .db.execute(
                 "SELECT * FROM episodic_memory WHERE related_entity_type=? AND related_entity_id=? ORDER BY created_at DESC",
                 (source_type, int(source_id)),
@@ -250,7 +247,7 @@ class EpisodicMemoryWriter:
         reply = _call_ai(msg, auth_header).get("reply", "")
         d = parse_abstract_reply(reply, source_type, txt[:200])
         n = _now()
-        eid = MemoryEntriesRepository(self.db).create(
+        eid = MemoryEntriesRepository(self._connection()).create(
             {
                 "title": d.get("title", ""),
                 "content": d.get("content", txt[:200]),
@@ -265,7 +262,7 @@ class EpisodicMemoryWriter:
                 "updated_at": n,
             }
         )
-        fetched = MemoryEntriesRepository(self.db).get_by_id(eid)
+        fetched = MemoryEntriesRepository(self._connection()).get_by_id(eid)
         if fetched:
             self._auto_associate(eid, fetched)
         return {"id": eid, "title": d.get("title", ""), "content": d.get("content", "")}

@@ -36,17 +36,13 @@ class AsrService(BaseService):
         }
 
     def get_transcript(self, task_id: str) -> Optional[dict[str, Any]]:
-        row = self.db.execute(
-            "SELECT task_id, transcript, status FROM asr_tasks WHERE task_id = ?", (task_id,)
-        ).fetchone()
+        row = self.db.execute("SELECT task_id, transcript, status FROM asr_tasks WHERE task_id = ?", (task_id,)).fetchone()
         if not row:
             return None
         return {"task_id": row["task_id"], "transcript": row["transcript"], "status": row["status"]}
 
     def get_summary(self, task_id: str) -> Optional[dict[str, Any]]:
-        row = self.db.execute(
-            "SELECT task_id, summary, status FROM asr_tasks WHERE task_id = ?", (task_id,)
-        ).fetchone()
+        row = self.db.execute("SELECT task_id, summary, status FROM asr_tasks WHERE task_id = ?", (task_id,)).fetchone()
         if not row:
             return None
         return {

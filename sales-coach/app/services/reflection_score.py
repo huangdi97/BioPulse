@@ -35,6 +35,7 @@ def _compare_with_history(session_id: int, current_scores: dict, db) -> dict:
             (session_id,),
         ).fetchall()
     except Exception:
+        logger.warning("Reflection score query异常", exc_info=True)
         rows = []
 
     if not rows:
@@ -153,6 +154,7 @@ def generate_reflection_report(
                 ai_content = data["data"]["choices"][0].get("message", {}).get("content", "")
             ai_suggestions = _parse_ai_response(ai_content)
     except Exception:
+        logger.warning("Reflection score AI建议异常", exc_info=True)
         ai_suggestions = {}
 
     strengths = ai_suggestions.get(

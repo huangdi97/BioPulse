@@ -56,8 +56,8 @@ class SoapDecisionValidatorMixin:
         Returns:
             创建的意见记录
         """
-        decisions_repo = SoapDecisionsRepository(self.db)
-        opinions_repo = AsyncMdtOpinionsRepository(self.db)
+        decisions_repo = SoapDecisionsRepository(self._connection())
+        opinions_repo = AsyncMdtOpinionsRepository(self._connection())
         dec = decisions_repo.get_by_id(decision_id)
         if not dec or not dec.get("is_active"):
             raise HTTPException(http_status.HTTP_404_NOT_FOUND, detail="Decision not found")
@@ -88,8 +88,8 @@ class SoapDecisionValidatorMixin:
         Returns:
             意见列表
         """
-        decisions_repo = SoapDecisionsRepository(self.db)
-        opinions_repo = AsyncMdtOpinionsRepository(self.db)
+        decisions_repo = SoapDecisionsRepository(self._connection())
+        opinions_repo = AsyncMdtOpinionsRepository(self._connection())
         dec = decisions_repo.get_by_id(decision_id)
         if not dec or not dec.get("is_active"):
             raise HTTPException(http_status.HTTP_404_NOT_FOUND, detail="Decision not found")

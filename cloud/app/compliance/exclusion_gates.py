@@ -31,9 +31,11 @@ class NewProductGracePeriodGate(ExclusionGate):
     """产品上线前 3 个月免数据考核。"""
 
     def is_active(self, context: dict[str, Any]) -> bool:
+        """判断是否启用新产品宽限期闸。"""
         return context.get("gates", {}).get("new_product_grace_period", False)
 
     def evaluate(self, rule: dict[str, Any], data: dict[str, Any], context: dict[str, Any]) -> bool:
+        """判断产品是否在上市 90 天宽限期内。"""
         product_launch = data.get("product_launch_date")
         if not product_launch:
             return False
@@ -41,6 +43,7 @@ class NewProductGracePeriodGate(ExclusionGate):
         return (datetime.now() - launch).days < 90
 
     def get_reason(self) -> str:
+        """返回产品宽限期排除原因。"""
         return "产品上线前 3 个月免数据考核"
 
 
@@ -48,9 +51,11 @@ class SeasonalAdjustmentGate(ExclusionGate):
     """季节性波动自动校准（参考去年同期值）。"""
 
     def is_active(self, context: dict[str, Any]) -> bool:
+        """判断是否启用季节性调整闸。"""
         return context.get("gates", {}).get("seasonal_adjustment", False)
 
     def evaluate(self, rule: dict[str, Any], data: dict[str, Any], context: dict[str, Any]) -> bool:
+        """判断当前值与去年同期值波动是否在 ±30% 以内。"""
         current_val = data.get(rule.get("detection_field", ""))
         last_year_val = data.get("last_year_same_period")
         if current_val is None or last_year_val is None:
@@ -62,6 +67,7 @@ class SeasonalAdjustmentGate(ExclusionGate):
             return False
 
     def get_reason(self) -> str:
+        """返回季节性调整排除原因。"""
         return "季节性波动自动校准（参考去年同期值）"
 
 
@@ -69,9 +75,11 @@ class PolicyShockExemptionGate(ExclusionGate):
     """集采/医保新规临时豁免。"""
 
     def is_active(self, context: dict[str, Any]) -> bool:
+        """判断是否启用政策冲击豁免闸。"""
         return context.get("gates", {}).get("policy_shock_exemption", False)
 
     def evaluate(self, rule: dict[str, Any], data: dict[str, Any], context: dict[str, Any]) -> bool:
+        """判断新规生效是否在 90 天豁免期内。"""
         effective = context.get("policy_effective_date")
         if not effective:
             return False
@@ -79,6 +87,7 @@ class PolicyShockExemptionGate(ExclusionGate):
         return (datetime.now() - eff).days < 90
 
     def get_reason(self) -> str:
+        """返回政策豁免排除原因。"""
         return "集采/医保新规临时豁免"
 
 
@@ -86,14 +95,17 @@ class NaturalDisasterOverrideGate(ExclusionGate):
     """自然灾害期间自动调整。"""
 
     def is_active(self, context: dict[str, Any]) -> bool:
+        """判断是否启用自然灾害覆盖闸。"""
         return context.get("gates", {}).get("natural_disaster_override", False)
 
     def evaluate(self, rule: dict[str, Any], data: dict[str, Any], context: dict[str, Any]) -> bool:
+        """判断数据所属区域是否在灾区内。"""
         region = data.get("region")
         disaster_regions = context.get("disaster_regions", [])
         return region in disaster_regions
 
     def get_reason(self) -> str:
+        """返回自然灾害排除原因。"""
         return "自然灾害期间自动调整"
 
 
@@ -101,14 +113,17 @@ class DoctorAbsenceExemptionGate(ExclusionGate):
     """医生长期出差/请假免拜访考核。"""
 
     def is_active(self, context: dict[str, Any]) -> bool:
+        """判断是否启用医生缺勤豁免闸。"""
         return context.get("gates", {}).get("doctor_absence_exemption", False)
 
     def evaluate(self, rule: dict[str, Any], data: dict[str, Any], context: dict[str, Any]) -> bool:
+        """判断医生是否在缺勤名单中。"""
         doctor_id = data.get("hcp_id") or data.get("doctor_id")
         absent_doctors = context.get("absent_doctors", [])
         return doctor_id in absent_doctors
 
     def get_reason(self) -> str:
+        """返回医生缺勤排除原因。"""
         return "医生长期出差/请假免拜访考核"
 
 
@@ -116,9 +131,11 @@ class NewRepTrainingPeriodGate(ExclusionGate):
     """代表入职前 3 个月免考核。"""
 
     def is_active(self, context: dict[str, Any]) -> bool:
+        """判断是否启用新代表培训期闸。"""
         return context.get("gates", {}).get("new_rep_training_period", False)
 
     def evaluate(self, rule: dict[str, Any], data: dict[str, Any], context: dict[str, Any]) -> bool:
+        """判断代表是否在入职 90 天培训期内。"""
         rep_id = data.get("rep_id") or data.get("user_id")
         hire_dates = context.get("rep_hire_dates", {})
         hire = hire_dates.get(str(rep_id))
@@ -128,6 +145,7 @@ class NewRepTrainingPeriodGate(ExclusionGate):
         return (datetime.now() - hd).days < 90
 
     def get_reason(self) -> str:
+        """返回培训期排除原因。"""
         return "代表入职前 3 个月免考核"
 
 
@@ -135,9 +153,11 @@ class HolidayExemptionGate(ExclusionGate):
     """法定节假日豁免。"""
 
     def is_active(self, context: dict[str, Any]) -> bool:
+        """判断是否启用节假日豁免闸。"""
         return context.get("gates", {}).get("holiday_exemption", False)
 
     def evaluate(self, rule: dict[str, Any], data: dict[str, Any], context: dict[str, Any]) -> bool:
+        """判断拜访日期是否在法定节假日内。"""
         visit_date = data.get("visit_date") or data.get("created_at")
         if not visit_date:
             return False
@@ -146,6 +166,7 @@ class HolidayExemptionGate(ExclusionGate):
         return vd.strftime("%Y-%m-%d") in holidays
 
     def get_reason(self) -> str:
+        """返回节假日排除原因。"""
         return "法定节假日豁免"
 
 
@@ -153,14 +174,17 @@ class ProductPhaseOutGate(ExclusionGate):
     """产品退市过渡期免考核。"""
 
     def is_active(self, context: dict[str, Any]) -> bool:
+        """判断是否启用产品退市豁免闸。"""
         return context.get("gates", {}).get("product_phase_out", False)
 
     def evaluate(self, rule: dict[str, Any], data: dict[str, Any], context: dict[str, Any]) -> bool:
+        """判断产品是否在退市名单中。"""
         product = data.get("product") or data.get("product_name")
         phase_out_products = context.get("phase_out_products", [])
         return product in phase_out_products
 
     def get_reason(self) -> str:
+        """返回产品退市排除原因。"""
         return "产品退市过渡期免考核"
 
 
@@ -168,14 +192,17 @@ class RegionAdjustmentGate(ExclusionGate):
     """区域市场调整期。"""
 
     def is_active(self, context: dict[str, Any]) -> bool:
+        """判断是否启用区域调整闸。"""
         return context.get("gates", {}).get("region_adjustment", False)
 
     def evaluate(self, rule: dict[str, Any], data: dict[str, Any], context: dict[str, Any]) -> bool:
+        """判断数据所属区域是否在调整名单中。"""
         region = data.get("region")
         adjustment_regions = context.get("adjustment_regions", [])
         return region in adjustment_regions
 
     def get_reason(self) -> str:
+        """返回区域调整排除原因。"""
         return "区域市场调整期"
 
 
@@ -183,9 +210,11 @@ class SystemMigrationOverrideGate(ExclusionGate):
     """系统迁移/数据切换期。"""
 
     def is_active(self, context: dict[str, Any]) -> bool:
+        """判断是否启用系统迁移覆盖闸。"""
         return context.get("gates", {}).get("system_migration_override", False)
 
     def evaluate(self, rule: dict[str, Any], data: dict[str, Any], context: dict[str, Any]) -> bool:
+        """判断数据实体是否在迁移影响范围内。"""
         migration_active = context.get("migration_active", False)
         if not migration_active:
             return False
@@ -194,6 +223,7 @@ class SystemMigrationOverrideGate(ExclusionGate):
         return entity in affected_entities
 
     def get_reason(self) -> str:
+        """返回系统迁移排除原因。"""
         return "系统迁移/数据切换期"
 
 

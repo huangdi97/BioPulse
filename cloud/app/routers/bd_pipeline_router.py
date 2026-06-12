@@ -53,16 +53,27 @@ async def create_pipeline(req: PipelineCreateRequest, _: dict = Depends(require_
     """新增线索到BD管线。"""
     score_result = _scorer.score(req.lead_id, req.bant, req.custom)
     entry = _pipeline.create(
-        lead_id=req.lead_id, lead_name=req.lead_name, company=req.company,
-        amount=req.amount, probability=req.probability, owner=req.owner,
-        score=score_result.total_score, tier=score_result.tier, notes=req.notes,
+        lead_id=req.lead_id,
+        lead_name=req.lead_name,
+        company=req.company,
+        amount=req.amount,
+        probability=req.probability,
+        owner=req.owner,
+        score=score_result.total_score,
+        tier=score_result.tier,
+        notes=req.notes,
     )
-    return success(data={"pipeline": entry, "score": {
-        "total": score_result.total_score,
-        "tier": score_result.tier,
-        "bant": score_result.bant_score,
-        "custom": score_result.custom_score,
-    }})
+    return success(
+        data={
+            "pipeline": entry,
+            "score": {
+                "total": score_result.total_score,
+                "tier": score_result.tier,
+                "bant": score_result.bant_score,
+                "custom": score_result.custom_score,
+            },
+        }
+    )
 
 
 @router.put("/pipeline/{lead_id}", tags=["BD管线"])

@@ -8,19 +8,24 @@ class AgentStorage(ABC):
     """Agent 运行时存储抽象层。"""
 
     @abstractmethod
-    def save_trace(self, trace: dict): ...
+    def save_trace(self, trace: dict):
+        """保存 trace 记录。"""
 
     @abstractmethod
-    def query_traces(self, agent_name: str = None, limit: int = 20, offset: int = 0) -> list[dict]: ...
+    def query_traces(self, agent_name: str = None, limit: int = 20, offset: int = 0) -> list[dict]:
+        """查询 trace 记录。"""
 
     @abstractmethod
-    def save_eval_result(self, result: dict): ...
+    def save_eval_result(self, result: dict):
+        """保存评估结果。"""
 
     @abstractmethod
-    def save_cost_record(self, record: dict): ...
+    def save_cost_record(self, record: dict):
+        """保存成本记录。"""
 
     @abstractmethod
-    def get_prompt_version(self, agent_name: str, version_id: int = None) -> dict | None: ...
+    def get_prompt_version(self, agent_name: str, version_id: int = None) -> dict | None:
+        """获取 prompt 版本。"""
 
 
 class SQLiteAgentStorage(AgentStorage):
@@ -30,6 +35,7 @@ class SQLiteAgentStorage(AgentStorage):
         self._db = db
 
     def save_trace(self, trace: dict):
+        """保存 trace 记录到 SQLite。"""
         self._db.execute(
             "INSERT INTO agent_traces "
             "(trace_id, agent_name, user_id, input_data, output_data, status, "
@@ -55,6 +61,7 @@ class SQLiteAgentStorage(AgentStorage):
         self._db.commit()
 
     def query_traces(self, agent_name: str = None, limit: int = 20, offset: int = 0) -> list[dict]:
+        """从 SQLite 查询 trace 记录。"""
         conditions = []
         params = []
         if agent_name:
@@ -68,6 +75,7 @@ class SQLiteAgentStorage(AgentStorage):
         return [dict(r) for r in rows]
 
     def save_eval_result(self, result: dict):
+        """保存评估结果到 SQLite。"""
         self._db.execute(
             "INSERT INTO agent_eval_results (agent_name, trace_id, input_data, output_data, expected_data, metrics_json, passed, score) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -85,6 +93,7 @@ class SQLiteAgentStorage(AgentStorage):
         self._db.commit()
 
     def save_cost_record(self, record: dict):
+        """保存成本记录到 SQLite。"""
         self._db.execute(
             "INSERT INTO agent_cost_tracking (agent_name, trace_id, model, model_tier, input_tokens, output_tokens, cost, step, created_at) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -103,6 +112,7 @@ class SQLiteAgentStorage(AgentStorage):
         self._db.commit()
 
     def get_prompt_version(self, agent_name: str, version_id: int = None) -> dict | None:
+        """从 SQLite 获取 prompt 版本。"""
         if version_id:
             row = self._db.execute(
                 "SELECT * FROM prompt_versions WHERE agent_name=? AND version_id=? AND status='approved'",

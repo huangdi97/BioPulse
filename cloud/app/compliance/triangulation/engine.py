@@ -9,17 +9,9 @@ from typing import Any, Optional
 from shared.base import AppException, ErrorCode
 
 from .decision import TriangulationFinding, TriangulationResult
-from .patterns import (
-    _correlation_keys,
-    _detect_channel_stuffing,
-    _detect_fake_distribution,
-    _finding,
-    _records,
-    _region_mismatch,
-    _row_to_dict,
-    _total,
-    _trend,
-)
+from .patterns import _correlation_keys, _records, _row_to_dict
+from .patterns_detection import _detect_channel_stuffing, _detect_fake_distribution, _finding, _region_mismatch
+from .patterns_trend import _total, _trend
 
 logger = logging.getLogger(__name__)
 
@@ -180,10 +172,17 @@ class TriangulationEngine:
 
         channel_result = _detect_channel_stuffing(distributions, _records(distribution_area))
         if channel_result:
-            findings.append(_finding(
-                "channel_stuffing_batch", "distribution", channel_result["score"],
-                channel_result["detail"], expenses, visits, distributions,
-            ))
+            findings.append(
+                _finding(
+                    "channel_stuffing_batch",
+                    "distribution",
+                    channel_result["score"],
+                    channel_result["detail"],
+                    expenses,
+                    visits,
+                    distributions,
+                )
+            )
 
         sellin_records = _records(sellin_data)
         sellout_records = _records(sellout_data)
@@ -192,10 +191,17 @@ class TriangulationEngine:
             sellout_records or distributions,
         )
         if fake_dist_result:
-            findings.append(_finding(
-                "fake_distribution", "distribution", fake_dist_result["score"],
-                fake_dist_result["detail"], expenses, visits, distributions,
-            ))
+            findings.append(
+                _finding(
+                    "fake_distribution",
+                    "distribution",
+                    fake_dist_result["score"],
+                    fake_dist_result["detail"],
+                    expenses,
+                    visits,
+                    distributions,
+                )
+            )
 
         return findings
 

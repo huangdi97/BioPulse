@@ -142,6 +142,14 @@ PIPELINE_PRODUCTS = [
 
 
 def list_targets(disease_area: Optional[str] = None) -> list[Target]:
+    """获取靶点列表，可按疾病领域筛选。
+
+    Args:
+        disease_area: 疾病领域名称（可选），若提供则只返回该领域的靶点。
+
+    Returns:
+        符合条件的靶点列表。
+    """
     if not disease_area:
         return TARGETS
     needle = disease_area.lower()
@@ -149,6 +157,17 @@ def list_targets(disease_area: Optional[str] = None) -> list[Target]:
 
 
 def get_target(target_id: str) -> Target:
+    """根据 ID 获取单个靶点。
+
+    Args:
+        target_id: 靶点唯一标识。
+
+    Returns:
+        匹配的靶点对象。
+
+    Raises:
+        HTTPException 404: 未找到对应靶点。
+    """
     for target in TARGETS:
         if target.id == target_id:
             return target
@@ -156,6 +175,14 @@ def get_target(target_id: str) -> Target:
 
 
 def get_pipeline_products(target_id: str) -> list[PipelineProduct]:
+    """获取指定靶点下的所有管线产品。
+
+    Args:
+        target_id: 靶点唯一标识。
+
+    Returns:
+        管线产品列表。
+    """
     get_target(target_id)
     return [product for product in PIPELINE_PRODUCTS if product.target_id == target_id]
 
@@ -164,6 +191,15 @@ def get_target_pipeline_tree(
     target_id: Optional[str] = None,
     disease_area: Optional[str] = None,
 ) -> TargetPipelineTree:
+    """获取靶点-管线树结构，支持按靶点 ID 或疾病领域筛选。
+
+    Args:
+        target_id: 靶点 ID（可选），与 disease_area 二选一。
+        disease_area: 疾病领域名称（可选），与 target_id 二选一。
+
+    Returns:
+        包含靶点及对应管线产品的树结构对象。
+    """
     targets = [get_target(target_id)] if target_id else list_targets(disease_area)
     target_ids = {target.id for target in targets}
     products = [product for product in PIPELINE_PRODUCTS if product.target_id in target_ids]

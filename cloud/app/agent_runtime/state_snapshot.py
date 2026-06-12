@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 
 
 def ensure_snapshot_table(db) -> None:
+    """确保快照表存在，不存在则创建。"""
     db.execute(
         "CREATE TABLE IF NOT EXISTS agent_runtime_snapshots ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -49,6 +50,7 @@ def _row_to_snapshot(row) -> dict | None:
 
 
 def save_snapshot(db, trace_id: str, step: int, state_dict: dict) -> int:
+    """保存运行时状态快照。"""
     ensure_snapshot_table(db)
     expires_at = datetime.now() + timedelta(days=7)
     cur = db.execute(
@@ -60,6 +62,7 @@ def save_snapshot(db, trace_id: str, step: int, state_dict: dict) -> int:
 
 
 def load_latest_snapshot(db, trace_id: str) -> dict | None:
+    """加载指定 trace 的最新快照。"""
     ensure_snapshot_table(db)
     row = db.execute(
         "SELECT * FROM agent_runtime_snapshots WHERE trace_id=? ORDER BY step DESC, id DESC LIMIT 1",
@@ -69,6 +72,7 @@ def load_latest_snapshot(db, trace_id: str) -> dict | None:
 
 
 def load_snapshot(db, trace_id: str, step: int) -> dict | None:
+    """加载指定 trace 和 step 的快照。"""
     ensure_snapshot_table(db)
     row = db.execute(
         "SELECT * FROM agent_runtime_snapshots WHERE trace_id=? AND step=? ORDER BY id DESC LIMIT 1",
@@ -78,6 +82,7 @@ def load_snapshot(db, trace_id: str, step: int) -> dict | None:
 
 
 def delete_expired_snapshots(db) -> int:
+    """删除已过期的快照记录。"""
     ensure_snapshot_table(db)
     now = datetime.now().isoformat()
     cur = db.execute("DELETE FROM agent_runtime_snapshots WHERE expires_at IS NOT NULL AND expires_at < ?", (now,))
@@ -111,15 +116,19 @@ class StateSnapshot:
         self._agent_db.commit()
 
     def save_runtime(self, trace_id, step, state_dict):
+        """保存运行时快照。"""
         return save_snapshot(self._agent_db, trace_id, step, state_dict)
 
     def load_runtime_latest(self, trace_id):
+        """加载最新运行时快照。"""
         return load_latest_snapshot(self._agent_db, trace_id)
 
     def load_runtime(self, trace_id, step):
+        """加载指定 step 的运行时快照。"""
         return load_snapshot(self._agent_db, trace_id, step)
 
     def save(self, agent_id, step_id, plan, results, context, status="active"):
+        """保存传统格式的状态快照。"""
         cur = self._agent_db.execute(
             "INSERT INTO agent_state_snapshots "
             "(agent_id, step_id, plan_json, results_json, context_json, created_at, status) "
@@ -139,6 +148,7 @@ class StateSnapshot:
         return cur.lastrowid
 
     def load(self, snapshot_id):
+        """加载传统格式的状态快照。"""
         row = self._agent_db.execute("SELECT * FROM agent_state_snapshots WHERE id=?", (snapshot_id,)).fetchone()
         if not row:
             return None
@@ -154,6 +164,7 @@ class StateSnapshot:
         }
 
     def list_snapshots(self, agent_id, limit=10):
+        """列出指定 agent 的快照列表。"""
         rows = self._agent_db.execute(
             "SELECT id, agent_id, step_id, created_at, status FROM agent_state_snapshots WHERE agent_id=? ORDER BY id DESC LIMIT ?",
             (agent_id, limit),
@@ -161,6 +172,7 @@ class StateSnapshot:
         return [dict(r) for r in rows]
 
     def get_latest(self, agent_id):
+        """获取指定 agent 的最新活跃快照。"""
         row = self._agent_db.execute(
             "SELECT * FROM agent_state_snapshots WHERE agent_id=? AND status='active' ORDER BY id DESC LIMIT 1",
             (agent_id,),
@@ -170,6 +182,7 @@ class StateSnapshot:
         return self.load(row["id"])
 
     def mark_rolled_back(self, snapshot_id):
+        """将快照标记为已回滚。"""
         self._agent_db.execute("UPDATE agent_state_snapshots SET status='rolled_back' WHERE id=?", (snapshot_id,))
         self._agent_db.commit()
 

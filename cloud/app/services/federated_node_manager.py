@@ -61,7 +61,7 @@ class NodeManager(BaseService):
         Returns:
             描述
         """
-        repo = FederatedNodesRepository(self.db)
+        repo = FederatedNodesRepository(self._connection())
         now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         existing = repo.get_by_node_id(node_id)
         if existing:
@@ -110,7 +110,7 @@ class NodeManager(BaseService):
         Returns:
             描述
         """
-        repo = FederatedNodesRepository(self.db)
+        repo = FederatedNodesRepository(self._connection())
         conditions, params = [], []
         if status_filter:
             conditions.append("status=?")
@@ -134,7 +134,7 @@ class NodeManager(BaseService):
         Returns:
             描述
         """
-        repo = FederatedNodesRepository(self.db)
+        repo = FederatedNodesRepository(self._connection())
         row = repo.get_by_node_id(node_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Node not found")
@@ -150,7 +150,7 @@ class NodeManager(BaseService):
         Returns:
             描述
         """
-        repo = FederatedNodesRepository(self.db)
+        repo = FederatedNodesRepository(self._connection())
         row = repo.get_by_node_id(node_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Node not found")
@@ -178,7 +178,7 @@ class NodeManager(BaseService):
         Returns:
             描述
         """
-        repo = FederatedNodesRepository(self.db)
+        repo = FederatedNodesRepository(self._connection())
         row = repo.get_by_node_id(node_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Node not found")

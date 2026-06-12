@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Any
+
 from shared.base_service import BaseService
 
 
@@ -43,13 +44,15 @@ class SchedulingService(BaseService):
             if hcp.get("urgency", 1) >= 8:
                 reason_parts.append("有紧急跟进事项")
 
-            scored.append({
-                "hcp_id": hcp["id"],
-                "hcp_name": hcp["name"],
-                "visit_time": (datetime.now() + timedelta(hours=len(scored) * 2)).strftime("%Y-%m-%d %H:%M"),
-                "priority_score": round(score, 2),
-                "reason": "；".join(reason_parts) if reason_parts else "常规拜访",
-            })
+            scored.append(
+                {
+                    "hcp_id": hcp["id"],
+                    "hcp_name": hcp["name"],
+                    "visit_time": (datetime.now() + timedelta(hours=len(scored) * 2)).strftime("%Y-%m-%d %H:%M"),
+                    "priority_score": round(score, 2),
+                    "reason": "；".join(reason_parts) if reason_parts else "常规拜访",
+                }
+            )
 
         scored.sort(key=lambda x: x["priority_score"], reverse=True)
         return scored

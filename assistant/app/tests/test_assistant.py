@@ -176,5 +176,5 @@ class TestAuthChecks:
         resp = client.get("/health")
         assert resp.status_code == 200
         data = resp.json()
-        assert "db" in data
+        assert data["status"] == "ok"
         assert "uptime" in data

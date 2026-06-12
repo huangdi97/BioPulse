@@ -3,10 +3,7 @@
 from datetime import datetime, timedelta
 
 from cloud.app.repositories import WorkingMemoryRepository
-
-
-def _now() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+from shared.datetime_utils import now as _now
 
 
 class WorkingMemoryWriter:
@@ -25,7 +22,7 @@ class WorkingMemoryWriter:
     ) -> dict:
         n = _now()
         expires_at = (datetime.now() + timedelta(seconds=ttl_seconds)).strftime("%Y-%m-%d %H:%M:%S")
-        wm = WorkingMemoryRepository(self.db)
+        wm = WorkingMemoryRepository(self._connection())
         wm.db.execute(
             "INSERT OR REPLACE INTO working_memory "
             "(session_id,slot_key,slot_value,slot_type,ttl_seconds,created_at,expires_at) "
@@ -41,11 +38,11 @@ class WorkingMemoryWriter:
         }
 
     def working_clear(self, session_id: str) -> str:
-        WorkingMemoryRepository(self.db).db.execute("DELETE FROM working_memory WHERE session_id=?", (session_id,))
+        WorkingMemoryRepository(self._connection()).db.execute("DELETE FROM working_memory WHERE session_id=?", (session_id,))
         return f"Cleared all slots for session {session_id}"
 
     def working_refresh(self, session_id: str) -> dict:
-        wm = WorkingMemoryRepository(self.db)
+        wm = WorkingMemoryRepository(self._connection())
         rows = wm.db.execute(
             "SELECT id, ttl_seconds FROM working_memory WHERE session_id=?",
             (session_id,),

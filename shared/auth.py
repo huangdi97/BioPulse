@@ -1,9 +1,9 @@
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from fastapi import HTTPException, Request
 import bcrypt
 import jwt
+from fastapi import HTTPException, Request
 from jwt import ExpiredSignatureError, PyJWTError
 from starlette import status
 
@@ -17,10 +17,7 @@ REFRESH_TOKEN_EXPIRE_DAYS = settings.refresh_token_expire_days
 def _get_secret_key() -> str:
     key = settings.jwt_secret_key
     if not key:
-        raise ValueError(
-            "JWT_SECRET_KEY is not set in environment or .env file. "
-            "This is a security requirement for production."
-        )
+        raise ValueError("JWT_SECRET_KEY is not set in environment or .env file. This is a security requirement for production.")
     return key
 
 
@@ -100,7 +97,9 @@ def add_token_to_blacklist(token: str, db) -> None:
     """Add a JWT token to the blacklist."""
     try:
         payload = jwt.decode(
-            token, _get_secret_key(), algorithms=[ALGORITHM],
+            token,
+            _get_secret_key(),
+            algorithms=[ALGORITHM],
             options={"verify_exp": False},
         )
     except PyJWTError:

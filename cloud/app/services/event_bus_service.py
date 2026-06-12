@@ -55,7 +55,7 @@ class EventBusService(BaseService):
         priority: int,
     ) -> dict:
         """创建事件类型定义，重复类型名则返回 409 冲突。"""
-        def_repo = EventBusDefinitionsRepository(self.db)
+        def_repo = EventBusDefinitionsRepository(self._connection())
         if def_repo.get_by_event_type(event_type):
             raise HTTPException(status.HTTP_409_CONFLICT, detail="Event type already exists")
         def_repo.create(
@@ -73,11 +73,11 @@ class EventBusService(BaseService):
 
     def list_definitions(self, source_end: Optional[str] = None, enabled: Optional[int] = None) -> list:
         """查询事件定义列表，支持按来源端和启用状态筛选。"""
-        return EventBusDefinitionsRepository(self.db).list_filtered(source_end=source_end, enabled=enabled)
+        return EventBusDefinitionsRepository(self._connection()).list_filtered(source_end=source_end, enabled=enabled)
 
     def toggle_definition(self, event_type: str) -> dict:
         """切换事件定义的启用/禁用状态。"""
-        def_repo = EventBusDefinitionsRepository(self.db)
+        def_repo = EventBusDefinitionsRepository(self._connection())
         if not def_repo.get_by_event_type(event_type):
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Event definition not found")
         def_repo.toggle_enabled(event_type)
@@ -92,12 +92,12 @@ class EventBusService(BaseService):
         correlation_id: str,
     ) -> dict:
         """发布事件消息，投递到目标端并标记为已送达。"""
-        def_repo = EventBusDefinitionsRepository(self.db)
+        def_repo = EventBusDefinitionsRepository(self._connection())
         definition = def_repo.get_by_event_type(event_type)
         if not definition or not definition.get("enabled"):
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Event type not found or disabled")
-        msg_repo = EventBusMessagesRepository(self.db)
-        delivery_repo = EventDeliveryLogRepository(self.db)
+        msg_repo = EventBusMessagesRepository(self._connection())
+        delivery_repo = EventDeliveryLogRepository(self._connection())
         message_id = f"evt:{uuid.uuid4()}"
         targets = parse_targets(definition["target_ends"])
         payload_json = json.dumps(payload, ensure_ascii=False)
@@ -137,7 +137,7 @@ class EventBusService(BaseService):
         end_date: Optional[str] = None,
     ) -> list:
         """查询消息列表，支持按事件类型、状态、来源端和时间范围筛选。"""
-        return EventBusMessagesRepository(self.db).list_filtered(
+        return EventBusMessagesRepository(self._connection()).list_filtered(
             event_type=event_type,
             status=status,
             source_end=source_end,
@@ -147,20 +147,20 @@ class EventBusService(BaseService):
 
     def get_message(self, message_id: str) -> dict:
         """获取单条消息详情及其投递日志。"""
-        msg_repo = EventBusMessagesRepository(self.db)
+        msg_repo = EventBusMessagesRepository(self._connection())
         msg = msg_repo.get_by_message_id(message_id)
         if not msg:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Message not found")
-        logs = EventDeliveryLogRepository(self.db).list_by_message_id(message_id)
+        logs = EventDeliveryLogRepository(self._connection()).list_by_message_id(message_id)
         return {"message": msg, "delivery_logs": logs}
 
     def redeliver_message(self, message_id: str) -> dict:
         """重新投递指定消息，重置其状态为待处理。"""
-        msg_repo = EventBusMessagesRepository(self.db)
+        msg_repo = EventBusMessagesRepository(self._connection())
         if not msg_repo.get_by_message_id(message_id):
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Message not found")
         msg_repo.mark_pending_with_retry(message_id)
-        EventDeliveryLogRepository(self.db).reset_pending_by_message(message_id)
+        EventDeliveryLogRepository(self._connection()).reset_pending_by_message(message_id)
         return msg_repo.get_by_message_id(message_id)
 
     def subscribe(self, target_end: str, event_types: list, callback_url: str = "") -> dict:
@@ -174,7 +174,7 @@ class EventBusService(BaseService):
         delivery_status: Optional[str] = None,
     ) -> list:
         """查询投递日志，支持按消息 ID、目标端和状态筛选。"""
-        return EventDeliveryLogRepository(self.db).list_filtered(
+        return EventDeliveryLogRepository(self._connection()).list_filtered(
             message_id=message_id,
             target_end=target_end,
             delivery_status=delivery_status,
@@ -182,9 +182,9 @@ class EventBusService(BaseService):
 
     def get_dashboard(self) -> dict:
         """获取事件总线仪表盘，包含定义总数、消息统计与热门事件类型。"""
-        def_repo = EventBusDefinitionsRepository(self.db)
-        msg_repo = EventBusMessagesRepository(self.db)
-        delivery_repo = EventDeliveryLogRepository(self.db)
+        def_repo = EventBusDefinitionsRepository(self._connection())
+        msg_repo = EventBusMessagesRepository(self._connection())
+        delivery_repo = EventDeliveryLogRepository(self._connection())
         msg_counts = msg_repo.count_by_status()
         delivery_counts = delivery_repo.count_by_status()
         overview = {

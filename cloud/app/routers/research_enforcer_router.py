@@ -27,19 +27,21 @@ def enforce_research_visit(
     try:
         enforcer = ResearchComplianceEnforcer(db)
         violations = enforcer.check_research_visit(body.visit_data)
-        return success(data={
-            "violations": [
-                {
-                    "rule_code": v.rule_code,
-                    "rule_name": v.rule_name,
-                    "severity": v.severity,
-                    "action": v.action,
-                    "detail": v.detail,
-                }
-                for v in violations
-            ],
-            "passed": len(violations) == 0,
-        })
+        return success(
+            data={
+                "violations": [
+                    {
+                        "rule_code": v.rule_code,
+                        "rule_name": v.rule_name,
+                        "severity": v.severity,
+                        "action": v.action,
+                        "detail": v.detail,
+                    }
+                    for v in violations
+                ],
+                "passed": len(violations) == 0,
+            }
+        )
     finally:
         db.close()
 

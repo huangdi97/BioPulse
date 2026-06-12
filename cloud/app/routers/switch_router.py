@@ -33,9 +33,11 @@ def switch_mode(
     user_id = current_user.get("id") or current_user.get("sub")
     role = current_user.get("role", "rep")
     new_token = create_access_token(user_id, role, body.new_scope)
-    return success(data={
-        "access_token": new_token,
-        "token_type": "bearer",
-        "scope": body.new_scope,
-        "role": role,
-    })
+    return success(
+        data={
+            "access_token": new_token,
+            "token_type": "bearer",
+            "scope": body.new_scope,
+            "role": role,
+        }
+    )

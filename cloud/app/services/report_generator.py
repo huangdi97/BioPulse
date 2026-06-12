@@ -32,8 +32,8 @@ class ReportGenerator(ReportTemplateMixin, ReportFormatterMixin, BaseService):
         Returns:
             复核后的记录
         """
-        audit_repo = ComplianceAuditRecordsRepository(self.db)
-        chain_repo = AuditChainEntriesRepository(self.db)
+        audit_repo = ComplianceAuditRecordsRepository(self._connection())
+        chain_repo = AuditChainEntriesRepository(self._connection())
         row = audit_repo.get_by_id(record_id)
         if not row:
             _n404("Record")
@@ -78,7 +78,7 @@ class ReportGenerator(ReportTemplateMixin, ReportFormatterMixin, BaseService):
         Returns:
             含 current_hash 和 previous_hash 的确认信息
         """
-        repo = AuditChainEntriesRepository(self.db)
+        repo = AuditChainEntriesRepository(self._connection())
         n = _now()
         prev_hash = ""
         latest_rows = repo.list_all(
@@ -122,7 +122,7 @@ class ReportGenerator(ReportTemplateMixin, ReportFormatterMixin, BaseService):
         Returns:
             审计链条目列表
         """
-        repo = AuditChainEntriesRepository(self.db)
+        repo = AuditChainEntriesRepository(self._connection())
         rows = repo.list_all(
             conditions=["entity_type=?", "entity_id=?"],
             params=[entity_type, entity_id],
@@ -140,7 +140,7 @@ class ReportGenerator(ReportTemplateMixin, ReportFormatterMixin, BaseService):
         Returns:
             含 valid、total_entries 和 broken_at 的验证结果
         """
-        repo = AuditChainEntriesRepository(self.db)
+        repo = AuditChainEntriesRepository(self._connection())
         rows = repo.list_all(
             conditions=["entity_type=?", "entity_id=?"],
             params=[entity_type, entity_id],
