@@ -161,3 +161,5 @@ data/test_*.db
 .coverage
 data/safety_audit.log
 wiki/*
+audit_script.py
+audit_script2.py
