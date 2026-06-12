@@ -122,13 +122,13 @@ jobs:
   #        env:
   #          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
   #          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
-  #          SSH_USER: ${{ secrets.DEPLOY_USER }}
-  #          SSH_PORT: ${{ secrets.DEPLOY_PORT }}
-  #        run: |
-#          mkdir -p ~/.ssh
-#          echo "$SSH_KEY" > ~/.ssh/deploy_key
-#          chmod 600 ~/.ssh/deploy_key
-#          ssh -i ~/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST 'cd /home/hermes/one-cloud-four-ends && git pull && ./scripts/deploy.sh'
+      - name: Build EXE (release)
+        run: flutter build windows --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: one-cloud-app-exe
+          path: mobile_app/build/windows/runner/Release/
+          if-no-files-found: warn
 
   release:
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
@@ -151,7 +151,7 @@ jobs:
           name: one-cloud-app-exe
           path: ./release-artifacts/exe/
 
-      - name: Zip EXE directory
+      - name: Zip EXE as one-cloud-app-windows.zip
         run: |
           cd ./release-artifacts/exe
           zip -r ../one-cloud-app-windows.zip .
@@ -162,7 +162,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="nightly"
-          # Delete existing release + tag if they exist (idempotent)
           gh release delete "$TAG" --yes --delete-tag 2>/dev/null || true
           gh release create "$TAG" \
             --title "Nightly Build ($(date -u '+%Y-%m-%d %H:%M UTC'))" \
