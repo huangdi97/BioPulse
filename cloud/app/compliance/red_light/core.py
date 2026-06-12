@@ -6,6 +6,8 @@ import json
 import sqlite3
 from typing import Any, Optional
 
+from shared.base import AppException, ErrorCode
+
 from .models import (
     LEVEL_TO_ROLE,
     NOTIFY_ROLES,
@@ -20,7 +22,6 @@ from .scoring import (
     normalize_level,
     should_revoke,
 )
-from shared.base import AppException, ErrorCode
 
 
 class RedLightManager:
@@ -89,12 +90,25 @@ class RedLightManager:
         return self._incentive_pause.get(agent_id, False)
 
     def _ensure_tables(self) -> None:
-        self.db.execute(
-            "CREATE TABLE IF NOT EXISTS compliance_red_light_events (event_id TEXT PRIMARY KEY, agent_id TEXT NOT NULL, level TEXT NOT NULL, evidence_json TEXT NOT NULL, status TEXT NOT NULL, incentives_paused INTEGER NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)"
-        )
-        self.db.execute(
-            "CREATE TABLE IF NOT EXISTS compliance_red_light_notifications (id INTEGER PRIMARY KEY AUTOINCREMENT, event_id TEXT NOT NULL, agent_id TEXT NOT NULL, role TEXT NOT NULL, role_name TEXT NOT NULL, message TEXT NOT NULL, created_at TEXT NOT NULL)"
-        )
+        self.db.execute("""CREATE TABLE IF NOT EXISTS compliance_red_light_events (
+            event_id TEXT PRIMARY KEY,
+            agent_id TEXT NOT NULL,
+            level TEXT NOT NULL,
+            evidence_json TEXT NOT NULL,
+            status TEXT NOT NULL,
+            incentives_paused INTEGER NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )""")
+        self.db.execute("""CREATE TABLE IF NOT EXISTS compliance_red_light_notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_id TEXT NOT NULL,
+            agent_id TEXT NOT NULL,
+            role TEXT NOT NULL,
+            role_name TEXT NOT NULL,
+            message TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )""")
         self.db.commit()
 
     def _persist_event(self, event: RedLightEvent) -> None:
@@ -102,7 +116,9 @@ class RedLightManager:
             return
         with self.db:
             self.db.execute(
-                "INSERT OR REPLACE INTO compliance_red_light_events (event_id, agent_id, level, evidence_json, status, incentives_paused, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT OR REPLACE INTO compliance_red_light_events "
+                "(event_id, agent_id, level, evidence_json, status, incentives_paused, "
+                "created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 (
                     event.event_id,
                     event.agent_id,
@@ -116,7 +132,9 @@ class RedLightManager:
             )
             for notification in event.notifications:
                 self.db.execute(
-                    "INSERT INTO compliance_red_light_notifications (event_id, agent_id, role, role_name, message, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO compliance_red_light_notifications "
+                    "(event_id, agent_id, role, role_name, message, created_at) "
+                    "VALUES (?, ?, ?, ?, ?, ?)",
                     (
                         notification.event_id,
                         notification.agent_id,

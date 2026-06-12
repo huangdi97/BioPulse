@@ -60,7 +60,7 @@ def health():
         conn.close()
         db_status = "connected"
     except Exception:
-        logger.exception("Health check异常")
+        _logger.exception("Health check异常")
         db_status = "disconnected"
     return {
         "status": "ok",

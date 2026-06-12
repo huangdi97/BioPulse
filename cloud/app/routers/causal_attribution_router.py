@@ -1,5 +1,7 @@
 """商机因果归因路由。"""
 
+import logging
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from starlette import status
@@ -7,6 +9,8 @@ from starlette import status
 from cloud.app.services import CausalAttributionService
 from shared.auth_scope import require_scope
 from shared.base import success
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/opportunities/attribution", tags=["商机因果归因"])
 

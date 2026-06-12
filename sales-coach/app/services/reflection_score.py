@@ -1,12 +1,15 @@
 """反思评分模块，基于对话日志计算维度评分并生成反思报告。"""
 
 import json
+import logging
 from datetime import datetime, timezone
 from typing import Optional
 
 import httpx
 
 from shared.app_settings import settings
+
+logger = logging.getLogger(__name__)
 
 AI_GATEWAY_URL = f"{settings.cloud_api_base}/ai/chat"
 

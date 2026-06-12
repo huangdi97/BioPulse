@@ -32,9 +32,15 @@ class EnforcerAudit:
         Returns:
             None.
         """
-        self.db.execute(
-            "CREATE TABLE IF NOT EXISTS enforcement_log (id INTEGER PRIMARY KEY AUTOINCREMENT, rule_code TEXT NOT NULL, rule_name TEXT NOT NULL, severity TEXT NOT NULL, action TEXT NOT NULL, visit_data_json TEXT NOT NULL, created_at TEXT NOT NULL)"
-        )
+        self.db.execute("""CREATE TABLE IF NOT EXISTS enforcement_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            rule_code TEXT NOT NULL,
+            rule_name TEXT NOT NULL,
+            severity TEXT NOT NULL,
+            action TEXT NOT NULL,
+            visit_data_json TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )""")
         self.db.commit()
 
     def _ensure_l2_tables(self) -> None:
@@ -46,12 +52,20 @@ class EnforcerAudit:
         Returns:
             None.
         """
-        self.db.execute(
-            "CREATE TABLE IF NOT EXISTS compliance_l2_log (id INTEGER PRIMARY KEY AUTOINCREMENT, rule_id TEXT NOT NULL, rule_name TEXT NOT NULL, severity TEXT NOT NULL, check_type TEXT NOT NULL, visit_data_json TEXT NOT NULL, created_at TEXT NOT NULL)"
-        )
-        self.db.execute(
-            "CREATE TABLE IF NOT EXISTS compliance_l3_log (id INTEGER PRIMARY KEY AUTOINCREMENT, visit_data_json TEXT NOT NULL, created_at TEXT NOT NULL)"
-        )
+        self.db.execute("""CREATE TABLE IF NOT EXISTS compliance_l2_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            rule_id TEXT NOT NULL,
+            rule_name TEXT NOT NULL,
+            severity TEXT NOT NULL,
+            check_type TEXT NOT NULL,
+            visit_data_json TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )""")
+        self.db.execute("""CREATE TABLE IF NOT EXISTS compliance_l3_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            visit_data_json TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )""")
         self.db.commit()
 
     def ensure_tables(self) -> None:

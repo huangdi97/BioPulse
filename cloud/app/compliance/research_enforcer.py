@@ -26,9 +26,15 @@ class ResearchComplianceEnforcer:
         self.db = db
         self._rules = load_research_rules()
         self._parsed_rules = [self._parse_rule(r) for r in self._rules]
-        self.db.execute(
-            "CREATE TABLE IF NOT EXISTS research_enforcement_log (id INTEGER PRIMARY KEY AUTOINCREMENT, rule_code TEXT NOT NULL, rule_name TEXT NOT NULL, severity TEXT NOT NULL, action TEXT NOT NULL, visit_data_json TEXT NOT NULL, created_at TEXT NOT NULL)"
-        )
+        self.db.execute("""CREATE TABLE IF NOT EXISTS research_enforcement_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            rule_code TEXT NOT NULL,
+            rule_name TEXT NOT NULL,
+            severity TEXT NOT NULL,
+            action TEXT NOT NULL,
+            visit_data_json TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )""")
         self.db.commit()
 
     def _parse_rule(self, rule: dict[str, Any]) -> DetectionRule:
@@ -114,7 +120,9 @@ class ResearchComplianceEnforcer:
             )
             violations.append(violation)
             self.db.execute(
-                "INSERT INTO research_enforcement_log (rule_code, rule_name, severity, action, visit_data_json, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                "INSERT INTO research_enforcement_log "
+                "(rule_code, rule_name, severity, action, visit_data_json, created_at) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
                 (violation.rule_code, violation.rule_name, violation.severity, violation.action, json.dumps(data, ensure_ascii=False), _now()),
             )
             self.db.commit()

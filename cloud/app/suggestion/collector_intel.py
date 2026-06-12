@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 import sqlite3
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 def query_competitor_intel(db: sqlite3.Connection, args: dict[str, Any]) -> dict[str, Any]:

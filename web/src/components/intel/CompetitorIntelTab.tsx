@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent } from "../ui/Card"
 import { Badge } from "../ui/Badge"
 import { Button } from "../ui/Button"
-import { Bar, MiniLineChart, MiniBarChart } from "./charts"
+import { MiniLineChart, MiniBarChart } from "./charts"
 import {
   getCompetitorProducts,
   getCompetitorSentiment,
@@ -145,7 +145,6 @@ function VolumePanel() {
   if (!data) return <p className="text-center py-8 text-sm" style={{ color: 'var(--clr-text-secondary)' }}>暂无数据</p>
 
   const series: any[] = data.series || []
-  const maxMentions = Math.max(...series.map(s => s.mentions), 1)
 
   return (
     <div className="space-y-4">
