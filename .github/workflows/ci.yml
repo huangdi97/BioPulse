@@ -96,13 +96,17 @@ jobs:
           channel: 'stable'
       - name: Install deps
         run: flutter pub get
-      - name: Build EXE (windows)
-        run: flutter build windows --debug
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress --limit-output
+      - name: Build EXE (release)
+        run: flutter build windows --release
+      - name: Build installer
+        run: iscc windows/installer.iss
       - uses: actions/upload-artifact@v4
         with:
-          name: one-cloud-app-exe
-          path: mobile_app/build/windows/
-          if-no-files-found: warn
+          name: one-cloud-app-installer
+          path: mobile_app/installer/one_cloud_app_setup_*.exe
+          if-no-files-found: error
 
   docker:
     runs-on: ubuntu-latest
@@ -145,17 +149,11 @@ jobs:
           name: one-cloud-app-apk
           path: ./release-artifacts/
 
-      - name: Download EXE
+      - name: Download installer
         uses: actions/download-artifact@v4
         with:
-          name: one-cloud-app-exe
-          path: ./release-artifacts/exe/
-
-      - name: Zip EXE as one-cloud-app-windows.zip
-        run: |
-          cd ./release-artifacts/exe
-          zip -r ../one-cloud-app-windows.zip .
-          ls -lh ../one-cloud-app-windows.zip
+          name: one-cloud-app-installer
+          path: ./release-artifacts/
 
       - name: Create/Update Nightly Release
         env:
@@ -168,4 +166,4 @@ jobs:
             --notes "Automated build from commit ${{ github.sha }}" \
             --prerelease \
             ./release-artifacts/app-debug.apk \
-            ./release-artifacts/one-cloud-app-windows.zip
+            ./release-artifacts/one_cloud_app_setup_*.exe
