@@ -45,7 +45,7 @@ transformers>=4.40
 # ============================================================
 
 pytest==9.0.3
-pytest-asyncio==1.6.2
+pytest-asyncio==1.4.0
 pytest-cov==7.1.0
 pytest-benchmark==5.2.3
 coverage==7.14.1
