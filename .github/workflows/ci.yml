@@ -125,7 +125,46 @@ jobs:
   #          SSH_USER: ${{ secrets.DEPLOY_USER }}
   #          SSH_PORT: ${{ secrets.DEPLOY_PORT }}
   #        run: |
-  #          mkdir -p ~/.ssh
-  #          echo "$SSH_KEY" > ~/.ssh/deploy_key
-  #          chmod 600 ~/.ssh/deploy_key
-  #          ssh -i ~/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST 'cd /home/hermes/one-cloud-four-ends && git pull && ./scripts/deploy.sh'
+#          mkdir -p ~/.ssh
+#          echo "$SSH_KEY" > ~/.ssh/deploy_key
+#          chmod 600 ~/.ssh/deploy_key
+#          ssh -i ~/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST 'cd /home/hermes/one-cloud-four-ends && git pull && ./scripts/deploy.sh'
+
+  release:
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    needs: [mobile-apk, mobile-exe]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download APK
+        uses: actions/download-artifact@v4
+        with:
+          name: one-cloud-app-apk
+          path: ./release-artifacts/
+
+      - name: Download EXE
+        uses: actions/download-artifact@v4
+        with:
+          name: one-cloud-app-exe
+          path: ./release-artifacts/exe/
+
+      - name: Zip EXE directory
+        run: |
+          cd ./release-artifacts/exe
+          zip -r ../one-cloud-app-windows.zip .
+          ls -lh ../one-cloud-app-windows.zip
+
+      - name: Create/Update Nightly Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="nightly"
+          # Delete existing release + tag if they exist (idempotent)
+          gh release delete "$TAG" --yes --delete-tag 2>/dev/null || true
+          gh release create "$TAG" \
+            --title "Nightly Build ($(date -u '+%Y-%m-%d %H:%M UTC'))" \
+            --notes "Automated build from commit ${{ github.sha }}" \
+            --prerelease \
+            ./release-artifacts/app-debug.apk \
+            ./release-artifacts/exe/
