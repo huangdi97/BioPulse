@@ -154,9 +154,12 @@ jobs:
         run: |
           TAG="nightly"
           gh release delete "$TAG" --yes --delete-tag 2>/dev/null || true
+          INSTALLER=$(ls ./release-artifacts/one_cloud_app_setup_*.exe | head -1)
+          echo "Uploading APK: ./release-artifacts/app-debug.apk"
+          echo "Uploading installer: $INSTALLER"
           gh release create "$TAG" \
             --title "Nightly Build ($(date -u '+%Y-%m-%d %H:%M UTC'))" \
             --notes "Automated build from commit ${{ github.sha }}" \
             --prerelease \
             ./release-artifacts/app-debug.apk \
-            ./release-artifacts/one_cloud_app_setup_*.exe
+            "$INSTALLER"
