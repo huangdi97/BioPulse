@@ -120,19 +120,12 @@ jobs:
   #    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
   #    runs-on: ubuntu-latest
   #    needs: [docker]
-  #    steps:
-  #      - uses: actions/checkout@v4
-  #      - name: Deploy via SSH
-  #        env:
-  #          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-  #          SSH_HOST: ${{ secrets.DEPLOY_HOST }}
-      - name: Build EXE (release)
-        run: flutter build windows --release
-      - uses: actions/upload-artifact@v4
-        with:
-          name: one-cloud-app-exe
-          path: mobile_app/build/windows/runner/Release/
-          if-no-files-found: warn
+  #          SSH_PORT: ${{ secrets.DEPLOY_PORT }}
+  #        run: |
+  #          mkdir -p ~/.ssh
+  #          echo "$SSH_KEY" > ~/.ssh/deploy_key
+  #          chmod 600 ~/.ssh/deploy_key
+  #          ssh -i ~/.ssh/deploy_key -p $SSH_PORT -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST 'cd /home/hermes/one-cloud-four-ends && git pull && ./scripts/deploy.sh'
 
   release:
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
