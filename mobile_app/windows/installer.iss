@@ -6,7 +6,7 @@
 #define MyAppPublisher "帝皇"
 #define MyAppURL "https://github.com/huangdi97/one-cloud-four-ends"
 #define MyAppExeName "one_cloud_app.exe"
-#define BuildDir "runner\Release"
+#define BuildDir "..\build\windows\x64\runner\Release"
 
 [Setup]
 AppId={{B8A3C2D1-4E5F-6A7B-8C9D-0E1F2A3B4C5D}
