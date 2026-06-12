@@ -105,7 +105,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: one-cloud-app-installer
-          path: mobile_app/installer/one_cloud_app_setup_*.exe
+          path: installer/one_cloud_app_setup_*.exe
           if-no-files-found: error
 
   docker:
