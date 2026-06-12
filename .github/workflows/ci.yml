@@ -134,6 +134,8 @@ jobs:
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     runs-on: ubuntu-latest
     needs: [mobile-apk, mobile-exe]
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -167,4 +169,4 @@ jobs:
             --notes "Automated build from commit ${{ github.sha }}" \
             --prerelease \
             ./release-artifacts/app-debug.apk \
-            ./release-artifacts/exe/
+            ./release-artifacts/one-cloud-app-windows.zip
