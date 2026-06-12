@@ -153,10 +153,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="nightly"
-          gh release delete "$TAG" --yes --delete-tag 2>/dev/null || true
           INSTALLER=$(ls ./release-artifacts/one_cloud_app_setup_*.exe | head -1)
           echo "Uploading APK: ./release-artifacts/app-debug.apk"
           echo "Uploading installer: $INSTALLER"
+          # Try upload first (release exists), fallback to create (first run)
+          gh release upload "$TAG" ./release-artifacts/app-debug.apk "$INSTALLER" --clobber 2>/dev/null ||
           gh release create "$TAG" \
             --title "Nightly Build ($(date -u '+%Y-%m-%d %H:%M UTC'))" \
             --notes "Automated build from commit ${{ github.sha }}" \
