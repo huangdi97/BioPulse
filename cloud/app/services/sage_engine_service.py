@@ -4,8 +4,6 @@ import json
 import logging
 from datetime import datetime
 
-logger = logging.getLogger(__name__)
-
 from cloud.app.repositories.sage_repository import SageRepository
 from cloud.app.research_database import get_research_db
 from cloud.app.services.brain_evolution_service import BrainEvolutionService
@@ -16,6 +14,8 @@ from cloud.app.services.sage_linking import SageLinkingService
 from cloud.app.services.sage_scoring import (
     SageScoringMixin,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class SageEngineService(SageCacheMixin, SageScoringMixin):

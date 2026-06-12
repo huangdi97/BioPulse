@@ -3,7 +3,7 @@
 from typing import Any
 
 from .decision import TriangulationFinding
-from .patterns_trend import _trend, _period_values, _number
+from .patterns_trend import _number, _period_values, _trend
 
 
 def _region_mismatch(visits: list[dict[str, Any]], distributions: list[dict[str, Any]]) -> bool:

@@ -3,8 +3,6 @@
 import json
 import logging
 
-logger = logging.getLogger(__name__)
-
 from fastapi import HTTPException
 from starlette import status
 
@@ -17,6 +15,8 @@ from cloud.app.repositories import (
 )
 from cloud.app.services.holographic_service import HolographicService
 from shared.datetime_utils import now as _now
+
+logger = logging.getLogger(__name__)
 
 
 class MemoryEvaluatorService:

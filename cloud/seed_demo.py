@@ -10,16 +10,13 @@ import json
 import logging
 import os
 import sqlite3
-import sys
 from pathlib import Path
+
+from shared.auth import hash_password
 
 logger = logging.getLogger(__name__)
 
 _root = str(Path(__file__).resolve().parent.parent)
-if _root not in sys.path:
-    sys.path.insert(0, _root)
-
-from shared.auth import hash_password
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

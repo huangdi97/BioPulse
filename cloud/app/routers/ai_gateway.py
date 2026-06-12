@@ -30,5 +30,5 @@ def chat(
     _: dict = Depends(require_scope("visit")),
     service: AiGatewayService = Depends(),
 ) -> Any:
-    result = service.chat(body.messages, body.temperature, body.max_tokens, current_user.get("id"))
+    result = service.chat(body.messages, body.temperature, body.max_tokens, current_user.get("id"))  # noqa: F821
     return success(ChatResponse(reply=result["reply"], usage=result["usage"]))

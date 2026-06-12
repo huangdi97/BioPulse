@@ -12,11 +12,11 @@ from cloud.app.repositories import (
     MdtSessionsRepository,
 )
 from cloud.app.services.mdt_debate_scorer import _call_ai, parse_ai_opinion, parse_consensus_json
+from shared.base import success
 from shared.base_service import BaseService
 from shared.datetime_utils import now as _now
 
 logger = logging.getLogger(__name__)
-from shared.base import success
 
 
 class MdtDebater(BaseService):

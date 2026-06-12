@@ -1,20 +1,14 @@
-"""Consolidated research matching router module."""
+"""Consolidated research matching router module.
 
-from fastapi import APIRouter
-
-"""Research product matching API endpoints.
-
-Matches research products against PI profiles (by research area)
-or free-text method descriptions using keyword overlap scoring.
+Research product matching API endpoints — matches research products
+against PI profiles (by research area) or free-text method
+descriptions using keyword overlap scoring.
 """
 
-from fastapi import Depends
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from cloud.app.services.product_matching_service import (
-    match_products_by_method,
-    match_products_for_pi,
-)
+from cloud.app.services.product_matching_service import match_products_by_method, match_products_for_pi
 from cloud.app.services.research_service import ResearchService
 from shared.auth import get_current_user
 from shared.auth_scope import require_scope
@@ -73,16 +67,16 @@ def match_by_method(
     return success(data=results)
 
 
-"""科研 PI 路由：研究者搜索、详情、创建与审计日志。"""
+# 科研 PI 路由：研究者搜索、详情、创建与审计日志。
 
-from typing import Optional
+from typing import Optional  # noqa: E402
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, Query  # noqa: E402
+from pydantic import BaseModel  # noqa: E402
 
-from cloud.app.services.research_pi_service import ResearchPiService
-from shared.auth import get_current_user
-from shared.auth_scope import require_scope
+from cloud.app.services.research_pi_service import ResearchPiService  # noqa: E402
+from shared.auth import get_current_user  # noqa: E402
+from shared.auth_scope import require_scope  # noqa: E402
 
 pi_router = APIRouter(
     prefix="/api/research/pi",
@@ -154,13 +148,13 @@ def create_pi(
     return success(data=pi)
 
 
-"""科研产品路由：产品搜索与详情查询。"""
+# 科研产品路由：产品搜索与详情查询。
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query  # noqa: E402
 
-from cloud.app.services.research_product_service import ResearchProductService
-from shared.auth import get_current_user
-from shared.auth_scope import require_scope
+from cloud.app.services.research_product_service import ResearchProductService  # noqa: E402
+from shared.auth import get_current_user  # noqa: E402
+from shared.auth_scope import require_scope  # noqa: E402
 
 product_router = APIRouter(
     prefix="/api/research/products",

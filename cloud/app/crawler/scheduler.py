@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import inspect
 import threading
 import uuid
-from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
 from typing import Any
 
 try:
@@ -14,38 +11,15 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - exercised only when optional dependency is absent.
     BackgroundScheduler = None
 
+from cloud.app.crawler.crawl_executor import (
+    LocalEventBus,
+    require_job,
+    run_job,
+    schedule_fallback,
+)
+from cloud.app.crawler.crawl_task import ScheduledCrawlerJob
 from cloud.app.crawler.data_sources import get_source_config
-from cloud.app.crawler.engine import Crawler, CrawlResult
-
-
-@dataclass
-class ScheduledCrawlerJob:
-    """A single scheduled crawler job definition."""
-
-    id: str
-    source: str
-    interval: int
-    max_pages: int
-    keywords: list[str]
-    paused: bool = False
-    next_run_time: datetime | None = None
-
-
-class LocalEventBus:
-    """Small event bus adapter used when the application EventBus is unavailable."""
-
-    def __init__(self) -> None:
-        self.events: list[dict[str, Any]] = []
-
-    def publish(self, event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
-        """Record and return a local event for later inspection."""
-        event = {
-            "event_type": event_type,
-            "payload": payload,
-            "published_at": datetime.now(timezone.utc).isoformat(),
-        }
-        self.events.append(event)
-        return event
+from cloud.app.crawler.engine import Crawler
 
 
 class ScraperScheduler:
@@ -121,7 +95,7 @@ class ScraperScheduler:
             if not self._scheduler.running:
                 self._scheduler.start()
             aps_job = self._scheduler.add_job(
-                self._run_job,
+                self._run_job_wrapper,
                 "interval",
                 seconds=interval,
                 id=job_id,
@@ -130,7 +104,15 @@ class ScraperScheduler:
             )
             job.next_run_time = aps_job.next_run_time
         else:
-            self._schedule_fallback(job_id)
+            schedule_fallback(
+                self.jobs,
+                self._fallback_lock,
+                self._fallback_timers,
+                self._fallback_running,
+                self.crawler,
+                self.event_bus,
+                job_id,
+            )
         return job_id
 
     def remove_job(self, job_id: str) -> None:
@@ -155,7 +137,7 @@ class ScraperScheduler:
         Raises:
             ValueError: If job_id is unknown.
         """
-        job = self._require_job(job_id)
+        job = require_job(self.jobs, job_id)
         job.paused = True
         if self._scheduler and self._scheduler.get_job(job_id):
             self._scheduler.pause_job(job_id)
@@ -170,102 +152,25 @@ class ScraperScheduler:
         Raises:
             ValueError: If job_id is unknown.
         """
-        job = self._require_job(job_id)
+        job = require_job(self.jobs, job_id)
         job.paused = False
         if self._scheduler and self._scheduler.get_job(job_id):
             self._scheduler.resume_job(job_id)
         elif not self._scheduler:
-            self._schedule_fallback(job_id)
+            schedule_fallback(
+                self.jobs,
+                self._fallback_lock,
+                self._fallback_timers,
+                self._fallback_running,
+                self.crawler,
+                self.event_bus,
+                job_id,
+            )
 
     # -- internal helpers ------------------------------------------------------
 
-    def _run_job(self, job_id: str) -> list[CrawlResult]:
-        # Execute one scheduled run for the given job, publishing results on completion.
-        job = self._require_job(job_id)
-        if job.paused:
-            return []
-        config = get_source_config(job.source)
-        results = []
-        for keyword in job.keywords or [""]:
-            for page in range(1, job.max_pages + 1):
-                url = config.build_search_url(keyword, page)
-                results.append(self.crawler.crawl(url, job.source))
-        self._publish_completed(job, results)
-        return results
-
-    def _publish_completed(self, job: ScheduledCrawlerJob, results: list[CrawlResult]) -> None:
-        # Build and publish a crawl.completed event with result summaries.
-        payload = {
-            "job_id": job.id,
-            "source": job.source,
-            "keywords": job.keywords,
-            "max_pages": job.max_pages,
-            "result_count": len(results),
-            "completed_at": datetime.now(timezone.utc).isoformat(),
-            "items": [
-                {
-                    "source": result.source,
-                    "timestamp": result.timestamp.isoformat(),
-                    "metadata": result.metadata,
-                    "content_length": len(result.content),
-                }
-                for result in results
-            ],
-        }
-        self._publish_event("crawl.completed", payload)
-
-    def _publish_event(self, event_type: str, payload: dict[str, Any]) -> None:
-        # Dispatch event through the event_bus adaptor (supports publish / publish_message).
-        if hasattr(self.event_bus, "publish"):
-            maybe_result = self.event_bus.publish(event_type, payload)
-            if inspect.isawaitable(maybe_result):
-                raise RuntimeError("Async event bus publish is not supported in the sync scheduler")
-            return
-        if hasattr(self.event_bus, "publish_message"):
-            self.event_bus.publish_message(
-                event_type=event_type,
-                source_entity_type="crawler_job",
-                source_entity_id=payload["job_id"],
-                payload=payload,
-                correlation_id=payload["job_id"],
-            )
-            return
-        raise TypeError("event_bus must expose publish() or publish_message()")
-
-    def _schedule_fallback(self, job_id: str) -> None:
-        # Schedule the next run via threading.Timer when APScheduler is not available.
-        job = self._require_job(job_id)
-        if job.paused:
-            return
-
-        def runner() -> None:
-            try:
-                self._run_job(job_id)
-            finally:
-                with self._fallback_lock:
-                    self._fallback_running.discard(job_id)
-                if job_id in self.jobs and not self.jobs[job_id].paused:
-                    self._schedule_fallback(job_id)
-
-        with self._fallback_lock:
-            if job_id in self._fallback_running:
-                return
-            self._fallback_running.add(job_id)
-            old_timer = self._fallback_timers.pop(job_id, None)
-            if old_timer:
-                old_timer.cancel()
-            timer = threading.Timer(job.interval, runner)
-            timer.daemon = True
-            self._fallback_timers[job_id] = timer
-            job.next_run_time = datetime.now(timezone.utc) + timedelta(seconds=job.interval)
-        timer.start()
-
-    def _require_job(self, job_id: str) -> ScheduledCrawlerJob:
-        # Look up a job by id, raising ValueError if not found.
-        try:
-            return self.jobs[job_id]
-        except KeyError as exc:
-            raise ValueError(f"Unknown crawler job: {job_id}") from exc
+    def _run_job_wrapper(self, job_id: str) -> list:
+        return run_job(self.jobs, self.crawler, self.event_bus, job_id)
 
 
-__all__ = ["LocalEventBus", "ScheduledCrawlerJob", "ScraperScheduler"]
+__all__ = ["ScraperScheduler"]

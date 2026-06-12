@@ -30,7 +30,7 @@ def create_token(
     _: dict = Depends(require_scope("visit")),
     service: ApiTokenService = Depends(),
 ) -> Any:
-    user_id = int(current_user["sub"])
+    user_id = int(current_user["sub"])  # noqa: F821
     return success(data=service.create_token(body.name, user_id))
 
 
@@ -39,7 +39,7 @@ def list_tokens(
     _: dict = Depends(require_scope("visit")),
     service: ApiTokenService = Depends(),
 ) -> Any:
-    user_id = int(current_user["sub"])
+    user_id = int(current_user["sub"])  # noqa: F821
     return success(data=service.list_tokens(user_id))
 
 
@@ -49,6 +49,6 @@ def revoke_token(
     _: dict = Depends(require_scope("visit")),
     service: ApiTokenService = Depends(),
 ) -> Any:
-    user_id = int(current_user["sub"])
+    user_id = int(current_user["sub"])  # noqa: F821
     service.revoke_token(token_id, user_id)
     return success()

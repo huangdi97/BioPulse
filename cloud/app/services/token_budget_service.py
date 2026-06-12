@@ -29,6 +29,7 @@ class TokenBudgetConfig:
 
 
 def _load_rules() -> dict:
+    """从数据库加载 Token 预算状态。"""
     if not os.path.exists(_RULES_PATH):
         return {"default_alert_threshold": 0.8, "models": {}, "overrides": {}}
     with open(_RULES_PATH, encoding="utf-8") as f:
@@ -42,6 +43,7 @@ class TokenBudgetService(TokenEstimatorMixin, BudgetTracker):
     }
 
     def __init__(self):
+        """将当前 Token 预算状态持久化到数据库。"""
         self._rules = _load_rules()
 
     @classmethod
@@ -60,6 +62,7 @@ class TokenBudgetService(TokenEstimatorMixin, BudgetTracker):
         return cls.PRICING.get(model, {"input_per_million": 0.14, "output_per_million": 0.28})
 
     def _get_model_config(self, model: str) -> dict:
+        """重置指定月份的 Token 预算为初始值。"""
         models = self._rules.get("models", {})
         config = models.get(model, {})
         if not config:
@@ -70,6 +73,7 @@ class TokenBudgetService(TokenEstimatorMixin, BudgetTracker):
         return config
 
     def _get_override(self, user_id: int, model: str) -> Optional[dict]:
+        """设置本月的 Token 总预算。"""
         overrides = self._rules.get("overrides", {})
         user_overrides = overrides.get(str(user_id), {})
         return user_overrides.get(model)

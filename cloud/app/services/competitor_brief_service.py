@@ -6,12 +6,12 @@ import logging
 from datetime import date, datetime, timedelta
 from typing import Any
 
-logger = logging.getLogger(__name__)
-
 from cloud.app.crawler.analysis.anomaly_detector import AnomalyDetector
 from cloud.app.crawler.analysis.sentiment_analyzer import SentimentAnalyzer
 from cloud.app.crawler.analysis.threshold_alerter import ThresholdAlerter
 from cloud.app.crawler.analysis.trend_detector import TrendDetector
+
+logger = logging.getLogger(__name__)
 
 
 class CompetitorBriefService:

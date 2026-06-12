@@ -4,9 +4,9 @@ import json
 import logging
 
 from cloud.app.services.ai_gateway_service import AiGatewayService
+from shared.config import settings
 
 logger = logging.getLogger(__name__)
-from shared.config import settings
 
 DEFAULT_FALLBACK = {
     "predicted_areas": [],
@@ -18,6 +18,7 @@ DEFAULT_FALLBACK = {
 
 
 def build_prediction_prompt(pi_info: dict, time_series_features: dict, horizon_days: int) -> str:
+    """构建 AI 预测提示词。"""
     n = time_series_features["stat_features"]["observation_count"]
     tc = time_series_features["stat_features"]["transition_count"]
     stability = time_series_features["stat_features"]["latest_stability_measure"]
@@ -77,6 +78,7 @@ def build_prediction_prompt(pi_info: dict, time_series_features: dict, horizon_d
 
 
 def call_llm_for_prediction(prompt: str) -> dict:
+    """基于 PI 研究方向预测其科研轨迹。"""
     if not settings.deepseek_api_key:
         return DEFAULT_FALLBACK
 
@@ -97,6 +99,7 @@ def call_llm_for_prediction(prompt: str) -> dict:
 
 
 def parse_prediction_response(raw_response: str) -> dict:
+    """解析 AI 返回的预测结果。"""
     try:
         cleaned = raw_response.strip()
         if cleaned.startswith("```"):

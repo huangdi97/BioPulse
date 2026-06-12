@@ -8,22 +8,11 @@ from starlette import status
 
 from cloud.app.repositories.holographic_repository import MemoryAssociationsRepository
 from cloud.app.repositories.memory_entry_repo import MemoryEntriesRepository
+from cloud.app.services.holographic_association import _n404
 from shared.base_service import BaseService
 from shared.datetime_utils import now as _now
 
 logger = logging.getLogger(__name__)
-
-
-def _n404(name: str = "Resource") -> HTTPException:
-    """生成 404 未找到的 HTTP 异常。
-
-    参数:
-        name: 资源名称，用于错误信息。
-
-    返回:
-        HTTPException 404 异常实例。
-    """
-    return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{name} not found")
 
 
 class HolographicService(BaseService):

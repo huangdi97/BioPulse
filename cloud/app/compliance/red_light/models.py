@@ -6,7 +6,6 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 
-
 NOTIFY_ROLES = {
     "compliance_officer": "合规官",
     "regional_manager": "区域经理",

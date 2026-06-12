@@ -8,8 +8,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from cloud.app.compliance.condition_evaluator import _compare
 from cloud.app.compliance.condition_evaluator import (
+    _compare,
     _match_citation_check,
     _match_concentration_check,
     _match_discount_check,

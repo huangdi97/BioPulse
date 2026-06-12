@@ -28,6 +28,7 @@ TAX_RATE = Decimal("0.13")
 
 
 def generate_quotation(template_id: str, items: list[dict]) -> dict:
+    """根据参数生成科研报价单。"""
     template = QUOTATION_TEMPLATES.get(template_id)
     if not template:
         raise ValueError(f"Unknown template_id: {template_id}")

@@ -5,7 +5,6 @@ from typing import Any
 from shared.base import AppException, ErrorCode
 
 
-
 def _records(value: dict[str, Any] | list[dict[str, Any]] | None) -> list[dict[str, Any]]:
     """Normalize an input payload into a list of dictionaries.
 

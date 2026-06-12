@@ -6,8 +6,6 @@ import math
 import urllib.error
 import urllib.request
 
-logger = logging.getLogger(__name__)
-
 from fastapi import HTTPException
 from starlette import status
 
@@ -15,6 +13,8 @@ from cloud.app.services.token_budget_service import TokenBudgetService
 from shared.ai_gateway import TIMEOUT_SECONDS
 from shared.base_service import BaseService
 from shared.config import settings
+
+logger = logging.getLogger(__name__)
 
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
 

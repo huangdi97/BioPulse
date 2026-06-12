@@ -1,19 +1,12 @@
-"""Consolidated research quotation router module."""
-
-from fastapi import APIRouter
-
-"""科研报价单路由：模板列表与报价单生成。"""
+"""Consolidated research quotation router module — 模板列表与报价单生成。"""
 
 from typing import Optional
 
-from fastapi import Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from starlette import status
 
-from cloud.app.services.quotations_service import (
-    QUOTATION_TEMPLATES,
-    generate_quotation,
-)
+from cloud.app.services.quotations_service import QUOTATION_TEMPLATES, generate_quotation
 from cloud.app.services.research_service import ResearchService
 from shared.auth import get_current_user
 from shared.auth_scope import require_scope
@@ -62,18 +55,18 @@ def create_quotation(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-"""科研报价审批流水线路由：提交、批准、驳回。"""
+# 科研报价审批流水线路由：提交、批准、驳回。
 
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends  # noqa: E402
+from pydantic import BaseModel  # noqa: E402
 
-from cloud.app.services.quotation_workflow_service import (
+from cloud.app.services.quotation_workflow_service import (  # noqa: E402
     approve,
     reject,
     submit_for_approval,
 )
-from shared.auth import get_current_user
-from shared.auth_scope import require_scope
+from shared.auth import get_current_user  # noqa: E402
+from shared.auth_scope import require_scope  # noqa: E402
 
 quotation_workflow_router = APIRouter(
     prefix="/api/research/quotations",

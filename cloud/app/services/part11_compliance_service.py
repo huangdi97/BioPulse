@@ -22,12 +22,13 @@ from cloud.app.schemas.part11_compliance import (
     SignatureVerificationResult,
     SignedDocument,
 )
+from shared.datetime_utils import now as _now
 
 _LOCK = Lock()
+
 _SIGNATURES: dict[str, ElectronicSignature] = {}
 _DOCUMENTS: dict[str, SignedDocument] = {}
 _AUDIT_TRAILS: dict[str, list[AuditTrail]] = {}
-from shared.datetime_utils import now as _now
 
 _SIGNING_SECRET = os.getenv("PART11_HMAC_SECRET", "part11-demo-hmac-secret").encode()
 
@@ -37,6 +38,7 @@ _PASSWORD_HASHES = {
 
 
 def _password_valid(user_id: str, password: str) -> bool:
+    """验证用户密码（演示用）。"""
     expected = _PASSWORD_HASHES.get(user_id)
     if expected:
         return hmac.compare_digest(hashlib.sha256(password.encode()).hexdigest(), expected)
@@ -44,6 +46,7 @@ def _password_valid(user_id: str, password: str) -> bool:
 
 
 def _document_hash(document_id: str) -> str:
+    """生成文档内容的哈希值。"""
     return hashlib.sha256(f"document:{document_id}".encode()).hexdigest()
 
 
@@ -71,6 +74,7 @@ def _signature_hash(
     signed_data: dict,
     verification_token: str,
 ) -> str:
+    """生成 HMAC 签名字符串。"""
     return hmac.new(
         _SIGNING_SECRET,
         _canonical_payload(user_id, document_id, signing_time, signed_data, verification_token),
@@ -85,6 +89,7 @@ def _append_audit(
     changes_diff: dict,
     ip_address: str = "127.0.0.1",
 ) -> AuditTrail:
+    """追加审计追踪记录。"""
     entry = AuditTrail(
         id=f"audit-{uuid4().hex[:10]}",
         event_type=event_type,
@@ -99,7 +104,7 @@ def _append_audit(
 
 
 def sign_document(user_id: str, document_id: str, password: str) -> ElectronicSignature:
-    """Create a non-repudiable electronic signature bound by timestamp and HMAC."""
+    """创建电子签名并存储。"""
     if not _password_valid(user_id, password):
         _append_audit(
             AuditEventType.SIGNATURE_REJECTED,
@@ -150,6 +155,7 @@ def sign_document(user_id: str, document_id: str, password: str) -> ElectronicSi
 
 
 def verify_signature(signature_id: str) -> SignatureVerificationResult:
+    """验证签名是否存在。"""
     signature = _SIGNATURES.get(signature_id)
     if not signature:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Signature not found")
@@ -177,4 +183,5 @@ def verify_signature(signature_id: str) -> SignatureVerificationResult:
 
 
 def get_audit_trail(document_id: str) -> list[AuditTrail]:
+    """获取指定文档的审计追踪记录。"""
     return _AUDIT_TRAILS.get(document_id, [])
