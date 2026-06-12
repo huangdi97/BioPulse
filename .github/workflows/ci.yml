@@ -84,7 +84,7 @@ jobs:
           if-no-files-found: error
 
   mobile-exe:
-    runs-on: windows-latest
+    runs-on: windows-2022
     defaults:
       run:
         working-directory: mobile_app
