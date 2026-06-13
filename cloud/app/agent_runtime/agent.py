@@ -32,7 +32,7 @@ class Agent:
         identity = AgentIdentity(**data)
         return cls(identity)
 
-    def insights_for(self, page_id: str, user_id: str) -> list[Insight]:
+    async def insights_for(self, page_id: str, user_id: str) -> list[Insight]:
         return [
             Insight(
                 agent_key=self.identity.key,
