@@ -1,12 +1,11 @@
 """PatientEngage · 患者服务 — FastAPI 入口。"""
 
-import time
-
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from shared.auth import get_current_user
 from shared.exception_handlers import register_exception_handlers
+from shared.health import router as health_router
 from shared.middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 
@@ -16,8 +15,6 @@ from .followup_router import router as followup_router
 from .reminder_router import router as reminder_router
 from .routers.gamification_router import router as gamification_router
 from .routers.patient_weapp_router import router as patient_weapp_router
-
-START_TIME = time.time()
 
 setup_logging("patient-engage")
 
@@ -50,13 +47,7 @@ def startup():
     init_cache_db()
 
 
-@app.get("/health")
-def health():
-    return {
-        "status": "ok",
-        "uptime": int(time.time() - START_TIME),
-        "service": "patient-engage",
-    }
+app.include_router(health_router)
 
 
 app.include_router(education_router, dependencies=[Depends(get_current_user)])

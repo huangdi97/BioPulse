@@ -1,12 +1,11 @@
 """ClinicalOps · 临床试验运营 — FastAPI 入口。"""
 
-import time
-
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from shared.auth import get_current_user
 from shared.exception_handlers import register_exception_handlers
+from shared.health import router as health_router
 from shared.middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 
@@ -16,8 +15,6 @@ from .recruitment_router import router as recruitment_router
 from .routers.milestone_tracker_router import router as milestone_tracker_router
 from .routers.monitor_task_router import router as monitor_task_router
 from .site_router import router as site_router
-
-START_TIME = time.time()
 
 setup_logging("clinical-ops")
 
@@ -48,13 +45,7 @@ def startup():
     init_cache_db()
 
 
-@app.get("/health")
-def health():
-    return {
-        "status": "ok",
-        "uptime": int(time.time() - START_TIME),
-        "service": "clinical-ops",
-    }
+app.include_router(health_router)
 
 
 app.include_router(site_router, dependencies=[Depends(get_current_user)])

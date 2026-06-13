@@ -2,20 +2,16 @@
 
 import logging
 import os
-import sqlite3
-import time
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from cloud.app.app_setup import register_routers, register_startup_events
-from cloud.app.database import DB_PATH
 from cloud.app.middleware.logging_middleware import JSONFormatter
 from cloud.app.middleware_setup import register_middleware
 from shared.app_settings import settings
-
-START_TIME = time.time()
+from shared.health import router as health_router
 
 _logger = logging.getLogger("cloud")
 _logger.setLevel(getattr(logging, settings.log_level.upper(), logging.INFO))
@@ -53,24 +49,7 @@ register_routers(app)
 register_startup_events(app)
 
 Instrumentator().instrument(app).expose(app)
-
-
-@app.get("/health")
-def health():
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        conn.execute("SELECT 1")
-        conn.close()
-        db_status = "connected"
-    except Exception:
-        _logger.exception("Health check异常")
-        db_status = "disconnected"
-    return {
-        "status": "ok",
-        "db": db_status,
-        "uptime": int(time.time() - START_TIME),
-        "version": "0.1.0",
-    }
+app.include_router(health_router)
 
 
 app.mount("/assets", StaticFiles(directory="static/assets"), name="assets")

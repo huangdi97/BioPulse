@@ -26,5 +26,8 @@ class Settings(BaseSettings):
 
     model_config = {"env_prefix": "OCFE_", "env_file": ".env", "extra": "ignore"}
 
+    # AI
+    ai_local_endpoint: str = "http://localhost:11434"
+
 
 settings = Settings()

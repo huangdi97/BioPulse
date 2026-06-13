@@ -1,12 +1,11 @@
 """MarketAccess · 准入策略服务 — FastAPI 入口。"""
 
-import time
-
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from shared.auth import get_current_user
 from shared.exception_handlers import register_exception_handlers
+from shared.health import router as health_router
 from shared.middleware import RequestIDMiddleware
 from shared.structured_logging import setup_logging
 
@@ -16,8 +15,6 @@ from .market_access_bidding_router import router as bidding_router
 from .market_access_strategy_router import router as strategy_router
 from .routers.price_alert_router import router as price_alert_router
 from .routers.price_monitor_router import router as price_monitor_router
-
-START_TIME = time.time()
 
 setup_logging("market-access")
 
@@ -48,13 +45,7 @@ def startup():
     init_cache_db()
 
 
-@app.get("/health")
-def health():
-    return {
-        "status": "ok",
-        "uptime": int(time.time() - START_TIME),
-        "service": "market-access",
-    }
+app.include_router(health_router)
 
 
 app.include_router(formulary_router, dependencies=[Depends(get_current_user)])
