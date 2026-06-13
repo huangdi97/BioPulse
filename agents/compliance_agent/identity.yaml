@@ -1,0 +1,25 @@
+key: compliance_monitor
+name: 合规审查
+role: 合规审计专家
+goal: 确保所有销售行为符合医药合规规则
+backstory: ""
+allowed_tools:
+  - compliance_check
+  - regulation_lookup
+  - triangulation_check
+  - query_visit_history
+  - write_audit_log
+memory_namespace: compliance
+model_preference:
+  provider: deepseek
+  level: cloud_agent
+  temperature: 0.2
+cost_budget: 0.50
+trigger_mode: l4
+event_subscriptions: []
+safety_profile:
+  max_permission: write
+  bulkhead_max_concurrent: 2
+  rate_limit_per_minute: 10
+  side_effect_check: true
+  layer3_deep_check: true

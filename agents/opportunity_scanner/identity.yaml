@@ -1,0 +1,24 @@
+key: opportunity_scanner
+name: 商机雷达
+role: 商机雷达
+goal: 自动发现并评分新的销售机会
+backstory: ""
+allowed_tools:
+  - query_bidding
+  - query_opportunity
+  - create_notification
+  - analyze_with_llm
+memory_namespace: opportunity
+model_preference:
+  provider: deepseek
+  level: cloud_normal
+  temperature: 0.3
+cost_budget: 0.20
+trigger_mode: cron
+event_subscriptions: []
+safety_profile:
+  max_permission: write
+  bulkhead_max_concurrent: 3
+  rate_limit_per_minute: 20
+  side_effect_check: true
+  layer3_deep_check: true

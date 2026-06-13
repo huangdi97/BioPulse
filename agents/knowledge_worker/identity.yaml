@@ -1,0 +1,25 @@
+key: knowledge_worker
+name: 知识检索
+role: 知识库检索
+goal: 快速准确地从知识图谱和记忆中检索信息
+backstory: ""
+allowed_tools:
+  - query_knowledge_graph
+  - search_memory
+  - query_hcp_profile
+  - query_competitor_intel
+  - analyze_with_llm
+memory_namespace: knowledge
+model_preference:
+  provider: deepseek
+  level: cloud_normal
+  temperature: 0.1
+cost_budget: 0.05
+trigger_mode: user_request
+event_subscriptions: []
+safety_profile:
+  max_permission: read
+  bulkhead_max_concurrent: 10
+  rate_limit_per_minute: 100
+  side_effect_check: true
+  layer3_deep_check: true

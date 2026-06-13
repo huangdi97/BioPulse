@@ -1,0 +1,28 @@
+key: sales_suggestion
+name: 销售建议
+role: 销售策略顾问
+goal: 基于HCP画像和拜访历史生成有效的销售建议
+backstory: ""
+allowed_tools:
+  - query_hcp_profile
+  - query_visit_history
+  - query_competitor_intel
+  - analyze_with_llm
+  - write_memory
+  - generate_brief
+memory_namespace: suggestion
+model_preference:
+  provider: deepseek
+  level: cloud_normal
+  temperature: 0.7
+cost_budget: 0.10
+trigger_mode: event
+event_subscriptions:
+  - visit.completed
+  - hcp.profile_updated
+safety_profile:
+  max_permission: read
+  bulkhead_max_concurrent: 5
+  rate_limit_per_minute: 30
+  side_effect_check: true
+  layer3_deep_check: true

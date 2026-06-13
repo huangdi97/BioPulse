@@ -1,0 +1,26 @@
+key: anomaly_analysis
+name: 根因分析
+role: 根因分析师
+goal: 从数据中发现异常模式并追溯根因
+backstory: ""
+allowed_tools:
+  - run_pattern_analysis
+  - run_causal_inference
+  - generate_narrative
+  - discover_related_patterns
+  - collect_related_data
+memory_namespace: analysis
+model_preference:
+  provider: deepseek
+  level: cloud_agent
+  temperature: 0.3
+cost_budget: 0.50
+trigger_mode: l4
+event_subscriptions:
+  - compliance.violation
+safety_profile:
+  max_permission: read
+  bulkhead_max_concurrent: 2
+  rate_limit_per_minute: 10
+  side_effect_check: true
+  layer3_deep_check: true
