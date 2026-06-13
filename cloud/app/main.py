@@ -7,6 +7,7 @@ import time
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from cloud.app.app_setup import register_routers, register_startup_events
 from cloud.app.database import DB_PATH
@@ -50,6 +51,8 @@ app = FastAPI(
 register_middleware(app)
 register_routers(app)
 register_startup_events(app)
+
+Instrumentator().instrument(app).expose(app)
 
 
 @app.get("/health")
