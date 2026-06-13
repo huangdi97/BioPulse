@@ -3,7 +3,9 @@
 from importlib import import_module
 
 _EXPORTS = {
+    "agent": ("Agent",),
     "agent_protocol": ("AgentMessage", "AgentMessageBus"),
+    "agent_registry": ("AgentRegistry",),
     "agent_worker": ("AgentWorker",),
     "analyzer": ("Analysis", "Analyzer"),
     "approval_workflow": ("ApprovalWorkflow",),
@@ -14,13 +16,21 @@ _EXPORTS = {
     "memory": ("AgentBrain", "AgentMemory", "Memory"),
     "models": (
         "AgentDecision",
+        "AgentIdentity",
         "AgentLogEntry",
+        "AgentResult",
         "AgentSpec",
+        "AgentTier",
         "CheckpointData",
         "CheckResult",
+        "ExecutionContext",
+        "Insight",
+        "ModelPreference",
         "Models",
         "RuntimeResult",
+        "SafetyProfile",
         "ToolDef",
+        "TriggerMode",
         "VerificationResult",
     ),
     "notifier": ("AgentNotifier", "Notifier"),

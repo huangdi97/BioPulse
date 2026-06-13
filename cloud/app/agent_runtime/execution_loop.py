@@ -5,11 +5,27 @@ import logging
 import time
 from datetime import datetime
 
+from cloud.app.agent_runtime.agent_registry import AgentRegistry
 from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
 from cloud.app.agent_runtime.guard import sanitize_tool_output
 from cloud.app.agent_runtime.models import RuntimeResult
 from cloud.app.agent_runtime.schema_validator import OutputSchemaValidator
 from cloud.app.agent_runtime.validator import Validator
+
+
+def _identity_to_spec(agent) -> dict:
+    identity = agent.identity
+    return {
+        "role_desc": f"你是{identity.role}，{identity.goal}",
+        "allowed_tools": identity.allowed_tools,
+        "max_iterations": 10,
+        "default_temperature": identity.model_preference.temperature,
+        "max_permission": identity.safety_profile.max_permission,
+        "trigger_cron": None,
+        "trigger_mode": identity.trigger_mode.value,
+        "event_subscriptions": identity.event_subscriptions,
+    }
+
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +76,11 @@ class ExecutionLoopMixin:
         }
 
     def _execute_impl(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
-        spec = AGENT_SPECS.get(agent_key)
+        agent = AgentRegistry.get(agent_key)
+        if agent is not None:
+            spec = _identity_to_spec(agent)
+        else:
+            spec = AGENT_SPECS.get(agent_key)
         if spec is None:
             return RuntimeResult(status="error", result=f"unknown agent_key: {agent_key}", iterations=0, tool_calls=0, logs=[])
         c, max_iter = self._new_context(goal, agent_key, context, spec), min(spec["max_iterations"], 15)

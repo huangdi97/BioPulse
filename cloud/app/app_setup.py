@@ -38,3 +38,6 @@ def register_startup_events(app: FastAPI) -> None:
         init_agent_db()
         init_db()
         init_research()
+        from cloud.app.agent_runtime.agent_registry import AgentRegistry
+
+        AgentRegistry.load()
