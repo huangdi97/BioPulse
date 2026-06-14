@@ -71,6 +71,7 @@ testpaths = [
     "opportunity/app/tests",
     "sales-coach/app/tests",
     "sales-assistant/app/tests",
+    "tests",
 ]
 addopts = "--cov=cloud/app --cov=assistant/app --cov=opportunity/app --cov=sales_coach/app --cov=sales_assistant/app --cov-report=term --cov-report=html:coverage_html --import-mode=importlib"
 
