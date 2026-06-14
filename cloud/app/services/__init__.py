@@ -6,6 +6,8 @@ from cloud.app.services.coach_ability import CoachAbility
 from cloud.app.services.coach_gap import CoachGap
 from cloud.app.services.intel_analyzer import IntelAnalyzerMixin
 from cloud.app.services.intel_collector import IntelCollectorMixin
+from cloud.app.services.memory_namespace import MemoryNamespace
+from cloud.app.services.memory_service import MemoryService
 from cloud.app.services.network_crud import NetworkCrudMixin
 from cloud.app.services.network_sync import NetworkSyncMixin
 from cloud.app.services.utility_opt import UtilityOptMixin
@@ -35,6 +37,8 @@ class CoachAssessor(BaseService, CoachAbility, CoachGap):
 
 __all__ = [
     "BaseService",
+    "MemoryNamespace",
+    "MemoryService",
     "CausalAttributionService",
     "CellNetworkService",
     "CoachAssessor",
