@@ -3,6 +3,8 @@
     <view class="insight-title">AI 洞察</view>
     <view class="insight-text">{{insights[0].summary}}</view>
   </view>
+  <view wx:elif="{{insightsLoaded && insights.length === 0}}" class="insight-card orange" style="display:none">
+  </view>
   <view class="title">合规自检</view>
   <view class="panel">
     <view class="result {{result === '通过' ? 'pass' : 'pending'}}">{{result}}</view>

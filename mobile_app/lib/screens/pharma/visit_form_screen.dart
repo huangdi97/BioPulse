@@ -4,6 +4,9 @@ import 'package:biopulse_app/models/visit.dart';
 import 'package:biopulse_app/models/hcp.dart';
 import 'package:biopulse_app/models/compliance_result.dart';
 import 'package:biopulse_app/services/database_service.dart';
+import 'package:flutter_sound/flutter_sound.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:dio/dio.dart';
 
 class VisitFormScreen extends StatefulWidget {
   final Visit? visit;
@@ -22,6 +25,10 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
   String _visitType = 'academic';
   final List<String> _selectedProducts = [];
   bool _saving = false;
+
+  FlutterSoundRecorder? _recorder;
+  bool _isRecording = false;
+  bool _uploadingAudio = false;
 
   static const _productOptions = [
     '产品A（降压药）',
@@ -46,6 +53,8 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
   @override
   void initState() {
     super.initState();
+    _recorder = FlutterSoundRecorder();
+    _initRecorder();
     if (widget.visit != null) {
       final v = widget.visit!;
       _notesController.text = v.notes ?? '';
@@ -71,8 +80,76 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
 
   @override
   void dispose() {
+    _recorder?.closeRecorder();
     _notesController.dispose();
     super.dispose();
+  }
+
+  Future<void> _initRecorder() async {
+    await _recorder?.openRecorder();
+  }
+
+  Future<void> _toggleRecording() async {
+    if (_isRecording) {
+      final path = await _recorder?.stopRecorder();
+      if (path != null) {
+        await _uploadAudio(path);
+      }
+      setState(() => _isRecording = false);
+    } else {
+      final status = await Permission.microphone.request();
+      if (status != PermissionStatus.granted) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('需要麦克风权限')),
+          );
+        }
+        return;
+      }
+      await _recorder?.startRecorder(
+        toFile: 'audio_recording_${DateTime.now().millisecondsSinceEpoch}.aac',
+        codec: Codec.aacADTS,
+      );
+      setState(() => _isRecording = true);
+    }
+  }
+
+  Future<void> _uploadAudio(String filePath) async {
+    setState(() => _uploadingAudio = true);
+    try {
+      final formData = FormData.fromMap({
+        'audio_file': await MultipartFile.fromFile(filePath, filename: 'recording.aac'),
+        'user_id': 'mobile_user',
+      });
+      final dio = Dio(BaseOptions(
+        baseUrl: 'http://10.0.2.2:8000',
+        connectTimeout: const Duration(seconds: 30),
+      ));
+      final response = await dio.post(
+        '/api/cloud/visit/upload-recording',
+        data: formData,
+        options: Options(
+          headers: {'Content-Type': 'multipart/form-data'},
+        ),
+      );
+      final data = response.data?['data'] as Map<String, dynamic>?;
+      if (data != null && data['transcript'] != null) {
+        _notesController.text = data['transcript'] as String;
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('语音转录完成')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('语音上传失败: $e')),
+        );
+      }
+    } finally {
+      setState(() => _uploadingAudio = false);
+    }
   }
 
   Future<void> _pickDate() async {
@@ -308,6 +385,28 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
                     });
                   },
                 )),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _uploadingAudio ? null : _toggleRecording,
+                  icon: Icon(
+                    _isRecording ? Icons.mic_off : Icons.mic,
+                    color: _isRecording ? Colors.red : null,
+                  ),
+                  label: Text(
+                    _uploadingAudio
+                        ? '转录中...'
+                        : _isRecording
+                            ? '停止录音'
+                            : '语音录入',
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isRecording ? Colors.red.shade50 : null,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _notesController,

@@ -5,13 +5,14 @@ Page({
     keyword: '',
     loading: false,
     hcps: [],
-    insights: []
+    insights: [],
+    insightsLoaded: false
   },
 
   onLoad() {
     this.search()
     api.getAgentInsights('index').then((insights) => {
-      this.setData({ insights })
+      this.setData({ insights, insightsLoaded: true })
     })
   },
 

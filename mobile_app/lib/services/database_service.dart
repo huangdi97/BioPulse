@@ -13,7 +13,7 @@ import 'package:biopulse_app/models/quotation.dart';
 class DatabaseService {
   static Database? _database;
   static const String _dbName = 'biopulse_app.db';
-  static const int _dbVersion = 3;
+  static const int _dbVersion = 4;
 
   /// Initialize the database and create tables if they do not exist.
   Future<Database> initDatabase() async {
@@ -158,6 +158,16 @@ class DatabaseService {
           total_amount REAL DEFAULT 0,
           status TEXT NOT NULL DEFAULT 'draft',
           created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+      ''');
+    if (oldVersion < 4) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS agent_insights_cache (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id TEXT NOT NULL,
+          page_id TEXT NOT NULL DEFAULT 'default',
+          insights_json TEXT NOT NULL,
+          cached_at TEXT NOT NULL DEFAULT (datetime('now'))
         )
       ''');
     }

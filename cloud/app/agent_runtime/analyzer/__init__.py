@@ -4,20 +4,14 @@ from cloud.app.agent_runtime.analyzer.classifier import FailureClassifier, call_
 from cloud.app.agent_runtime.analyzer.hypothesis import HypothesisEngine
 from cloud.app.agent_runtime.analyzer.models import Analysis, Hypothesis, RootCauseNarrative, VerificationPlan, VerificationResult
 
-
-class Analyzer(FailureClassifier, HypothesisEngine):
-    """Combined analyzer — failure classification + hypothesis verification."""
-
-
 __all__ = [
     "Analysis",
-    "Analyzer",
-    "FailureClassifier",
     "Hypothesis",
     "HypothesisEngine",
     "RootCauseNarrative",
     "VerificationPlan",
     "VerificationResult",
+    "FailureClassifier",
     "call_llm",
     "extract_json",
 ]

@@ -16,6 +16,7 @@ class Hypothesis(BaseModel):
     status: str = "pending"
     evidence_for: list[str] = []
     evidence_against: list[str] = []
+    type: str = "anomaly_pattern"
 
 
 class VerificationPlan(BaseModel):

@@ -10,12 +10,13 @@ Page({
       { id: 'material', text: '使用资料来自已批准内容库', checked: false }
     ],
     result: '待检查',
-    insights: []
+    insights: [],
+    insightsLoaded: false
   },
 
   onLoad() {
     api.getAgentInsights('compliance').then((insights) => {
-      this.setData({ insights })
+      this.setData({ insights, insightsLoaded: true })
     })
   },
 

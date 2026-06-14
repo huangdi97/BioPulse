@@ -1,0 +1,84 @@
+"""录音上传与草稿管理路由。"""
+
+import os
+import uuid
+
+from fastapi import APIRouter, Depends, File, Form, UploadFile
+from pydantic import BaseModel
+from starlette import status
+
+from cloud.app.services.visit_extraction_service import (
+    confirm_draft,
+    delete_draft,
+    generate_visit_draft,
+    get_user_drafts,
+    save_draft,
+)
+from shared.auth_scope import require_scope
+from shared.base import success
+
+router = APIRouter(prefix="/api/cloud/visit", tags=["拜访"])
+
+
+@router.post("/upload-recording", status_code=status.HTTP_201_CREATED)
+async def upload_recording(
+    audio_file: UploadFile = File(...),
+    user_id: str = Form(...),
+    _: dict = Depends(require_scope("visit")),
+):
+    os.makedirs("uploads/audio", exist_ok=True)
+    file_ext = os.path.splitext(audio_file.filename or "recording.wav")[1] or ".wav"
+    file_name = f"rec_{uuid.uuid4().hex}{file_ext}"
+    file_path = f"uploads/audio/{file_name}"
+    content = await audio_file.read()
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    draft_data = await generate_visit_draft(file_path, user_id)
+    saved = save_draft(draft_data)
+
+    return success(
+        data={
+            "draft_id": saved["id"],
+            "transcript": draft_data["transcript"],
+            "extracted_fields": draft_data["extracted_fields"],
+            "status": saved.get("status", "draft"),
+        }
+    )
+
+
+@router.get("/drafts")
+def list_drafts(
+    user_id: str,
+    _: dict = Depends(require_scope("visit")),
+):
+    drafts = get_user_drafts(user_id)
+    return success(data=drafts)
+
+
+class ConfirmDraftBody(BaseModel):
+    user_id: str
+    edited_fields: dict
+
+
+@router.post("/drafts/{draft_id}/confirm")
+def confirm_draft_endpoint(
+    draft_id: str,
+    body: ConfirmDraftBody,
+    _: dict = Depends(require_scope("visit")),
+):
+    result = confirm_draft(draft_id, body.user_id, body.edited_fields)
+    if not result:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=404, detail="Draft not found")
+    return success(data=result)
+
+
+@router.delete("/drafts/{draft_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_draft_endpoint(
+    draft_id: str,
+    user_id: str,
+    _: dict = Depends(require_scope("visit")),
+):
+    delete_draft(draft_id, user_id)

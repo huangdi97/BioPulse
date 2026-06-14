@@ -22,6 +22,8 @@ import {
   Image as ImageIcon,
   Crosshair,
   AlertCircle,
+  Mic,
+  MicOff,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import PhotoUploader from '@/components/PhotoUploader'
@@ -57,6 +59,12 @@ export default function VisitNew() {
   const [location, setLocation] = useState('')
   const [locationMode, setLocationMode] = useState('auto')
   const [settings, setSettings] = useState<Record<string,string>>({})
+
+  const [recording, setRecording] = useState(false)
+  const [uploadingAudio, setUploadingAudio] = useState(false)
+  const [extractedCards, setExtractedCards] = useState<Record<string, unknown> | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
 
   const validateField = useCallback((field: string, value: string) => {
     switch (field) {
@@ -157,6 +165,62 @@ export default function VisitNew() {
     } catch {
       toast.error('拜访记录保存失败，请重试')
       setSubmitting(false)
+    }
+  }
+
+  const toggleRecording = async () => {
+    if (recording) {
+      mediaRecorderRef.current?.stop()
+      setRecording(false)
+      return
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : 'audio/webm',
+      })
+      mediaRecorderRef.current = mediaRecorder
+      audioChunksRef.current = []
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data)
+      }
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop())
+        const blob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType })
+        await uploadAudio(blob)
+      }
+      mediaRecorder.start()
+      setRecording(true)
+    } catch {
+      toast.error('无法访问麦克风，请检查权限设置')
+    }
+  }
+
+  const uploadAudio = async (blob: Blob) => {
+    setUploadingAudio(true)
+    try {
+      const fd = new FormData()
+      fd.append('audio_file', blob, 'recording.webm')
+      fd.append('user_id', localStorage.getItem('user_id') || 'unknown')
+      const res = await client.post('/api/cloud/visit/upload-recording', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      const data = (res as any)?.data
+      if (data?.transcript) {
+        setContent(data.transcript)
+      }
+      if (data?.extracted_fields) {
+        setExtractedCards(data.extracted_fields)
+      }
+      if (data?.transcript) {
+        toast.success('语音转录完成')
+      }
+    } catch {
+      toast.error('语音上传或转录失败')
+    } finally {
+      setUploadingAudio(false)
     }
   }
 
@@ -292,6 +356,45 @@ export default function VisitNew() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={toggleRecording}
+                disabled={uploadingAudio}
+                className={cn(
+                  'flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300',
+                  recording
+                    ? 'bg-red-500 animate-pulse shadow-lg shadow-red-300'
+                    : 'bg-gray-200 hover:bg-gray-300',
+                )}
+              >
+                {recording ? (
+                  <MicOff className="h-5 w-5 text-white" />
+                ) : (
+                  <Mic className={cn('h-5 w-5', uploadingAudio ? 'text-gray-400' : 'text-gray-600')} />
+                )}
+              </button>
+              <span className="text-sm text-muted-foreground">
+                {uploadingAudio
+                  ? '转录中...'
+                  : recording
+                    ? '录音中，点击停止'
+                    : '点击开始语音录入'}
+              </span>
+            </div>
+
+            {extractedCards && Object.keys(extractedCards).length > 0 && (
+              <div className="rounded-md border bg-blue-50 p-3 space-y-1">
+                <p className="text-xs font-semibold text-blue-700 mb-1">提取字段</p>
+                {Object.entries(extractedCards).map(([key, val]) => (
+                  <div key={key} className="flex gap-2 text-sm">
+                    <span className="font-medium text-blue-600 min-w-[80px]">{key}:</span>
+                    <span className="text-blue-800">{String(val)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div
               className={cn(
                 'flex items-center gap-2 rounded-md border px-3 py-2 text-sm',

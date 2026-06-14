@@ -64,7 +64,7 @@ function optimizeSchedule(payload) {
 
 function getAgentInsights(pageId) {
   return request({
-    url: `/api/v1/agent/insights?page=${pageId}`
+    url: `/api/cloud/agent/insights?page=${pageId}`
   }).then((res) => res.insights || []).catch(() => [])
 }
 

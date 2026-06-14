@@ -5,10 +5,10 @@ import os
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
-from prometheus_fastapi_instrumentator import Instrumentator
 
 from cloud.app.app_setup import register_routers, register_startup_events
 from cloud.app.middleware.logging_middleware import JSONFormatter
+from cloud.app.middleware.metrics import setup_metrics
 from cloud.app.middleware_setup import register_middleware
 from shared.app_settings import settings
 from shared.health import router as health_router
@@ -48,7 +48,7 @@ register_middleware(app)
 register_routers(app)
 register_startup_events(app)
 
-Instrumentator().instrument(app).expose(app)
+setup_metrics(app)
 app.include_router(health_router)
 
 

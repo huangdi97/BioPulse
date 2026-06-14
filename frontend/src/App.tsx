@@ -20,6 +20,7 @@ const HcpList = lazy(() => import('./pages/rep/HcpList'))
 const HcpDetail = lazy(() => import('./pages/rep/HcpDetail'))
 const VisitNew = lazy(() => import('./pages/rep/VisitNew'))
 const VisitDetail = lazy(() => import('./pages/rep/VisitDetail'))
+const VisitDrafts = lazy(() => import('./pages/rep/VisitDrafts'))
 const TaskList = lazy(() => import('./pages/rep/TaskList'))
 const ManagerDashboard = lazy(() => import('./pages/manager/Dashboard'))
 const ManagerVisits = lazy(() => import('./pages/manager/Visits'))
@@ -39,6 +40,7 @@ const PresidentSummary = lazy(() => import('./pages/admin/president/Summary'))
 const PresidentCompliance = lazy(() => import('./pages/admin/president/ComplianceOverview'))
 const PresidentRankings = lazy(() => import('./pages/admin/president/TeamRankings'))
 const PresidentTrend = lazy(() => import('./pages/admin/president/TrendReport'))
+const PresidentDashboard = lazy(() => import('./pages/admin/president/PresidentDashboard'))
 const ExpenseWasteDashboard = lazy(() => import('./pages/admin/president/ExpenseWasteDashboard'))
 const VisitFraudDashboard = lazy(() => import('./pages/admin/president/VisitFraudDashboard'))
 const ManagementNeglectDashboard = lazy(() => import('./pages/admin/president/ManagementNeglectDashboard'))
@@ -81,6 +83,7 @@ const ObjectionList = lazy(() => import('./pages/sales-assistant/ObjectionList')
 const NoteList = lazy(() => import('./pages/sales-assistant/NoteList'))
 const FunnelView = lazy(() => import('./pages/sales-assistant/FunnelView'))
 const ScheduleView = lazy(() => import('./pages/sales-assistant/ScheduleView'))
+const BiddingMonitor = lazy(() => import('./pages/market/BiddingMonitor'))
 const DiagnosisPage = lazy(() => import('./pages/DiagnosisPage'))
 
 export default function App() {
@@ -103,6 +106,7 @@ export default function App() {
                 <Route path="tasks" element={<TaskList />} />
                 <Route path="diagnosis" element={<DiagnosisPage />} />
                 <Route path="visits/new" element={<VisitNew />} />
+                <Route path="visits/drafts" element={<VisitDrafts />} />
                 <Route path="visits/:id" element={<VisitDetail />} />
                 <Route path="visits" element={<VisitList />} />
               </Route>
@@ -129,6 +133,7 @@ export default function App() {
             <Route path="/admin" element={<ManagementLayout />}>
               <Route index element={<Navigate to="president/summary" replace />} />
               <Route element={<RoleRoute allowedRoles={['admin']} />}>
+                <Route path="president/dashboard" element={<PresidentDashboard />} />
                 <Route path="president/summary" element={<PresidentSummary />} />
                 <Route path="president/compliance" element={<PresidentCompliance />} />
                 <Route path="president/rankings" element={<PresidentRankings />} />
@@ -193,6 +198,7 @@ export default function App() {
               <Route path="funnel" element={<FunnelView />} />
               <Route path="schedule" element={<ScheduleView />} />
             </Route>
+            <Route path="/market/bidding" element={<BiddingMonitor />} />
             <Route path="/dashboard" element={<Navigate to="/rep/dashboard" replace />} />
             <Route path="/" element={<Navigate to="/rep/dashboard" replace />} />
             <Route path="*" element={<NotFound />} />

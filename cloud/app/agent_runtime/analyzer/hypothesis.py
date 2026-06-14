@@ -12,13 +12,16 @@ logger = logging.getLogger(__name__)
 
 
 class HypothesisEngine:
-    """Generates, verifies, and evaluates hypotheses for root cause analysis."""
+    """Generates, verifies, evaluates, and ranks hypotheses for root cause analysis."""
 
     def __init__(self, llm_url: str = config_settings.ai_chat_url):
         self._llm_url = llm_url
 
     def generate_hypotheses(self, red_light_event: dict) -> list[Hypothesis]:
-        """Given a red light event, generate a list of candidate hypotheses for root cause."""
+        """Given a red light event, generate a list of candidate hypotheses for root cause.
+
+        Produces hypotheses across three types: anomaly_pattern, causal_relationship, trend_change.
+        """
         event_desc = json.dumps(red_light_event, ensure_ascii=False)
         prompt = (
             f"Given the following red light compliance event, generate 2-4 hypotheses for the root cause.\n"
@@ -30,18 +33,26 @@ class HypothesisEngine:
             "- 费用虚增 (inflated expenses)\n"
             "- 窜货 (cross-region channel stuffing)\n"
             "- 虚假活动 (fake activity)\n\n"
-            'Reply ONLY JSON array: [{"description": "...", "confidence": 0.0}, ...]'
+            "For each hypothesis, include its type:\n"
+            "  - anomaly_pattern: 异常模式 — unusual patterns in expense/visit/distribution\n"
+            "  - causal_relationship: 因果关系 — A caused B relationship\n"
+            "  - trend_change: 趋势变化 — sudden shift in metrics over time\n\n"
+            'Reply ONLY JSON array: [{"description": "...", "confidence": 0.0, "type": "anomaly_pattern"}, ...]'
         )
         try:
             reply = call_llm(self._llm_url, [{"role": "user", "content": prompt}])
             parsed = extract_json(reply)
             hypotheses = []
             for h in parsed:
+                hyp_type = h.get("type", "anomaly_pattern")
+                if hyp_type not in ("anomaly_pattern", "causal_relationship", "trend_change"):
+                    hyp_type = "anomaly_pattern"
                 hyp = Hypothesis(
                     id=str(uuid.uuid4())[:8],
                     description=h.get("description", ""),
                     confidence=float(h.get("confidence", 0.5)),
                     status="pending",
+                    type=hyp_type,
                 )
                 hypotheses.append(hyp)
             return hypotheses if hypotheses else self._default_hypotheses(red_light_event)
@@ -50,12 +61,25 @@ class HypothesisEngine:
             return self._default_hypotheses(red_light_event)
 
     def _default_hypotheses(self, red_light_event: dict) -> list[Hypothesis]:
-        """Fallback hypotheses when LLM generation fails."""
+        """Fallback hypotheses when LLM generation fails, covering all three types."""
         return [
-            Hypothesis(id=str(uuid.uuid4())[:8], description="拜访数据可能存在虚增", confidence=0.6, status="pending"),
-            Hypothesis(id=str(uuid.uuid4())[:8], description="经销商数据可能存在延迟上报", confidence=0.5, status="pending"),
-            Hypothesis(id=str(uuid.uuid4())[:8], description="可能存在跨区域窜货", confidence=0.4, status="pending"),
+            Hypothesis(id=str(uuid.uuid4())[:8], description="拜访数据可能存在虚增", confidence=0.6, status="pending", type="anomaly_pattern"),
+            Hypothesis(
+                id=str(uuid.uuid4())[:8], description="经销商数据可能存在延迟上报", confidence=0.5, status="pending", type="causal_relationship"
+            ),
+            Hypothesis(id=str(uuid.uuid4())[:8], description="近期费用趋势异常上升", confidence=0.4, status="pending", type="trend_change"),
         ]
+
+    def rank_hypotheses(self, hypotheses: list[Hypothesis], verification_results: list[VerificationResult] | None = None) -> list[Hypothesis]:
+        """Rank hypotheses by confidence (and validation results if available), descending."""
+        if verification_results:
+            result_map = {r.hypothesis_id: r for r in verification_results}
+            for hyp in hypotheses:
+                result = result_map.get(hyp.id)
+                if result:
+                    hyp.confidence = result.confidence
+                    hyp.status = "confirmed" if result.confirmed else "falsified"
+        return sorted(hypotheses, key=lambda h: h.confidence, reverse=True)
 
     def design_verification_plan(self, hypothesis: Hypothesis) -> VerificationPlan:
         """Design a verification plan: what data to collect to confirm/falsify the hypothesis."""
@@ -77,6 +101,10 @@ class HypothesisEngine:
         if any(k in desc_lower for k in ("费用", "虚增", "expense", "inflated")):
             checks.append({"check": "费用与产出对比分析", "data_needed": ["expense_records", "sales_output"]})
             checks.append({"check": "费用异常模式检测", "data_needed": ["expense_trend", "peer_benchmark"]})
+
+        if any(k in desc_lower for k in ("趋势", "trend", "上升", "下降", "shift")):
+            checks.append({"check": "时间序列趋势分析", "data_needed": ["monthly_metrics", "quarterly_comparison"]})
+            checks.append({"check": "外部因素相关性分析", "data_needed": ["policy_changes", "market_events"]})
 
         if not checks:
             checks.append({"check": "通用数据交叉验证", "data_needed": ["expense_records", "visit_records", "distribution_records"]})
@@ -118,6 +146,11 @@ class HypothesisEngine:
                 evidence.append("流向与授权区域存在不一致")
                 confirmed = True
                 confidence = max(confidence, 0.82)
+            if "趋势" in desc_lower or "上升" in desc_lower or "下降" in desc_lower:
+                evidence.append("多期数据比对显示趋势变化")
+                confidence = max(confidence, 0.60)
+                if confidence > 0.7:
+                    confirmed = True
 
             hyp.status = "confirmed" if confirmed else "falsified"
             if confirmed:
@@ -174,8 +207,12 @@ class HypothesisEngine:
             recommended_action=recommended_action,
         )
 
-    def hypothesis_verification_loop(self, red_light_event: dict) -> RootCauseNarrative:
-        """Full hypothesis verification cycle: generate → plan → verify → evaluate → narrate."""
+    def hypothesis_verification_loop(self, red_light_event: dict) -> dict:
+        """Full hypothesis verification cycle: generate → plan → verify → evaluate → rank → narrate.
+
+        Returns:
+            dict with keys: hypotheses (ranked list), narrative (RootCauseNarrative), status
+        """
         logger.info("Starting hypothesis verification loop for event: %s", red_light_event.get("event_id", "unknown"))
 
         hypotheses = self.generate_hypotheses(red_light_event)
@@ -188,7 +225,12 @@ class HypothesisEngine:
             results = self.evaluate_hypotheses([hyp], data)
             all_results.extend(results)
 
+        ranked = self.rank_hypotheses(hypotheses, all_results)
         narrative = self.generate_narrative(hypotheses, all_results)
         logger.info("Hypothesis verification complete: root_cause=%s confidence=%.2f", narrative.root_cause, narrative.confidence)
 
-        return narrative
+        return {
+            "hypotheses": [h.model_dump() for h in ranked],
+            "narrative": narrative,
+            "status": "completed",
+        }

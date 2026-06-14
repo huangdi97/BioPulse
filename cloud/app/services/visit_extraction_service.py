@@ -117,6 +117,18 @@ async def extract_visit_fields(transcript: str, confidence: float) -> dict:
     return await svc.extract_structured_fields(transcript, schema)
 
 
+def delete_draft(draft_id: str, user_id: str) -> None:
+    conn = _get_conn()
+    try:
+        conn.execute(
+            "DELETE FROM visit_drafts WHERE id = ? AND user_id = ?",
+            (draft_id, user_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 async def generate_visit_draft(audio_file: str, user_id: str) -> dict:
     asr_result = await transcribe_audio(audio_file)
     transcript = asr_result["text"]

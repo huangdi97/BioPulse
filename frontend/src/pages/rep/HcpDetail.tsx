@@ -103,7 +103,10 @@ export default function HcpDetail() {
         </div>
       </div>
 
-      <AgentSummaryCard title='情报摘要' agentKey='knowledge_worker' pageId='rep_hcp_detail' variant='summary' />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <AgentSummaryCard title='知识情报摘要' agentKey='knowledge_worker' pageId='rep_hcp_detail' variant='summary' />
+        <AgentSummaryCard title='策略建议' agentKey='sales_suggestion' pageId='rep_hcp_detail' variant='suggestion' />
+      </div>
       <AgentInsightBar pageId="rep_hcp_detail" />
 
       <Card>

@@ -10,6 +10,7 @@ import 'package:biopulse_app/services/database_service.dart';
 import 'package:biopulse_app/services/sync_service.dart';
 import 'package:biopulse_app/services/api_client.dart';
 import 'package:biopulse_app/screens/pharma/visit_form_screen.dart';
+import 'package:biopulse_app/screens/pharma/hcp_detail_screen.dart';
 
 class VisitListScreen extends StatefulWidget {
   const VisitListScreen({super.key});
@@ -23,6 +24,8 @@ class _VisitListScreenState extends State<VisitListScreen>
   late TabController _tabController;
   final List<Visit> _visits = [];
   bool _loading = true;
+  List<Map<String, dynamic>> _priorityRecommendations = [];
+  bool _priorityLoading = true;
 
   @override
   void initState() {
@@ -32,6 +35,7 @@ class _VisitListScreenState extends State<VisitListScreen>
       if (!_tabController.indexIsChanging) _loadVisits();
     });
     _loadVisits();
+    _loadPriorityRecommendations();
   }
 
   @override
@@ -115,6 +119,31 @@ class _VisitListScreenState extends State<VisitListScreen>
     await _loadVisits();
   }
 
+  Future<void> _loadPriorityRecommendations() async {
+    try {
+      final api = context.read<MultiBackendApiClient>();
+      final response = await api
+          .getClient('cloud')
+          .get<Map<String, dynamic>>('/api/cloud/agent/insights', queryParameters: {
+            'agent': 'suggestion_agent',
+            'scope': 'daily_priority',
+          });
+      if (response.isSuccess && response.data != null) {
+        final items = response.data!['items'] as List<dynamic>? ?? [];
+        if (mounted) {
+          setState(() {
+            _priorityRecommendations = items.cast<Map<String, dynamic>>();
+            _priorityLoading = false;
+          });
+        }
+        return;
+      }
+    } catch (_) {}
+    if (mounted) {
+      setState(() => _priorityLoading = false);
+    }
+  }
+
   Color _complianceColor(String? status) {
     switch (status) {
       case 'compliant':
@@ -154,6 +183,128 @@ class _VisitListScreenState extends State<VisitListScreen>
     }
   }
 
+  Widget _buildPrioritySection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+          child: Row(
+            children: [
+              const Icon(Icons.sort, size: 16, color: Colors.blue),
+              const SizedBox(width: 6),
+              Text(
+                '今日建议拜访顺序',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.blue,
+                ),
+              ),
+              if (_priorityLoading)
+                const Padding(
+                  padding: EdgeInsets.only(left: 8),
+                  child: SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 140,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            itemCount: _priorityRecommendations.length,
+            itemBuilder: (ctx, i) {
+              final item = _priorityRecommendations[i];
+              final hcpName = item['hcp_name'] as String? ?? '';
+              final suggestion = item['suggestion'] as String? ?? '';
+              final priority = item['priority'] as String? ?? 'medium';
+              final hcpId = item['hcp_id'] as int? ?? 0;
+              final isHigh = priority == 'high';
+              return GestureDetector(
+                onTap: () {
+                  if (hcpId > 0) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => HcpDetailScreen(hcpId: hcpId),
+                      ),
+                    );
+                  }
+                },
+                child: Card(
+                  margin: const EdgeInsets.only(right: 8),
+                  child: Container(
+                    width: 200,
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                hcpName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isHigh
+                                    ? Colors.red.shade50
+                                    : Colors.orange.shade50,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                isHigh ? '高' : '中',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: isHigh
+                                      ? Colors.red.shade700
+                                      : Colors.orange.shade700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Expanded(
+                          child: Text(
+                            suggestion,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -177,6 +328,8 @@ class _VisitListScreenState extends State<VisitListScreen>
             variant: 'suggestion',
           ),
           const AgentInsightBar(pageId: 'mobile_visit_list'),
+          if (_priorityRecommendations.isNotEmpty)
+            _buildPrioritySection(),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())

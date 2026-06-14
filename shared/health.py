@@ -49,9 +49,10 @@ def _check_ai() -> str:
 
 @router.get("/health", summary="健康检查")
 def health():
+    db_status = _check_db()
     return {
-        "status": "ok",
-        "db": _check_db(),
+        "status": "degraded" if db_status == "disconnected" else "ok",
+        "db": db_status,
         "ai_api": _check_ai(),
         "uptime": int(time.time() - _START_TIME),
         "version": settings.version,

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:provider/provider.dart';
+import 'package:biopulse_app/constants/app_constants.dart';
 import 'package:biopulse_app/providers/mode_provider.dart';
 import 'package:biopulse_app/theme/design_tokens.dart';
 import 'package:biopulse_app/services/api_client.dart';
 import 'package:biopulse_app/services/push_service.dart';
+import 'package:biopulse_app/services/cache_service.dart';
+import 'package:biopulse_app/services/database_service.dart';
 import 'package:biopulse_app/screens/management/dashboard_compliance_section.dart';
 import 'package:biopulse_app/screens/management/dashboard_notification_section.dart';
 import 'package:biopulse_app/widgets/agent_insight_bar.dart';
@@ -15,12 +19,35 @@ class ManagementDashboardScreen extends StatefulWidget {
   State<ManagementDashboardScreen> createState() => _ManagementDashboardScreenState();
 }
 
-class _ManagementDashboardScreenState extends State<ManagementDashboardScreen> {
+class _ManagementDashboardScreenState extends State<ManagementDashboardScreen> with WidgetsBindingObserver {
+  final DatabaseService _db = DatabaseService();
+  late final CacheService _cacheService;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _cacheService = CacheService(_db);
+    _initDb();
     _loadDashboard();
     _initPushService();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadDashboard();
+    }
+  }
+
+  Future<void> _initDb() async {
+    await _db.initDatabase();
   }
 
   Future<void> _initPushService() async {
@@ -33,7 +60,28 @@ class _ManagementDashboardScreenState extends State<ManagementDashboardScreen> {
     try {
       final api = context.read<MultiBackendApiClient>();
       await api.getClient('cloud').get('/api/demo/dashboard');
+      _cacheInsights();
+    } catch (_) {
+      _loadCachedInsights();
+    }
+  }
+
+  Future<void> _cacheInsights() async {
+    try {
+      final api = context.read<MultiBackendApiClient>();
+      final response = await api.getClient('cloud').get<List>('/api/v1/agent/insights');
+      if (response.data != null) {
+        await _cacheService.cacheInsights('current_user', jsonEncode(response.data));
+        await _cacheService.clearExpiredCache();
+      }
     } catch (_) {}
+  }
+
+  Future<void> _loadCachedInsights() async {
+    final cached = await _cacheService.getCachedInsights('current_user');
+    if (cached != null && mounted) {
+      debugPrint('Loaded cached insights: $cached');
+    }
   }
 
   @override

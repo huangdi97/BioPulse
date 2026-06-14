@@ -9,7 +9,8 @@ Page({
     visitTime: '',
     submitting: false,
     visitTypes: ['学术拜访', '产品沟通', '术后随访', '科室会议'],
-    insights: []
+    insights: [],
+    insightsLoaded: false
   },
 
   onLoad(query) {
@@ -21,7 +22,7 @@ Page({
       visitTime
     })
     api.getAgentInsights('visit').then((insights) => {
-      this.setData({ insights })
+      this.setData({ insights, insightsLoaded: true })
     })
   },
 

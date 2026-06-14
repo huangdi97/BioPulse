@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 
 const PRESIDENT_MENU = [
+  { to: '/admin/president/dashboard', label: '总裁视图', icon: LayoutDashboard },
   { to: '/admin/president/summary', label: '概览', icon: LayoutDashboard },
   { to: '/admin/president/compliance', label: '合规', icon: ShieldCheck },
   { to: '/admin/president/rankings', label: '排名', icon: Trophy },
