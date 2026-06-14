@@ -27,7 +27,7 @@ export default function Sidebar() {
         <div className="w-7 h-7 rounded bg-[var(--clr-brand)] flex items-center justify-center text-xs font-bold">
           Y
         </div>
-        <span className="font-semibold text-sm tracking-wide">一云四端</span>
+        <span className="font-semibold text-sm tracking-wide">BioPulse</span>
       </div>
 
       <nav className="flex-1 py-4 space-y-1 px-3">

@@ -63,7 +63,7 @@ export default function TopNav() {
                 {username}
               </p>
               <p className="text-xs text-[var(--clr-text-secondary)]">
-                {user?.username ? `${user.username}@yysd.io` : ""}
+                {user?.username ? `${user.username}@biopulse.ai` : ""}
               </p>
             </div>
             <ChevronDown className="w-4 h-4 text-[var(--clr-text-secondary)]" />

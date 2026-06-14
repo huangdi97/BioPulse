@@ -5,7 +5,7 @@
     "pages/compliance/compliance"
   ],
   "window": {
-    "navigationBarTitleText": "一云四端",
+    "navigationBarTitleText": "BioPulse",
     "navigationBarBackgroundColor": "#0f766e",
     "navigationBarTextStyle": "white",
     "backgroundColor": "#f6f8fb"

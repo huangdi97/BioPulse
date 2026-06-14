@@ -21,7 +21,7 @@ if not _logger.handlers:
     _logger.addHandler(_handler)
 
 app = FastAPI(
-    title="一云四端 · Cloud API",
+    title="BioPulse · Cloud API",
     description="面向医药+生物双主线的智能CRM SaaS。包含认证、合规、商机、Agent、记忆系统、知识图谱、MDT会诊、因果推理、合规规则引擎等核心模块。",
     version=settings.version,
     openapi_tags=[

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ============================================================
-# 一云四端 · 部署脚本
+# BioPulse · 部署脚本
 # 用法: ./scripts/deploy.sh
 # 功能: git pull → docker compose build → up → health check
 # ============================================================

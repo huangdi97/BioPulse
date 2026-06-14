@@ -1,6 +1,6 @@
 """隐私计算调度模块，管理联邦学习轮次与贡献审计。"""
 
-# FROZEN — 代码保留不迭代。参见一云四端-整体战略规划-v2.3-final.md 第2章
+# FROZEN — 代码保留不迭代。参见 BioPulse-整体战略规划-v2.3-final.md 第2章
 
 import json
 from datetime import datetime

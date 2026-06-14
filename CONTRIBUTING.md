@@ -1,4 +1,4 @@
-# Contributing · 一云四端开发指南
+# Contributing · BioPulse 开发指南
 
 > 本仓库的生命科学行业 AI 工作台。本文档告诉你如何从零上手、在哪里改代码、以及遵守什么规则。
 
@@ -16,7 +16,7 @@ Flutter 3.24+（移动端开发需要）
 
 # 克隆
 git clone <repo-url>
-cd one-cloud-four-ends
+cd biopulse
 
 # 安装后端依赖
 python3 -m venv venv

@@ -32,10 +32,10 @@ const NOTIFY_ITEMS = [
 ] as const
 
 const ABOUT_ROWS = [
-  { label: "系统名称", value: "一云四端 · 生命科学销售 AI 工作台" },
+  { label: "系统名称", value: "BioPulse · 生命科学销售 AI 工作台" },
   { label: "版本号", value: "v1.0.0 (Build 2026-06-05)" },
   { label: "设计系统版本", value: "1.0" },
-  { label: "技术支持", value: "support@yysd.io" },
+  { label: "技术支持", value: "support@biopulse.ai" },
 ] as const
 
 const DEFAULT_ENDPOINTS: ApiEndpoint[] = [

@@ -1,4 +1,4 @@
-# FROZEN — 代码保留不迭代。参见一云四端-整体战略规划-v2.3-final.md 第2章
+# FROZEN — 代码保留不迭代。参见 BioPulse-整体战略规划-v2.3-final.md 第2章
 """隐私计算路由。"""
 
 from typing import Optional

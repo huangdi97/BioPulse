@@ -44,7 +44,7 @@ function AuthenticatedLayout() {
 }
 
 function DynamicTitle() {
-  useEffect(() => { document.title = '制药情报 · 一云四端' }, [])
+  useEffect(() => { document.title = '制药情报 · BioPulse' }, [])
   return null
 }
 

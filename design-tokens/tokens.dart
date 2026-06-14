@@ -1,5 +1,5 @@
 // ==========================================
-// 一云四端 Design System — Flutter Tokens
+// BioPulse Design System — Flutter Tokens
 // 来源: design-tokens/tokens.json (单一源)
 // 生成方式: 手动转译，以 tokens.json 为准
 // ==========================================

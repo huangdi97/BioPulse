@@ -5,7 +5,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # General
-    app_name: str = "OneCloudFourEnds"
+    app_name: str = "BioPulse"
     version: str = "1.0.0"
     debug: bool = True
 

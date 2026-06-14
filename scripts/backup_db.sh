@@ -1,5 +1,5 @@
 #!/bin/bash
-# 一云四端 · SQLite 数据库备份脚本
+# BioPulse · SQLite 数据库备份脚本
 # 用法: ./scripts/backup_db.sh
 # 建议: 每日凌晨 3 点运行（见 backup_schedule.md）
 
