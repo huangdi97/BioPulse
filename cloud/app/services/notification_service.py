@@ -1,18 +1,24 @@
 """通知服务，负责通知模板管理与消息发送、列表查询及已读标记。"""
 
 import json
+import logging
 from datetime import datetime
 from typing import Optional
 
 from fastapi import HTTPException
 from starlette import status
 
+from cloud.app.config.provider_config import ProviderMode, ProviderSettings
 from cloud.app.repositories import (
     NotificationsRepository,
     NotificationTemplatesRepository,
 )
+from cloud.app.services.api_providers import ApiPush
+from cloud.app.services.local_providers import LocalPush
 from cloud.app.services.notification_builder import NotificationBuilderMixin, _render_template
 from shared.base_service import BaseService
+
+logger = logging.getLogger(__name__)
 
 
 def _notification_to_dict(row) -> dict:
@@ -42,6 +48,22 @@ def _notification_to_dict(row) -> dict:
 
 class NotificationService(NotificationBuilderMixin, BaseService):
     """通知服务，提供模板管理、消息发送、列表查询与已读标记功能。"""
+
+    def __init__(self, db=None, provider_settings: ProviderSettings | None = None) -> None:
+        super().__init__(db)
+        self._push_settings = provider_settings or ProviderSettings(service="push")
+
+    def _push_notification(self, title: str, body: str, user_id: int) -> None:
+        if not self._push_settings.enabled:
+            logger.info("Push disabled, skipping push for user_id=%d", user_id)
+            return
+        recipient = str(user_id)
+        message = f"{title}: {body}"
+        if self._push_settings.mode == ProviderMode.API:
+            provider = ApiPush(self._push_settings)
+        else:
+            provider = LocalPush(self._push_settings)
+        provider.send(recipient, message)
 
     def send(
         self,
@@ -114,6 +136,7 @@ class NotificationService(NotificationBuilderMixin, BaseService):
             }
         )
         row = notif_repo.get_by_id(row_id)
+        self._push_notification(title=title, body=body_text, user_id=user_id)
         return _notification_to_dict(row)
 
     def list_notifications(
