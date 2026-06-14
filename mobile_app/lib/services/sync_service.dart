@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:one_cloud_app/models/hcp.dart';
@@ -199,6 +200,68 @@ class SyncService {
       'visits': visitCount,
       'surgeries': surgeryCount,
     };
+  }
+
+  Future<String?> pullAgentInsights(String baseUrl, {int page = 1}) async {
+    try {
+      final response = await _dio
+          .get('$baseUrl/api/v1/agent/insights', queryParameters: {'page': page})
+          .timeout(const Duration(seconds: 10));
+      final data = response.data;
+      final jsonStr = jsonEncode(data);
+      await cacheAgentInsight('$page', jsonStr);
+      return jsonStr;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> cacheAgentInsight(String pageId, String jsonData) async {
+    final prefs = await SharedPreferences.getInstance();
+    final cacheKey = 'agent_insight_${pageId}';
+    final cacheData = jsonEncode({
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'data': jsonData,
+    });
+    await prefs.setString(cacheKey, cacheData);
+  }
+
+  Future<String?> getCachedInsight(String pageId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final cacheKey = 'agent_insight_${pageId}';
+    final cached = prefs.getString(cacheKey);
+    if (cached == null) return null;
+    try {
+      final cacheData = jsonDecode(cached) as Map<String, dynamic>;
+      final timestamp = cacheData['timestamp'] as int;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (now - timestamp > 24 * 60 * 60 * 1000) return null;
+      return cacheData['data'] as String;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> clearExpiredInsights() async {
+    final prefs = await SharedPreferences.getInstance();
+    final keys = prefs.getKeys();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final key in keys) {
+      if (key.startsWith('agent_insight_')) {
+        final cached = prefs.getString(key);
+        if (cached != null) {
+          try {
+            final cacheData = jsonDecode(cached) as Map<String, dynamic>;
+            final timestamp = cacheData['timestamp'] as int;
+            if (now - timestamp > 24 * 60 * 60 * 1000) {
+              await prefs.remove(key);
+            }
+          } catch (_) {
+            await prefs.remove(key);
+          }
+        }
+      }
+    }
   }
 
   List<dynamic> _extractList(dynamic data) {
