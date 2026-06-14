@@ -21,6 +21,22 @@ GATEWAY_ROUTES: dict[str, str] = {
     "compliance_check": "POST /cloud/compliance/check",
     "search_memory": "POST /memory/recall",
     "write_memory": "POST /memory/entries",
+    "verify_expense": "POST /cloud/compliance/expense/check",
+    "verify_visit": "POST /cloud/compliance/visit/check",
+    "trace_distribution": "POST /cloud/compliance/distribution/trace",
+    "triangulation_check": "POST /cloud/compliance/triangulation/check",
+    "write_audit_log": "POST /cloud/compliance/audit/log",
+    "query_visit_history": "POST /cloud/visit/history/query",
+    "query_hcp_profile": "POST /cloud/hcp/profile/query",
+    "query_competitor_intel": "POST /cloud/competitor/intel/query",
+    "run_causal_attribution": "POST /cloud/causal/attribution/run",
+    "generate_brief": "POST /cloud/visit/brief/generate",
+    "collect_related_data": "POST /cloud/analysis/collect",
+    "run_pattern_analysis": "POST /cloud/analysis/pattern",
+    "run_causal_inference": "POST /cloud/causal/inference",
+    "generate_narrative": "POST /cloud/analysis/narrative",
+    "discover_related_patterns": "POST /cloud/analysis/related-patterns",
+    "trigger_red_light": "POST /cloud/compliance/red-light/trigger",
 }
 
 router = APIRouter(prefix="/agent-gateway", tags=["Agent Gateway"])

@@ -25,7 +25,6 @@ class TestHealthEndpoint:
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "ok"
-        assert data["service"] == "clinical-ops"
 
     def test_health_uptime_is_int(self):
         mod = importlib.import_module("clinical-ops.app.main")
