@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:one_cloud_app/models/surgery.dart';
-import 'package:one_cloud_app/services/database_service.dart';
-import 'package:one_cloud_app/screens/surgery/scan_screen.dart';
+import 'package:biopulse_app/models/surgery.dart';
+import 'package:biopulse_app/services/database_service.dart';
+import 'package:biopulse_app/screens/surgery/scan_screen.dart';
 
 class SurgeryDetailScreen extends StatefulWidget {
   final Surgery surgery;

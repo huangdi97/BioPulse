@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:one_cloud_app/services/sync_service.dart';
+import 'package:biopulse_app/services/sync_service.dart';
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({super.key});

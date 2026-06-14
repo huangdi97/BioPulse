@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:one_cloud_app/services/api_client.dart';
+import 'package:biopulse_app/services/api_client.dart';
 
 class AnalysisReportScreen extends StatefulWidget {
   const AnalysisReportScreen({super.key});

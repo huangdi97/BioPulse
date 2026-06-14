@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:one_cloud_app/models/pi_profile.dart';
-import 'package:one_cloud_app/services/database_service.dart';
-import 'package:one_cloud_app/services/api_client.dart';
-import 'package:one_cloud_app/screens/research/pi_detail_screen.dart';
+import 'package:biopulse_app/models/pi_profile.dart';
+import 'package:biopulse_app/services/database_service.dart';
+import 'package:biopulse_app/services/api_client.dart';
+import 'package:biopulse_app/screens/research/pi_detail_screen.dart';
 
 class PISearchScreen extends StatefulWidget {
   const PISearchScreen({super.key});

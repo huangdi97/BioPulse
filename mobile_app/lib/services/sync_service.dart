@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:one_cloud_app/models/hcp.dart';
-import 'package:one_cloud_app/models/visit.dart';
-import 'package:one_cloud_app/models/surgery.dart';
-import 'package:one_cloud_app/constants/app_constants.dart';
-import 'package:one_cloud_app/services/database_service.dart';
+import 'package:biopulse_app/models/hcp.dart';
+import 'package:biopulse_app/models/visit.dart';
+import 'package:biopulse_app/models/surgery.dart';
+import 'package:biopulse_app/constants/app_constants.dart';
+import 'package:biopulse_app/services/database_service.dart';
 
 class SyncService {
   final DatabaseService _db;

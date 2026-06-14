@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:one_cloud_app/providers/auth_provider.dart';
-import 'package:one_cloud_app/services/sync_service.dart';
+import 'package:biopulse_app/providers/auth_provider.dart';
+import 'package:biopulse_app/services/sync_service.dart';
 
 /// Splash screen displayed on app launch.
 ///
@@ -70,7 +70,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'One Cloud App',
+              'BioPulse',
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.primary,

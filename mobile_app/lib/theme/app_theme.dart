@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:one_cloud_app/providers/mode_provider.dart';
+import 'package:biopulse_app/providers/mode_provider.dart';
 
 /// Centralized app theme definition.
 ///

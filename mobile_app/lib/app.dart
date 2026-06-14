@@ -1,36 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:one_cloud_app/providers/auth_provider.dart';
-import 'package:one_cloud_app/providers/mode_provider.dart';
-import 'package:one_cloud_app/theme/app_theme.dart';
-import 'package:one_cloud_app/screens/splash_screen.dart';
-import 'package:one_cloud_app/screens/login_screen.dart';
-import 'package:one_cloud_app/screens/home_screen.dart';
-import 'package:one_cloud_app/screens/settings_screen.dart';
-import 'package:one_cloud_app/screens/surgery/surgery_home_screen.dart';
-import 'package:one_cloud_app/screens/opportunity/opportunity_list_screen.dart';
-import 'package:one_cloud_app/screens/opportunity/opportunity_detail_screen.dart';
-import 'package:one_cloud_app/screens/opportunity/opportunity_form_screen.dart';
-import 'package:one_cloud_app/screens/management/management_dashboard_screen.dart';
-import 'package:one_cloud_app/screens/management/compliance_record_screen.dart';
-import 'package:one_cloud_app/screens/management/notification_screen.dart';
-import 'package:one_cloud_app/screens/pharma/visit_list_screen.dart';
-import 'package:one_cloud_app/screens/pharma/hcp_list_screen.dart';
-import 'package:one_cloud_app/screens/pharma/compliance_screen.dart';
-import 'package:one_cloud_app/screens/surgery/scan_screen.dart';
-import 'package:one_cloud_app/screens/surgery/surgery_list_screen.dart';
-import 'package:one_cloud_app/screens/surgery/surgery_detail_screen.dart';
-import 'package:one_cloud_app/screens/surgery/surgery_form_screen.dart';
-import 'package:one_cloud_app/screens/research/pi_search_screen.dart';
-import 'package:one_cloud_app/screens/research/product_matching_screen.dart';
-import 'package:one_cloud_app/screens/research/quotation_screen.dart';
-import 'package:one_cloud_app/screens/sales_coach/training_list_screen.dart';
-import 'package:one_cloud_app/screens/sales_coach/analysis_report_screen.dart';
-import 'package:one_cloud_app/screens/sales_coach/recommendation_screen.dart';
-import 'package:one_cloud_app/screens/register_screen.dart';
-import 'package:one_cloud_app/screens/forgot_password_screen.dart';
-import 'package:one_cloud_app/screens/onboarding_screen.dart';
-import 'package:one_cloud_app/models/surgery.dart';
+import 'package:biopulse_app/providers/auth_provider.dart';
+import 'package:biopulse_app/providers/mode_provider.dart';
+import 'package:biopulse_app/theme/app_theme.dart';
+import 'package:biopulse_app/screens/splash_screen.dart';
+import 'package:biopulse_app/screens/login_screen.dart';
+import 'package:biopulse_app/screens/home_screen.dart';
+import 'package:biopulse_app/screens/settings_screen.dart';
+import 'package:biopulse_app/screens/surgery/surgery_home_screen.dart';
+import 'package:biopulse_app/screens/opportunity/opportunity_list_screen.dart';
+import 'package:biopulse_app/screens/opportunity/opportunity_detail_screen.dart';
+import 'package:biopulse_app/screens/opportunity/opportunity_form_screen.dart';
+import 'package:biopulse_app/screens/management/management_dashboard_screen.dart';
+import 'package:biopulse_app/screens/management/compliance_record_screen.dart';
+import 'package:biopulse_app/screens/management/notification_screen.dart';
+import 'package:biopulse_app/screens/pharma/visit_list_screen.dart';
+import 'package:biopulse_app/screens/pharma/hcp_list_screen.dart';
+import 'package:biopulse_app/screens/pharma/compliance_screen.dart';
+import 'package:biopulse_app/screens/surgery/scan_screen.dart';
+import 'package:biopulse_app/screens/surgery/surgery_list_screen.dart';
+import 'package:biopulse_app/screens/surgery/surgery_detail_screen.dart';
+import 'package:biopulse_app/screens/surgery/surgery_form_screen.dart';
+import 'package:biopulse_app/screens/research/pi_search_screen.dart';
+import 'package:biopulse_app/screens/research/product_matching_screen.dart';
+import 'package:biopulse_app/screens/research/quotation_screen.dart';
+import 'package:biopulse_app/screens/sales_coach/training_list_screen.dart';
+import 'package:biopulse_app/screens/sales_coach/analysis_report_screen.dart';
+import 'package:biopulse_app/screens/sales_coach/recommendation_screen.dart';
+import 'package:biopulse_app/screens/register_screen.dart';
+import 'package:biopulse_app/screens/forgot_password_screen.dart';
+import 'package:biopulse_app/screens/onboarding_screen.dart';
+import 'package:biopulse_app/models/surgery.dart';
 
 /// Root MaterialApp widget with provider tree and route configuration.
 ///
@@ -44,7 +44,7 @@ class App extends StatelessWidget {
     return Consumer2<AuthProvider, ModeProvider>(
       builder: (context, auth, mode, _) {
         return MaterialApp(
-          title: 'One Cloud App',
+          title: 'BioPulse',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.getTheme(mode: mode.currentMode),
           darkTheme: AppTheme.getTheme(

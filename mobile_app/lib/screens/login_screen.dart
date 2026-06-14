@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:one_cloud_app/providers/auth_provider.dart';
-import 'package:one_cloud_app/providers/mode_provider.dart';
-import 'package:one_cloud_app/services/sync_service.dart';
+import 'package:biopulse_app/providers/auth_provider.dart';
+import 'package:biopulse_app/providers/mode_provider.dart';
+import 'package:biopulse_app/services/sync_service.dart';
 
 /// Login screen with username/password fields and loading state.
 ///
@@ -98,7 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'One Cloud App',
+                    'BioPulse',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,

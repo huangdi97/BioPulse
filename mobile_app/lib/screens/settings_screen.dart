@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:one_cloud_app/services/database_service.dart';
-import 'package:one_cloud_app/services/api_client.dart';
+import 'package:biopulse_app/services/database_service.dart';
+import 'package:biopulse_app/services/api_client.dart';
 import 'package:provider/provider.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -236,7 +236,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: theme.textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 12),
-                      _infoRow('应用名称', 'One Cloud App'),
+                      _infoRow('应用名称', 'BioPulse'),
                       _infoRow('版本', '1.0.0+1'),
                       _infoRow('构建号', '1'),
                     ],

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:one_cloud_app/models/surgery.dart';
-import 'package:one_cloud_app/services/database_service.dart';
+import 'package:biopulse_app/models/surgery.dart';
+import 'package:biopulse_app/services/database_service.dart';
 
 class SurgeryFormScreen extends StatefulWidget {
   final Surgery? surgery;

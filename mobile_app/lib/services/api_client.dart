@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:one_cloud_app/services/auth_service.dart';
+import 'package:biopulse_app/services/auth_service.dart';
 
 /// Dio HTTP client wrapper with token refresh and response unwrapping.
 class ApiClient {

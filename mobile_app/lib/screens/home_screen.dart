@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:one_cloud_app/providers/auth_provider.dart';
-import 'package:one_cloud_app/providers/mode_provider.dart';
-import 'package:one_cloud_app/screens/settings_screen.dart';
-import 'package:one_cloud_app/screens/pharma/visit_list_screen.dart';
-import 'package:one_cloud_app/screens/pharma/hcp_list_screen.dart';
-import 'package:one_cloud_app/screens/pharma/compliance_screen.dart';
-import 'package:one_cloud_app/screens/surgery/surgery_list_screen.dart';
-import 'package:one_cloud_app/screens/surgery/scan_screen.dart';
-import 'package:one_cloud_app/screens/research/pi_search_screen.dart';
-import 'package:one_cloud_app/screens/research/product_matching_screen.dart';
-import 'package:one_cloud_app/screens/research/quotation_screen.dart';
-import 'package:one_cloud_app/screens/opportunity/opportunity_list_screen.dart';
-import 'package:one_cloud_app/screens/sales_coach/training_list_screen.dart';
-import 'package:one_cloud_app/screens/sales_coach/analysis_report_screen.dart';
-import 'package:one_cloud_app/screens/sales_coach/recommendation_screen.dart';
-import 'package:one_cloud_app/screens/management/management_dashboard_screen.dart';
+import 'package:biopulse_app/providers/auth_provider.dart';
+import 'package:biopulse_app/providers/mode_provider.dart';
+import 'package:biopulse_app/screens/settings_screen.dart';
+import 'package:biopulse_app/screens/pharma/visit_list_screen.dart';
+import 'package:biopulse_app/screens/pharma/hcp_list_screen.dart';
+import 'package:biopulse_app/screens/pharma/compliance_screen.dart';
+import 'package:biopulse_app/screens/surgery/surgery_list_screen.dart';
+import 'package:biopulse_app/screens/surgery/scan_screen.dart';
+import 'package:biopulse_app/screens/research/pi_search_screen.dart';
+import 'package:biopulse_app/screens/research/product_matching_screen.dart';
+import 'package:biopulse_app/screens/research/quotation_screen.dart';
+import 'package:biopulse_app/screens/opportunity/opportunity_list_screen.dart';
+import 'package:biopulse_app/screens/sales_coach/training_list_screen.dart';
+import 'package:biopulse_app/screens/sales_coach/analysis_report_screen.dart';
+import 'package:biopulse_app/screens/sales_coach/recommendation_screen.dart';
+import 'package:biopulse_app/screens/management/management_dashboard_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

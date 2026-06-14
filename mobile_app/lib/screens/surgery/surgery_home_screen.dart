@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:one_cloud_app/models/surgery.dart';
-import 'package:one_cloud_app/services/database_service.dart';
-import 'package:one_cloud_app/services/sync_service.dart';
-import 'package:one_cloud_app/theme/design_tokens.dart';
-import 'package:one_cloud_app/screens/surgery/scan_screen.dart';
-import 'package:one_cloud_app/screens/surgery/surgery_form_screen.dart';
-import 'package:one_cloud_app/screens/surgery/surgery_list_screen.dart';
-import 'package:one_cloud_app/screens/surgery/surgery_detail_screen.dart';
+import 'package:biopulse_app/models/surgery.dart';
+import 'package:biopulse_app/services/database_service.dart';
+import 'package:biopulse_app/services/sync_service.dart';
+import 'package:biopulse_app/theme/design_tokens.dart';
+import 'package:biopulse_app/screens/surgery/scan_screen.dart';
+import 'package:biopulse_app/screens/surgery/surgery_form_screen.dart';
+import 'package:biopulse_app/screens/surgery/surgery_list_screen.dart';
+import 'package:biopulse_app/screens/surgery/surgery_detail_screen.dart';
 
 class SurgeryHomeScreen extends StatefulWidget {
   const SurgeryHomeScreen({super.key});

@@ -1,6 +1,6 @@
 {
-    "name": "one_cloud_app",
-    "short_name": "one_cloud_app",
+    "name": "BioPulse",
+    "short_name": "BioPulse",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

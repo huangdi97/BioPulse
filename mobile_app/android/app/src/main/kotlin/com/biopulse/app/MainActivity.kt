@@ -1,4 +1,4 @@
-package com.onecloud4ends.one_cloud_app
+package com.biopulse.app
 
 import io.flutter.embedding.android.FlutterActivity
 

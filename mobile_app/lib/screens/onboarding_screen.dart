@@ -48,7 +48,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   _buildPage(
                     icon: Icons.cloud_done_outlined,
-                    title: '欢迎使用 One Cloud App',
+                    title: '欢迎使用 BioPulse',
                     description: '一站式云端工作平台，\n助力您的业务高效运转',
                     theme: theme,
                   ),

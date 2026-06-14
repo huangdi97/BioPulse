@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:one_cloud_app/services/auth_service.dart';
+import 'package:biopulse_app/services/auth_service.dart';
 
 /// ChangeNotifier managing authentication state across the app.
 ///

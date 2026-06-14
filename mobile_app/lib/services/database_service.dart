@@ -1,10 +1,10 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:one_cloud_app/models/visit.dart';
-import 'package:one_cloud_app/models/surgery.dart';
-import 'package:one_cloud_app/models/hcp.dart';
-import 'package:one_cloud_app/models/pi_profile.dart';
-import 'package:one_cloud_app/models/quotation.dart';
+import 'package:biopulse_app/models/visit.dart';
+import 'package:biopulse_app/models/surgery.dart';
+import 'package:biopulse_app/models/hcp.dart';
+import 'package:biopulse_app/models/pi_profile.dart';
+import 'package:biopulse_app/models/quotation.dart';
 
 /// Local SQLite database service for offline-first data storage.
 ///
@@ -12,7 +12,7 @@ import 'package:one_cloud_app/models/quotation.dart';
 /// for pending records that need to be synced with the server.
 class DatabaseService {
   static Database? _database;
-  static const String _dbName = 'one_cloud_app.db';
+  static const String _dbName = 'biopulse_app.db';
   static const int _dbVersion = 3;
 
   /// Initialize the database and create tables if they do not exist.

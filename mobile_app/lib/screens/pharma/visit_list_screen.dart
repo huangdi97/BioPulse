@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:one_cloud_app/models/visit.dart';
-import 'package:one_cloud_app/services/database_service.dart';
-import 'package:one_cloud_app/services/sync_service.dart';
-import 'package:one_cloud_app/services/api_client.dart';
-import 'package:one_cloud_app/screens/pharma/visit_form_screen.dart';
+import 'package:biopulse_app/models/visit.dart';
+import 'package:biopulse_app/services/database_service.dart';
+import 'package:biopulse_app/services/sync_service.dart';
+import 'package:biopulse_app/services/api_client.dart';
+import 'package:biopulse_app/screens/pharma/visit_form_screen.dart';
 
 class VisitListScreen extends StatefulWidget {
   const VisitListScreen({super.key});

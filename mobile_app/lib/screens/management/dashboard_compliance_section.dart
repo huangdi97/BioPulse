@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:one_cloud_app/theme/design_tokens.dart';
+import 'package:biopulse_app/theme/design_tokens.dart';
 
 enum _ComplianceStatus { pass, warn, violation }
 

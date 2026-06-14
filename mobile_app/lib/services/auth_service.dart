@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:one_cloud_app/services/api_client.dart';
+import 'package:biopulse_app/services/api_client.dart';
 
 /// Authentication service managing login, logout, and token persistence.
 ///

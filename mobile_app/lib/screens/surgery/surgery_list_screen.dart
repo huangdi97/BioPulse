@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:one_cloud_app/models/surgery.dart';
-import 'package:one_cloud_app/services/database_service.dart';
-import 'package:one_cloud_app/services/sync_service.dart';
-import 'package:one_cloud_app/screens/surgery/surgery_form_screen.dart';
+import 'package:biopulse_app/models/surgery.dart';
+import 'package:biopulse_app/services/database_service.dart';
+import 'package:biopulse_app/services/sync_service.dart';
+import 'package:biopulse_app/screens/surgery/surgery_form_screen.dart';
 
 class SurgeryListScreen extends StatefulWidget {
   const SurgeryListScreen({super.key});

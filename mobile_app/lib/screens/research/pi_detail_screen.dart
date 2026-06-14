@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:one_cloud_app/models/pi_profile.dart';
-import 'package:one_cloud_app/screens/research/product_matching_screen.dart';
+import 'package:biopulse_app/models/pi_profile.dart';
+import 'package:biopulse_app/screens/research/product_matching_screen.dart';
 
 class PIDetailScreen extends StatelessWidget {
   final PIProfile profile;

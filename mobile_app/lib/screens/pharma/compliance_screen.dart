@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:one_cloud_app/models/compliance_result.dart';
-import 'package:one_cloud_app/services/api_client.dart';
+import 'package:biopulse_app/models/compliance_result.dart';
+import 'package:biopulse_app/services/api_client.dart';
 
 class ComplianceScreen extends StatefulWidget {
   const ComplianceScreen({super.key});

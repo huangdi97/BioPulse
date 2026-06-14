@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:one_cloud_app/models/visit.dart';
-import 'package:one_cloud_app/models/hcp.dart';
-import 'package:one_cloud_app/models/compliance_result.dart';
-import 'package:one_cloud_app/services/database_service.dart';
+import 'package:biopulse_app/models/visit.dart';
+import 'package:biopulse_app/models/hcp.dart';
+import 'package:biopulse_app/models/compliance_result.dart';
+import 'package:biopulse_app/services/database_service.dart';
 
 class VisitFormScreen extends StatefulWidget {
   final Visit? visit;
