@@ -1,4 +1,8 @@
 <view class="page">
+  <view wx:if="{{insights.length > 0}}" class="insight-card green">
+    <view class="insight-title">AI 洞察</view>
+    <view class="insight-text">{{insights[0].summary}}</view>
+  </view>
   <view class="title">新建拜访</view>
   <view class="panel">
     <view class="label">HCP</view>

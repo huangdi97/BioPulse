@@ -8,7 +8,8 @@ Page({
     content: '',
     visitTime: '',
     submitting: false,
-    visitTypes: ['学术拜访', '产品沟通', '术后随访', '科室会议']
+    visitTypes: ['学术拜访', '产品沟通', '术后随访', '科室会议'],
+    insights: []
   },
 
   onLoad(query) {
@@ -18,6 +19,9 @@ Page({
       hcpId: query.hcp_id || '',
       hcpName: query.hcp_name ? decodeURIComponent(query.hcp_name) : '',
       visitTime
+    })
+    api.getAgentInsights('visit').then((insights) => {
+      this.setData({ insights })
     })
   },
 

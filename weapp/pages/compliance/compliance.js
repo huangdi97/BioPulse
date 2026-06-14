@@ -1,3 +1,5 @@
+const api = require('../../utils/api')
+
 Page({
   data: {
     items: [
@@ -7,7 +9,14 @@ Page({
       { id: 'privacy', text: '未记录无授权患者隐私信息', checked: false },
       { id: 'material', text: '使用资料来自已批准内容库', checked: false }
     ],
-    result: '待检查'
+    result: '待检查',
+    insights: []
+  },
+
+  onLoad() {
+    api.getAgentInsights('compliance').then((insights) => {
+      this.setData({ insights })
+    })
   },
 
   toggleItem(event) {

@@ -1,4 +1,8 @@
 <view class="page">
+  <view wx:if="{{insights.length > 0}}" class="insight-card">
+    <view class="insight-title">AI 洞察</view>
+    <view class="insight-text">{{insights[0].summary}}</view>
+  </view>
   <view class="title">HCP 查询</view>
   <view class="panel">
     <input class="field" placeholder="姓名 / 科室 / 医院" value="{{keyword}}" bindinput="onInput" confirm-type="search" bindconfirm="search" />

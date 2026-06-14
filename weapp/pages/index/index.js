@@ -4,11 +4,15 @@ Page({
   data: {
     keyword: '',
     loading: false,
-    hcps: []
+    hcps: [],
+    insights: []
   },
 
   onLoad() {
     this.search()
+    api.getAgentInsights('index').then((insights) => {
+      this.setData({ insights })
+    })
   },
 
   onInput(event) {

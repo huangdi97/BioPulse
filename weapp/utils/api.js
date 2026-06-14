@@ -62,9 +62,16 @@ function optimizeSchedule(payload) {
   })
 }
 
+function getAgentInsights(pageId) {
+  return request({
+    url: `/api/v1/agent/insights?page=${pageId}`
+  }).then((res) => res.insights || []).catch(() => [])
+}
+
 module.exports = {
   request,
   searchHcp,
   createSchedule,
-  optimizeSchedule
+  optimizeSchedule,
+  getAgentInsights
 }

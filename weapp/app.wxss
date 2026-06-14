@@ -48,3 +48,27 @@ page {
   color: #0f766e;
   border-radius: 8rpx;
 }
+
+.insight-card {
+  margin: 10px;
+  padding: 12px;
+  border-left: 4px solid #3b82f6;
+  background: #f0f9ff;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.insight-card.green {
+  border-color: #22c55e;
+  background: #f0fdf4;
+}
+.insight-card.orange {
+  border-color: #f97316;
+  background: #fff7ed;
+}
+.insight-title {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+.insight-text {
+  color: #666;
+}
