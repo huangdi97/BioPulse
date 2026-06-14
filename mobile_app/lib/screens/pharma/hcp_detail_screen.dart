@@ -4,6 +4,7 @@ import 'package:biopulse_app/models/hcp.dart';
 import 'package:biopulse_app/models/visit.dart';
 import 'package:biopulse_app/services/database_service.dart';
 import 'package:biopulse_app/screens/pharma/visit_form_screen.dart';
+import 'package:biopulse_app/widgets/agent_summary_card.dart';
 
 class HcpDetailScreen extends StatefulWidget {
   final int hcpId;
@@ -76,9 +77,18 @@ class _HcpDetailScreenState extends State<HcpDetailScreen> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: Column(
         children: [
+          AgentSummaryCard(
+            title: '情报摘要',
+            agentKey: 'knowledge_worker',
+            pageId: 'mobile_hcp_detail',
+            variant: 'summary',
+          ),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),

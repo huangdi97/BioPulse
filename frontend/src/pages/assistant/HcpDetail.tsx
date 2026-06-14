@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { fetchAssistantHcpDetail, type AssistantHcp } from '@/api/assistant-api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ArrowLeft, User, Building2, MapPin } from 'lucide-react'
+import AgentSummaryCard from '../../components/AgentSummaryCard'
 
 export default function HcpDetail() {
   const { id } = useParams<{ id: string }>()
@@ -26,6 +26,7 @@ export default function HcpDetail() {
 
   return (
     <div className="space-y-4">
+      <AgentSummaryCard agentKey='knowledge_worker' pageId='hcp_detail' title='情报摘要' variant='summary' />
       <button onClick={() => navigate('/assistant/hcps')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-4 w-4" />返回列表
       </button>

@@ -6,6 +6,7 @@ import { fetchSuggestions } from '@/api/recommends'
 import type { DashboardSummary, Task, AiSuggestion } from '@/types'
 import StatCard from '@/components/StatCard'
 import AiSuggestionCard from '@/components/AiSuggestionCard'
+import AgentSummaryCard from '../../components/AgentSummaryCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ClipboardList, CalendarCheck, AlertTriangle, Check } from 'lucide-react'
 
@@ -67,6 +68,7 @@ export default function RepDashboard() {
 
   return (
     <div className="space-y-4">
+      <AgentSummaryCard title='今日建议' agentKey='sales_suggestion' pageId='rep_dashboard' variant='suggestion' />
       <div className="flex gap-4">
         <StatCard
           icon={<ClipboardList className="h-5 w-5 text-blue-600" />}

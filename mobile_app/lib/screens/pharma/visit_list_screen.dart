@@ -1,3 +1,4 @@
+import 'package:biopulse_app/widgets/agent_summary_card.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -167,6 +168,12 @@ class _VisitListScreenState extends State<VisitListScreen>
               Tab(text: '本周'),
               Tab(text: '本月'),
             ],
+          ),
+          AgentSummaryCard(
+            title: '今日推荐',
+            agentKey: 'sales_suggestion',
+            pageId: 'mobile_visit_list',
+            variant: 'suggestion',
           ),
           Expanded(
             child: _loading

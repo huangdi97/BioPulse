@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:biopulse_app/models/compliance_result.dart';
 import 'package:biopulse_app/services/api_client.dart';
+import 'package:biopulse_app/widgets/agent_summary_card.dart';
 
 class ComplianceScreen extends StatefulWidget {
   const ComplianceScreen({super.key});
@@ -138,6 +139,12 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const AgentSummaryCard(
+            title: '合规状态',
+            agentKey: 'compliance_monitor',
+            pageId: 'mobile_compliance',
+            variant: 'pulse',
+          ),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),

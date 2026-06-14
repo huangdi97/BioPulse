@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import StatCard from '@/components/StatCard'
+import AgentSummaryCard from '../../../components/AgentSummaryCard'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
@@ -22,6 +23,7 @@ export default function Summary() {
 
   return (
     <div className="space-y-4">
+      <AgentSummaryCard title='公司月报摘要' agentKey='anomaly_analysis' pageId='president_summary' variant='summary' />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={<DollarSign className="h-5 w-5 text-green-600" />}

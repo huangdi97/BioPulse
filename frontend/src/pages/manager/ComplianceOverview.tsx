@@ -18,6 +18,7 @@ import {
 } from 'recharts'
 import { fetchComplianceDashboard } from '@/api/compliance'
 import type { ComplianceDashboard } from '@/types'
+import AgentSummaryCard from '../../components/AgentSummaryCard'
 
 const RISK_BG: Record<string, string> = {
   low: 'bg-blue-100 text-blue-700',
@@ -146,7 +147,8 @@ export default function ComplianceOverview() {
             <CardTitle className="text-base">高频违规类型 TOP3</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+<div className="space-y-4">
+        <AgentSummaryCard title='合规脉搏' agentKey='compliance_monitor' pageId='compliance_overview' variant='pulse' />
               {data.topCategories.map((cat, index) => (
                 <div key={cat.category} className="flex items-center gap-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-bold shrink-0">
