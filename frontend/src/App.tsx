@@ -81,6 +81,7 @@ const ObjectionList = lazy(() => import('./pages/sales-assistant/ObjectionList')
 const NoteList = lazy(() => import('./pages/sales-assistant/NoteList'))
 const FunnelView = lazy(() => import('./pages/sales-assistant/FunnelView'))
 const ScheduleView = lazy(() => import('./pages/sales-assistant/ScheduleView'))
+const DiagnosisPage = lazy(() => import('./pages/DiagnosisPage'))
 
 export default function App() {
   return (
@@ -100,6 +101,7 @@ export default function App() {
                 <Route path="hcps" element={<HcpList />} />
                 <Route path="hcps/:id" element={<HcpDetail />} />
                 <Route path="tasks" element={<TaskList />} />
+                <Route path="diagnosis" element={<DiagnosisPage />} />
                 <Route path="visits/new" element={<VisitNew />} />
                 <Route path="visits/:id" element={<VisitDetail />} />
                 <Route path="visits" element={<VisitList />} />

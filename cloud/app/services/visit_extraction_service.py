@@ -101,7 +101,20 @@ def confirm_draft(draft_id: str, user_id: str, edited_fields: dict) -> dict:
 
 
 async def extract_visit_fields(transcript: str, confidence: float) -> dict:
-    raise NotImplementedError("LLM extraction not configured - requires LLM API access")
+    from cloud.app.services.extraction_schema import ExtractionSchema
+    from cloud.app.services.llm_extraction_service import LLMExtractionService
+    from cloud.app.services.llm_service import LlmService
+    from cloud.app.services.memory_service import MemoryService
+
+    llm = LlmService()
+    mem = MemoryService()
+    svc = LLMExtractionService(llm, mem)
+    schema = ExtractionSchema(
+        field_name="visit_summary",
+        description="Structured summary of the doctor visit including key discussion points, action items, and compliance markers",
+        type="string",
+    )
+    return await svc.extract_structured_fields(transcript, schema)
 
 
 async def generate_visit_draft(audio_file: str, user_id: str) -> dict:

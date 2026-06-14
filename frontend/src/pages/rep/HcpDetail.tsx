@@ -14,6 +14,8 @@ import {
   Play,
   Lightbulb,
 } from 'lucide-react'
+import AgentSummaryCard from '../../components/AgentSummaryCard'
+import AgentInsightBar from '../../components/AgentInsightBar'
 
 export default function HcpDetail() {
   const { id } = useParams<{ id: string }>()
@@ -100,6 +102,9 @@ export default function HcpDetail() {
           <p className="text-sm text-muted-foreground">{hcp.title}</p>
         </div>
       </div>
+
+      <AgentSummaryCard title='情报摘要' agentKey='knowledge_worker' pageId='rep_hcp_detail' variant='summary' />
+      <AgentInsightBar pageId="rep_hcp_detail" />
 
       <Card>
         <CardHeader>

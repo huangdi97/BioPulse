@@ -50,6 +50,13 @@ class SpecializedAgent(BaseAgent):
             self._model.agent_id,
             context.message[:64],
         )
+        safety = self._model.safety_profile
+        blocked = safety.check_topic(context.message)
+        if blocked is not None:
+            logger.warning("SafetyProfile blocked topic '%s' for agent %s", blocked, self._model.agent_id)
+            return AgentResponse(reply=f"[安全拦截] 消息包含被阻止的话题: {blocked}", actions=[], memory_updates=[])
+        if not safety.llm_audit_placeholder(context.message):
+            return AgentResponse(reply="[安全拦截] LLM 审核未通过", actions=[], memory_updates=[])
         namespace = None
         if self._memory is not None:
             try:

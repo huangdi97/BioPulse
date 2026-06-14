@@ -8,6 +8,7 @@ from pathlib import Path
 import yaml
 
 from cloud.app.agents.agent_model import AgentModel
+from cloud.app.agents.safety_profile import SafetyProfile
 
 logger = logging.getLogger(__name__)
 
@@ -65,12 +66,15 @@ class AgentRepository:
             safety_level = safety.get("max_permission", "read")
         else:
             safety_level = "read"
+        allowed_tools = data.get("allowed_tools", [])
+        safety_profile = SafetyProfile.from_safety_level(safety_level, allowed_tools=allowed_tools)
         return AgentModel(
             agent_id=agent_id,
             name=data.get("name", agent_id),
             persona=f"{data.get('role', '')}: {data.get('goal', '')}",
-            capabilities=data.get("allowed_tools", []),
+            capabilities=allowed_tools,
             model_preference=model_preference,
             safety_level=safety_level,
             interrupt_behavior=data.get("trigger_mode", "user_request"),
+            safety_profile=safety_profile,
         )

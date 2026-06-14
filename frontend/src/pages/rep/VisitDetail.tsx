@@ -5,6 +5,8 @@ import { fetchSuggestions } from '@/api/recommends'
 import type { VisitRecord, AiSuggestion } from '@/types'
 import { Button } from '@/components/ui/button'
 import AiSuggestionCard from '@/components/AiSuggestionCard'
+import AgentSummaryCard from '../../components/AgentSummaryCard'
+import AgentInsightBar from '../../components/AgentInsightBar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   ArrowLeft,
@@ -92,6 +94,9 @@ export default function VisitDetail() {
         <ArrowLeft className="h-4 w-4" />
         返回
       </button>
+
+      <AgentSummaryCard title='拜访分析' agentKey='visit_analysis' pageId='visit_detail' variant='summary' />
+      <AgentInsightBar pageId="visit_detail" />
 
       <Card>
         <CardHeader className="pb-3">

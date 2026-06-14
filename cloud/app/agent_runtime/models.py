@@ -71,12 +71,13 @@ class Insight(BaseModel):
 
 
 class ToolDef(BaseModel):
-    """工具定义，含名称、描述、参数及权限级别。"""
+    """工具定义，含名称、描述、参数、权限级别及允许调用 Agent 列表。"""
 
     name: str
     description: str
     params: dict
     permission_level: str = "read"
+    allowed_agents: list[str] = []
 
 
 class AgentSpec(BaseModel):

@@ -11,6 +11,8 @@ import {
   BarChart3,
   Calendar,
 } from 'lucide-react'
+import AgentSummaryCard from '../../components/AgentSummaryCard'
+import AgentInsightBar from '../../components/AgentInsightBar'
 
 const sidebarItems = [
   { to: '/sales-assistant/precall', label: '预呼叫', icon: Phone },
@@ -116,6 +118,8 @@ export default function SalesAssistantLayout() {
         </nav>
 
         <main className="flex-1 overflow-y-auto p-4">
+          <AgentSummaryCard title='销售洞察' agentKey='sales_suggestion' pageId='sales_assistant' variant='suggestion' />
+          <AgentInsightBar pageId="sales_assistant" />
           <Outlet />
         </main>
       </div>

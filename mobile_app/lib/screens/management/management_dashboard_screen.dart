@@ -3,8 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:biopulse_app/providers/mode_provider.dart';
 import 'package:biopulse_app/theme/design_tokens.dart';
 import 'package:biopulse_app/services/api_client.dart';
+import 'package:biopulse_app/services/push_service.dart';
 import 'package:biopulse_app/screens/management/dashboard_compliance_section.dart';
 import 'package:biopulse_app/screens/management/dashboard_notification_section.dart';
+import 'package:biopulse_app/widgets/agent_insight_bar.dart';
 
 class ManagementDashboardScreen extends StatefulWidget {
   const ManagementDashboardScreen({super.key});
@@ -18,6 +20,13 @@ class _ManagementDashboardScreenState extends State<ManagementDashboardScreen> {
   void initState() {
     super.initState();
     _loadDashboard();
+    _initPushService();
+  }
+
+  Future<void> _initPushService() async {
+    final push = PushService();
+    await push.initialize();
+    await push.registerForPush();
   }
 
   Future<void> _loadDashboard() async {
@@ -48,6 +57,10 @@ class _ManagementDashboardScreenState extends State<ManagementDashboardScreen> {
           _WelcomeHeader(role: role),
           const SizedBox(height: DesignTokens.spaceMd),
           const _StatsRow(),
+          const SizedBox(height: DesignTokens.spaceMd),
+          const AgentInsightBar(pageId: 'management_dashboard'),
+          const SizedBox(height: DesignTokens.spaceMd),
+          _AiCapabilitySection(),
           const SizedBox(height: DesignTokens.spaceLg),
           _SectionHeader(
             title: '最近合规记录',
@@ -184,6 +197,100 @@ class _SectionHeader extends StatelessWidget {
             child: const Text('查看全部', style: TextStyle(fontSize: 13, color: DesignTokens.brand)),
           ),
       ],
+    );
+  }
+}
+
+class _AiCapabilitySection extends StatelessWidget {
+  const _AiCapabilitySection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('AI 能力', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        const SizedBox(height: DesignTokens.spaceSm),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              _AiCapabilityCard(
+                icon: Icons.mic,
+                label: 'ASR转录',
+                description: '语音实时转文字',
+              ),
+              const SizedBox(width: DesignTokens.spaceSm),
+              _AiCapabilityCard(
+                icon: Icons.notifications_active,
+                label: '智能提醒',
+                description: '自动生成提醒事项',
+              ),
+              const SizedBox(width: DesignTokens.spaceSm),
+              _AiCapabilityCard(
+                icon: Icons.tips_and_updates,
+                label: '拜访建议',
+                description: '个性化沟通策略',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AiCapabilityCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String description;
+
+  const _AiCapabilityCard({
+    required this.icon,
+    required this.label,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 140,
+      padding: const EdgeInsets.all(DesignTokens.spaceMd),
+      decoration: BoxDecoration(
+        color: DesignTokens.surfaceCard,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+        border: Border.all(color: DesignTokens.borderDefault),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 20, color: DesignTokens.brand),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.yellow.shade50,
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusPill),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.circle, size: 6, color: Colors.yellow),
+                    SizedBox(width: 3),
+                    Text('模拟', style: TextStyle(fontSize: 10, color: Colors.brown)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: DesignTokens.spaceSm),
+          Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 2),
+          Text(description, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
+        ],
+      ),
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:biopulse_app/models/visit.dart';
 import 'package:biopulse_app/services/database_service.dart';
 import 'package:biopulse_app/screens/pharma/visit_form_screen.dart';
 import 'package:biopulse_app/widgets/agent_summary_card.dart';
+import 'package:biopulse_app/widgets/agent_insight_bar.dart';
 
 class HcpDetailScreen extends StatefulWidget {
   final int hcpId;
@@ -85,6 +86,7 @@ class _HcpDetailScreenState extends State<HcpDetailScreen> {
             pageId: 'mobile_hcp_detail',
             variant: 'summary',
           ),
+          const AgentInsightBar(pageId: 'mobile_hcp_detail'),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(16),

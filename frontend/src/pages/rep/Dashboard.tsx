@@ -6,9 +6,11 @@ import { fetchSuggestions } from '@/api/recommends'
 import type { DashboardSummary, Task, AiSuggestion } from '@/types'
 import StatCard from '@/components/StatCard'
 import AiSuggestionCard from '@/components/AiSuggestionCard'
+import AiCapabilityCard from '@/components/ai/AiCapabilityCard'
 import AgentSummaryCard from '../../components/AgentSummaryCard'
+import AgentInsightBar from '../../components/AgentInsightBar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ClipboardList, CalendarCheck, AlertTriangle, Check } from 'lucide-react'
+import { ClipboardList, CalendarCheck, AlertTriangle, Check, Mic, Bell, Zap } from 'lucide-react'
 
 export default function RepDashboard() {
   const navigate = useNavigate()
@@ -94,6 +96,8 @@ export default function RepDashboard() {
         />
       </div>
 
+      <AgentInsightBar pageId="rep_dashboard" />
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">待办任务</CardTitle>
@@ -133,6 +137,30 @@ export default function RepDashboard() {
       </Card>
 
       <AiSuggestionCard suggestions={suggestions} maxItems={1} />
+
+      <div>
+        <h2 className="text-sm font-semibold text-muted-foreground mb-3">AI 能力</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <AiCapabilityCard
+            icon={<Mic className="h-5 w-5 text-blue-600" />}
+            title="ASR 转录"
+            description="自动将语音转换为文字，支持实时通话转录"
+            status="simulated"
+          />
+          <AiCapabilityCard
+            icon={<Bell className="h-5 w-5 text-purple-600" />}
+            title="智能提醒"
+            description="基于拜访历史和合规要求自动生成提醒"
+            status="simulated"
+          />
+          <AiCapabilityCard
+            icon={<Zap className="h-5 w-5 text-green-600" />}
+            title="拜访建议"
+            description="根据客户画像提供个性化沟通策略"
+            status="simulated"
+          />
+        </div>
+      </div>
     </div>
   )
 }

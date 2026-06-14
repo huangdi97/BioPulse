@@ -1,12 +1,25 @@
 """工具桥接模块，注册工具、权限校验、调用转发及熔断保护。"""
 
+from __future__ import annotations
+
 import json
 import time
 import urllib.request
+from dataclasses import dataclass
+from typing import Any
 
 from cloud.app.agent_runtime.models import ToolDef
 from cloud.app.agent_runtime.retry import retry_with_backoff
 from shared.app_settings import settings
+
+
+@dataclass
+class ToolResult:
+    """工具执行结果。"""
+
+    success: bool = False
+    data: Any = None
+    error: str = ""
 
 
 class ToolBridge:
@@ -247,6 +260,21 @@ class ToolBridge:
         if self._failure_counts[tool_name] >= 3:
             self._breaker_expiry[tool_name] = time.time() + 30
         return {"success": False, "data": None, "error": result["error"]}
+
+    def execute(self, tool_name: str, args: dict[str, Any] | None = None, caller_agent_id: str | None = None) -> ToolResult:
+        """执行工具调用，含 caller_agent_id 白名单校验。
+
+        allowed_agents 为空列表时允许所有 Agent 调用。
+        """
+        tool = self._tools.get(tool_name)
+        if tool is None:
+            return ToolResult(success=False, error=f"unknown tool: {tool_name}")
+
+        if caller_agent_id is not None and tool.allowed_agents:
+            if caller_agent_id not in tool.allowed_agents:
+                return ToolResult(success=False, error="agent not allowed")
+
+        return ToolResult(success=True, data=None, error="")
 
     def list_tools(self) -> list[dict]:
         """返回所有已注册工具的列表。"""

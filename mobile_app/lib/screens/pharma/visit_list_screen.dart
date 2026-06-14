@@ -1,4 +1,5 @@
 import 'package:biopulse_app/widgets/agent_summary_card.dart';
+import 'package:biopulse_app/widgets/agent_insight_bar.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -175,6 +176,7 @@ class _VisitListScreenState extends State<VisitListScreen>
             pageId: 'mobile_visit_list',
             variant: 'suggestion',
           ),
+          const AgentInsightBar(pageId: 'mobile_visit_list'),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
