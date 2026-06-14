@@ -120,13 +120,6 @@ def messages_publish(
         payload=body.payload,
         correlation_id=body.correlation_id,
     )
-    # EDAC: trigger subscribing agents
-    try:
-        from cloud.app.services.agent_event_bridge import on_event_published
-
-        on_event_published(body.event_type, body.payload)
-    except Exception:
-        pass
     return success(data=result)
 
 
