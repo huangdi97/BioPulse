@@ -2,6 +2,7 @@
 
 import json
 import re
+import sqlite3
 from datetime import datetime, timezone
 
 from fastapi import HTTPException
@@ -78,7 +79,7 @@ class ContentFactoryService(BaseService):
                 (template_key, name, content_type, template_body, compliance_rules, variables, now),
             )
             self.db.commit()
-        except Exception as e:
+        except (sqlite3.IntegrityError, sqlite3.Error) as e:
             if "UNIQUE" in str(e):
                 raise HTTPException(status.HTTP_409_CONFLICT, detail=f"模板键 '{template_key}' 已存在")
             raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

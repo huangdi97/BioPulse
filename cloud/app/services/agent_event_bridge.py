@@ -49,7 +49,7 @@ def _trigger_async(agent_key: str, goal: str, context: dict | None = None):
             runtime = RuntimeCore(conn, conn, "")
             result = runtime.execute(goal, agent_key, context or {})
             logger.info("EDAC agent=%s status=%s", agent_key, result.status)
-        except Exception:
+        except Exception:  # noqa: BLE001  # agent 执行可能抛出任意异常
             logger.exception("EDAC agent=%s failed", agent_key)
         finally:
             conn.close()

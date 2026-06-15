@@ -71,7 +71,7 @@ class SageLinkingService:
                         result["details"]["episodic_to_semantic"].append(
                             {"session_id": sid, "count": len(mids)},
                         )
-        except Exception:
+        except Exception:  # noqa: BLE001  # 链接操作多步可能失败
             logger.exception("链接异常")
 
         try:
@@ -91,7 +91,7 @@ class SageLinkingService:
                                 {"memory_ids": [a["id"], b_item["id"]], "common_areas": common},
                             )
                             paired.update([a["id"], b_item["id"]])
-        except Exception:
+        except Exception:  # noqa: BLE001  # 链接操作多步可能失败
             logger.exception("链接异常2")
 
         try:
@@ -108,10 +108,10 @@ class SageLinkingService:
                         result["details"]["world_tree_links"].append(
                             {"node_id": nodes[title], "memory_id": sem["id"]},
                         )
-                    except Exception:
+                    except Exception:  # noqa: BLE001  # 链接操作多步可能失败
                         logger.exception("链接异常3")
                         result["pending_manual"] += 1
-        except Exception:
+        except Exception:  # noqa: BLE001  # 链接操作多步可能失败
             logger.exception("链接异常4")
 
         return result

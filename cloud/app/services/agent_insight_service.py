@@ -55,6 +55,6 @@ class AgentInsightService:
                     result = await agent.insights_for(page_id, user_id)
                     if result:
                         results.extend(result)
-                except Exception:
+                except Exception:  # noqa: BLE001  # agent func 可能抛出任意异常
                     continue
         return results

@@ -181,7 +181,7 @@ class ToolRegistry:
         try:
             result = tool["fn"](**kwargs)
             return {"status": "ok", "data": result, "error": None}
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001  # 工具执行可能抛出任意异常
             return {"status": "error", "data": None, "error": str(e)}
 
     def clear(self) -> None:
@@ -241,7 +241,7 @@ class InferenceLoop:
                         "content": result["error"],
                         "tool": tc["name"],
                     }
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001  # 工具执行可能抛出任意异常
                 return {"type": "error", "content": str(e), "tool": tc["name"]}
 
         return {"type": "output", "content": content}

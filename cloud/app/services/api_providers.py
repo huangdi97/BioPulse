@@ -8,6 +8,7 @@ PIPL 合规声明：
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any
 
@@ -70,7 +71,7 @@ class ApiLLM(BaseLLM):
                 response.raise_for_status()
                 data = response.json()
                 return data["choices"][0]["message"]["content"]
-            except Exception as exc:
+            except (httpx.HTTPError, json.JSONDecodeError, KeyError, TypeError) as exc:
                 logger.warning(
                     "[ApiLLM] attempt %d/%d failed: %s",
                     attempt + 1,

@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import logging
+import sqlite3
 from datetime import date, datetime, timedelta
 from typing import Any
+
+import httpx
 
 from cloud.app.crawler.analysis.anomaly_detector import AnomalyDetector
 from cloud.app.crawler.analysis.sentiment_analyzer import SentimentAnalyzer
@@ -124,7 +127,7 @@ class CompetitorBriefService:
                 context={"channel": channel, "brief": brief},
             )
             return {"team_id": team_id, "channel": channel, "status": "sent", "notification_id": notification_id}
-        except Exception as exc:
+        except (sqlite3.Error, httpx.HTTPError) as exc:
             return {"team_id": team_id, "channel": channel, "status": "failed", "error": str(exc)}
 
     def _resolve_week_start(self, value: date | datetime | str | None) -> date:

@@ -155,7 +155,7 @@ class IntelAnalyzerMixin:
             with urllib.request.urlopen(req, timeout=60) as rp:
                 resp = json.loads(rp.read().decode("utf-8"))
                 ai_result = resp.get("data", {}).get("reply", "")
-        except Exception as e:
+        except (urllib.error.URLError, json.JSONDecodeError, KeyError) as e:
             raise HTTPException(status.HTTP_502_BAD_GATEWAY, detail=f"AI analysis failed: {str(e)}")
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         items_repo.update_fields(

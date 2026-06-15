@@ -1,9 +1,12 @@
 """Agent 推送通知服务"""
 
+import json
 import logging
 import time
 from enum import Enum
 from typing import Optional
+
+import httpx
 
 from cloud.app.services.notification_service import NotificationService
 
@@ -62,6 +65,6 @@ class AgentPushService:
             svc.create_notification(user_id=user_id, title=title, body=message, source="agent")
             logger.info("Pushed %s → %s", agent_key, user_id)
             return True
-        except Exception:
+        except (httpx.HTTPError, json.JSONDecodeError):
             logger.exception("Push failed %s", agent_key)
             return False

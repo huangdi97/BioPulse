@@ -2,6 +2,7 @@
 
 import json
 import logging
+import sqlite3
 import uuid
 
 from fastapi import HTTPException
@@ -68,7 +69,7 @@ class NetworkCrudMixin:
                 )
                 registered += 1
                 cells.append(cell_key)
-            except Exception as e:
+            except (sqlite3.Error, KeyError) as e:
                 failed.append({"agent_instance_key": agent_key, "error": str(e)})
 
         self.db.commit()
