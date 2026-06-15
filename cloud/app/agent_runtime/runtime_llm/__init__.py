@@ -1,4 +1,4 @@
-from .config import FALLBACK_CHAIN, AllModelsFailedError
+from .config import AllModelsFailedError, get_fallback_chain
 from .core import RuntimeLLM
 
-__all__ = ["RuntimeLLM", "AllModelsFailedError", "FALLBACK_CHAIN"]
+__all__ = ["RuntimeLLM", "AllModelsFailedError", "get_fallback_chain"]

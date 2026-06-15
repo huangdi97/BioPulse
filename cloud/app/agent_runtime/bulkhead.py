@@ -45,9 +45,3 @@ class Bulkhead:
         if sem:
             sem.release()
             logger.debug("Bulkhead released for agent %s", agent_name)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        pass

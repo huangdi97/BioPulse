@@ -12,10 +12,12 @@ from shared.config import settings as config_settings
 logger = logging.getLogger(__name__)
 
 
-def raw_llm_call(request_body: dict, auth_header: str) -> dict:
+def raw_llm_call(request_body: dict, auth_header: str, url: str | None = None) -> dict:
+    if url is None:
+        url = f"{config_settings.ai_chat_url}"
     with httpx.Client(timeout=LLM_INFERENCE_TIMEOUT) as client:
         resp = client.post(
-            f"{config_settings.ai_chat_url}",
+            url,
             json=request_body,
             headers={
                 "Content-Type": "application/json",
@@ -26,10 +28,12 @@ def raw_llm_call(request_body: dict, auth_header: str) -> dict:
         return resp.json()
 
 
-async def raw_llm_call_async(request_body: dict, auth_header: str) -> dict:
+async def raw_llm_call_async(request_body: dict, auth_header: str, url: str | None = None) -> dict:
+    if url is None:
+        url = f"{config_settings.ai_chat_url}"
     async with httpx.AsyncClient(timeout=LLM_INFERENCE_TIMEOUT) as client:
         resp = await client.post(
-            f"{config_settings.ai_chat_url}",
+            url,
             json=request_body,
             headers={
                 "Content-Type": "application/json",

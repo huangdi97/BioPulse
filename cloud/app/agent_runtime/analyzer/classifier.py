@@ -2,26 +2,19 @@
 
 import json
 import logging
-import urllib.request
 from typing import Any
 
 from cloud.app.agent_runtime.analyzer.models import Analysis
+from cloud.app.agent_runtime.runtime_llm.request import raw_llm_call
 from shared.config import settings as config_settings
 
 logger = logging.getLogger(__name__)
 
 
-def call_llm(llm_url: str, messages: list[dict]) -> str:
-    body = json.dumps({"messages": messages, "temperature": 0.1, "max_tokens": 1024}).encode("utf-8")
-    req = urllib.request.Request(
-        llm_url,
-        data=body,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=60) as rp:
-        data = json.loads(rp.read().decode("utf-8"))
-    return data.get("data", {}).get("reply", "")
+def call_llm(llm_url: str, messages: list[dict], auth_header: str = "") -> str:
+    body = {"messages": messages, "temperature": 0.1, "max_tokens": 1024}
+    result = raw_llm_call(body, auth_header, url=llm_url)
+    return result.get("data", {}).get("reply", "")
 
 
 def extract_json(raw: str) -> dict[str, Any]:
@@ -63,8 +56,9 @@ class FailureClassifier:
         "context_drift": "medium",
     }
 
-    def __init__(self, llm_url: str = config_settings.ai_chat_url):
+    def __init__(self, llm_url: str = config_settings.ai_chat_url, auth_header: str = ""):
         self._llm_url = llm_url
+        self._auth_header = auth_header
 
     def analyze(self, task: str, failed_step: str, result: dict, context: dict | None = None) -> Analysis:
         """Main entry — try non-LLM first, fall back to LLM for complex failures."""
@@ -112,7 +106,7 @@ class FailureClassifier:
             '"severity": "low"|"medium"|"high", "suggestion": "..."}'
         )
         try:
-            reply = call_llm(self._llm_url, [{"role": "user", "content": prompt}])
+            reply = call_llm(self._llm_url, [{"role": "user", "content": prompt}], self._auth_header)
             parsed = extract_json(reply)
             return Analysis(
                 cause=parsed.get("cause", "unknown"),

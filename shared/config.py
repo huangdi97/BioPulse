@@ -26,6 +26,16 @@ class Config(BaseSettings):
     ai_gateway_timeout: int = 120
 
     deepseek_api_key: str = ""
+    deepseek_api_url: str = "https://api.deepseek.com/v1/chat/completions"
+    deepseek_model: str = "deepseek-v4-flash"
+
+    openrouter_api_key: str = ""
+    openrouter_api_url: str = "https://openrouter.ai/api/v1/chat/completions"
+    openrouter_model: str = "openrouter/anthropic/claude-sonnet-4"
+
+    openai_api_key: str = ""
+    openai_api_url: str = "https://api.openai.com/v1/chat/completions"
+    openai_model: str = "openai/gpt-4o-mini"
     secret_key: str = ""  # PRIMARY: SECRET_KEY from env
     jwt_secret_key: str = ""  # FALLBACK: JWT_SECRET_KEY from env (legacy compat)
 

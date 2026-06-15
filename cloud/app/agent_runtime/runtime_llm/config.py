@@ -2,6 +2,8 @@
 
 import logging
 
+from shared.config import settings as config_settings
+
 logger = logging.getLogger(__name__)
 
 
@@ -11,16 +13,17 @@ class AllModelsFailedError(RuntimeError):
         super().__init__(f"All fallback models failed: {len(errors)} errors")
 
 
-FALLBACK_CHAIN = [
-    {"provider": "deepseek", "model": "deepseek-v4-flash", "env_key": "DEEPSEEK_API_KEY", "url": "https://api.deepseek.com/v1/chat/completions"},
-    {
-        "provider": "openrouter",
-        "model": "openrouter/anthropic/claude-sonnet-4",
-        "env_key": "OPENROUTER_API_KEY",
-        "url": "https://openrouter.ai/api/v1/chat/completions",
-    },
-    {"provider": "openai", "model": "openai/gpt-4o-mini", "env_key": "OPENAI_API_KEY", "url": "https://api.openai.com/v1/chat/completions"},
-]
+def get_fallback_chain() -> list[dict]:
+    return [
+        {"provider": "deepseek", "model": config_settings.deepseek_model, "env_key": "DEEPSEEK_API_KEY", "url": config_settings.deepseek_api_url},
+        {
+            "provider": "openrouter",
+            "model": config_settings.openrouter_model,
+            "env_key": "OPENROUTER_API_KEY",
+            "url": config_settings.openrouter_api_url,
+        },
+        {"provider": "openai", "model": config_settings.openai_model, "env_key": "OPENAI_API_KEY", "url": config_settings.openai_api_url},
+    ]
 
 
 def estimate_token_count(messages: list[dict]) -> int:
