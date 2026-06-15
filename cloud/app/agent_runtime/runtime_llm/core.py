@@ -56,47 +56,39 @@ class RuntimeLLM:
         """估算消息列表的复杂度等级。"""
         return estimate_complexity(messages)
 
-    def _call_local(self, messages: list[dict], temperature: float) -> dict:
-        """调用本地模型并支持降级到云端。"""
-        return call_local(
-            config_settings,
-            messages,
-            temperature,
-            fallback_fn=lambda: self._call_cloud_normal(messages, temperature),
+    def _do_call_local(self, messages: list[dict], temperature: float, is_async: bool):
+        fn = call_local_async if is_async else call_local
+        fallback_fn = (
+            (lambda: self._call_cloud_normal_async(messages, temperature)) if is_async else (lambda: self._call_cloud_normal(messages, temperature))
         )
+        return fn(config_settings, messages, temperature, fallback_fn=fallback_fn)
+
+    def _call_local(self, messages: list[dict], temperature: float) -> dict:
+        return self._do_call_local(messages, temperature, False)
 
     async def _call_local_async(self, messages: list[dict], temperature: float) -> dict:
-        """异步调用本地模型并支持降级到云端。"""
-        return await call_local_async(
-            config_settings,
-            messages,
-            temperature,
-            fallback_fn=lambda: self._call_cloud_normal_async(messages, temperature),
-        )
+        return await self._do_call_local(messages, temperature, True)
+
+    def _do_call_cloud(self, messages: list[dict], temperature: float, is_async: bool, agent_mode: bool = False):
+        body = build_cloud_body(messages, temperature, agent_mode=agent_mode)
+        if is_async:
+            fn = partial(self._raw_llm_call_async, body)
+            return async_retry_with_backoff(fn, max_attempts=4, base_delay=1.0)
+        else:
+            fn = partial(self._raw_llm_call, body)
+            return retry_with_backoff(fn, max_attempts=4, base_delay=1.0)
 
     def _call_cloud_normal(self, messages: list[dict], temperature: float) -> dict:
-        """通过云端正常运行模式调用 LLM。"""
-        body = build_cloud_body(messages, temperature)
-        fn = partial(self._raw_llm_call, body)
-        return retry_with_backoff(fn, max_attempts=4, base_delay=1.0)
+        return self._do_call_cloud(messages, temperature, False)
 
     async def _call_cloud_normal_async(self, messages: list[dict], temperature: float) -> dict:
-        """异步通过云端正常运行模式调用 LLM。"""
-        body = build_cloud_body(messages, temperature)
-        fn = partial(self._raw_llm_call_async, body)
-        return await async_retry_with_backoff(fn, max_attempts=4, base_delay=1.0)
+        return await self._do_call_cloud(messages, temperature, True)
 
     def _call_cloud_agent(self, messages: list[dict], temperature: float) -> dict:
-        """通过云端 Agent 模式调用 LLM。"""
-        body = build_cloud_body(messages, temperature, agent_mode=True)
-        fn = partial(self._raw_llm_call, body)
-        return retry_with_backoff(fn, max_attempts=4, base_delay=1.0)
+        return self._do_call_cloud(messages, temperature, False, agent_mode=True)
 
     async def _call_cloud_agent_async(self, messages: list[dict], temperature: float) -> dict:
-        """异步通过云端 Agent 模式调用 LLM。"""
-        body = build_cloud_body(messages, temperature, agent_mode=True)
-        fn = partial(self._raw_llm_call_async, body)
-        return await async_retry_with_backoff(fn, max_attempts=4, base_delay=1.0)
+        return await self._do_call_cloud(messages, temperature, True, agent_mode=True)
 
     @staticmethod
     def _usage_from_route_result(result: dict) -> dict:
@@ -108,35 +100,42 @@ class RuntimeLLM:
         """为路由结果添加模型层级标注。"""
         return annotate_route_result(result, model_tier)
 
-    def _route_call(self, messages: list[dict], temperature: float, force_level: int | None = None) -> dict:
-        """根据复杂度和配置路由 LLM 调用。"""
-        if force_level is not None:
-            level = force_level
-        elif not config_settings.ai_routing_enabled:
-            return self._annotate_route_result(self._call_cloud_normal(messages, temperature), "cloud_normal")
-        else:
-            level = self._estimate_complexity(messages)
+    def _do_route(self, messages: list[dict], temperature: float, force_level: int | None, is_async: bool):
+        def _sync():
+            if force_level is not None:
+                level = force_level
+            elif not config_settings.ai_routing_enabled:
+                return self._annotate_route_result(self._call_cloud_normal(messages, temperature), "cloud_normal")
+            else:
+                level = self._estimate_complexity(messages)
 
-        if level <= 2:
-            return self._annotate_route_result(self._call_local(messages, temperature), "local")
-        if level == 3:
-            return self._annotate_route_result(self._call_cloud_normal(messages, temperature), "cloud_normal")
-        return self._annotate_route_result(self._call_cloud_agent(messages, temperature), "cloud_agent")
+            if level <= 2:
+                return self._annotate_route_result(self._call_local(messages, temperature), "local")
+            if level == 3:
+                return self._annotate_route_result(self._call_cloud_normal(messages, temperature), "cloud_normal")
+            return self._annotate_route_result(self._call_cloud_agent(messages, temperature), "cloud_agent")
+
+        async def _async():
+            if force_level is not None:
+                level = force_level
+            elif not config_settings.ai_routing_enabled:
+                return self._annotate_route_result(await self._call_cloud_normal_async(messages, temperature), "cloud_normal")
+            else:
+                level = self._estimate_complexity(messages)
+
+            if level <= 2:
+                return self._annotate_route_result(await self._call_local_async(messages, temperature), "local")
+            if level == 3:
+                return self._annotate_route_result(await self._call_cloud_normal_async(messages, temperature), "cloud_normal")
+            return self._annotate_route_result(await self._call_cloud_agent_async(messages, temperature), "cloud_agent")
+
+        return _async() if is_async else _sync()
+
+    def _route_call(self, messages: list[dict], temperature: float, force_level: int | None = None) -> dict:
+        return self._do_route(messages, temperature, force_level, False)
 
     async def _route_call_async(self, messages: list[dict], temperature: float, force_level: int | None = None) -> dict:
-        """异步路由 LLM 调用。"""
-        if force_level is not None:
-            level = force_level
-        elif not config_settings.ai_routing_enabled:
-            return self._annotate_route_result(await self._call_cloud_normal_async(messages, temperature), "cloud_normal")
-        else:
-            level = self._estimate_complexity(messages)
-
-        if level <= 2:
-            return self._annotate_route_result(await self._call_local_async(messages, temperature), "local")
-        if level == 3:
-            return self._annotate_route_result(await self._call_cloud_normal_async(messages, temperature), "cloud_normal")
-        return self._annotate_route_result(await self._call_cloud_agent_async(messages, temperature), "cloud_agent")
+        return await self._do_route(messages, temperature, force_level, True)
 
     @staticmethod
     def _call_provider(messages: list[dict], temperature: float, provider: dict) -> dict:
@@ -148,162 +147,182 @@ class RuntimeLLM:
         """异步调用指定供应商的 LLM。"""
         return await call_provider_async(messages, temperature, provider)
 
+    def _do_fallback(self, messages: list[dict], temperature: float, fallback_strategy: str, is_async: bool):
+        def _sync():
+            errors = []
+            for provider in get_fallback_chain():
+                logger.info("Trying provider: %s model: %s", provider["provider"], provider["model"])
+                start = time.time()
+                result = self._call_provider(messages, temperature, provider)
+                elapsed = round(time.time() - start, 3)
+                if result["success"]:
+                    logger.info("Provider %s succeeded in %.3fs", provider["provider"], elapsed)
+                    return result
+                errors.append(
+                    {"provider": provider["provider"], "model": provider["model"], "error": result.get("error", "unknown"), "elapsed": elapsed}
+                )
+                logger.warning("Provider %s failed in %.3fs: %s", provider["provider"], elapsed, result.get("error"))
+                if fallback_strategy == "fail_fast":
+                    break
+            raise AllModelsFailedError(errors)
+
+        async def _async():
+            errors = []
+            for provider in get_fallback_chain():
+                logger.info("Trying provider: %s model: %s", provider["provider"], provider["model"])
+                start = time.time()
+                result = await self._call_provider_async(messages, temperature, provider)
+                elapsed = round(time.time() - start, 3)
+                if result["success"]:
+                    logger.info("Provider %s succeeded in %.3fs", provider["provider"], elapsed)
+                    return result
+                errors.append(
+                    {"provider": provider["provider"], "model": provider["model"], "error": result.get("error", "unknown"), "elapsed": elapsed}
+                )
+                logger.warning("Provider %s failed in %.3fs: %s", provider["provider"], elapsed, result.get("error"))
+                if fallback_strategy == "fail_fast":
+                    break
+            raise AllModelsFailedError(errors)
+
+        return _async() if is_async else _sync()
+
     def call_llm_with_fallback(self, messages: list[dict], temperature: float, fallback_strategy: str = "fail_fast") -> dict:
-        """按供应商链依次调用 LLM，支持降级策略。"""
-        errors = []
-        for provider in get_fallback_chain():
-            logger.info("Trying provider: %s model: %s", provider["provider"], provider["model"])
-            start = time.time()
-            result = self._call_provider(messages, temperature, provider)
-            elapsed = round(time.time() - start, 3)
-            if result["success"]:
-                logger.info("Provider %s succeeded in %.3fs", provider["provider"], elapsed)
-                return result
-            errors.append({"provider": provider["provider"], "model": provider["model"], "error": result.get("error", "unknown"), "elapsed": elapsed})
-            logger.warning("Provider %s failed in %.3fs: %s", provider["provider"], elapsed, result.get("error"))
-            if fallback_strategy == "fail_fast":
-                break
-        raise AllModelsFailedError(errors)
+        return self._do_fallback(messages, temperature, fallback_strategy, False)
 
     async def call_llm_with_fallback_async(self, messages: list[dict], temperature: float, fallback_strategy: str = "fail_fast") -> dict:
-        """异步按供应商链依次调用 LLM，支持降级策略。"""
-        errors = []
-        for provider in get_fallback_chain():
-            logger.info("Trying provider: %s model: %s", provider["provider"], provider["model"])
-            start = time.time()
-            result = await self._call_provider_async(messages, temperature, provider)
-            elapsed = round(time.time() - start, 3)
+        return await self._do_fallback(messages, temperature, fallback_strategy, True)
+
+    def _do_call_ai(self, messages: list[dict], temperature: float, step: int = 0, force_level: int | None = None, is_async: bool = False) -> dict:
+        """执行 AI 调用并收集运行指标，内部根据 is_async 分支调用。"""
+
+        def _sync():
+            prompt_text = json.dumps(messages, ensure_ascii=False)
+            input_len = len(prompt_text)
+            call_start = time.time()
+
+            rate_limiter = getattr(self, "_rate_limiter", None)
+            if rate_limiter is not None:
+                agent_key = getattr(self, "_trace_id", "unknown")
+                rate_limiter.check_or_raise(f"agent_llm:{agent_key}")
+
+            circuit_breaker: CircuitBreaker | None = getattr(self, "_circuit_breaker", None)
+            if circuit_breaker is not None:
+                result = circuit_breaker.call(self._route_call, messages, temperature, force_level)
+            else:
+                result = self._route_call(messages, temperature, force_level)
+
+            duration_s = round(time.time() - call_start, 3)
+
             if result["success"]:
-                logger.info("Provider %s succeeded in %.3fs", provider["provider"], elapsed)
-                return result
-            errors.append({"provider": provider["provider"], "model": provider["model"], "error": result.get("error", "unknown"), "elapsed": elapsed})
-            logger.warning("Provider %s failed in %.3fs: %s", provider["provider"], elapsed, result.get("error"))
-            if fallback_strategy == "fail_fast":
-                break
-        raise AllModelsFailedError(errors)
+                ai_response = result["data"]
+                data = ai_response.get("data", {})
+                raw_response = json.dumps(ai_response, ensure_ascii=False)
+                output_len = len(raw_response)
+
+                tracer = getattr(self, "_tracer", None)
+                if tracer:
+                    tier = result.get("model_tier", "cloud_normal")
+                    usage = data.get("usage", {})
+                    tracer.log_llm_call(
+                        tier,
+                        int(usage.get("prompt_tokens", 0) or 0),
+                        int(usage.get("completion_tokens", 0) or 0),
+                        int(duration_s * 1000),
+                    )
+
+                self._trace_data.append(
+                    {
+                        "step": step,
+                        "input_len": input_len,
+                        "output_len": output_len,
+                        "duration_s": duration_s,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
+
+                model_tier = result.get("model_tier", "cloud_normal")
+                agent_llm_duration.labels(agent_name=getattr(self, "_trace_id", "unknown"), model=model_tier).observe(duration_s)
+                usage = data.get("usage", {})
+                total_tokens = int(usage.get("total_tokens", 0) or 0)
+                if total_tokens:
+                    agent_tokens_total.labels(agent_name=getattr(self, "_trace_id", "unknown")).inc(total_tokens)
+                return {
+                    "reply": data.get("reply", ""),
+                    "usage": usage,
+                    "prompt": prompt_text,
+                    "raw_response": raw_response,
+                    "retry_count": result["attempts"] - 1,
+                    "cost": result.get("cost", {}),
+                    "model_tier": model_tier,
+                }
+            raise RuntimeError(f"LLM call failed after {result['attempts']} attempts: {result['error']}")
+
+        async def _async():
+            prompt_text = json.dumps(messages, ensure_ascii=False)
+            input_len = len(prompt_text)
+            call_start = time.time()
+
+            rate_limiter = getattr(self, "_rate_limiter", None)
+            if rate_limiter is not None:
+                agent_key = getattr(self, "_trace_id", "unknown")
+                rate_limiter.check_or_raise(f"agent_llm:{agent_key}")
+
+            circuit_breaker: CircuitBreaker | None = getattr(self, "_circuit_breaker", None)
+            if circuit_breaker is not None:
+                result = circuit_breaker.call(self._route_call_async, messages, temperature, force_level)
+            else:
+                result = await self._route_call_async(messages, temperature, force_level)
+
+            duration_s = round(time.time() - call_start, 3)
+
+            if result["success"]:
+                ai_response = result["data"]
+                data = ai_response.get("data", {})
+                raw_response = json.dumps(ai_response, ensure_ascii=False)
+                output_len = len(raw_response)
+
+                tracer = getattr(self, "_tracer", None)
+                if tracer:
+                    tier = result.get("model_tier", "cloud_normal")
+                    usage = data.get("usage", {})
+                    tracer.log_llm_call(
+                        tier,
+                        int(usage.get("prompt_tokens", 0) or 0),
+                        int(usage.get("completion_tokens", 0) or 0),
+                        int(duration_s * 1000),
+                    )
+
+                self._trace_data.append(
+                    {
+                        "step": step,
+                        "input_len": input_len,
+                        "output_len": output_len,
+                        "duration_s": duration_s,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
+
+                model_tier = result.get("model_tier", "cloud_normal")
+                agent_llm_duration.labels(agent_name=getattr(self, "_trace_id", "unknown"), model=model_tier).observe(duration_s)
+                usage = data.get("usage", {})
+                total_tokens = int(usage.get("total_tokens", 0) or 0)
+                if total_tokens:
+                    agent_tokens_total.labels(agent_name=getattr(self, "_trace_id", "unknown")).inc(total_tokens)
+                return {
+                    "reply": data.get("reply", ""),
+                    "usage": usage,
+                    "prompt": prompt_text,
+                    "raw_response": raw_response,
+                    "retry_count": result["attempts"] - 1,
+                    "cost": result.get("cost", {}),
+                    "model_tier": model_tier,
+                }
+            raise RuntimeError(f"LLM call failed after {result['attempts']} attempts: {result['error']}")
+
+        return _async() if is_async else _sync()
 
     def _call_ai(self, messages: list[dict], temperature: float, step: int = 0, force_level: int | None = None) -> dict:
-        """执行同步 AI 调用并收集运行指标。"""
-        prompt_text = json.dumps(messages, ensure_ascii=False)
-        input_len = len(prompt_text)
-        call_start = time.time()
-
-        rate_limiter = getattr(self, "_rate_limiter", None)
-        if rate_limiter is not None:
-            agent_key = getattr(self, "_trace_id", "unknown")
-            rate_limiter.check_or_raise(f"agent_llm:{agent_key}")
-
-        circuit_breaker: CircuitBreaker | None = getattr(self, "_circuit_breaker", None)
-        if circuit_breaker is not None:
-            result = circuit_breaker.call(self._route_call, messages, temperature, force_level)
-        else:
-            result = self._route_call(messages, temperature, force_level)
-
-        duration_s = round(time.time() - call_start, 3)
-
-        if result["success"]:
-            ai_response = result["data"]
-            data = ai_response.get("data", {})
-            raw_response = json.dumps(ai_response, ensure_ascii=False)
-            output_len = len(raw_response)
-
-            tracer = getattr(self, "_tracer", None)
-            if tracer:
-                tier = result.get("model_tier", "cloud_normal")
-                usage = data.get("usage", {})
-                tracer.log_llm_call(
-                    tier,
-                    int(usage.get("prompt_tokens", 0) or 0),
-                    int(usage.get("completion_tokens", 0) or 0),
-                    int(duration_s * 1000),
-                )
-
-            self._trace_data.append(
-                {
-                    "step": step,
-                    "input_len": input_len,
-                    "output_len": output_len,
-                    "duration_s": duration_s,
-                    "timestamp": datetime.now().isoformat(),
-                }
-            )
-
-            model_tier = result.get("model_tier", "cloud_normal")
-            agent_llm_duration.labels(agent_name=getattr(self, "_trace_id", "unknown"), model=model_tier).observe(duration_s)
-            usage = data.get("usage", {})
-            total_tokens = int(usage.get("total_tokens", 0) or 0)
-            if total_tokens:
-                agent_tokens_total.labels(agent_name=getattr(self, "_trace_id", "unknown")).inc(total_tokens)
-            return {
-                "reply": data.get("reply", ""),
-                "usage": usage,
-                "prompt": prompt_text,
-                "raw_response": raw_response,
-                "retry_count": result["attempts"] - 1,
-                "cost": result.get("cost", {}),
-                "model_tier": model_tier,
-            }
-        raise RuntimeError(f"LLM call failed after {result['attempts']} attempts: {result['error']}")
+        return self._do_call_ai(messages, temperature, step, force_level, False)
 
     async def _call_ai_async(self, messages: list[dict], temperature: float, step: int = 0, force_level: int | None = None) -> dict:
-        """执行异步 AI 调用并收集运行指标。"""
-        prompt_text = json.dumps(messages, ensure_ascii=False)
-        input_len = len(prompt_text)
-        call_start = time.time()
-
-        rate_limiter = getattr(self, "_rate_limiter", None)
-        if rate_limiter is not None:
-            agent_key = getattr(self, "_trace_id", "unknown")
-            rate_limiter.check_or_raise(f"agent_llm:{agent_key}")
-
-        circuit_breaker: CircuitBreaker | None = getattr(self, "_circuit_breaker", None)
-        if circuit_breaker is not None:
-            result = circuit_breaker.call(self._route_call_async, messages, temperature, force_level)
-        else:
-            result = await self._route_call_async(messages, temperature, force_level)
-
-        duration_s = round(time.time() - call_start, 3)
-
-        if result["success"]:
-            ai_response = result["data"]
-            data = ai_response.get("data", {})
-            raw_response = json.dumps(ai_response, ensure_ascii=False)
-            output_len = len(raw_response)
-
-            tracer = getattr(self, "_tracer", None)
-            if tracer:
-                tier = result.get("model_tier", "cloud_normal")
-                usage = data.get("usage", {})
-                tracer.log_llm_call(
-                    tier,
-                    int(usage.get("prompt_tokens", 0) or 0),
-                    int(usage.get("completion_tokens", 0) or 0),
-                    int(duration_s * 1000),
-                )
-
-            self._trace_data.append(
-                {
-                    "step": step,
-                    "input_len": input_len,
-                    "output_len": output_len,
-                    "duration_s": duration_s,
-                    "timestamp": datetime.now().isoformat(),
-                }
-            )
-
-            model_tier = result.get("model_tier", "cloud_normal")
-            agent_llm_duration.labels(agent_name=getattr(self, "_trace_id", "unknown"), model=model_tier).observe(duration_s)
-            usage = data.get("usage", {})
-            total_tokens = int(usage.get("total_tokens", 0) or 0)
-            if total_tokens:
-                agent_tokens_total.labels(agent_name=getattr(self, "_trace_id", "unknown")).inc(total_tokens)
-            return {
-                "reply": data.get("reply", ""),
-                "usage": usage,
-                "prompt": prompt_text,
-                "raw_response": raw_response,
-                "retry_count": result["attempts"] - 1,
-                "cost": result.get("cost", {}),
-                "model_tier": model_tier,
-            }
-        raise RuntimeError(f"LLM call failed after {result['attempts']} attempts: {result['error']}")
+        return await self._do_call_ai(messages, temperature, step, force_level, True)
