@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 
 
 class DiversionDetectionService:
+    """窜货检测服务 — 检测产品流向与授权区域的一致性，记录窜货日志。"""
+
     def __init__(self, db: sqlite3.Connection):
         self.db = db
         self._ensure_tables()

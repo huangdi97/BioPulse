@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class McpToolService:
+    """MCP 工具管理服务 — 提供 MCP 工具的注册、查询、移除等管理功能。"""
+
     @staticmethod
     def _connect():
         conn = sqlite3.connect(DB_PATH)

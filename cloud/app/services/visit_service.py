@@ -14,6 +14,8 @@ from cloud.app.repositories.visit_repository import VisitRepository
 
 
 class VisitService:
+    """访问服务，记录与分析用户的页面访问行为。"""
+
     def __init__(self, db: sqlite3.Connection = None):
         if db is None:
             db = sqlite3.connect(DB_PATH)

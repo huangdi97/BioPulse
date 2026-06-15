@@ -5,6 +5,8 @@ from shared.base_service import BaseService
 
 
 class SchedulingService(BaseService):
+    """路线调度优化服务，负责医药代表的拜访路线规划与优化。"""
+
     def optimize_route(self, rep_id: int, date_range: str) -> list[dict[str, Any]]:
         hcps = self._get_hcp_list(rep_id)
         if not hcps:

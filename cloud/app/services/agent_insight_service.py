@@ -2,6 +2,8 @@ from cloud.app.agent_runtime.agent_registry import AgentRegistry
 
 
 class AgentInsightService:
+    """智能体洞察服务 — 提供页面与智能体的映射关系，根据页面路由获取对应智能体配置。"""
+
     PAGE_AGENT_MAPPING = {
         "manager_dashboard": ["anomaly_analysis"],
         "rep_dashboard": ["sales_suggestion"],

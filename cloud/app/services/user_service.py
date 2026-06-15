@@ -8,6 +8,8 @@ from shared.base_service import BaseService
 
 
 class UserService(BaseService):
+    """用户服务，管理用户信息与认证授权操作。"""
+
     def list_users(self) -> list:
         users_repo = UsersRepository(self._connection())
         rows = users_repo.list_all(order_by="id ASC")

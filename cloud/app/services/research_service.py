@@ -18,6 +18,8 @@ def set_test_research_db_path(path: str):
 
 
 class ResearchService:
+    """科研数据库访问服务，提供科研数据的增删改查操作。"""
+
     @staticmethod
     def get_research_db() -> sqlite3.Connection:
         db_path = _get_research_db_path()

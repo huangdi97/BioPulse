@@ -21,6 +21,8 @@ _RULES_PATH = os.path.join(_RULES_DIR, "token_budget_rules.json")
 
 @dataclass
 class TokenBudgetConfig:
+    """Token预算配置，定义每个模型的每日与每次请求的额度上限。"""
+
     model: str
     max_tokens_per_day: int
     max_tokens_per_request: int
@@ -37,6 +39,8 @@ def _load_rules() -> dict:
 
 
 class TokenBudgetService(TokenEstimatorMixin, BudgetTracker):
+    """Token预算管理服务，提供配额检查、使用跟踪与消耗报告。"""
+
     PRICING = {
         "deepseek-chat": {"input_per_million": 0.14, "output_per_million": 0.28},
         "deepseek-v4-pro": {"input_per_million": 0.14, "output_per_million": 0.28},

@@ -6,6 +6,8 @@ from shared.base_service import BaseService
 
 
 class ApprovalService(BaseService):
+    """审批服务 — 处理报价审批流程，包括合规校验与审批状态管理。"""
+
     def submit_quotation(self, quotation_data: dict) -> dict[str, Any]:
         product = quotation_data.get("product", "")
         amount = quotation_data.get("amount", 0)

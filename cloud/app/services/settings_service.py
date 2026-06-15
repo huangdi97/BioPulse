@@ -7,6 +7,8 @@ from cloud.app.database import DB_PATH
 
 
 class SettingsService:
+    """系统键值配置服务，提供配置项的读写与全局管理。"""
+
     def _connect(self):
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row

@@ -7,6 +7,8 @@ STATUSES = ["待提交", "药事会排期", "审批中", "已通过", "已驳回
 
 
 class AdmissionService(BaseService):
+    """入院申请服务 — 管理药品入院申请的创建、审批流程与状态跟踪。"""
+
     def create(self, data: dict) -> dict[str, Any]:
         self.db.execute(
             "INSERT INTO admission_records (hospital_name, department, product, status, meeting_date, notes, rep_id) VALUES (?, ?, ?, ?, ?, ?, ?)",

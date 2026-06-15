@@ -2,6 +2,8 @@
 
 
 class EvalService:
+    """评估服务 — 提供预设评估案例，用于验证智能体工具调用与输出正确性。"""
+
     PRESET_CASES = {
         "opportunity_scanner": [
             {

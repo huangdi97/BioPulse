@@ -17,6 +17,8 @@ def cosine_similarity(a: list[float], b: list[float]) -> float:
 
 
 class SemanticCache:
+    """语义缓存服务，基于嵌入向量的相似度计算实现缓存存取。"""
+
     def __init__(self, threshold: float = 0.92, max_entries: int = 1000):
         self.threshold = threshold
         self.max_entries = max_entries

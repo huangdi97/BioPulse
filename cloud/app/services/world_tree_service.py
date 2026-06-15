@@ -17,6 +17,8 @@ from shared.base_service import BaseService
 
 
 class WorldTreeService(WorldTreeQueryMixin, BaseService):
+    """世界树服务，管理层级化知识树结构的增删改查与同步。"""
+
     def create_node(
         self,
         name: str,
