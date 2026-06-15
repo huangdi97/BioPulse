@@ -1,4 +1,8 @@
-"""Agent 仓库 — 从 agents/*/identity.yaml 加载 AgentModel。"""
+"""Agent 仓库 — 从 agents/*/identity.yaml 加载 AgentModel。
+
+注意：identity.yaml 是 Agent 定义的主要来源。
+agent_specs.py 中的 AGENT_SPECS 是运行时运行时覆盖/补充（用于 L4 编排等高级配置）。
+当 identity.yaml 与 AGENT_SPECS 同时存在时，identity.yaml 优先作为源数据。"""
 
 from __future__ import annotations
 

@@ -47,9 +47,27 @@ class TestToolBridgeExecuteAllowedAgents:
         assert bridge.execute("shared_tool", caller_agent_id="agent_z").success is True
         assert bridge.execute("shared_tool", caller_agent_id="agent_w").success is False
 
-    def test_default_tools_allow_all(self) -> None:
+    def test_default_tools_global_accessible(self) -> None:
         bridge = ToolBridge()
         bridge.register_default_tools()
-        for tool_name in bridge._tools:
-            result = bridge.execute(tool_name, caller_agent_id="any_agent")
-            assert result.success is True, f"tool {tool_name} should be accessible"
+        for tool_name, tool in bridge._tools.items():
+            if not tool.allowed_agents:
+                result = bridge.execute(tool_name, caller_agent_id="any_agent")
+                assert result.success is True, f"global tool {tool_name} should be accessible"
+
+    def test_default_tools_restricted_not_accessible_by_other_agents(self) -> None:
+        bridge = ToolBridge()
+        bridge.register_default_tools()
+        for tool_name, tool in bridge._tools.items():
+            if tool.allowed_agents:
+                result = bridge.execute(tool_name, caller_agent_id="unauthorized_agent")
+                assert result.success is False, f"restricted tool {tool_name} should not be accessible by unauthorized agent"
+                assert result.error == "agent not allowed"
+
+    def test_default_tools_restricted_accessible_by_allowed_agent(self) -> None:
+        bridge = ToolBridge()
+        bridge.register_default_tools()
+        for tool_name, tool in bridge._tools.items():
+            if tool.allowed_agents:
+                result = bridge.execute(tool_name, caller_agent_id=tool.allowed_agents[0])
+                assert result.success is True, f"restricted tool {tool_name} should be accessible by {tool.allowed_agents[0]}"

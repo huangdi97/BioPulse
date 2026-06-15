@@ -1,0 +1,1 @@
+0 3 * * * cd /project && bash scripts/pg_dump.sh >> /var/log/backup.log 2>&1

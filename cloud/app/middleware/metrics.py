@@ -8,7 +8,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 
 logger = logging.getLogger("cloud")
 
-_enabled = os.getenv("ENABLE_METRICS", "false").lower() in ("1", "true", "yes")
+_enabled = os.getenv("ENABLE_METRICS", "true").lower() in ("1", "true", "yes")
 
 request_latency_seconds = Histogram(
     "request_latency_seconds",
@@ -40,8 +40,12 @@ def setup_metrics(app) -> Instrumentator | None:
     if not _enabled:
         logger.info("Metrics disabled (ENABLE_METRICS != true)")
         return None
-    logger.info("Prometheus metrics enabled on /metrics")
-    return Instrumentator().instrument(app).expose(app)
+    try:
+        logger.info("Prometheus metrics enabled on /metrics")
+        return Instrumentator().instrument(app).expose(app)
+    except Exception:
+        logger.warning("Metrics endpoint not configured, skipping metrics setup")
+        return None
 
 
 def metrics_payload() -> str:
