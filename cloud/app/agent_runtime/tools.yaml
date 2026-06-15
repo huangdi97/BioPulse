@@ -1,0 +1,196 @@
+tools:
+  - name: query_bidding
+    description: 查询招标信息
+    parameters: []
+    category: bidding
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["opportunity_scanner"]
+
+  - name: query_opportunity
+    description: 查询商机
+    parameters: []
+    category: bidding
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["opportunity_scanner"]
+
+  - name: query_knowledge_graph
+    description: 查询知识图谱
+    parameters: []
+    category: knowledge
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["knowledge_worker"]
+
+  - name: create_notification
+    description: 发送通知
+    parameters: []
+    category: notification
+    security_level: medium
+    rate_limit: 50
+    allowed_agents: ["opportunity_scanner"]
+
+  - name: analyze_with_llm
+    description: 调LLM分析
+    parameters: []
+    category: analysis
+    security_level: low
+    rate_limit: 100
+
+  - name: compliance_check
+    description: 合规检查
+    parameters: []
+    category: compliance
+    security_level: medium
+    rate_limit: 50
+    allowed_agents: ["compliance_monitor"]
+
+  - name: search_memory
+    description: 查记忆
+    parameters: []
+    category: memory
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["knowledge_worker"]
+
+  - name: write_memory
+    description: 写入记忆
+    parameters: []
+    category: memory
+    security_level: medium
+    rate_limit: 50
+
+  - name: collect_related_data
+    description: 收集异常分析所需的费用、拜访、流向、审计和红灯上下文数据
+    parameters: []
+    category: anomaly
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["anomaly_analysis"]
+
+  - name: run_pattern_analysis
+    description: 对异常证据运行模式分析并输出支持或证伪信号
+    parameters: []
+    category: anomaly
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["anomaly_analysis"]
+
+  - name: run_causal_inference
+    description: 基于关联数据执行因果归因并给出根因置信度
+    parameters: []
+    category: anomaly
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["anomaly_analysis"]
+
+  - name: generate_narrative
+    description: 生成发现、原因、建议三段式自然语言根因报告
+    parameters: []
+    category: anomaly
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["anomaly_analysis"]
+
+  - name: discover_related_patterns
+    description: 扫描历史和其他代表，发现与当前异常相似的跨代表模式
+    parameters: []
+    category: anomaly
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["anomaly_analysis"]
+
+  - name: verify_expense
+    description: 核查代表费用数据是否符合合规规则
+    parameters: []
+    category: compliance
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["compliance_monitor"]
+
+  - name: verify_visit
+    description: 核查代表拜访数据的真实性与合规性
+    parameters: []
+    category: compliance
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["compliance_monitor"]
+
+  - name: trace_distribution
+    description: 追踪药品流向数据，验证库存与销售一致性
+    parameters: []
+    category: compliance
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["compliance_monitor"]
+
+  - name: triangulation_check
+    description: 执行费用、拜访、流向三角勾稽交叉验证
+    parameters: []
+    category: compliance
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["compliance_monitor", "anomaly_analysis"]
+
+  - name: write_audit_log
+    description: 将审计结果写入审计链
+    parameters: []
+    category: compliance
+    security_level: medium
+    rate_limit: 50
+    allowed_agents: ["compliance_monitor"]
+
+  - name: query_hcp_profile
+    description: 查询 HCP 画像信息（专长、评分、历史互动）
+    parameters: []
+    category: sales
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["sales_suggestion", "knowledge_worker"]
+
+  - name: query_visit_history
+    description: 查询 HCP 历史拜访记录（次数、时间、内容）
+    parameters: []
+    category: sales
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["sales_suggestion"]
+
+  - name: query_competitor_intel
+    description: 查询竞品情报（活动、新品、市场份额）
+    parameters: []
+    category: sales
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["sales_suggestion", "knowledge_worker"]
+
+  - name: run_causal_attribution
+    description: 执行因果归因分析（输入拜访+市场数据，输出根因置信度）
+    parameters: []
+    category: sales
+    security_level: low
+    rate_limit: 100
+    allowed_agents: ["sales_suggestion"]
+
+  - name: generate_brief
+    description: 生成结构化 Pre-call Brief 文档
+    parameters: []
+    category: sales
+    security_level: medium
+    rate_limit: 50
+    allowed_agents: ["sales_suggestion"]
+
+  - name: agent_brain_get
+    description: 读取Agent自身状态值（短期记忆）
+    parameters: []
+    category: system
+    security_level: low
+    rate_limit: 100
+
+  - name: agent_brain_set
+    description: 写入Agent自身状态值（短期记忆）
+    parameters: []
+    category: system
+    security_level: medium
+    rate_limit: 50
