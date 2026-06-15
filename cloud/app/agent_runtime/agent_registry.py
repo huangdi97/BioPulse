@@ -27,7 +27,7 @@ class AgentRegistry:
                 agent = Agent.from_yaml(str(yaml_path))
                 cls._agents[agent.identity.key] = agent
                 logger.info("Loaded agent %s from %s", agent.identity.key, yaml_path)
-            except Exception:
+            except (OSError, KeyError, TypeError):
                 logger.exception("Failed to load agent from %s", yaml_path)
         cls._loaded = True
         logger.info("AgentRegistry loaded %d agents", len(cls._agents))

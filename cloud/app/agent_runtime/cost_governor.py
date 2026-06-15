@@ -1,6 +1,7 @@
 """成本管控模块，按 token 用量估算并限制 LLM 调用成本。"""
 
 import logging
+import sqlite3
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +112,7 @@ class CostGovernor:
                 (agent_name, model, model, input_tokens, output_tokens, round(cost, 9), trace_id),
             )
             db.commit()
-        except Exception:
+        except sqlite3.Error:
             logger.exception("Failed to record cost tracking entry")
 
     def get_daily_costs(self, db, start: str, end: str) -> list[dict]:

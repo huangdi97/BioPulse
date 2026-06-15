@@ -85,7 +85,7 @@ class SecretManager:
                 data = json.loads(blob.decode("utf-8"))
                 aesgcm = AESGCM(self._storage_key)
                 return aesgcm.decrypt(bytes.fromhex(data["nonce"]), bytes.fromhex(data["ct"]), None).decode("utf-8")
-            except Exception:
+            except (ValueError, KeyError):
                 logger.warning("Secret manager解密异常，尝试直接解码", exc_info=True)
                 return blob.decode("utf-8")
         return blob.decode("utf-8")

@@ -2,6 +2,7 @@
 
 import json
 import logging
+import sqlite3
 import time
 import uuid
 from datetime import datetime
@@ -84,7 +85,7 @@ class AgentTracer:
                 ),
             )
             self._db.commit()
-        except Exception:
+        except sqlite3.Error:
             logger.exception("Failed to save trace %s", self.current_trace)
         logger.info(
             "Trace ended: %s status=%s duration=%dms tokens=%d",

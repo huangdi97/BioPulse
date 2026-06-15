@@ -56,7 +56,7 @@ class VectorMemory:
                 ")"
             )
             conn.commit()
-        except Exception:
+        except sqlite3.Error:
             logger.exception("Failed to ensure vector memory table")
 
     def _get_model(self):

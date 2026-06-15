@@ -2,6 +2,7 @@
 
 import json
 import logging
+import sqlite3
 from datetime import datetime
 
 from cloud.app.agent_runtime.state_snapshot import load_snapshot, save_snapshot
@@ -15,7 +16,7 @@ class RuntimeHelper:
     def _save_log(self, agent_key, goal, status, iterations, tool_calls, logs, started_at):
         try:
             self._agent_db.execute("ALTER TABLE agent_runtime_logs ADD COLUMN cost_data TEXT DEFAULT '{}'")
-        except Exception:
+        except sqlite3.OperationalError:
             logger.warning("agent_runtime_logs.cost_data already exists, skipping migration")
         self._agent_db.execute(
             "INSERT INTO agent_runtime_logs (agent_key, goal, status, iterations, tool_calls, log_detail, "
@@ -76,7 +77,7 @@ class RuntimeHelper:
     def _save_snapshot(self, agent_key, step, plan, results, context, status="active"):
         try:
             self._snapshot_manager.save(agent_key, step, plan, results, context, status)
-        except Exception:
+        except (KeyError, TypeError, ValueError):
             logger.exception("Failed to save snapshot for agent %s at step %s", agent_key, step)
 
     def _restore_from_snapshot(self, snapshot_id):

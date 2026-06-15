@@ -3,6 +3,7 @@
 import json
 import logging
 import random
+import sqlite3
 
 from cloud.app.agent_runtime.content_filter import check_output
 
@@ -89,7 +90,7 @@ class AgentEvaluator:
                 ")"
             )
             self._db.commit()
-        except Exception:
+        except sqlite3.Error:
             logger.exception("Failed to create eval_results table")
 
     def evaluate(self, agent_name: str, input_data: dict, output_data: dict, expected: dict | None = None, trace_id: str = "") -> dict:
@@ -101,7 +102,7 @@ class AgentEvaluator:
             metric_expected = expected.get(metric_name) if expected else None
             try:
                 passed = metric_fn(output_data.get("result", ""), metric_expected)
-            except Exception:
+            except (TypeError, ValueError):
                 logger.warning("Evaluator metric exception", exc_info=True)
                 passed = False
             results[metric_name] = passed
@@ -139,7 +140,7 @@ class AgentEvaluator:
                 ),
             )
             self._db.commit()
-        except Exception:
+        except sqlite3.Error:
             logger.exception("Failed to save eval result")
 
     def get_dashboard(self) -> dict:

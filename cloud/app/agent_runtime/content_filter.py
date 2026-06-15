@@ -50,7 +50,7 @@ def _write_audit_log(category: str, detail: str, content: str = ""):
         _ensure_audit_dir()
         with open(AUDIT_LOG_FILE, "a", encoding="utf-8") as f:
             f.write(f"[{datetime.now().isoformat()}] [{category}] {detail} | content_len={len(content)}\n")
-    except Exception:
+    except OSError:
         logger.exception("Failed to write safety audit log")
 
 

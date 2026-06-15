@@ -2,7 +2,9 @@
 
 import json
 import logging
+import sqlite3
 import threading
+import urllib.error
 import urllib.request
 from datetime import datetime
 
@@ -65,7 +67,7 @@ class Notifier:
                 ("_system", message, "notification", json.dumps({"priority": priority, "message": message}, ensure_ascii=False)),
             )
             self._agent_db.commit()
-        except Exception:
+        except sqlite3.Error:
             logger.exception("Failed to send in-app notification")
 
     def _send_webhook(self, url: str, message: str, priority: str = "normal") -> None:
@@ -74,7 +76,7 @@ class Notifier:
             req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST")
             with urllib.request.urlopen(req, timeout=INTERNAL_API_TIMEOUT):
                 pass
-        except Exception:
+        except (urllib.error.URLError, TimeoutError):
             logger.exception("Failed to send webhook notification to %s", url)
 
     def _create_approval(self, agent_name: str, action: str, detail: dict) -> str:
