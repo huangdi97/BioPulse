@@ -10,11 +10,11 @@ from cloud.app.agent_runtime.circuit_breaker import CircuitBreaker
 from cloud.app.agent_runtime.metrics import agent_llm_duration, agent_tokens_total
 from cloud.app.agent_runtime.retry import async_retry_with_backoff, retry_with_backoff
 from cloud.app.agent_runtime.runtime_llm.config import (
-    FALLBACK_CHAIN,
     AllModelsFailedError,
     compress_messages,
     estimate_complexity,
     estimate_token_count,
+    get_fallback_chain,
 )
 from cloud.app.agent_runtime.runtime_llm.request import (
     build_cloud_body,
@@ -151,7 +151,7 @@ class RuntimeLLM:
     def call_llm_with_fallback(self, messages: list[dict], temperature: float, fallback_strategy: str = "fail_fast") -> dict:
         """按供应商链依次调用 LLM，支持降级策略。"""
         errors = []
-        for provider in FALLBACK_CHAIN:
+        for provider in get_fallback_chain():
             logger.info("Trying provider: %s model: %s", provider["provider"], provider["model"])
             start = time.time()
             result = self._call_provider(messages, temperature, provider)
@@ -168,7 +168,7 @@ class RuntimeLLM:
     async def call_llm_with_fallback_async(self, messages: list[dict], temperature: float, fallback_strategy: str = "fail_fast") -> dict:
         """异步按供应商链依次调用 LLM，支持降级策略。"""
         errors = []
-        for provider in FALLBACK_CHAIN:
+        for provider in get_fallback_chain():
             logger.info("Trying provider: %s model: %s", provider["provider"], provider["model"])
             start = time.time()
             result = await self._call_provider_async(messages, temperature, provider)

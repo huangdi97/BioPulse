@@ -102,7 +102,7 @@ class AgentEvaluator:
             try:
                 passed = metric_fn(output_data.get("result", ""), metric_expected)
             except Exception:
-                logger.warning("Evaluator指标评估异常", exc_info=True)
+                logger.warning("Evaluator metric exception", exc_info=True)
                 passed = False
             results[metric_name] = passed
         passed_all = all(results.values())

@@ -224,7 +224,7 @@ class RuleEngineLLM:
                 detail = f"{rule_id}: {detail}"
             return CheckResult(name="rule_engine_llm", passed=not violated, detail=detail)
         except Exception:
-            logger.warning("Safety guard异常，使用回退", exc_info=True)
+            logger.warning("Safety guard exception, falling back", exc_info=True)
             return fallback
 
     def _static_fallback(self, input_data: dict, static_checks: list[CheckResult] | None = None) -> CheckResult:

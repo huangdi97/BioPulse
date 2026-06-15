@@ -6,6 +6,7 @@ import logging
 from dataclasses import dataclass
 from typing import Literal
 
+from cloud.app.agent_runtime.runtime_llm.config import get_fallback_chain
 from cloud.app.config.provider_config import ProviderType
 
 logger = logging.getLogger(__name__)
@@ -19,12 +20,6 @@ _REQUEST_TYPE_MAP: dict[RequestType, ProviderType] = {
     "asr": ProviderType.ASR,
     "tts": ProviderType.TTS,
 }
-
-FALLBACK_CHAIN: list[dict[str, str]] = [
-    {"provider": "deepseek", "model": "deepseek-v4-flash", "mode": "api"},
-    {"provider": "openrouter", "model": "openrouter/anthropic/claude-sonnet-4", "mode": "api"},
-    {"provider": "openai", "model": "openai/gpt-4o-mini", "mode": "api"},
-]
 
 _DEFAULT_MAP: dict[ProviderType, dict[str, str]] = {
     ProviderType.LLM: {"provider": "deepseek", "model": "deepseek-chat", "mode": "api"},
@@ -77,7 +72,8 @@ class ModelRouter:
 
     @staticmethod
     def _first_fallback() -> RouteResult:
-        entry = FALLBACK_CHAIN[0]
+        chain = get_fallback_chain()
+        entry = chain[0] if chain else {}
         return RouteResult(
             provider=entry["provider"],
             model=entry["model"],

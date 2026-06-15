@@ -112,7 +112,8 @@ class HypothesisEngine:
         return VerificationPlan(hypothesis_id=hypothesis.id, checks=checks)
 
     def execute_verification(self, plan: VerificationPlan) -> dict:
-        """Execute verification — simulate data collection for each check in the plan."""
+        """模拟执行验证计划。TODO: 替换为真实数据源查询。"""
+        # TODO: mock 实现，待替换为真实数据源查询
         results = {}
         for check in plan.checks:
             data_needed = check.get("data_needed", [])
@@ -127,7 +128,8 @@ class HypothesisEngine:
         return results
 
     def evaluate_hypotheses(self, hypotheses: list[Hypothesis], verification_data: dict) -> list[VerificationResult]:
-        """Evaluate each hypothesis against collected verification data, confirming or falsifying."""
+        """依据验证数据评估假设，确认或证伪。TODO: mock 实现，待替换为 LLM 驱动的评估。"""
+        # TODO: mock 实现，待替换为 LLM 驱动的假设评估
         results = []
         for hyp in hypotheses:
             confirmed = False

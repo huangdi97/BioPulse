@@ -1,10 +1,10 @@
 """Tests for LLM fallback chain."""
 
-from cloud.app.agent_runtime.runtime_llm import FALLBACK_CHAIN, AllModelsFailedError
+from cloud.app.agent_runtime.runtime_llm import AllModelsFailedError, get_fallback_chain
 
 
 def test_fallback_chain_has_expected_providers():
-    providers = [p["provider"] for p in FALLBACK_CHAIN]
+    providers = [p["provider"] for p in get_fallback_chain()]
     assert "deepseek" in providers
     assert "openrouter" in providers
     assert "openai" in providers

@@ -131,7 +131,7 @@ class Verifier:
             result = llm._call_ai(messages, temperature=0.1, force_level=2)
             return result.get("reply", "")
         except Exception:
-            logger.warning("Verifier异常", exc_info=True)
+            logger.warning("Verifier exception", exc_info=True)
             return ""
 
     @staticmethod

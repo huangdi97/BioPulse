@@ -55,7 +55,7 @@ class AgentMessage:
             try:
                 msg.timestamp = datetime.fromisoformat(data["timestamp"])
             except (ValueError, TypeError):
-                logger.warning("Agent协议处理异常", exc_info=True)
+                logger.warning("Agent protocol exception", exc_info=True)
         return msg
 
 
