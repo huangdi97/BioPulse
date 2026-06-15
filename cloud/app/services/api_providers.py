@@ -90,19 +90,7 @@ class ApiLLM(BaseLLM):
         return headers
 
     def close(self) -> None:
-        import asyncio
-
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = None
-
-        if loop is not None and loop.is_running():
-            loop.create_task(self._client.aclose())
-        elif loop is not None:
-            loop.run_until_complete(self._client.aclose())
-        else:
-            asyncio.run(self._client.aclose())
+        self._client.aclose()
 
 
 class ApiASR(BaseASR):
@@ -119,7 +107,7 @@ class ApiASR(BaseASR):
         return fb.transcribe(audio)
 
     def close(self) -> None:
-        pass
+        self._asr_provider.close()
 
 
 class ApiTTS(BaseTTS):
@@ -136,7 +124,7 @@ class ApiTTS(BaseTTS):
         return fb.synthesize(text)
 
     def close(self) -> None:
-        pass
+        self._tts_provider.close()
 
 
 class ApiPush(BasePush):
@@ -153,4 +141,4 @@ class ApiPush(BasePush):
         return fb.send(recipient, message)
 
     def close(self) -> None:
-        pass
+        self._push_provider.close()
