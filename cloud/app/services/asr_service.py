@@ -31,15 +31,18 @@ class AsrService:
     """ASR service that delegates to LocalASR or ApiASR based on settings."""
 
     def __init__(self, provider_settings: ProviderSettings | None = None) -> None:
+        """初始化 ASR 服务，设置提供商配置。"""
         self._settings = provider_settings or ProviderSettings(service="asr")
         self._provider: BaseASR | None = None
         self._tasks: dict[str, dict[str, Any]] = {}
 
     @property
     def settings(self) -> ProviderSettings:
+        """获取当前提供商设置。"""
         return self._settings
 
     def _get_provider(self) -> BaseASR:
+        """根据当前设置获取对应的 ASR 提供商实例。"""
         if not self._settings.enabled:
             return LocalASR(self._settings)
         if self._settings.mode == ProviderMode.API:
@@ -47,10 +50,12 @@ class AsrService:
         return LocalASR(self._settings)
 
     def switch_mode(self, mode: ProviderMode) -> None:
+        """切换 ASR 提供商模式（本地/API）。"""
         self._settings.mode = mode
         self._provider = None
 
     def transcribe(self, file_path: str) -> dict:
+        """对指定音频文件进行语音识别。"""
         if not self._settings.enabled:
             return {"error": "ASR disabled", "text": ""}
         if not os.path.isfile(file_path):
@@ -63,6 +68,7 @@ class AsrService:
         return {"text": raw, "confidence": 0.95, "segments": [{"start": 0.0, "end": 1.0, "text": raw}]}
 
     def process_audio(self, file_path: str) -> dict:
+        """异步处理音频文件并返回任务 ID。"""
         task_id = str(uuid.uuid4())
         result = self.transcribe(file_path)
         self._tasks[task_id] = {"task_id": task_id, "status": "completed", "result": result}
@@ -70,12 +76,14 @@ class AsrService:
         return {"task_id": task_id, "status": "pending"}
 
     def get_transcript(self, task_id: str) -> dict | None:
+        """根据任务 ID 获取转写结果。"""
         task = self._tasks.get(task_id)
         if not task:
             return None
         return {"task_id": task_id, "transcript": task["result"]["text"], "status": task["status"]}
 
     def get_summary(self, task_id: str) -> dict | None:
+        """根据任务 ID 获取转写摘要。"""
         task = self._tasks.get(task_id)
         if not task:
             return None

@@ -37,6 +37,7 @@ class DecisionLogger(DecisionReportMixin, BaseService):
         tags: list,
         uid: int,
     ) -> dict:
+        """创建一条决策案例。"""
         ctx = context
         if pipeline_run_id:
             run_repo = PipelineRunsRepository(self._connection())
@@ -75,6 +76,7 @@ class DecisionLogger(DecisionReportMixin, BaseService):
         page: int = 1,
         page_size: int = 20,
     ) -> dict:
+        """分页列出决策案例，支持分数范围 / 标签 / 关键词筛选。"""
         case_repo = DecisionCasesRepository(self._connection())
         total, total_pages, items = case_repo.list_filtered(
             outcome_score_min=outcome_score_min,
@@ -93,6 +95,7 @@ class DecisionLogger(DecisionReportMixin, BaseService):
         }
 
     def get_case(self, case_id: int) -> dict:
+        """根据 ID 获取单个决策案例，不存在则 404。"""
         row = DecisionCasesRepository(self._connection()).get_active_by_id(case_id)
         if not row:
             _e404("Case")
@@ -108,6 +111,7 @@ class DecisionLogger(DecisionReportMixin, BaseService):
         context: Optional[dict] = None,
         tags: Optional[list] = None,
     ) -> dict:
+        """更新决策案例的指定字段，不传的字段保持不变。"""
         case_repo = DecisionCasesRepository(self._connection())
         row = case_repo.get_active_by_id(case_id)
         if not row:
@@ -128,6 +132,7 @@ class DecisionLogger(DecisionReportMixin, BaseService):
         return case_repo.get_by_id(case_id)
 
     def delete_case(self, case_id: int) -> None:
+        """软删除指定决策案例及其关联数据。"""
         case_repo = DecisionCasesRepository(self._connection())
         row = case_repo.get_active_by_id(case_id)
         if not row:
@@ -141,6 +146,7 @@ class DecisionLogger(DecisionReportMixin, BaseService):
         page: int = 1,
         page_size: int = 20,
     ) -> dict:
+        """分页列出跨案例洞察，支持类型 / 置信度筛选。"""
         total, total_pages, items = CrossCaseInsightsRepository(self._connection()).list_filtered(
             insight_type=insight_type,
             confidence_min=confidence_min,
@@ -156,6 +162,7 @@ class DecisionLogger(DecisionReportMixin, BaseService):
         }
 
     def get_insight(self, insight_id: int) -> dict:
+        """根据 ID 获取单个洞察，不存在则 404。"""
         row = CrossCaseInsightsRepository(self._connection()).get_active_by_id(insight_id)
         if not row:
             _e404("Insight")
@@ -169,6 +176,7 @@ class DecisionLogger(DecisionReportMixin, BaseService):
         confidence: Optional[float] = None,
         applicability: Optional[str] = None,
     ) -> dict:
+        """更新洞察的指定字段，不传的字段保持不变。"""
         repo = CrossCaseInsightsRepository(self._connection())
         row = repo.get_active_by_id(insight_id)
         if not row:

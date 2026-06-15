@@ -29,9 +29,11 @@ class MemoryRetriever(BaseService):
     """记忆检索服务，提供工作记忆槽位查询、情景记忆列表与语义搜索。"""
 
     def __init__(self, db):
+        """初始化记忆检索器。"""
         super().__init__(db)
 
     def working_get(self, session_id: str, slot_key: Optional[str] = None) -> dict:
+        """查询工作记忆槽位，不传 slot_key 时返回该会话的所有槽位。"""
         wm = WorkingMemoryRepository(self.db)
         if slot_key:
             row = wm.db.execute(
@@ -56,6 +58,7 @@ class MemoryRetriever(BaseService):
         page: int = 1,
         page_size: int = 20,
     ) -> dict:
+        """分页列出情景记忆，支持按事件类型、结果、日期范围筛选。"""
         c, p = ["1=1"], []
         if event_type:
             c.append("event_type=?")
@@ -85,6 +88,7 @@ class MemoryRetriever(BaseService):
         }
 
     def episodic_detail(self, memory_id: int) -> dict:
+        """获取单条情景记忆详情，并记录再巩固日志。"""
         em_repo = EpisodicMemoryRepository(self.db)
         row = em_repo.get_by_id(memory_id)
         if not row:
@@ -102,6 +106,7 @@ class MemoryRetriever(BaseService):
         return row
 
     def dashboard(self) -> dict:
+        """返回记忆系统仪表盘，包含活跃会话、槽位统计与最近情景。"""
         now_val = _now()
         wm_repo = WorkingMemoryRepository(self.db)
         em_repo = EpisodicMemoryRepository(self.db)
@@ -121,6 +126,7 @@ class MemoryRetriever(BaseService):
         }
 
     def semantic_search(self, query: str, limit: int = 10) -> dict:
+        """语义搜索，在语义记忆中匹配标题或内容。"""
         kw = f"%{query}%"
         rows = (
             MemoryEntriesRepository(self.db)
@@ -134,6 +140,7 @@ class MemoryRetriever(BaseService):
         return {"items": [dict(r) for r in rows]}
 
     def procedural_recall(self, trigger_context: str) -> dict:
+        """依据触发上下文召回程序性记忆（前三高重要性）。"""
         rows = (
             MemoryEntriesRepository(self.db)
             .db.execute("SELECT * FROM memory_entries WHERE memory_type='procedural' AND is_active=1 ORDER BY importance DESC LIMIT 3")
@@ -156,6 +163,7 @@ class MemoryRetriever(BaseService):
         return {"items": items, "trigger_context": trigger_context}
 
     def holographic_get(self, memory_id: int, depth: int = 3) -> dict:
+        """全息检索，返回记忆条目及其关联图（递归指定深度）。"""
         me_repo = MemoryEntriesRepository(self.db)
         entry = me_repo.get_by_id(memory_id)
         if not entry:
@@ -167,6 +175,7 @@ class MemoryRetriever(BaseService):
         return {"entry": root, "depth": depth, "total_nodes": len(visited)}
 
     def _traverse_graph(self, memory_id: int, depth: int, visited: set, assoc_repo, me_repo, max_per_level: int = 10) -> list:
+        """递归遍历关联图，收集关联记忆条目。"""
         if depth <= 0:
             return []
         rows = assoc_repo.find_by_memory_id(memory_id, max_per_level * 2)

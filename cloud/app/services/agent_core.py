@@ -23,6 +23,7 @@ class EDAGNode:
         input_port: dict[str, type] | None = None,
         output_port: dict[str, type] | None = None,
     ) -> None:
+        """初始化 EDAGNode 节点，设置 ID、输入端口、输出端口、父节点和子节点列表。"""
         self.id = id
         self.input_port = input_port or {}
         self.output_port = output_port or {}
@@ -30,12 +31,14 @@ class EDAGNode:
         self.children: list[EDAGNode] = []
 
     def add_child(self, child: EDAGNode) -> None:
+        """添加一个子节点，若产生环则抛出 CycleDetectedError。"""
         if self._would_cycle(child):
             raise CycleDetectedError(f"Adding {child.id} to {self.id} would create a cycle")
         child.parent = self
         self.children.append(child)
 
     def _would_cycle(self, node: EDAGNode) -> bool:
+        """沿父链向上遍历检查是否会与目标节点形成环。"""
         current: EDAGNode | None = self
         while current is not None:
             if current is node:
@@ -44,6 +47,7 @@ class EDAGNode:
         return False
 
     def validate_input(self, data: dict[str, Any]) -> None:
+        """校验输入数据与 input_port 声明的类型是否匹配。"""
         for key, expected_type in self.input_port.items():
             if key in data:
                 value = data[key]
@@ -51,6 +55,7 @@ class EDAGNode:
                     raise PortTypeError(f"Input '{key}' expects {expected_type.__name__}, got {type(value).__name__}")
 
     def validate_output(self, data: dict[str, Any]) -> None:
+        """校验输出数据与 output_port 声明的类型是否匹配。"""
         for key, expected_type in self.output_port.items():
             if key in data:
                 value = data[key]
@@ -58,6 +63,7 @@ class EDAGNode:
                     raise PortTypeError(f"Output '{key}' expects {expected_type.__name__}, got {type(value).__name__}")
 
     def dfs(self) -> list[EDAGNode]:
+        """深度优先遍历，返回节点列表（含自身）。"""
         result: list[EDAGNode] = []
         stack = [self]
         visited: set[str] = set()
@@ -72,6 +78,7 @@ class EDAGNode:
         return result
 
     def bfs(self) -> list[EDAGNode]:
+        """广度优先遍历，返回节点列表（含自身）。"""
         result: list[EDAGNode] = []
         queue: deque[EDAGNode] = deque([self])
         visited: set[str] = set()
@@ -86,6 +93,7 @@ class EDAGNode:
         return result
 
     def to_dict(self) -> dict[str, Any]:
+        """将当前节点及子树序列化为字典。"""
         return {
             "id": self.id,
             "input_port": {k: v.__name__ for k, v in self.input_port.items()},
@@ -95,6 +103,7 @@ class EDAGNode:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> EDAGNode:
+        """从字典反序列化重建 EDAGNode 及子树。"""
         _type_map: dict[str, type] = {
             "str": str,
             "int": int,
@@ -118,6 +127,7 @@ class EDAGNode:
 
 class ToolRegistry:
     def __init__(self) -> None:
+        """初始化 ToolRegistry，创建空的工具存储字典。"""
         self._tools: dict[str, dict[str, Any]] = {}
 
     def register(
@@ -127,6 +137,7 @@ class ToolRegistry:
         parameters: dict[str, Any],
         fn: Callable[..., Any],
     ) -> None:
+        """注册一个工具，若名称已存在则抛出 DuplicateToolError。"""
         if name in self._tools:
             raise DuplicateToolError(f"Tool '{name}' is already registered")
         self._tools[name] = {
@@ -137,11 +148,13 @@ class ToolRegistry:
         }
 
     def unregister(self, name: str) -> None:
+        """注销指定名称的工具，未找到则抛出 ToolNotFoundError。"""
         if name not in self._tools:
             raise ToolNotFoundError(f"Tool '{name}' not found")
         del self._tools[name]
 
     def get_tool(self, name: str) -> dict[str, Any]:
+        """获取指定工具的名称、描述和参数信息（不含可调用对象）。"""
         if name not in self._tools:
             raise ToolNotFoundError(f"Tool '{name}' not found")
         return {
@@ -151,6 +164,7 @@ class ToolRegistry:
         }
 
     def list_tools(self) -> list[dict[str, Any]]:
+        """返回按名称排序的所有工具列表。"""
         return sorted(
             [
                 {
@@ -164,6 +178,7 @@ class ToolRegistry:
         )
 
     def execute(self, name: str, **kwargs: Any) -> dict[str, Any]:
+        """执行指定工具，校验参数类型并返回执行结果（含异常捕获）。"""
         if name not in self._tools:
             raise ToolNotFoundError(f"Tool '{name}' not found")
         tool = self._tools[name]
@@ -185,6 +200,7 @@ class ToolRegistry:
             return {"status": "error", "data": None, "error": str(e)}
 
     def clear(self) -> None:
+        """清空所有已注册的工具。"""
         self._tools.clear()
 
 
@@ -195,6 +211,7 @@ class InferenceLoop:
         max_iterations: int = 10,
         step_timeout: float = 30.0,
     ) -> None:
+        """初始化推理循环，设置工具注册表、最大迭代次数和单步超时。"""
         self.tool_registry = tool_registry
         self.max_iterations = max_iterations
         self.step_timeout = step_timeout
@@ -202,9 +219,11 @@ class InferenceLoop:
 
     @property
     def is_running(self) -> bool:
+        """返回当前推理循环是否正在运行。"""
         return self._running
 
     def run(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """依次处理消息列表，每步调用 _step，遇到 final 类型或达上限时停止。"""
         if not messages:
             return []
         self._running = True
@@ -223,9 +242,11 @@ class InferenceLoop:
         return outputs
 
     def stop(self) -> None:
+        """设置运行标志为 False 以停止推理循环。"""
         self._running = False
 
     def _step(self, msg: dict[str, Any]) -> dict[str, Any]:
+        """处理单条消息：依次执行 tool_calls，返回输出或错误结果。"""
         content = msg.get("content", "")
         tool_calls = msg.get("tool_calls", [])
 

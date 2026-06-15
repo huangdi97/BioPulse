@@ -21,6 +21,7 @@ class KgService(BaseService):
     """知识图谱服务，提供知识图谱的实体管理、关系管理与图搜索功能。"""
 
     def create_entity(self, data, user: dict) -> dict:
+        """创建知识图谱实体。"""
         entities_repo = KgEntitiesRepository(self._connection())
         entity_id = data.entity_id or f"kg:{data.entity_type}:{uuid.uuid4()}"
         if entities_repo.exists_entity_id(entity_id):
@@ -41,10 +42,12 @@ class KgService(BaseService):
         return entities_repo.get_by_entity_id(entity_id)
 
     def list_entities(self, entity_type=None, name=None, status_="active") -> list:
+        """查询实体列表，支持按类型、名称和状态过滤。"""
         entities_repo = KgEntitiesRepository(self._connection())
         return entities_repo.list_filtered(entity_type=entity_type, name=name, status_=status_)
 
     def get_entity(self, entity_id: str) -> dict:
+        """获取单个实体及其关联关系。"""
         entities_repo = KgEntitiesRepository(self._connection())
         relations_repo = KgRelationsRepository(self._connection())
         row = entities_repo.get_by_entity_id(entity_id)
@@ -54,6 +57,7 @@ class KgService(BaseService):
         return {"entity": row, "relations": rels}
 
     def delete_entity(self, entity_id: str) -> dict:
+        """软删除指定实体。"""
         entities_repo = KgEntitiesRepository(self._connection())
         if not entities_repo.exists_entity_id(entity_id):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entity not found")
@@ -61,6 +65,7 @@ class KgService(BaseService):
         return {"entity_id": entity_id, "status": "inactive"}
 
     def create_relation(self, data) -> dict:
+        """创建实体之间的关系。"""
         entities_repo = KgEntitiesRepository(self._connection())
         relations_repo = KgRelationsRepository(self._connection())
         for label, eid in [
@@ -87,10 +92,12 @@ class KgService(BaseService):
         return relations_repo.get_by_id(row_id)
 
     def list_relations(self, source=None, target=None, relation_type=None) -> list:
+        """查询关系列表，支持按源实体、目标实体和关系类型过滤。"""
         relations_repo = KgRelationsRepository(self._connection())
         return relations_repo.list_filtered(source=source, target=target, relation_type=relation_type)
 
     def delete_relation(self, relation_id: int) -> dict:
+        """删除指定关系。"""
         relations_repo = KgRelationsRepository(self._connection())
         if not relations_repo.get_by_id(relation_id):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Relation not found")
@@ -98,12 +105,14 @@ class KgService(BaseService):
         return {"relation_id": relation_id, "deleted": True}
 
     def search_kg(self, data) -> dict:
+        """执行知识图谱搜索。"""
         entities_repo = KgEntitiesRepository(self._connection())
         relations_repo = KgRelationsRepository(self._connection())
         cache_repo = KgSearchCacheRepository(self._connection())
         return _search_kg(entities_repo, relations_repo, cache_repo, data)
 
     def get_subgraph(self, entity_id: str, max_depth: int = 2) -> dict:
+        """获取以指定实体为中心的子图。"""
         entities_repo = KgEntitiesRepository(self._connection())
         relations_repo = KgRelationsRepository(self._connection())
         entity = entities_repo.get_by_entity_id(entity_id)
@@ -112,6 +121,7 @@ class KgService(BaseService):
         return _get_subgraph(entities_repo, relations_repo, entity_id, max_depth)
 
     def dashboard(self) -> dict:
+        """获取知识图谱仪表盘统计数据。"""
         entities_repo = KgEntitiesRepository(self._connection())
         relations_repo = KgRelationsRepository(self._connection())
         return _dashboard_stats(entities_repo, relations_repo)
