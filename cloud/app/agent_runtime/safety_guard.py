@@ -44,7 +44,7 @@ class DistilBertClassifier:
             cls._tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
             cls._model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased")
             return True
-        except Exception:
+        except (OSError, ImportError):
             logger.warning("Failed to load DistilBERT model", exc_info=True)
             return False
 
@@ -114,7 +114,7 @@ class SafetyGuard:
                     passed=passed,
                     detail=f"DistilBERT: {label} (confidence={confidence:.4f})",
                 )
-            except Exception:
+            except (ValueError, RuntimeError):
                 logger.warning("DistilBERT classification failed, using static fallback", exc_info=True)
         return cls.check_params("instruction", {"instruction": instruction})
 
@@ -192,7 +192,7 @@ class SafetyGuard:
                 passed=passed,
                 detail=" | ".join(detail_parts),
             )
-        except Exception:
+        except Exception:  # 多种失败模式，保持宽捕获
             logger.warning("L3 LLM side-effect prediction failed, using static fallback", exc_info=True)
             return cls.predict_side_effect(tool, params)
 
@@ -223,7 +223,7 @@ class RuleEngineLLM:
             if rule_id:
                 detail = f"{rule_id}: {detail}"
             return CheckResult(name="rule_engine_llm", passed=not violated, detail=detail)
-        except Exception:
+        except Exception:  # 多种失败模式，保持宽捕获
             logger.warning("Safety guard exception, falling back", exc_info=True)
             return fallback
 

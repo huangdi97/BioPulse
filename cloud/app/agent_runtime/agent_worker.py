@@ -1,5 +1,6 @@
 """将 Agent 执行隔离到独立子进程。"""
 
+import concurrent.futures
 import logging
 from concurrent.futures import ProcessPoolExecutor, TimeoutError
 
@@ -29,7 +30,7 @@ def _run_agent_task(task: dict) -> dict:
             return result.model_dump()
         finally:
             conn.close()
-    except Exception as exc:
+    except (TimeoutError, concurrent.futures.CancelledError) as exc:
         return {"status": "error", "result": str(exc)}
 
 
@@ -50,7 +51,7 @@ class AgentWorker:
             future.cancel()
             logger.warning("Agent %s task timed out after %ds, killing process", self.agent_name, timeout)
             return {"status": "timeout", "result": f"task timed out after {timeout}s"}
-        except Exception as exc:
+        except (TimeoutError, concurrent.futures.TimeoutError) as exc:
             logger.error("Agent %s task failed: %s", self.agent_name, exc)
             return {"status": "error", "result": str(exc)}
 
@@ -58,7 +59,7 @@ class AgentWorker:
         try:
             future = self._pool.submit(lambda: True)
             return future.result(timeout=5)
-        except Exception:
+        except (TimeoutError, concurrent.futures.CancelledError):
             logger.warning("Agent worker异常", exc_info=True)
             return False
 

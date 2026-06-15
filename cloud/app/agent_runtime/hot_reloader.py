@@ -2,6 +2,7 @@
 
 import json
 import logging
+import sqlite3
 import threading
 import time
 
@@ -40,7 +41,7 @@ class PromptHotReloader:
                 if isinstance(content, dict):
                     return content
             return None
-        except Exception:
+        except (sqlite3.Error, KeyError):
             logger.exception("Failed to load prompt version from DB for %s", agent_name)
             return None
 

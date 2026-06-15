@@ -1,5 +1,6 @@
 """LLM request building and raw HTTP callers."""
 
+import json
 import logging
 import os
 
@@ -70,7 +71,7 @@ def call_local(config, messages: list[dict], temperature: float, fallback_fn) ->
                 json=body,
             )
             raw = resp.json()
-    except Exception as e:
+    except (httpx.HTTPError, json.JSONDecodeError) as e:
         logger.warning("Local model call failed, fallback to Cloud Normal: %s", e)
         result = fallback_fn()
         result["model_tier"] = "cloud_normal"
@@ -104,7 +105,7 @@ async def call_local_async(config, messages: list[dict], temperature: float, fal
                 json=body,
             )
             raw = resp.json()
-    except Exception as e:
+    except (httpx.HTTPError, json.JSONDecodeError) as e:
         logger.warning("Local model call failed, fallback to Cloud Normal: %s", e)
         result = await fallback_fn()
         result["model_tier"] = "cloud_normal"
@@ -146,7 +147,7 @@ def call_provider(messages: list[dict], temperature: float, provider: dict) -> d
                 },
             )
             raw = resp.json()
-    except Exception as exc:
+    except (httpx.HTTPError, json.JSONDecodeError) as exc:
         return {"success": False, "data": None, "error": str(exc), "attempts": 1}
     choices = raw.get("choices", [])
     reply = ""
@@ -183,7 +184,7 @@ async def call_provider_async(messages: list[dict], temperature: float, provider
                 },
             )
             raw = resp.json()
-    except Exception as exc:
+    except (httpx.HTTPError, json.JSONDecodeError) as exc:
         return {"success": False, "data": None, "error": str(exc), "attempts": 1}
     choices = raw.get("choices", [])
     reply = ""

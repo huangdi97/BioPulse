@@ -73,7 +73,7 @@ class Verifier:
         try:
             reply = self._call_llm([{"role": "user", "content": prompt}])
             return reply.strip().lower() == "true"
-        except Exception as e:
+        except (KeyError, ValueError, json.JSONDecodeError) as e:
             logger.error("Global verification failed: %s", e)
             return False
 
@@ -100,7 +100,7 @@ class Verifier:
             reply = self._call_llm([{"role": "user", "content": prompt}])
             parsed = self._extract_json(reply)
             return CheckResult(name="llm_verification", passed=parsed.get("passed", False), detail=parsed.get("reason", "No reason given"))
-        except Exception as e:
+        except (KeyError, ValueError, json.JSONDecodeError) as e:
             return CheckResult(name="llm_verification", passed=False, detail=f"LLM error: {e}")
 
     @staticmethod
@@ -130,7 +130,7 @@ class Verifier:
         try:
             result = llm._call_ai(messages, temperature=0.1, force_level=2)
             return result.get("reply", "")
-        except Exception:
+        except (KeyError, TypeError):
             logger.warning("Verifier exception", exc_info=True)
             return ""
 

@@ -67,7 +67,7 @@ class Planner:
                 logger.warning("Generated plan failed validation, returning empty plan")
                 return Plan(goal=goal, steps=[], plan_confidence=0.0)
             return plan
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Plan generation failed: %s", e)
             return Plan(goal=goal, steps=[], plan_confidence=0.0)
 
@@ -103,7 +103,7 @@ class Planner:
         try:
             result = llm._call_ai(messages, temperature=0.2, force_level=5)
             return result.get("reply", "")
-        except Exception:
+        except (KeyError, TypeError, ValueError):
             logger.warning("Planner exception", exc_info=True)
             return ""
 
