@@ -52,7 +52,7 @@ class AgentScheduler:
                         self._queue.complete(task["id"], result.result)
                     else:
                         self._queue.fail(task["id"], result.result)
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 if task:
                     self._queue.fail(task["id"], str(e))
             time.sleep(30)

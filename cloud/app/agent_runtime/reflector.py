@@ -73,7 +73,7 @@ class Reflector:
                 action="adjust_params",
                 detail=f"Adjusted params for {failed_step.step_id}: {json.dumps(adjusted_params)}",
             )
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Param adjustment failed: %s", e)
             return ReflectionResult(plan=None, action="cannot_fix", detail=f"Adjustment error: {e}")
 
@@ -100,7 +100,7 @@ class Reflector:
                         action="replace_step",
                         detail=f"Replaced {step.step_id} with fallback: {plan.steps[i].tool}",
                     )
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     logger.error("Step replacement failed: %s", e)
 
         return ReflectionResult(plan=None, action="cannot_fix", detail="No fallback available for failed step")
@@ -121,7 +121,7 @@ class Reflector:
                     detail=f"Generated new {len(new_plan.steps)}-step plan after {analysis.cause}",
                 )
             return ReflectionResult(plan=None, action="cannot_fix", detail="Replanning produced empty plan")
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Replanning failed: %s", e)
             return ReflectionResult(plan=None, action="cannot_fix", detail=f"Replan error: {e}")
 

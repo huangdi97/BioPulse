@@ -113,7 +113,7 @@ class FailureClassifier:
                 severity=parsed.get("severity", "medium"),
                 suggestion=parsed.get("suggestion", "No suggestion"),
             )
-        except Exception as e:
+        except (KeyError, TypeError, json.JSONDecodeError) as e:
             logger.error("LLM analysis failed: %s", e)
             return Analysis(cause="unknown", severity="medium", suggestion="LLM analysis unavailable")
 

@@ -65,7 +65,7 @@ class GuardLayer1:
             self._model.eval()
             self._ready = True
             logger.info("GuardLayer1 loaded from %s", self.MODEL_DIR)
-        except Exception as exc:
+        except (OSError, FileNotFoundError, ValueError) as exc:
             logger.warning("GuardLayer1 load failed (model not downloaded?): %s", exc)
             self._ready = False
 
@@ -94,7 +94,7 @@ class GuardLayer1:
                 "risk_type": risk_type,
                 "confidence": round(confidence.item(), 4),
             }
-        except Exception as exc:
+        except (ValueError, RuntimeError) as exc:
             logger.warning("GuardLayer1 predict failed: %s", exc)
             return {"safe": True, "risk_type": "none", "confidence": 1.0}
 

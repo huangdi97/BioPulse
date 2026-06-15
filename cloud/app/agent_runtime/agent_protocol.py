@@ -80,7 +80,7 @@ class AgentMessageBus:
             for handler in handlers:
                 try:
                     handler(message)
-                except Exception:
+                except Exception:  # handler 可能抛出任意异常
                     logger.exception("Handler for %s failed", key)
             if not handlers:
                 logger.debug("No handler for %s", key)

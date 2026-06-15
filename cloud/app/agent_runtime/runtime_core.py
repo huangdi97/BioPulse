@@ -154,7 +154,7 @@ class RuntimeCore(ExecutionLoopMixin, RollbackHandlerMixin, RuntimeHelper, Runti
             if self._streamer:
                 self._streamer.stream(trace_id, "agent.end", {"status": result.status, "result": result.result})
             return result
-        except Exception:
+        except Exception:  # agent 完整生命周期，保持宽捕获
             logger.exception("Runtime core异常")
             self._save_snapshot(agent_key, -1, [], [], context or {}, "failed")
             self._tracer.end_trace("error", {"error": "unhandled exception"})

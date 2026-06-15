@@ -111,7 +111,7 @@ class ExecutionLoopMixin:
                 except (json.JSONDecodeError, TypeError):
                     logger.warning("执行循环异常", exc_info=True)
                 self._accumulate_cost(ai_resp, step)
-            except Exception as exc:
+            except (KeyError, TypeError, ValueError) as exc:
                 if self._handle_step_error(c, step, str(exc), duration_ms=int((time.time() - step_start) * 1000)):
                     continue
                 raise
@@ -165,7 +165,7 @@ class ExecutionLoopMixin:
             tracer = getattr(self, "_tracer", None)
             if tracer:
                 tracer.log_tool_call(tool_name, tool_params, str(tool_result.get("data", "")), t_elapsed)
-        except Exception as exc:
+        except (KeyError, TypeError, ValueError) as exc:
             if not self._handle_step_error(c, step, str(exc), tool_name, tool_params, duration_ms, ai_resp):
                 raise
             return None

@@ -48,7 +48,7 @@ class CircuitBreaker:
             return result
         except CircuitBreakerOpenError:
             raise
-        except Exception as e:
+        except Exception as e:  # 调用可能抛出任意异常
             logger.warning("Circuit breaker熔断: %s", e, exc_info=True)
             self.on_failure()
             raise

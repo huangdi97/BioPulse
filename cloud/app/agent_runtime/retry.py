@@ -54,7 +54,7 @@ def retry_with_backoff(
 
             time.sleep(delay)
             total_delay += delay
-        except Exception as e:
+        except Exception as e:  # 重试需捕获所有异常
             return {
                 "success": False,
                 "data": None,
@@ -114,7 +114,7 @@ async def async_retry_with_backoff(
 
             await asyncio.sleep(delay)
             total_delay += delay
-        except Exception as e:
+        except Exception as e:  # 重试需捕获所有异常
             return {
                 "success": False,
                 "data": None,

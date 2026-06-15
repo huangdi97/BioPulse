@@ -115,7 +115,7 @@ class RuntimeToolExecMixin:
                 status = "timeout_pass"
             finally:
                 executor.shutdown(wait=False, cancel_futures=True)
-        except Exception as exc:
+        except (TimeoutError, OSError, ValueError) as exc:
             status = "error_pass"
             logger.info("Reflector soft-pass after error at level=%s: %s", level, exc)
         if result is not None:

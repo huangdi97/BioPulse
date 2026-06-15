@@ -56,7 +56,7 @@ class HypothesisEngine:
                 )
                 hypotheses.append(hyp)
             return hypotheses if hypotheses else self._default_hypotheses(red_light_event)
-        except Exception as e:
+        except (KeyError, TypeError, json.JSONDecodeError) as e:
             logger.error("Hypothesis generation failed: %s", e)
             return self._default_hypotheses(red_light_event)
 
