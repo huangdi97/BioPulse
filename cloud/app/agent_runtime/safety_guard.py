@@ -9,11 +9,68 @@ from cloud.app.agent_runtime.models import CheckResult
 from shared.ai_gateway import LLM_INFERENCE_TIMEOUT
 from shared.config import settings as config_settings
 
+L3_SYSTEM_PROMPT = (
+    "You are a safety evaluator. Given a tool name and its parameters, "
+    "predict the side effects. Return JSON with keys: risk_level (low/medium/high), "
+    "effects (list of strings), recommendation (允许/需确认/禁止)."
+)
+
 logger = logging.getLogger(__name__)
 
 
+class DistilBertClassifier:
+    """Lazy-loaded DistilBERT classifier for instruction safety classification (L1).
+
+    Controlled by ``SAFETY_GUARD_L1_ENABLED`` env var (default ``false``).
+    On load failure silently falls back to safe classification.
+    """
+
+    _model = None
+    _tokenizer = None
+
+    @classmethod
+    def is_enabled(cls) -> bool:
+        """Check if L1 safety guard is enabled via environment variable."""
+        return os.environ.get("SAFETY_GUARD_L1_ENABLED", "false").lower() == "true"
+
+    @classmethod
+    def _load(cls) -> bool:
+        """Lazy-load transformers model and tokenizer."""
+        if cls._model is not None:
+            return True
+        try:
+            from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+            cls._tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+            cls._model = AutoModelForSequenceClassification.from_pretrained("distilbert-base-uncased")
+            return True
+        except Exception:
+            logger.warning("Failed to load DistilBERT model", exc_info=True)
+            return False
+
+    @classmethod
+    def classify(cls, instruction: str) -> tuple[str, float]:
+        """Classify instruction as ``"safe"`` or ``"unsafe"`` with confidence score.
+
+        Returns ``("safe", 0.0)`` on load failure.
+        """
+        if not cls._load():
+            return "safe", 0.0
+        import torch
+
+        inputs = cls._tokenizer(instruction, return_tensors="pt", truncation=True, max_length=512)
+        with torch.no_grad():
+            outputs = cls._model(**inputs)
+        probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
+        safe_score = probs[0][0].item()
+        unsafe_score = probs[0][1].item()
+        if unsafe_score > safe_score:
+            return "unsafe", unsafe_score
+        return "safe", safe_score
+
+
 class SafetyGuard:
-    """Parameter boundary check and side-effect prediction (L1+L2+L3)."""
+    """Parameter boundary check, instruction classification (L1), and side-effect prediction (L2+L3)."""
 
     _side_effects_cache: dict | None = None
 
@@ -31,6 +88,7 @@ class SafetyGuard:
 
     @staticmethod
     def check_params(tool: str, params: dict) -> CheckResult:
+        """Check tool parameters for risky keys (passwords, secrets, tokens, etc.)."""
         risky_keys = {"password", "secret", "token", "key", "certificate", "private"}
         violations = [k for k in params if any(r in k.lower() for r in risky_keys)]
         return CheckResult(
@@ -38,6 +96,27 @@ class SafetyGuard:
             passed=len(violations) == 0,
             detail=f"Risky params: {violations}" if violations else "All params safe",
         )
+
+    @classmethod
+    def classify_instruction(cls, instruction: str) -> CheckResult:
+        """L1 instruction classification using DistilBERT or static fallback.
+
+        When ``SAFETY_GUARD_L1_ENABLED=true``, routes the instruction
+        through DistilBERT.  When disabled or on model-load failure, falls
+        back to the static ``check_params()``.
+        """
+        if DistilBertClassifier.is_enabled():
+            try:
+                label, confidence = DistilBertClassifier.classify(instruction)
+                passed = label == "safe"
+                return CheckResult(
+                    name="instruction_classifier",
+                    passed=passed,
+                    detail=f"DistilBERT: {label} (confidence={confidence:.4f})",
+                )
+            except Exception:
+                logger.warning("DistilBERT classification failed, using static fallback", exc_info=True)
+        return cls.check_params("instruction", {"instruction": instruction})
 
     @staticmethod
     def predict_side_effect(tool: str, params: dict) -> CheckResult:
@@ -70,6 +149,52 @@ class SafetyGuard:
             passed=True,
             detail=f"Write operation: {tool}" if is_write else "Read-only operation (no known side effects)",
         )
+
+    @classmethod
+    def _l3_enabled(cls) -> bool:
+        """Check if L3 safety guard is enabled via environment variable."""
+        return os.environ.get("SAFETY_GUARD_L3_ENABLED", "false").lower() == "true"
+
+    @classmethod
+    async def predict_side_effect_llm(
+        cls,
+        tool: str,
+        params: dict,
+        llm_service: object,
+    ) -> CheckResult:
+        """L3 side-effect prediction using LLM via LlmService.
+
+        When ``SAFETY_GUARD_L3_ENABLED=true``, calls ``LlmService.generate()``
+        to predict side effects.  On failure or when disabled, falls back to
+        the static JSON-based ``predict_side_effect()``.
+
+        Returns a ``CheckResult`` with risk assessment.
+        """
+        if not cls._l3_enabled():
+            return cls.predict_side_effect(tool, params)
+        try:
+            prompt = (
+                f"Tool: {tool}\nParams: {json.dumps(params, ensure_ascii=False)}\nPredict potential side effects, risk level, and recommendation."
+            )
+            reply = await llm_service.generate(prompt, context=L3_SYSTEM_PROMPT)
+            parsed = json.loads(reply)
+            risk = parsed.get("risk_level", "medium")
+            effects = parsed.get("effects", [])
+            recommendation = parsed.get("recommendation", "允许")
+            passed = risk != "high" or recommendation != "禁止"
+            detail_parts = [
+                f"LLM副作用: {'; '.join(effects)}",
+                f"风险等级: {risk}",
+                f"建议: {recommendation}",
+            ]
+            return CheckResult(
+                name="side_effect_llm",
+                passed=passed,
+                detail=" | ".join(detail_parts),
+            )
+        except Exception:
+            logger.warning("L3 LLM side-effect prediction failed, using static fallback", exc_info=True)
+            return cls.predict_side_effect(tool, params)
 
 
 class RuleEngineLLM:

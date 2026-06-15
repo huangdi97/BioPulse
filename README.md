@@ -12,14 +12,14 @@
 ## 架构
 
 ```
-一云（Cloud）  ────  四端（Assistant / Opportunity / Sales-Assistant / Sales-Coach）
+BioPulse（Cloud）  ────  多端（Assistant / Opportunity / Sales-Assistant / Sales-Coach）
                         ├── 扩展服务（Management / Pharma-Intel / MarketAccess / ClinicalOps / PatientEngage）
                         └── 移动端（Flutter App）
 ```
 
-- **一云厚、四端专**：Cloud 承载全量业务引擎，各端专注场景交互（[完整架构](ARCHITECTURE.md)）
+- **BioPulse 厚、多端专**：Cloud 承载全量业务引擎，各端专注场景交互（[完整架构](ARCHITECTURE.md)）
 - **独立部署**：各端独立仓库、独立数据库、独立发布
-- **故障隔离**：一个端不影响其他，Cloud 停机时四端照常运行（JWT 本地解码）
+- **故障隔离**：一个端不影响其他，Cloud 停机时各端照常运行（JWT 本地解码）
 - **离线优先**：移动端本地 SQLite + 定时同步
 
 > 🆕 开发指南见 [CONTRIBUTING.md](CONTRIBUTING.md) | 架构详情见 [ARCHITECTURE.md](ARCHITECTURE.md)
