@@ -3,6 +3,7 @@
 import os
 import uuid
 
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from fastapi import APIRouter, Depends, File, Form, UploadFile
 from pydantic import BaseModel
 from starlette import status
@@ -19,6 +20,29 @@ from shared.base import success
 
 router = APIRouter(prefix="/api/cloud/visit", tags=["拜访"])
 
+_AES_KEY: bytes | None = None
+
+
+def _get_aes_key() -> bytes:
+    global _AES_KEY
+    if _AES_KEY is not None:
+        return _AES_KEY
+    raw = os.getenv("RECORDING_ENCRYPTION_KEY", "")
+    if raw:
+        _AES_KEY = bytes.fromhex(raw) if len(raw) == 64 else raw.encode()[:32].ljust(32, b"\0")
+    else:
+        _AES_KEY = os.urandom(32)
+    if len(_AES_KEY) != 32:
+        _AES_KEY = _AES_KEY[:32].ljust(32, b"\0")
+    return _AES_KEY
+
+
+def encrypt_audio(data: bytes) -> tuple[bytes, bytes]:
+    aesgcm = AESGCM(_get_aes_key())
+    nonce = os.urandom(12)
+    ciphertext = aesgcm.encrypt(nonce, data, None)
+    return nonce, ciphertext
+
 
 @router.post("/upload-recording", status_code=status.HTTP_201_CREATED)
 async def upload_recording(
@@ -28,13 +52,17 @@ async def upload_recording(
 ):
     os.makedirs("uploads/audio", exist_ok=True)
     file_ext = os.path.splitext(audio_file.filename or "recording.wav")[1] or ".wav"
-    file_name = f"rec_{uuid.uuid4().hex}{file_ext}"
+    timestamp = uuid.uuid4().hex[:8]
+    file_name = f"rec_{timestamp}_{uuid.uuid4().hex}{file_ext}"
     file_path = f"uploads/audio/{file_name}"
     content = await audio_file.read()
+
+    nonce, ciphertext = encrypt_audio(content)
     with open(file_path, "wb") as f:
-        f.write(content)
+        f.write(ciphertext)
 
     draft_data = await generate_visit_draft(file_path, user_id)
+    draft_data["encrypted_key"] = nonce.hex()
     saved = save_draft(draft_data)
 
     return success(

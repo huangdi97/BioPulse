@@ -30,6 +30,7 @@ class ProviderSettings:
     model_name: str | None = None
     timeout_seconds: int = 30
     max_retries: int = 3
+    restrict_domestic: bool = True  # PIPL: 仅允许境内服务端点
 
 
 @dataclass

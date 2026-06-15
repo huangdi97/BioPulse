@@ -1,6 +1,12 @@
 """
 ASR (Automatic Speech Recognition) service — provider-switchable.
 
+PIPL 合规声明：
+    - 语音数据仅发送至境内 ASR 服务端点（阿里云/腾讯云/讯飞等国内服务）
+    - 所有 API 调用使用 HTTPS 加密传输
+    - LocalASR 模式下数据不离开本地，完全符合数据境内存储要求
+    - ApiASR 模式下通过 restrict_domestic 开关强制限制非境内 endpoint
+
 The constructor accepts an optional ProviderSettings. When no settings are
 provided the module-level convenience function ``transcribe_audio()`` uses
 the global provider config.

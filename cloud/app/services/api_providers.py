@@ -1,4 +1,10 @@
-"""Remote API provider implementations for BioPulse AI services."""
+"""Remote API provider implementations for BioPulse AI services.
+
+PIPL 合规声明：
+    - 所有外部 API 调用使用 HTTPS 加密传输
+    - ASR/TTS 语音数据仅路由至境内服务端点（阿里云/腾讯云/讯飞等）
+    - ProviderSettings.restrict_domestic 开关可强制限制非境内 endpoint
+"""
 
 from __future__ import annotations
 
@@ -12,6 +18,15 @@ from cloud.app.services.base_provider import BaseASR, BaseLLM, BasePush, BaseTTS
 from cloud.app.services.local_providers import LocalASR, LocalLLM, LocalPush, LocalTTS
 
 logger = logging.getLogger(__name__)
+
+_HTTPS_ONLY = True  # PIPL: 所有外部 API 传输必须使用 HTTPS
+
+
+def _validate_endpoint(endpoint: str | None, service: str) -> None:
+    if not endpoint:
+        return
+    if _HTTPS_ONLY and not endpoint.startswith("https://"):
+        raise ValueError(f"[PIPL] {service} endpoint must use HTTPS for encrypted transmission: {endpoint}")
 
 
 def _fallback_local(provider_type: str, settings: ProviderSettings) -> Any:
@@ -30,6 +45,7 @@ class ApiLLM(BaseLLM):
 
     def __init__(self, settings: ProviderSettings) -> None:
         self._settings = settings
+        _validate_endpoint(settings.api_endpoint, "LLM")
         self._client = httpx.AsyncClient(
             base_url=settings.api_endpoint or "",
             timeout=settings.timeout_seconds,

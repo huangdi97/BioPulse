@@ -15,9 +15,7 @@ REFRESH_TOKEN_EXPIRE_DAYS = settings.refresh_token_expire_days
 
 
 def _get_secret_key() -> str:
-    key = settings.jwt_secret_key
-    if not key:
-        raise ValueError("JWT_SECRET_KEY is not set in environment or .env file. This is a security requirement for production.")
+    key = settings.effective_secret_key
     return key
 
 

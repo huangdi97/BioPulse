@@ -1,6 +1,8 @@
 """Agent运行时核心模块，提供"规划-决策-反思-执行-验证"五阶段执行循环；通过RuntimeState状态管理与StateSnapshot快照回滚机制保障任务可靠执行。"""
 
 import logging
+import os
+import threading
 import time
 import uuid
 from datetime import datetime
@@ -32,6 +34,19 @@ from cloud.app.agent_runtime.vector_memory import VectorMemory
 from cloud.app.agent_runtime.verifier import Verifier
 
 logger = logging.getLogger(__name__)
+
+_agent_exec_semaphore: threading.Semaphore | None = None
+_agent_sem_lock = threading.Lock()
+
+
+def _get_global_semaphore() -> threading.Semaphore:
+    global _agent_exec_semaphore
+    if _agent_exec_semaphore is None:
+        with _agent_sem_lock:
+            if _agent_exec_semaphore is None:
+                max_concurrency = int(os.getenv("AGENT_MAX_CONCURRENCY", "2"))
+                _agent_exec_semaphore = threading.Semaphore(max_concurrency)
+    return _agent_exec_semaphore
 
 
 class RuntimeCore(ExecutionLoopMixin, RollbackHandlerMixin, RuntimeHelper, RuntimeLLM, RuntimeCoreToolsMixin, RuntimeToolExecMixin):
@@ -65,19 +80,32 @@ class RuntimeCore(ExecutionLoopMixin, RollbackHandlerMixin, RuntimeHelper, Runti
         self._streamer = streamer
 
     def execute(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
-        """执行 Agent 任务，包含舱壁隔离与执行循环。"""
-        if not self._bulkhead.acquire(agent_key):
+        """执行 Agent 任务，包含全局并发限流与舱壁隔离。"""
+        sem = _get_global_semaphore()
+        acquired = sem.acquire(blocking=True, timeout=120.0)
+        if not acquired:
             return RuntimeResult(
-                status="bulkhead_rejected",
-                result=f"Agent '{agent_key}' is busy, too many concurrent executions. Try again later.",
+                status="rate_limited",
+                result="Global agent concurrency limit reached. Please try again later.",
                 iterations=0,
                 tool_calls=0,
                 logs=[],
             )
         try:
-            return self._execute_with_bulkhead(goal, agent_key, context)
+            if not self._bulkhead.acquire(agent_key):
+                return RuntimeResult(
+                    status="bulkhead_rejected",
+                    result=f"Agent '{agent_key}' is busy, too many concurrent executions. Try again later.",
+                    iterations=0,
+                    tool_calls=0,
+                    logs=[],
+                )
+            try:
+                return self._execute_with_bulkhead(goal, agent_key, context)
+            finally:
+                self._bulkhead.release(agent_key)
         finally:
-            self._bulkhead.release(agent_key)
+            sem.release()
 
     def _execute_with_bulkhead(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
         trace_id = self._tracer.start_trace(agent_key, self._auth_header or "anonymous", {"goal": goal, "context": context})

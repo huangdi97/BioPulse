@@ -7,7 +7,7 @@ from voice-of-customer visit recordings.
 import json
 import sqlite3
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from cloud.app.database import DB_PATH
 from cloud.app.services.asr_service import transcribe_audio
@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS visit_drafts (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
     audio_file_path TEXT,
+    encrypted_key TEXT,
+    expires_at TEXT,
     transcript TEXT,
     extracted_fields TEXT,
     status TEXT NOT NULL DEFAULT 'draft',
@@ -47,14 +49,17 @@ def create_drafts_table() -> None:
 def save_draft(draft_data: dict) -> dict:
     draft_id = draft_data.get("id", f"draft_{uuid.uuid4().hex}")
     now = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+    expires_at = (datetime.utcnow() + timedelta(days=365 * 2)).strftime("%Y-%m-%dT%H:%M:%SZ")
     conn = _get_conn()
     try:
         conn.execute(
-            "INSERT INTO visit_drafts (id, user_id, audio_file_path, transcript, extracted_fields, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO visit_drafts (id, user_id, audio_file_path, encrypted_key, expires_at, transcript, extracted_fields, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 draft_id,
                 draft_data["user_id"],
                 draft_data.get("audio_file_path"),
+                draft_data.get("encrypted_key"),
+                expires_at,
                 draft_data.get("transcript"),
                 json.dumps(draft_data["extracted_fields"]) if draft_data.get("extracted_fields") else None,
                 draft_data.get("status", "draft"),
@@ -62,7 +67,7 @@ def save_draft(draft_data: dict) -> dict:
             ),
         )
         conn.commit()
-        return {**draft_data, "id": draft_id, "created_at": now}
+        return {**draft_data, "id": draft_id, "created_at": now, "expires_at": expires_at}
     finally:
         conn.close()
 

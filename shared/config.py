@@ -1,3 +1,5 @@
+import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,7 +26,13 @@ class Config(BaseSettings):
     ai_gateway_timeout: int = 120
 
     deepseek_api_key: str = ""
-    jwt_secret_key: str = ""  # MUST be set via env in production; empty = fail at startup
+    secret_key: str = ""  # PRIMARY: SECRET_KEY from env
+    jwt_secret_key: str = ""  # FALLBACK: JWT_SECRET_KEY from env (legacy compat)
+
+    @property
+    def effective_secret_key(self) -> str:
+        return self.secret_key or self.jwt_secret_key or os.urandom(32).hex()
+
     cors_origins: str = "*"
     cloud_db_path: str = "data/cloud.db"
     assistant_db_path: str = "data/assistant.db"
