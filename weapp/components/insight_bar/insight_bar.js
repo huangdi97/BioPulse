@@ -1,0 +1,1 @@
+Component({properties:{pageType:{type:String,value:'default'}},data:{text:'AI 推荐'},observers:{pageType(val){const t={'default':'AI 推荐','visit':'建议重点拜访','compliance':'合规风险提示','patient':'患者关注项'};this.setData({text:t[val]||t.default})}}})

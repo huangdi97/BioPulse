@@ -2,7 +2,9 @@
   "pages": [
     "pages/index/index",
     "pages/visit/visit",
-    "pages/compliance/compliance"
+"pages/compliance/compliance",
+    "pages/patient_profile/patient_profile",
+    "pages/market_access/market_access"
   ],
   "window": {
     "navigationBarTitleText": "BioPulse",

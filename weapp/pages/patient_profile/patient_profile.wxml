@@ -1,0 +1,11 @@
+<view class='container'>
+  <view class='card'>
+    <text>患者信息</text>
+  </view>
+  <view class='card'>
+    <text>用药提醒</text>
+  </view>
+  <view class='card'>
+    <text>依从性</text>
+  </view>
+</view>

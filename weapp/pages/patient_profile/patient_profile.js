@@ -1,0 +1,1 @@
+Page({data:{},onLoad(){console.log('patient profile loaded')}})

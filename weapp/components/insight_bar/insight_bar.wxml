@@ -1,0 +1,1 @@
+<view class='bar'><icon type='info'/><text>{{text}}</text></view>
