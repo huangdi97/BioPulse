@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
   lint-and-test:
@@ -42,20 +42,20 @@ jobs:
         working-directory: frontend
         run: npx tsc --noEmit
 
-#  deploy:
-#    needs: lint-and-test
-#    if: github.ref == 'refs/heads/master'
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v4
-#      - name: Deploy via SSH
-#        uses: appleboy/ssh-action@v1
-#        with:
-#          host: ${{ secrets.DEPLOY_HOST }}
-#          username: ${{ secrets.DEPLOY_USERNAME }}
-#          key: ${{ secrets.DEPLOY_KEY }}
-#          script: |
-#            cd ${{ secrets.DEPLOY_PATH }}
-#            git pull
-#            docker-compose build
-#            docker-compose up -d
+  deploy:
+    needs: lint-and-test
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USERNAME }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            git pull
+            docker-compose build
+            docker-compose up -d
