@@ -106,7 +106,7 @@ class TestNotificationSystem:
             "/auth/register",
             json={"username": recipient_username, "password": recipient_password},
         )
-        assert resp.status_code == 201
+        assert resp.status_code == 201, resp.text
         recipient_id = resp.json()["data"]["user_id"]
 
         resp = client.post(
@@ -126,7 +126,7 @@ class TestNotificationSystem:
             },
             headers={"Authorization": f"Bearer {auth_token}"},
         )
-        assert resp.status_code == 201
+        assert resp.status_code == 201, resp.text
         template = resp.json()["data"]
         assert template["name"] == "test_template"
 

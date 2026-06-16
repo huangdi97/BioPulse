@@ -211,7 +211,7 @@ class TestComplianceRuleUpdate:
             json={"name": "RuleToUpdate", "category": "pharma", "keyword": "badword", "max_value": 0.3},
             headers=headers,
         )
-        assert resp.status_code in (200, 201)
+        assert resp.status_code in (200, 201), resp.text
         rule_id = resp.json()["data"].get("id") or resp.json()["data"].get("rule_id")
 
         resp = client.patch(
@@ -219,7 +219,7 @@ class TestComplianceRuleUpdate:
             json={"max_value": 0.9},
             headers=headers,
         )
-        assert resp.status_code in (200, 201)
+        assert resp.status_code in (200, 201), resp.text
 
         resp = client.get(f"/compliance/rules/{rule_id}", headers=headers)
         assert resp.status_code in (200, 404)

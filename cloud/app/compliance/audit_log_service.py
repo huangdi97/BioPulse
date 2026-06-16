@@ -14,6 +14,14 @@ logger = logging.getLogger(__name__)
 class ComplianceAuditLogService(BaseService):
     """Compliance audit log service for rep violation queries."""
 
+    def _connection(self):
+        if hasattr(self, "db") and self.db is not None:
+            return self.db
+        from cloud.app.database import DB_PATH
+
+        self.db = self._connect(DB_PATH)
+        return self.db
+
     def rep_violations(self, rep_id: int) -> dict[str, Any]:
         """Return violations for one representative.
 
@@ -23,7 +31,7 @@ class ComplianceAuditLogService(BaseService):
         Returns:
             Representative violation payload.
         """
-        db = self.db
+        db = self._connection()
         rows = db.execute(
             "SELECT id, rule_code, rule_name, severity, action, visit_data_json, created_at FROM enforcement_log ORDER BY id"
         ).fetchall()

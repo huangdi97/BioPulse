@@ -5,7 +5,8 @@ from pathlib import Path
 import pytest
 
 from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
-from cloud.app.agent_runtime.analyzer import Analyzer, Hypothesis, RootCauseNarrative
+from cloud.app.agent_runtime.analyzer import Hypothesis
+from cloud.app.agent_runtime.analyzer.hypothesis import HypothesisEngine
 from cloud.app.agent_runtime.content_filter import ContentFilter
 from cloud.app.agent_runtime.cost_governor import CostGovernor
 from cloud.app.agent_runtime.loop_detector import LoopDetector
@@ -391,7 +392,7 @@ def test_loop_detector_self_circuit_breaker():
 
 def test_analyzer_generate_hypotheses():
     """Analyzer: generate hypotheses from red light event."""
-    analyzer = Analyzer()
+    analyzer = HypothesisEngine()
     event = {"event_id": "red-R001-1", "level": "L2", "evidence": {"visit_up": 0.4, "flow_down": -0.15}}
     hypotheses = analyzer.generate_hypotheses(event)
     assert len(hypotheses) >= 2
@@ -402,7 +403,7 @@ def test_analyzer_generate_hypotheses():
 
 def test_analyzer_design_verification_plan():
     """Analyzer: design verification plan for a hypothesis."""
-    analyzer = Analyzer()
+    analyzer = HypothesisEngine()
     hyp = Hypothesis(id="h1", description="拜访数据可能存在虚增", confidence=0.7, status="pending")
     plan = analyzer.design_verification_plan(hyp)
     assert plan.hypothesis_id == "h1"
@@ -411,13 +412,13 @@ def test_analyzer_design_verification_plan():
 
 def test_analyzer_full_hypothesis_loop():
     """Analyzer: full hypothesis verification cycle returns narrative."""
-    analyzer = Analyzer()
+    analyzer = HypothesisEngine()
     event = {"event_id": "red-R002-1", "level": "L2", "evidence": {"visit_up": 0.4, "flow_down": -0.15, "expense_up": 0.3}}
     narrative = analyzer.hypothesis_verification_loop(event)
-    assert isinstance(narrative, RootCauseNarrative)
-    assert narrative.root_cause
-    assert len(narrative.reasoning_chain) >= 1
-    assert narrative.confidence >= 0
+    assert isinstance(narrative, dict)
+    assert narrative.get("root_cause")
+    assert len(narrative.get("reasoning_chain", [])) >= 1
+    assert narrative.get("confidence", -1) >= 0
 
 
 # ══════════════════════════════════════════════════════════════════════════════

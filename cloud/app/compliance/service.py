@@ -17,10 +17,10 @@ from .evaluation_service import ComplianceEvaluationService
 class ComplianceService(BaseService):
     """Compliance management service providing a unified API over rule CRUD, evaluation, and audit."""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._evaluation = ComplianceEvaluationService(*args, **kwargs)
-        self._audit_log = ComplianceAuditLogService(*args, **kwargs)
+    def __init__(self, db=None):
+        super().__init__(db=db)
+        self._evaluation = ComplianceEvaluationService(db=db)
+        self._audit_log = ComplianceAuditLogService(db=db)
 
     def _connection(self):
         if hasattr(self, "db") and self.db is not None:

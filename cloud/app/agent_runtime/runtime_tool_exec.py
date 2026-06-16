@@ -9,6 +9,9 @@ _KEEP_CONTEXT = object()
 
 
 class ToolExecutor:
+    def __init__(self, host):
+        self._host = host
+
     def _save_step_checkpoint(self, c, step, status="active", context=_KEEP_CONTEXT):
         context = c["context"] if context is _KEEP_CONTEXT else context
         self._host._save_checkpoint(
