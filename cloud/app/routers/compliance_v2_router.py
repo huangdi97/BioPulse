@@ -5,7 +5,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
-from cloud.app.services.compliance_v2_service import ComplianceV2Service
+from cloud.app.compliance.v2_service import ComplianceV2Service
 from shared.auth_scope import require_scope
 from shared.base import success
 

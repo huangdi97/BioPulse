@@ -6,3 +6,6 @@ COPY shared/ ./shared/
 COPY assistant/ ./assistant/
 EXPOSE 8003
 CMD ["uvicorn", "assistant.app.main:app", "--host", "0.0.0.0", "--port", "8003"]
+
+RUN adduser --disabled-password --gecos "" appuser
+USER appuser

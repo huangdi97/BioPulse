@@ -6,3 +6,6 @@ COPY shared/ ./shared/
 COPY opportunity/ ./opportunity/
 EXPOSE 8002
 CMD ["uvicorn", "opportunity.app.main:app", "--host", "0.0.0.0", "--port", "8002"]
+
+RUN adduser --disabled-password --gecos "" appuser
+USER appuser

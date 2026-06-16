@@ -28,7 +28,7 @@ def register_middleware(app: FastAPI) -> None:
         _cors_origins = _cors_origins.split(",") if _cors_origins != "*" else ["*"]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=_cors_origins if _cors_origins else ["*"],
+        allow_origins=_cors_origins,
         allow_credentials=_cors_origins != ["*"],
         allow_methods=["*"],
         allow_headers=["*"],

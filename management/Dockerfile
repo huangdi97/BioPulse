@@ -6,3 +6,6 @@ COPY shared/ ./shared/
 COPY management/ ./management/
 EXPOSE 8012
 CMD ["uvicorn", "management.app.main:app", "--host", "0.0.0.0", "--port", "8012"]
+
+RUN adduser --disabled-password --gecos "" appuser
+USER appuser

@@ -1,5 +1,3 @@
-from typing import Any
-
 import pytest
 
 from cloud.app.services.agent_core import (
@@ -32,7 +30,10 @@ class TestToolRegistryRegister:
 
     def test_register_duplicate_custom_message(self) -> None:
         registry = ToolRegistry()
-        fn = lambda: None
+
+        def fn():
+            return None
+
         registry.register("dup", "first", {"type": "object", "properties": {}}, fn)
         with pytest.raises(DuplicateToolError, match="dup"):
             registry.register("dup", "second", {"type": "object", "properties": {}}, fn)
@@ -113,9 +114,7 @@ class TestToolRegistryExecute:
         with pytest.raises(TypeError, match="expects integer, got str"):
             tool_registry.execute("search", query="test", limit="ten")
 
-    def test_execute_function_error_returns_error_status(
-        self, tool_registry: ToolRegistry
-    ) -> None:
+    def test_execute_function_error_returns_error_status(self, tool_registry: ToolRegistry) -> None:
         tool_registry.register(
             name="broken",
             description="Always fails",

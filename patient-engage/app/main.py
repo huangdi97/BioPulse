@@ -3,6 +3,7 @@
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from shared.app_settings import settings as app_settings
 from shared.auth import get_current_user
 from shared.exception_handlers import register_exception_handlers
 from shared.health import router as health_router
@@ -30,7 +31,7 @@ app = FastAPI(
         {"name": "游戏化激励", "description": "患者积分、奖励与排行榜"},
     ],
 )
-_cors_origins = ["*"]
+_cors_origins = app_settings.cors_origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,

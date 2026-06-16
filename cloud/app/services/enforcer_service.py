@@ -1,6 +1,6 @@
 """合规执行服务，负责拜访记录的合规性校验。"""
 
-from cloud.app.services.compliance_engine import ComplianceEnforcer
+from cloud.app.compliance.engine import ComplianceEnforcer
 from shared.base_service import BaseService
 
 

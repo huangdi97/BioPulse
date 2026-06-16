@@ -9,8 +9,7 @@ from typing import TYPE_CHECKING
 from cloud.app.config.provider_config import ProviderConfig, ProviderMode, ProviderType
 
 if TYPE_CHECKING:
-    from cloud.app.services.api_providers import ApiASR, ApiLLM, ApiPush, ApiTTS
-    from cloud.app.services.local_providers import LocalASR, LocalLLM, LocalPush, LocalTTS
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +22,7 @@ class BaseLLM(abc.ABC):
     """
 
     @abc.abstractmethod
-    def generate(self, prompt: str, context: str | None = None) -> str:
-        ...
+    def generate(self, prompt: str, context: str | None = None) -> str: ...
 
     def close(self) -> None:
         pass
@@ -38,8 +36,7 @@ class BaseASR(abc.ABC):
     """
 
     @abc.abstractmethod
-    def transcribe(self, audio: bytes) -> str:
-        ...
+    def transcribe(self, audio: bytes) -> str: ...
 
     def close(self) -> None:
         pass
@@ -53,8 +50,7 @@ class BaseTTS(abc.ABC):
     """
 
     @abc.abstractmethod
-    def synthesize(self, text: str) -> bytes:
-        ...
+    def synthesize(self, text: str) -> bytes: ...
 
     def close(self) -> None:
         pass
@@ -68,8 +64,7 @@ class BasePush(abc.ABC):
     """
 
     @abc.abstractmethod
-    def send(self, recipient: str, message: str) -> bool:
-        ...
+    def send(self, recipient: str, message: str) -> bool: ...
 
     def close(self) -> None:
         pass

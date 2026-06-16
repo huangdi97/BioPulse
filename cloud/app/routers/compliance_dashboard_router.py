@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends
 
-from cloud.app.services.compliance_service import ComplianceService
+from cloud.app.compliance.service import ComplianceService
 from shared.auth import get_current_user
 from shared.base import success
 

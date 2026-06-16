@@ -68,9 +68,7 @@ def _detect_channel_stuffing(
                 authorized.add(str(r))
     mismatch_batches: list[str] = []
     for batch, regions in batch_regions.items():
-        if authorized and not regions.issubset(authorized):
-            mismatch_batches.append(batch)
-        elif len(regions) > 1:
+        if authorized and not regions.issubset(authorized) or len(regions) > 1:
             mismatch_batches.append(batch)
     if not mismatch_batches:
         return None

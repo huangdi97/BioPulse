@@ -6,6 +6,39 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import HTTPException
 
+ALLOWED_COLUMNS = {
+    "id",
+    "name",
+    "created_at",
+    "updated_at",
+    "status",
+    "step",
+    "agent_key",
+    "goal",
+    "trace_id",
+    "score",
+    "confidence",
+    "amount",
+    "date",
+    "type",
+    "priority",
+}
+
+
+def _validate_order_by(order_by: str) -> str:
+    order_by = order_by.strip()
+    direction = ""
+    if order_by.upper().endswith(" DESC"):
+        direction = " DESC"
+        order_by = order_by[:-5].strip()
+    elif order_by.upper().endswith(" ASC"):
+        direction = " ASC"
+        order_by = order_by[:-4].strip()
+    col = order_by.split(",")[0].split(".")[-1].strip()
+    if col not in ALLOWED_COLUMNS:
+        return "id DESC"
+    return col + direction
+
 
 class BaseRepository:
     """通用数据仓库基类，封装增删改查与软删除。"""
@@ -66,7 +99,7 @@ class BaseRepository:
         filtered = {k: v for k, v in data.items() if k in self.cols and k != "id"}
         if not filtered:
             return False
-        set_clause = ", ".join([f"{k} = %s" for k in filtered.keys()])
+        set_clause = ", ".join([f"{k} = %s" for k in filtered])
         values = list(filtered.values()) + [record_id]
         query = f"UPDATE {self.table_name} SET {set_clause} WHERE id = %s"
         cursor = self.execute(query, values)
@@ -96,7 +129,7 @@ class BaseRepository:
         where = ""
         if conditions:
             where = " WHERE " + " AND ".join(conditions)
-        query = f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY {order_by}"
+        query = f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY {_validate_order_by(order_by)}"
         cursor = self.execute(query, params or [])
         return [dict(row) for row in cursor.fetchall()]
 
@@ -115,7 +148,7 @@ class BaseRepository:
         total = self.execute(f"SELECT COUNT(*) FROM {self.table_name}{where}", params or []).fetchone()[0]
         total_pages = max(1, (total + page_size - 1) // page_size)
         offset = (page - 1) * page_size
-        query = f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY {order_by} LIMIT %s OFFSET %s"
+        query = f"SELECT {placeholders} FROM {self.table_name}{where} ORDER BY {_validate_order_by(order_by)} LIMIT %s OFFSET %s"
         cursor = self.execute(query, (params or []) + [page_size, offset])
         return total, total_pages, [dict(row) for row in cursor.fetchall()]
 

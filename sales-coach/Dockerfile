@@ -6,3 +6,6 @@ COPY shared/ ./shared/
 COPY sales-coach/ ./sales_coach/
 EXPOSE 8001
 CMD ["uvicorn", "sales_coach.app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+
+RUN adduser --disabled-password --gecos "" appuser
+USER appuser

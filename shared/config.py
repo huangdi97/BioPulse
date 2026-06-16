@@ -1,6 +1,9 @@
+import logging
 import os
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
 
 
 class Config(BaseSettings):
@@ -41,6 +44,8 @@ class Config(BaseSettings):
 
     @property
     def effective_secret_key(self) -> str:
+        if not self.secret_key and not self.jwt_secret_key:
+            logger.warning("⚠️ 未配置 SECRET_KEY/JWT_SECRET_KEY，JWT 签名不稳定")
         return self.secret_key or self.jwt_secret_key or os.urandom(32).hex()
 
     cors_origins: str = "*"

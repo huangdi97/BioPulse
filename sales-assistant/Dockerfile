@@ -6,3 +6,6 @@ COPY shared/ ./shared/
 COPY sales-assistant/ ./sales-assistant/
 EXPOSE 8004
 CMD ["uvicorn", "sales_assistant.app.main:app", "--host", "0.0.0.0", "--port", "8004"]
+
+RUN adduser --disabled-password --gecos "" appuser
+USER appuser

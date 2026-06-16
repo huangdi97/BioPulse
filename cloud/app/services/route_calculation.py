@@ -85,10 +85,7 @@ class RouteCalculationMixin:
             cv = r["condition_value"]
             op = r["condition_operator"]
             if op == "contains":
-                if cv and cv in input_text:
-                    matched = r
-                    break
-                elif not cv:
+                if cv and cv in input_text or not cv:
                     matched = r
                     break
             elif op == "equals":

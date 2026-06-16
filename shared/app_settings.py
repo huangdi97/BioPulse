@@ -7,10 +7,10 @@ class Settings(BaseSettings):
     # General
     app_name: str = "BioPulse"
     version: str = "1.0.0"
-    debug: bool = True
+    debug: bool = False
 
     # CORS
-    cors_origins: List[str] = ["*"]
+    cors_origins: List[str] = []
 
     # Cloud API URL used by other services
     cloud_api_base: str = "http://localhost:8000"

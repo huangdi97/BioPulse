@@ -6,3 +6,6 @@ COPY shared/ ./shared/
 COPY patient-engage/ ./patient-engage/
 EXPOSE 8011
 CMD ["uvicorn", "patient-engage.app.main:app", "--host", "0.0.0.0", "--port", "8011"]
+
+RUN adduser --disabled-password --gecos "" appuser
+USER appuser

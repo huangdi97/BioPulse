@@ -89,9 +89,7 @@ class OfflineService(BaseService):
                 continue
 
             url = f"{CLOUD_API_URL}{endpoint}"
-            if action == "update" and entity_id:
-                url = f"{url}/{entity_id}"
-            elif action == "delete" and entity_id:
+            if action == "update" and entity_id or action == "delete" and entity_id:
                 url = f"{url}/{entity_id}"
 
             method_map = {"create": "POST", "update": "PUT", "delete": "DELETE"}

@@ -6,3 +6,6 @@ COPY shared/ ./shared/
 COPY market-access/ ./market-access/
 EXPOSE 8007
 CMD ["uvicorn", "market-access.app.main:app", "--host", "0.0.0.0", "--port", "8007"]
+
+RUN adduser --disabled-password --gecos "" appuser
+USER appuser

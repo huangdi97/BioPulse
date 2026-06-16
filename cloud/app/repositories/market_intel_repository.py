@@ -86,7 +86,7 @@ class MarketIntelItemsRepository(BaseRepository):
         filtered = {k: v for k, v in data.items() if k in self.cols and k != "id"}
         if not filtered:
             return False
-        set_clause = ", ".join(f"{k}=?" for k in filtered.keys())
+        set_clause = ", ".join(f"{k}=?" for k in filtered)
         values = list(filtered.values()) + [record_id]
         cursor = self.db.execute(f"UPDATE {self.table_name} SET {set_clause} WHERE id=?", values)
         return cursor.rowcount > 0
@@ -102,7 +102,7 @@ class MarketIntelSourcesRepository(BaseRepository):
         filtered = {k: v for k, v in data.items() if k in self.cols and k != "id"}
         if not filtered:
             return False
-        set_clause = ", ".join(f"{k}=?" for k in filtered.keys())
+        set_clause = ", ".join(f"{k}=?" for k in filtered)
         values = list(filtered.values()) + [record_id]
         cursor = self.db.execute(f"UPDATE {self.table_name} SET {set_clause} WHERE id=?", values)
         self.db.commit()

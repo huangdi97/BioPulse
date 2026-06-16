@@ -14,7 +14,7 @@ from cloud.app.agent_runtime.loop_detector import LoopDetector
 from cloud.app.agent_runtime.planner import Plan, PlanGenerator, PlanStep
 from cloud.app.agent_runtime.safety_guard import SafetyGuard
 from cloud.app.agent_runtime.verifier import Verifier
-from cloud.app.services.compliance_engine import ComplianceEnforcer
+from cloud.app.compliance.engine import ComplianceEnforcer
 
 GOLDEN_DIR = Path(__file__).parent / "golden"
 
