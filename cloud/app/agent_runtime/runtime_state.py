@@ -44,6 +44,10 @@ class RuntimeState:
         )
         self._agent_db.commit()
 
+    def _load_checkpoint(self, agent_key, goal):
+        """加载检查点，委托给 load 方法。"""
+        return self.load(agent_key, goal)
+
 
 class ApprovalManager:
     """审批管理器，创建待审批记录供人工审核后再恢复执行。"""

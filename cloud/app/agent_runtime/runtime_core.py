@@ -21,6 +21,8 @@ from cloud.app.agent_runtime.planner import Planner
 from cloud.app.agent_runtime.rate_limiter import RateLimiter
 from cloud.app.agent_runtime.reflector import Reflector
 from cloud.app.agent_runtime.rollback_handler import RollbackHandler
+from cloud.app.agent_runtime.runtime_core_tools import RuntimeCoreTools
+from cloud.app.agent_runtime.runtime_helpers import CompositionHelper
 from cloud.app.agent_runtime.runtime_llm import RuntimeLLM
 from cloud.app.agent_runtime.runtime_state import ApprovalManager, RuntimeState
 from cloud.app.agent_runtime.runtime_tool_exec import ToolExecutor
@@ -76,6 +78,8 @@ class RuntimeCore:
         self._tool_exec = ToolExecutor(self)
         self._engine = ExecutionEngine(self)
         self._llm = RuntimeLLM(core=self)
+        self._core_tools = RuntimeCoreTools(self)
+        self._helper = CompositionHelper(agent_db, self)
 
     def set_streamer(self, streamer: AgentStreamer):
         """设置事件流推送器。"""
@@ -195,13 +199,25 @@ class RuntimeCore:
         """获取 Agent 脑状态存储器。"""
         return self._brain
 
+    def _save_snapshot(self, agent_id, step_id, plan, results, context, status="active"):
+        """保存状态快照到 StateSnapshot 管理器。"""
+        return self._snapshot_manager.save(agent_id, step_id, plan, results, context, status)
+
+    def _estimate_token_count(self, messages: list[dict]) -> int:
+        """估算消息 token 数，委托 RuntimeLLM。"""
+        return RuntimeLLM._estimate_token_count(messages)
+
+    def get_cost_usage(self) -> dict:
+        """获取当前成本使用详情。"""
+        return self._cost_governor.get_usage()
+
     def _notify(self, c, status):
         if self._notifier:
             elapsed = (datetime.now() - datetime.fromisoformat(c["started_at"])).total_seconds()
             self._notifier.notify(c["agent_key"], c["goal"], status, elapsed, self._cost_tracker)
 
     def _finish(self, c, status, result, step, iterations, success=None, metadata=None, notify=False, delete_checkpoint=False):
-        self._save_log(c["agent_key"], c["goal"], status, iterations, c["tool_calls"], c["logs"], c["started_at"])
+        self._helper._save_log(c["agent_key"], c["goal"], status, iterations, c["tool_calls"], c["logs"], c["started_at"])
         if notify:
             self._notify(c, status)
         if delete_checkpoint:
@@ -215,7 +231,7 @@ class RuntimeCore:
 
     def _handle_budget_exceeded(self, c, step, step_start):
         c["logs"].append(
-            self._build_step_log(
+            self._core_tools._build_step_log(
                 step,
                 "budget_exceeded",
                 result="cost budget exceeded",

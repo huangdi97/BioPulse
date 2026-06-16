@@ -13,7 +13,7 @@ class RollbackHandler:
         """rollback."""
         if target_step < 0:
             raise HTTPException(status_code=400, detail="step must be non-negative")
-        state = self._host._load_runtime_snapshot(trace_id, target_step)
+        state = self._host._helper._load_runtime_snapshot(trace_id, target_step)
         if not state:
             raise HTTPException(status_code=404, detail="snapshot not found")
         agent_key, goal = state.get("agent_key"), state.get("goal")
@@ -31,11 +31,11 @@ class RollbackHandler:
             "step_costs": cost.get("step_costs", []),
         }
         restored_state = {**state, "trace_id": new_trace_id, "step": target_step, "status": "rolled_back", "rolled_back_from": trace_id}
-        self._host._save_checkpoint(agent_key, goal, restored_state)
+        self._host._helper._save_checkpoint(agent_key, goal, restored_state)
         result = self._host.execute(goal, agent_key, restored_state.get("context"))
         new_trace_id = result.metadata.get("trace_id", self._host._trace_id)
         restored_state = {**state, "trace_id": new_trace_id, "step": target_step, "status": "rolled_back", "rolled_back_from": trace_id}
-        self._host._save_checkpoint(agent_key, goal, restored_state)
+        self._host._helper._save_checkpoint(agent_key, goal, restored_state)
         return {
             "trace_id": new_trace_id,
             "source_trace_id": trace_id,

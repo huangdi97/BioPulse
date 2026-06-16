@@ -1,6 +1,7 @@
 import json
 import sqlite3
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -390,8 +391,15 @@ def test_loop_detector_self_circuit_breaker():
 # ══════════════════════════════════════════════════════════════════════════════
 
 
-def test_analyzer_generate_hypotheses():
+@mock.patch("cloud.app.agent_runtime.analyzer.hypothesis.call_llm")
+def test_analyzer_generate_hypotheses(mock_call_llm):
     """Analyzer: generate hypotheses from red light event."""
+    mock_call_llm.return_value = json.dumps(
+        [
+            {"description": "拜访数据可能虚增", "confidence": 0.7, "type": "anomaly_pattern"},
+            {"description": "经销商数据延迟上报", "confidence": 0.5, "type": "causal_relationship"},
+        ]
+    )
     analyzer = HypothesisEngine()
     event = {"event_id": "red-R001-1", "level": "L2", "evidence": {"visit_up": 0.4, "flow_down": -0.15}}
     hypotheses = analyzer.generate_hypotheses(event)
@@ -410,15 +418,23 @@ def test_analyzer_design_verification_plan():
     assert len(plan.checks) >= 1
 
 
-def test_analyzer_full_hypothesis_loop():
+@mock.patch("cloud.app.agent_runtime.analyzer.hypothesis.call_llm")
+def test_analyzer_full_hypothesis_loop(mock_call_llm):
     """Analyzer: full hypothesis verification cycle returns narrative."""
+    mock_call_llm.return_value = json.dumps(
+        [
+            {"description": "拜访数据可能虚增", "confidence": 0.7, "type": "anomaly_pattern"},
+            {"description": "经销商数据延迟上报", "confidence": 0.5, "type": "causal_relationship"},
+        ]
+    )
     analyzer = HypothesisEngine()
     event = {"event_id": "red-R002-1", "level": "L2", "evidence": {"visit_up": 0.4, "flow_down": -0.15, "expense_up": 0.3}}
-    narrative = analyzer.hypothesis_verification_loop(event)
-    assert isinstance(narrative, dict)
-    assert narrative.get("root_cause")
-    assert len(narrative.get("reasoning_chain", [])) >= 1
-    assert narrative.get("confidence", -1) >= 0
+    result = analyzer.hypothesis_verification_loop(event)
+    assert isinstance(result, dict)
+    assert result.get("narrative")
+    assert result["narrative"].root_cause
+    assert len(result["narrative"].reasoning_chain) >= 1
+    assert result["narrative"].confidence >= 0
 
 
 # ══════════════════════════════════════════════════════════════════════════════

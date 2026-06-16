@@ -14,10 +14,10 @@ class ToolExecutor:
 
     def _save_step_checkpoint(self, c, step, status="active", context=_KEEP_CONTEXT):
         context = c["context"] if context is _KEEP_CONTEXT else context
-        self._host._save_checkpoint(
+        self._host._helper._save_checkpoint(
             c["agent_key"],
             c["goal"],
-            self._host._make_checkpoint_state(
+            self._host._helper._make_checkpoint_state(
                 c["agent_key"],
                 c["goal"],
                 step,
@@ -31,18 +31,18 @@ class ToolExecutor:
 
     def _handle_step_error(self, c, step, error_msg, tool=None, params=None, duration_ms=0, ai_resp=None):
         c["logs"].append(
-            self._host._build_step_log(
+            self._host._core_tools._build_step_log(
                 step,
                 "error",
                 tool=tool,
                 params=params,
                 result=error_msg,
                 duration_ms=duration_ms,
-                **self._host._llm_meta(ai_resp, params),
+                **self._host._core_tools._llm_meta(ai_resp, params),
             )
         )
         self._save_step_checkpoint(c, step, "failed")
-        rolled = self._host._try_rollback(c["agent_key"])
+        rolled = self._host._helper._try_rollback(c["agent_key"])
         if not rolled:
             return False
         c["messages"], c["logs"], c["context"] = rolled
@@ -50,12 +50,12 @@ class ToolExecutor:
 
     def _handle_completion(self, c, step, decision, ai_resp, duration_ms):
         c["logs"].append(
-            self._host._build_step_log(
+            self._host._core_tools._build_step_log(
                 step,
                 "complete",
                 result=decision.reasoning or "",
                 duration_ms=duration_ms,
-                **self._host._llm_meta(ai_resp, include_tool_input=False),
+                **self._host._core_tools._llm_meta(ai_resp, include_tool_input=False),
             )
         )
         self._save_step_checkpoint(c, step, "completed")
@@ -63,14 +63,18 @@ class ToolExecutor:
 
     def _handle_loop_detected(self, c, step, tool_name, tool_params, loop_result, duration_ms):
         c["logs"].append(
-            self._host._build_step_log(step, "loop_detected", tool=tool_name, params=tool_params, result=loop_result, duration_ms=duration_ms)
+            self._host._core_tools._build_step_log(
+                step, "loop_detected", tool=tool_name, params=tool_params, result=loop_result, duration_ms=duration_ms
+            )
         )
         self._save_step_checkpoint(c, step, "escalated")
         return self._host._finish(c, "escalated", f"检测到循环: {loop_result}", step, step + 1, False)
 
     def _handle_approval_needed(self, c, step, tool_name, tool_params, decision):
         self._save_step_checkpoint(c, step, "awaiting_approval", context=None)
-        approval_id = self._approval.create(self._host._trace_id, c["agent_key"], c["goal"], step, tool_name, tool_params, decision.reasoning or "")
+        approval_id = self._host._approval.create(
+            self._host._trace_id, c["agent_key"], c["goal"], step, tool_name, tool_params, decision.reasoning or ""
+        )
         return self._host._finish(
             c,
             "awaiting_approval",
@@ -87,20 +91,20 @@ class ToolExecutor:
 
     def _append_invalid_step(self, c, step, message, duration_ms, ai_resp, tool=None, params=None):
         c["logs"].append(
-            self._host._build_step_log(
+            self._host._core_tools._build_step_log(
                 step,
                 "error",
                 tool=tool,
                 params=params,
                 result=message,
                 duration_ms=duration_ms,
-                **self._host._llm_meta(ai_resp, include_tool_input=False),
+                **self._host._core_tools._llm_meta(ai_resp, include_tool_input=False),
             )
         )
         self._save_step_checkpoint(c, step, "invalid")
 
     def _reflect_before_tool(self, step, goal, agent_key, context, messages, decision, ai_resp, llm_duration_ms, logs):
-        level = self._host._select_reflector_level(context, llm_duration_ms)
+        level = self._select_reflector_level(context, llm_duration_ms)
         started, result, reflected_params, status = time.time(), None, decision.params or {}, "pass"
         try:
             review_context = {
@@ -127,11 +131,11 @@ class ToolExecutor:
             status = result.action or "pass"
             if result.action == "adjust_params" and result.plan and result.plan.steps:
                 reflected_params = result.plan.steps[-1].params_template
-        self._host._update_reflector_level(level, status in {"pass", "timeout_pass", "error_pass"})
+        self._update_reflector_level(level, status in {"pass", "timeout_pass", "error_pass"})
         detail = result.detail if result is not None else status
         logger.info("Reflector level=%s result=%s detail=%s", level, status, detail)
         logs.append(
-            self._host._build_step_log(
+            self._host._core_tools._build_step_log(
                 step,
                 "reflector",
                 tool=decision.tool,
@@ -143,7 +147,7 @@ class ToolExecutor:
                     "next_level": self._host._reflector_level,
                 },
                 duration_ms=int((time.time() - started) * 1000),
-                **self._host._llm_meta(ai_resp, decision.params or {}, include_tool_input=True),
+                **self._host._core_tools._llm_meta(ai_resp, decision.params or {}, include_tool_input=True),
             )
         )
         return reflected_params

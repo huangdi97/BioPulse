@@ -115,15 +115,15 @@ class ExecutionEngine:
                     logger.warning("执行循环异常", exc_info=True)
                 self._host._core_tools._accumulate_cost(ai_resp, step)
             except (KeyError, TypeError, ValueError) as exc:
-                if self._handle_step_error(c, step, str(exc), duration_ms=int((time.time() - step_start) * 1000)):
+                if self._host._tool_exec._handle_step_error(c, step, str(exc), duration_ms=int((time.time() - step_start) * 1000)):
                     continue
                 raise
             if not self._host._core_tools._check_budget():
-                return self._handle_budget_exceeded(c, step, step_start)
+                return self._host._handle_budget_exceeded(c, step, step_start)
             result = self._handle_step_result(c, step, ai_resp, int((time.time() - step_start) * 1000), spec)
             if isinstance(result, RuntimeResult):
                 return result
-        return self._handle_max_iterations(c, max_iter)
+        return self._host._tool_exec._handle_max_iterations(c, max_iter)
 
     def _run_approved_tool(self, c, step):
         started = time.time()
@@ -143,14 +143,14 @@ class ExecutionEngine:
             return None
         tool_name, tool_params = decision.tool, decision.params or {}
         if self._host._is_completed(decision):
-            return self._handle_completion(c, step, decision, ai_resp, duration_ms)
+            return self._host._tool_exec._handle_completion(c, step, decision, ai_resp, duration_ms)
         if decision.action == "call_tool" and tool_name:
             return self._process_tool_call(c, step, tool_name, tool_params, decision, ai_resp, duration_ms, spec)
         self._host._tool_exec._append_invalid_step(c, step, f"invalid action: {decision.action}", duration_ms, ai_resp, tool_name, tool_params)
         return None
 
     def _process_tool_call(self, c, step, tool_name, tool_params, decision, ai_resp, duration_ms, spec):
-        tool_params = self._reflect_before_tool(
+        tool_params = self._host._tool_exec._reflect_before_tool(
             step, c["goal"], c["agent_key"], c["context"], c["messages"], decision, ai_resp, duration_ms, c["logs"]
         )
         streamer = getattr(self, "_streamer", None)
@@ -171,17 +171,17 @@ class ExecutionEngine:
             if tracer:
                 tracer.log_tool_call(tool_name, tool_params, str(tool_result.get("data", "")), t_elapsed)
         except (KeyError, TypeError, ValueError) as exc:
-            if not self._handle_step_error(c, step, str(exc), tool_name, tool_params, duration_ms, ai_resp):
+            if not self._host._tool_exec._handle_step_error(c, step, str(exc), tool_name, tool_params, duration_ms, ai_resp):
                 raise
             return None
         if tool_result.get("needs_approval"):
-            return self._handle_approval_needed(c, step, tool_name, tool_params, decision)
+            return self._host._tool_exec._handle_approval_needed(c, step, tool_name, tool_params, decision)
         self._record_tool_output(c, step, tool_name, tool_params, tool_result, duration_ms, ai_resp, decision)
         c["tool_calls"] += 1
         self._host._loop_detector.record(decision)
         loop_result = self._host._loop_detector.detect()
         if loop_result:
-            return self._handle_loop_detected(c, step, tool_name, tool_params, loop_result, duration_ms)
+            return self._host._tool_exec._handle_loop_detected(c, step, tool_name, tool_params, loop_result, duration_ms)
         self._host._tool_exec._save_step_checkpoint(c, step)
         return None
 
