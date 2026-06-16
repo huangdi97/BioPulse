@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def sanitize_tool_output(text: str, max_length: int = 2000) -> str:
+    """sanitize tool output."""
     patterns = [
         "忽略以上",
         "忽略之前",
@@ -43,6 +44,7 @@ class Guard:
         return sanitize_tool_output(text, max_length)
 
     def predict(self, text: str) -> dict:
+        """predict."""
         return self._layer1.predict(text)
 
 
@@ -70,6 +72,7 @@ class GuardLayer1:
             self._ready = False
 
     def predict(self, text: str) -> dict:
+        """predict."""
         if not self._ready:
             return {"safe": True, "risk_type": "none", "confidence": 1.0}
         try:

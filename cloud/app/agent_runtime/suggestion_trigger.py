@@ -12,4 +12,5 @@ GOAL = "生成拜访后销售策略建议"
 
 
 def suggestion_monitor_trigger(runtime: RuntimeCore, visit_event: dict) -> dict:
+    """suggestion monitor trigger."""
     return run_agent_trigger(runtime, AGENT_KEY, GOAL, visit_event)

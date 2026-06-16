@@ -187,9 +187,11 @@ class RuntimeLLM:
         return _async() if is_async else _sync()
 
     def call_llm_with_fallback(self, messages: list[dict], temperature: float, fallback_strategy: str = "fail_fast") -> dict:
+        """call llm with fallback."""
         return self._do_fallback(messages, temperature, fallback_strategy, False)
 
     async def call_llm_with_fallback_async(self, messages: list[dict], temperature: float, fallback_strategy: str = "fail_fast") -> dict:
+        """call llm with fallback async."""
         return await self._do_fallback(messages, temperature, fallback_strategy, True)
 
     def _do_call_ai(self, messages: list[dict], temperature: float, step: int = 0, force_level: int | None = None, is_async: bool = False) -> dict:

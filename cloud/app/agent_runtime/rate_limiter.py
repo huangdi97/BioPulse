@@ -36,10 +36,12 @@ class RateLimiter:
         self._windows: dict[str, list[float]] = {}
 
     def set_limit(self, key: str, max_calls: int, window_seconds: int) -> None:
+        """set limit."""
         with self._lock:
             self._limits[key] = (max_calls, window_seconds)
 
     def check(self, key: str) -> bool:
+        """check."""
         now = time.time()
         max_calls, window = self._limits.get(key, (0, 0))
         if max_calls <= 0:
@@ -54,6 +56,7 @@ class RateLimiter:
         return True
 
     def check_or_raise(self, key: str) -> None:
+        """check or raise."""
         now = time.time()
         max_calls, window = self._limits.get(key, (0, 0))
         if max_calls <= 0:
@@ -69,6 +72,7 @@ class RateLimiter:
             calls.append(now)
 
     def get_remaining(self, key: str) -> int:
+        """get remaining."""
         now = time.time()
         max_calls, window = self._limits.get(key, (0, 0))
         if max_calls <= 0:
@@ -80,6 +84,7 @@ class RateLimiter:
             return max(0, max_calls - len(calls))
 
     def reset(self, key: str | None = None) -> None:
+        """reset."""
         with self._lock:
             if key:
                 self._windows.pop(key, None)

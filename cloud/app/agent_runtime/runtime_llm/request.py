@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def raw_llm_call(request_body: dict, auth_header: str, url: str | None = None) -> dict:
+    """raw llm call."""
     if url is None:
         url = f"{config_settings.ai_chat_url}"
     with httpx.Client(timeout=LLM_INFERENCE_TIMEOUT) as client:
@@ -30,6 +31,7 @@ def raw_llm_call(request_body: dict, auth_header: str, url: str | None = None) -
 
 
 async def raw_llm_call_async(request_body: dict, auth_header: str, url: str | None = None) -> dict:
+    """raw llm call async."""
     if url is None:
         url = f"{config_settings.ai_chat_url}"
     async with httpx.AsyncClient(timeout=LLM_INFERENCE_TIMEOUT) as client:
@@ -46,6 +48,7 @@ async def raw_llm_call_async(request_body: dict, auth_header: str, url: str | No
 
 
 def build_cloud_body(messages: list[dict], temperature: float, agent_mode: bool = False) -> dict:
+    """build cloud body."""
     body = {
         "messages": messages,
         "temperature": temperature,
@@ -57,6 +60,7 @@ def build_cloud_body(messages: list[dict], temperature: float, agent_mode: bool 
 
 
 def call_local(config, messages: list[dict], temperature: float, fallback_fn) -> dict:
+    """call local."""
     prompt_text = "\n\n".join(f"{m.get('role', 'user')}: {m.get('content', '')}" for m in messages)
     body = {
         "model": config.ai_local_model,
@@ -91,6 +95,7 @@ def call_local(config, messages: list[dict], temperature: float, fallback_fn) ->
 
 
 async def call_local_async(config, messages: list[dict], temperature: float, fallback_fn) -> dict:
+    """call local async."""
     prompt_text = "\n\n".join(f"{m.get('role', 'user')}: {m.get('content', '')}" for m in messages)
     body = {
         "model": config.ai_local_model,
@@ -125,6 +130,7 @@ async def call_local_async(config, messages: list[dict], temperature: float, fal
 
 
 def call_provider(messages: list[dict], temperature: float, provider: dict) -> dict:
+    """call provider."""
     _secret_mgr = SecretManager()
     api_key = _secret_mgr.get(provider["env_key"]) or os.environ.get(provider["env_key"], "")
     if not api_key:
@@ -162,6 +168,7 @@ def call_provider(messages: list[dict], temperature: float, provider: dict) -> d
 
 
 async def call_provider_async(messages: list[dict], temperature: float, provider: dict) -> dict:
+    """call provider async."""
     _secret_mgr = SecretManager()
     api_key = _secret_mgr.get(provider["env_key"]) or os.environ.get(provider["env_key"], "")
     if not api_key:

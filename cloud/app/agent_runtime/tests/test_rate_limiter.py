@@ -6,6 +6,7 @@ from cloud.app.agent_runtime.rate_limiter import RateLimiter, RateLimitExceeded
 
 
 def test_rate_limiter_allows_within_limit():
+    """test rate limiter allows within limit."""
     rl = RateLimiter()
     rl.set_limit("test_key", 5, 60)
     for _ in range(5):
@@ -13,6 +14,7 @@ def test_rate_limiter_allows_within_limit():
 
 
 def test_rate_limiter_rejects_over_limit():
+    """test rate limiter rejects over limit."""
     rl = RateLimiter()
     rl.set_limit("test_key", 3, 60)
     for _ in range(3):
@@ -21,6 +23,7 @@ def test_rate_limiter_rejects_over_limit():
 
 
 def test_rate_limiter_recovers_after_window():
+    """test rate limiter recovers after window."""
     rl = RateLimiter()
     rl.set_limit("test_key", 2, 1)
     with patch("cloud.app.agent_runtime.rate_limiter.time.time", side_effect=[0, 0, 0, 1.1]):
@@ -31,6 +34,7 @@ def test_rate_limiter_recovers_after_window():
 
 
 def test_rate_limiter_check_or_raise():
+    """test rate limiter check or raise."""
     rl = RateLimiter()
     rl.set_limit("raise_key", 1, 60)
     rl.check_or_raise("raise_key")
@@ -42,6 +46,7 @@ def test_rate_limiter_check_or_raise():
 
 
 def test_get_remaining():
+    """test get remaining."""
     rl = RateLimiter()
     rl.set_limit("rem_key", 5, 60)
     assert rl.get_remaining("rem_key") == 5
@@ -50,6 +55,7 @@ def test_get_remaining():
 
 
 def test_reset():
+    """test reset."""
     rl = RateLimiter()
     rl.set_limit("reset_key", 2, 60)
     rl.check("reset_key")

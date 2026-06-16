@@ -12,12 +12,14 @@ logger = logging.getLogger(__name__)
 
 
 def call_llm(llm_url: str, messages: list[dict], auth_header: str = "") -> str:
+    """call llm."""
     body = {"messages": messages, "temperature": 0.1, "max_tokens": 1024}
     result = raw_llm_call(body, auth_header, url=llm_url)
     return result.get("data", {}).get("reply", "")
 
 
 def extract_json(raw: str) -> dict[str, Any]:
+    """extract json."""
     raw = raw.strip()
     if raw.startswith("```"):
         raw = raw.split("\n", 1)[-1]

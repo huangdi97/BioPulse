@@ -17,6 +17,7 @@ def run_agent_trigger(
     event: dict | None = None,
     context_extras: dict | None = None,
 ) -> dict:
+    """run agent trigger."""
     """通用 agent trigger：按 agent_key 查找 spec，用 goal 作为 execute 的 task，返回执行结果。
 
     Args:

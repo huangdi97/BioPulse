@@ -23,6 +23,7 @@ class PromptHotReloader:
         self._running = False
 
     def get_spec(self, agent_name: str) -> dict:
+        """get spec."""
         cached = self._cache.get(agent_name)
         if cached:
             return cached
@@ -46,6 +47,7 @@ class PromptHotReloader:
             return None
 
     def reload(self, agent_name: str = None):
+        """reload."""
         if agent_name:
             db_spec = self._load_from_db(agent_name)
             if db_spec:
@@ -58,6 +60,7 @@ class PromptHotReloader:
                 self.reload(name)
 
     def start_watching(self):
+        """start watching."""
         if self._running:
             return
         self._running = True
@@ -66,6 +69,7 @@ class PromptHotReloader:
         logger.info("Prompt hot-reload watcher started (interval=%ds)", self._watch_interval)
 
     def stop_watching(self):
+        """stop watching."""
         self._running = False
 
     def _watch_loop(self):

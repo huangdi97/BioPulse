@@ -26,6 +26,7 @@ class ApprovalWorkflow:
         self._db = db
 
     def request_approval(self, event_type: str, agent_name: str, detail: dict, timeout_hours: int = 24) -> str:
+        """request approval."""
         request = self._manager.create_request(agent_name, event_type, detail)
         expires_at = datetime.now() + timedelta(hours=timeout_hours)
         self._db.execute(
@@ -37,12 +38,14 @@ class ApprovalWorkflow:
         return request.request_id
 
     def approve(self, request_id: str, approver: str):
+        """approve."""
         success = self._manager.approve(request_id, approver)
         if success:
             logger.info("Approval approved: request_id=%s approver=%s", request_id, approver)
         return success
 
     def reject(self, request_id: str, approver: str, reason: str):
+        """reject."""
         success = self._manager.reject(request_id, approver)
         if success:
             self._db.execute(
@@ -54,6 +57,7 @@ class ApprovalWorkflow:
         return success
 
     def check_status(self, request_id: str) -> str:
+        """check status."""
         request = self._manager.get_request(request_id)
         if not request:
             return "not_found"
@@ -66,7 +70,9 @@ class ApprovalWorkflow:
         return request.status
 
     def get_pending_requests(self) -> list[dict]:
+        """get pending requests."""
         return [r.to_dict() for r in self._manager.get_pending_requests()]
 
     def check_timeouts(self):
+        """check timeouts."""
         return self._manager.check_timeouts()

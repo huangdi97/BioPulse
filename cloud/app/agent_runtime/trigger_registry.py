@@ -18,6 +18,7 @@ TRIGGER_REGISTRY = {
 
 
 def get_plan_builder(name: str):
+    """get plan builder."""
     entry = TRIGGER_REGISTRY[name]
     builder = entry["plan_builder"]
     if isinstance(builder, str):

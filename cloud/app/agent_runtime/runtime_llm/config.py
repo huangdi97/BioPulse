@@ -14,6 +14,7 @@ class AllModelsFailedError(RuntimeError):
 
 
 def get_fallback_chain() -> list[dict]:
+    """get fallback chain."""
     return [
         {"provider": "deepseek", "model": config_settings.deepseek_model, "env_key": "DEEPSEEK_API_KEY", "url": config_settings.deepseek_api_url},
         {
@@ -27,6 +28,7 @@ def get_fallback_chain() -> list[dict]:
 
 
 def estimate_token_count(messages: list[dict]) -> int:
+    """estimate token count."""
     total = 0
     for msg in messages:
         total += len(msg.get("content", "")) // 4
@@ -35,6 +37,7 @@ def estimate_token_count(messages: list[dict]) -> int:
 
 
 def compress_messages(messages: list[dict]) -> list[dict]:
+    """compress messages."""
     if estimate_token_count(messages) < 4000:
         return messages
     compressed = [m for m in messages if m["role"] == "system"]
@@ -46,6 +49,7 @@ def compress_messages(messages: list[dict]) -> list[dict]:
 
 
 def estimate_complexity(messages: list[dict]) -> int:
+    """estimate complexity."""
     total_chars = sum(len(m.get("content", "")) for m in messages)
     if total_chars < 500:
         return 1

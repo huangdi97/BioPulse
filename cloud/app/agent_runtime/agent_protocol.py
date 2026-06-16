@@ -30,6 +30,7 @@ class AgentMessage:
         self.timestamp = datetime.now()
 
     def to_dict(self) -> dict:
+        """to dict."""
         return {
             "version": self.VERSION,
             "source": self.source,
@@ -66,6 +67,7 @@ class AgentMessageBus:
         self._handlers: dict[str, list[Callable]] = {}
 
     def send(self, message: AgentMessage):
+        """send."""
         logger.info(
             "AgentMessageBus send: %s -> %s type=%s trace=%s",
             message.source,
@@ -86,6 +88,7 @@ class AgentMessageBus:
                 logger.debug("No handler for %s", key)
 
     def subscribe(self, agent_name: str, msg_type: str, handler: Callable):
+        """subscribe."""
         key = f"{agent_name}:{msg_type}"
         if key not in self._handlers:
             self._handlers[key] = []
@@ -93,6 +96,7 @@ class AgentMessageBus:
         logger.info("AgentMessageBus subscribe: %s", key)
 
     def unsubscribe(self, agent_name: str, msg_type: str, handler: Callable):
+        """unsubscribe."""
         key = f"{agent_name}:{msg_type}"
         if key in self._handlers and handler in self._handlers[key]:
             self._handlers[key].remove(handler)

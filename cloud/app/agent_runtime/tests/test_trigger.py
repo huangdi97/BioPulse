@@ -20,6 +20,7 @@ def _mock_runtime() -> MagicMock:
 
 
 def test_run_agent_trigger_success():
+    """test run agent trigger success."""
     runtime = _mock_runtime()
     result = run_agent_trigger(runtime, "anomaly_analysis", "分析红灯事件", {"event_id": "E1"})
     assert result["status"] == "success"
@@ -28,6 +29,7 @@ def test_run_agent_trigger_success():
 
 
 def test_run_agent_trigger_unknown_agent():
+    """test run agent trigger unknown agent."""
     runtime = _mock_runtime()
     result = run_agent_trigger(runtime, "nonexistent", "task", {"event_id": "E1"})
     assert result["status"] == "error"
@@ -35,12 +37,14 @@ def test_run_agent_trigger_unknown_agent():
 
 
 def test_run_agent_trigger_with_context_extras():
+    """test run agent trigger with context extras."""
     runtime = _mock_runtime()
     result = run_agent_trigger(runtime, "compliance_monitor", "合规检查", {"rep_id": "R1"}, {"_plan": [{"step": 1}]})
     assert result["status"] == "success"
 
 
 def test_run_agent_trigger_without_event():
+    """test run agent trigger without event."""
     runtime = _mock_runtime()
     result = run_agent_trigger(runtime, "sales_suggestion", "生成拜访后销售策略建议")
     assert result["status"] == "success"

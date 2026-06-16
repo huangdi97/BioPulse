@@ -29,4 +29,5 @@ agent_tokens_total = Counter(
 
 
 def get_metrics() -> str:
+    """get metrics."""
     return generate_latest().decode("utf-8")

@@ -179,6 +179,7 @@ class RuntimeCore(RuntimeLLM):
         return self.execute(goal, agent_key, checkpoint.get("context"))
 
     def rollback(self, trace_id: str, target_step: int) -> dict:
+        """rollback."""
         return self._rollback.rollback(trace_id, target_step)
 
     def get_status(self) -> dict:

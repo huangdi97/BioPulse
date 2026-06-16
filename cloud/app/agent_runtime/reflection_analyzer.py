@@ -32,6 +32,7 @@ class ReflectionAnalyzer:
         context: dict | None = None,
         level: str = "balanced",
     ) -> ReflectionResult:
+        """review decision."""
         ctx = context or {}
         decision_data = decision.model_dump() if hasattr(decision, "model_dump") else dict(decision)
         action = decision_data.get("action", "")

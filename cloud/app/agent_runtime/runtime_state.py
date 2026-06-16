@@ -10,6 +10,7 @@ class RuntimeState:
         self._agent_db = agent_db
 
     def save(self, agent_key, goal, data, trace_id):
+        """save."""
         json_data = json.dumps(data, ensure_ascii=False)
         cur = self._agent_db.execute(
             "UPDATE agent_runtime_logs SET checkpoint_data=?, trace_id=? WHERE agent_key=? AND goal=? AND status IN ('running', 'pending')",
@@ -23,6 +24,7 @@ class RuntimeState:
         self._agent_db.commit()
 
     def load(self, agent_key, goal):
+        """load."""
         cur = self._agent_db.execute(
             "SELECT checkpoint_data FROM agent_runtime_logs "
             "WHERE agent_key=? AND goal=? AND status='running' AND checkpoint_data IS NOT NULL "
@@ -35,6 +37,7 @@ class RuntimeState:
         return None
 
     def delete(self, agent_key, goal):
+        """delete."""
         self._agent_db.execute(
             "UPDATE agent_runtime_logs SET checkpoint_data=NULL WHERE agent_key=? AND goal=?",
             (agent_key, goal),
@@ -49,6 +52,7 @@ class ApprovalManager:
         self._agent_db = agent_db
 
     def create(self, trace_id, agent_key, goal, step, tool, params, reasoning):
+        """create."""
         cur = self._agent_db.execute(
             "INSERT INTO agent_runtime_approvals (trace_id, agent_key, goal, step, tool, params, reasoning, status) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')",

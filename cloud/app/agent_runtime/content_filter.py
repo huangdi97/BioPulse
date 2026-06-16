@@ -55,6 +55,7 @@ def _write_audit_log(category: str, detail: str, content: str = ""):
 
 
 def check_injection(text: str) -> str | None:
+    """check injection."""
     for name, pattern, reason in INJECTION_PATTERNS:
         if re.search(pattern, text, re.IGNORECASE):
             _write_audit_log("injection_blocked", f"{reason} (matched: {name})", text[:200])
@@ -63,6 +64,7 @@ def check_injection(text: str) -> str | None:
 
 
 def check_output(text: str) -> str | None:
+    """check output."""
     for name, pattern, reason in OUTPUT_BLOCK_PATTERNS:
         if re.search(pattern, text, re.IGNORECASE):
             _write_audit_log("output_blocked", f"{reason} (matched: {name})", text[:200])
@@ -72,12 +74,15 @@ def check_output(text: str) -> str | None:
 
 class ContentFilter:
     def check_input(self, text: str) -> str | None:
+        """check input."""
         return check_injection(text)
 
     def check_output(self, text: str) -> str | None:
+        """check output."""
         return check_output(text)
 
     def filter_output(self, text: str) -> str:
+        """filter output."""
         reason = check_output(text)
         if reason:
             _write_audit_log("output_blocked", reason, text[:200])

@@ -60,6 +60,7 @@ class Pipeline:
         visited = set()
 
         def dfs(step_id):
+            """dfs."""
             if step_id in visited:
                 return
             visited.add(step_id)
@@ -75,6 +76,7 @@ class Pipeline:
         return sorted_steps
 
     def execute(self, context: dict, auth_header: str = "") -> dict:
+        """execute."""
         outputs = {}
         run_ctx = dict(context)
 

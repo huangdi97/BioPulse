@@ -32,6 +32,7 @@ class CircuitBreaker:
         self.last_failure_time = 0.0
 
     def call(self, fn, *args, **kwargs):
+        """call."""
         if self.state == CircuitState.OPEN:
             elapsed = time.time() - self.last_failure_time
             remaining = max(0.0, self.recovery_timeout - elapsed)
@@ -54,12 +55,14 @@ class CircuitBreaker:
             raise
 
     def on_success(self):
+        """on success."""
         self.state = CircuitState.CLOSED
         self.failure_count = 0
         self.last_failure_time = 0.0
         logger.info("Circuit breaker closed after successful call")
 
     def on_failure(self):
+        """on failure."""
         self.failure_count += 1
         self.last_failure_time = time.time()
         logger.warning("Circuit breaker failure %d/%d", self.failure_count, self.failure_threshold)
@@ -68,6 +71,7 @@ class CircuitBreaker:
             logger.error("Circuit breaker opened after %d failures", self.failure_count)
 
     def reset(self):
+        """reset."""
         self.state = CircuitState.CLOSED
         self.failure_count = 0
         self.last_failure_time = 0.0

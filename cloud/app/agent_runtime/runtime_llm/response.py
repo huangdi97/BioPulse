@@ -4,6 +4,7 @@ from cloud.app.agent_runtime.cost_governor import CostGovernor
 
 
 def usage_from_route_result(result: dict) -> dict:
+    """usage from route result."""
     if not result.get("success"):
         return {}
     data = result.get("data") or {}
@@ -13,6 +14,7 @@ def usage_from_route_result(result: dict) -> dict:
 
 
 def annotate_route_result(result: dict, model_tier: str) -> dict:
+    """annotate route result."""
     tier = result.get("model_tier", model_tier)
     usage = usage_from_route_result(result)
     input_tokens = int(usage.get("prompt_tokens", 0) or 0)

@@ -12,4 +12,5 @@ GOAL = "分析红灯事件"
 
 
 def analysis_monitor_trigger(runtime: RuntimeCore, red_light_event: dict) -> dict:
+    """analysis monitor trigger."""
     return run_agent_trigger(runtime, AGENT_KEY, GOAL, red_light_event)

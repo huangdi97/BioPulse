@@ -10,6 +10,7 @@ class RollbackHandler:
         self._host = host
 
     def rollback(self, trace_id: str, target_step: int) -> dict:
+        """rollback."""
         if target_step < 0:
             raise HTTPException(status_code=400, detail="step must be non-negative")
         state = self._host._load_runtime_snapshot(trace_id, target_step)

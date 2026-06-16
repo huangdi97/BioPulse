@@ -44,6 +44,7 @@ class AgentWorker:
         self._pool = ProcessPoolExecutor(max_workers=max_workers)
 
     async def execute(self, task: dict, timeout: int = 60) -> dict:
+        """execute."""
         future = self._pool.submit(_run_agent_task, task)
         try:
             return future.result(timeout=timeout)
@@ -64,4 +65,5 @@ class AgentWorker:
             return False
 
     def shutdown(self):
+        """shutdown."""
         self._pool.shutdown(wait=False)

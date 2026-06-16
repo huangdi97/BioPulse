@@ -10,6 +10,7 @@ from cloud.app.agent_runtime.circuit_breaker import (
 
 
 def test_normal_operation():
+    """test normal operation."""
     cb = CircuitBreaker(failure_threshold=3, recovery_timeout=60)
     result = cb.call(lambda: "ok")
     assert result == "ok"
@@ -17,9 +18,11 @@ def test_normal_operation():
 
 
 def test_trips_after_threshold():
+    """test trips after threshold."""
     cb = CircuitBreaker(failure_threshold=3, recovery_timeout=60)
 
     def fail():
+        """fail."""
         raise ValueError("fail")
 
     for _ in range(3):
@@ -31,9 +34,11 @@ def test_trips_after_threshold():
 
 
 def test_half_open_recovers():
+    """test half open recovers."""
     cb = CircuitBreaker(failure_threshold=2, recovery_timeout=1)
 
     def fail():
+        """fail."""
         raise ValueError("fail")
 
     with patch("cloud.app.agent_runtime.circuit_breaker.time.time", side_effect=[0, 0, 0, 0, 0, 1.1]):
@@ -49,9 +54,11 @@ def test_half_open_recovers():
 
 
 def test_half_open_fails_again():
+    """test half open fails again."""
     cb = CircuitBreaker(failure_threshold=2, recovery_timeout=1)
 
     def fail():
+        """fail."""
         raise ValueError("fail")
 
     with patch("cloud.app.agent_runtime.circuit_breaker.time.time", side_effect=[0, 0, 0, 0, 0, 1.1, 1.1, 1.1, 1.1, 1.1]):
@@ -69,9 +76,11 @@ def test_half_open_fails_again():
 
 
 def test_open_raises():
+    """test open raises."""
     cb = CircuitBreaker(failure_threshold=1, recovery_timeout=60)
 
     def fail():
+        """fail."""
         raise ValueError("fail")
 
     try:
@@ -86,6 +95,7 @@ def test_open_raises():
 
 
 def test_dict_failure_detection():
+    """test dict failure detection."""
     cb = CircuitBreaker(failure_threshold=2, recovery_timeout=60)
     result = cb.call(lambda: {"success": False, "error": "fail"})
     assert result["success"] is False

@@ -45,6 +45,7 @@ class Planner:
         self._llm_url = llm_url
 
     def plan(self, goal: str, agent_key: str, context: dict | None = None) -> dict:
+        """plan."""
         return {
             "step": -1,
             "action": "plan",

@@ -33,6 +33,7 @@ class Agent:
         return cls(identity)
 
     async def insights_for(self, page_id: str, user_id: str) -> list[Insight]:
+        """insights for."""
         return [
             Insight(
                 agent_key=self.identity.key,

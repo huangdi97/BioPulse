@@ -30,6 +30,7 @@ class ApprovalRequest:
         self.expires_at = expires_at
 
     def to_dict(self) -> dict:
+        """to dict."""
         return {
             "request_id": self.request_id,
             "agent_name": self.agent_name,
@@ -46,6 +47,7 @@ class ApprovalRequestManager:
         self._db = db
 
     def create_request(self, agent_name: str, action: str, detail: dict) -> ApprovalRequest:
+        """create request."""
         request_id = str(uuid.uuid4())
         now = datetime.now().isoformat()
         self._db.execute(
@@ -57,6 +59,7 @@ class ApprovalRequestManager:
         return ApprovalRequest(request_id=request_id, agent_name=agent_name, action=action, detail=detail, created_at=now)
 
     def get_request(self, request_id: str) -> ApprovalRequest | None:
+        """get request."""
         row = self._db.execute(
             "SELECT * FROM agent_runtime_approvals WHERE trace_id=?",
             (request_id,),
@@ -73,6 +76,7 @@ class ApprovalRequestManager:
         )
 
     def approve(self, request_id: str, responded_by: str = "") -> bool:
+        """approve."""
         now = datetime.now().isoformat()
         cur = self._db.execute(
             "UPDATE agent_runtime_approvals SET status='approved', responded_at=?, responded_by=? WHERE trace_id=? AND status='pending'",
@@ -82,6 +86,7 @@ class ApprovalRequestManager:
         return cur.rowcount > 0
 
     def reject(self, request_id: str, responded_by: str = "") -> bool:
+        """reject."""
         now = datetime.now().isoformat()
         cur = self._db.execute(
             "UPDATE agent_runtime_approvals SET status='rejected', responded_at=?, responded_by=? WHERE trace_id=? AND status='pending'",
@@ -91,6 +96,7 @@ class ApprovalRequestManager:
         return cur.rowcount > 0
 
     def get_pending_requests(self) -> list[ApprovalRequest]:
+        """get pending requests."""
         rows = self._db.execute("SELECT * FROM agent_runtime_approvals WHERE status='pending' ORDER BY created_at ASC").fetchall()
         return [
             ApprovalRequest(
@@ -105,6 +111,7 @@ class ApprovalRequestManager:
         ]
 
     def check_timeouts(self) -> int:
+        """check timeouts."""
         expired = 0
         for req in self.get_pending_requests():
             if req.created_at:

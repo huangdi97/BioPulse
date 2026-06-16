@@ -18,6 +18,7 @@ def retry_with_backoff(
     max_delay=30.0,
     retryable_exceptions=None,
 ):
+    """retry with backoff."""
     if retryable_exceptions is None:
         retryable_exceptions = (HTTPError, URLError, TimeoutError, httpx.TimeoutException, httpx.HTTPError)
 
@@ -79,6 +80,7 @@ async def async_retry_with_backoff(
     max_delay=30.0,
     retryable_exceptions=None,
 ):
+    """async retry with backoff."""
     if retryable_exceptions is None:
         retryable_exceptions = (HTTPError, URLError, TimeoutError, httpx.TimeoutException, httpx.HTTPError)
 

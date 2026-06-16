@@ -4,6 +4,7 @@ from cloud.app.agent_runtime.runtime_llm import AllModelsFailedError, get_fallba
 
 
 def test_fallback_chain_has_expected_providers():
+    """test fallback chain has expected providers."""
     providers = [p["provider"] for p in get_fallback_chain()]
     assert "deepseek" in providers
     assert "openrouter" in providers
@@ -11,6 +12,7 @@ def test_fallback_chain_has_expected_providers():
 
 
 def test_all_models_failed_error():
+    """test all models failed error."""
     errors = [
         {"provider": "deepseek", "model": "deepseek-v4-flash", "error": "timeout", "elapsed": 5.0},
         {"provider": "openai", "model": "gpt-4o-mini", "error": "auth failed", "elapsed": 2.0},
@@ -21,6 +23,7 @@ def test_all_models_failed_error():
 
 
 def test_call_provider_missing_key():
+    """test call provider missing key."""
     from cloud.app.agent_runtime.runtime_llm import RuntimeLLM
 
     provider = {"provider": "test", "model": "test-model", "env_key": "NONEXISTENT_KEY_12345", "url": "http://localhost:0/test"}

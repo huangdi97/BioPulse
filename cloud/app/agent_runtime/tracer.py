@@ -24,6 +24,7 @@ class AgentTracer:
         self._input_data: dict = {}
 
     def start_trace(self, agent_name: str, user_id: str, input_data: dict) -> str:
+        """start trace."""
         trace_id = str(uuid.uuid4())
         self.current_trace = trace_id
         self._start_time = time.time()
@@ -36,6 +37,7 @@ class AgentTracer:
         return trace_id
 
     def log_tool_call(self, tool_name: str, args: dict, result: str, duration_ms: int) -> None:
+        """log tool call."""
         entry = {
             "tool_name": tool_name,
             "args": args,
@@ -46,6 +48,7 @@ class AgentTracer:
         self._tool_calls.append(entry)
 
     def log_llm_call(self, model: str, prompt_tokens: int, completion_tokens: int, duration_ms: int) -> None:
+        """log llm call."""
         entry = {
             "model": model,
             "prompt_tokens": prompt_tokens,
@@ -56,6 +59,7 @@ class AgentTracer:
         self._llm_calls.append(entry)
 
     def end_trace(self, status: str, output: dict) -> None:
+        """end trace."""
         if not self.current_trace:
             return
         total_duration = int((time.time() - self._start_time) * 1000)
@@ -97,12 +101,14 @@ class AgentTracer:
         self.current_trace = None
 
     def get_trace(self, trace_id: str) -> dict | None:
+        """get trace."""
         row = self._db.execute("SELECT * FROM agent_traces WHERE trace_id=?", (trace_id,)).fetchone()
         if not row:
             return None
         return dict(row)
 
     def list_traces(self, agent_name: str | None = None, user_id: str | None = None, page: int = 1, page_size: int = 20) -> dict:
+        """list traces."""
         conditions = []
         params = []
         if agent_name:
@@ -126,6 +132,7 @@ class AgentTracer:
         }
 
     def get_metrics_summary(self) -> dict:
+        """get metrics summary."""
         row = self._db.execute(
             "SELECT "
             "COUNT(*) as total_runs, "

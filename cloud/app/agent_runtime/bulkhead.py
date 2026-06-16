@@ -22,6 +22,7 @@ class Bulkhead:
         self._lock = threading.Lock()
 
     def get_semaphore(self, agent_name: str, max_concurrent: int | None = None) -> threading.Semaphore:
+        """get semaphore."""
         if max_concurrent is None:
             max_concurrent = self.DEFAULT_MAX_CONCURRENT
         with self._lock:
@@ -30,6 +31,7 @@ class Bulkhead:
             return self._semaphores[agent_name]
 
     def acquire(self, agent_name: str, timeout: float | None = None) -> bool:
+        """acquire."""
         sem = self.get_semaphore(agent_name)
         if timeout is None:
             timeout = self.DEFAULT_TIMEOUT
@@ -41,6 +43,7 @@ class Bulkhead:
         return acquired
 
     def release(self, agent_name: str) -> None:
+        """release."""
         sem = self._semaphores.get(agent_name)
         if sem:
             sem.release()

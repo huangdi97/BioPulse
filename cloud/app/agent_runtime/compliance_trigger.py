@@ -61,5 +61,6 @@ def compliance_monitor_trigger(
     task: str,
     context: dict | None = None,
 ) -> dict:
+    """compliance monitor trigger."""
     plan = build_compliance_plan(task, context)
     return run_agent_trigger(runtime, AGENT_KEY, task, context, {"_plan": plan})

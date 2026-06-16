@@ -28,6 +28,7 @@ class AgentStreamer:
         self._subscribers: dict[str, list[asyncio.Event]] = {}
 
     def stream(self, trace_id: str, event_type: str, data: dict):
+        """stream."""
         if event_type not in self.STREAM_EVENTS:
             logger.warning("Unknown stream event type: %s", event_type)
             return
@@ -44,6 +45,7 @@ class AgentStreamer:
                 event.set()
 
     def get_stream(self, trace_id: str) -> AsyncGenerator[str, None]:
+        """get stream."""
         if trace_id not in self._subscribers:
             self._subscribers[trace_id] = []
 
@@ -71,4 +73,5 @@ class AgentStreamer:
         return _generate()
 
     def has_stream(self, trace_id: str) -> bool:
+        """has stream."""
         return trace_id in self._subscribers and len(self._subscribers[trace_id]) > 0

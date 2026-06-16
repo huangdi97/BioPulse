@@ -29,6 +29,7 @@ class Reflector:
         context: dict | None = None,
         level: str = "balanced",
     ) -> ReflectionResult:
+        """review decision."""
         """Pre-tool reflection after LLM decision generation."""
         return self._analyzer.review_decision(task, decision, context, level)
 
@@ -39,6 +40,7 @@ class Reflector:
         analysis: Analysis,
         context: dict | None = None,
     ) -> ReflectionResult:
+        """reflect."""
         """Main reflection entry — dispatches by severity."""
         ctx = context or {}
 

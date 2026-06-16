@@ -211,6 +211,7 @@ class RuleEngineLLM:
         self._guard = guard or SafetyGuard()
 
     def verify(self, input_data: dict, static_checks: list[CheckResult] | None = None, rules: list[dict | str] | None = None) -> CheckResult:
+        """verify."""
         fallback = self._static_fallback(input_data, static_checks)
         try:
             reply = self._call_llm(self._build_messages(input_data, rules or self._rules))

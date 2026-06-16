@@ -21,6 +21,7 @@ class AgentScheduler:
         self._thread = None
 
     def start(self):
+        """start."""
         self._queue.recover()
         self._running = True
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
@@ -30,13 +31,16 @@ class AgentScheduler:
                 self.schedule_agent(key, 3600, f"执行 {spec['role_desc']}")
 
     def stop(self):
+        """stop."""
         self._running = False
 
     def schedule_agent(self, agent_key: str, interval_seconds: int, goal: str):
+        """schedule agent."""
         scheduled_at = (datetime.now() + timedelta(seconds=interval_seconds)).isoformat()
         self._queue.enqueue(agent_key, goal, scheduled_at)
 
     def trigger_now(self, agent_key: str, goal: str, auth_header: str) -> RuntimeResult:
+        """trigger now."""
         runtime = self._runtime_factory() if self._runtime_factory else RuntimeCore(self._db, self._db, auth_header)
         return runtime.execute(goal, agent_key)
 

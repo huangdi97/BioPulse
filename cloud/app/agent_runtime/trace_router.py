@@ -19,6 +19,7 @@ _streamer: AgentStreamer | None = None
 
 
 def get_streamer() -> AgentStreamer:
+    """get streamer."""
     global _streamer
     if _streamer is None:
         _streamer = AgentStreamer()
