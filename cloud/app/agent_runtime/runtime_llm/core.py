@@ -1,14 +1,12 @@
 """Agent Runtime LLM class — routing, fallback, and main call orchestration."""
 
-import json
 import logging
 import time
-from datetime import datetime
 from functools import partial
 
 from cloud.app.agent_runtime.circuit_breaker import CircuitBreaker
-from cloud.app.agent_runtime.metrics import agent_llm_duration, agent_tokens_total
 from cloud.app.agent_runtime.retry import async_retry_with_backoff, retry_with_backoff
+from cloud.app.agent_runtime.runtime_llm.call_orchestration import process_ai_response
 from cloud.app.agent_runtime.runtime_llm.config import (
     AllModelsFailedError,
     compress_messages,
@@ -195,131 +193,49 @@ class RuntimeLLM:
         return await self._do_fallback(messages, temperature, fallback_strategy, True)
 
     def _do_call_ai(self, messages: list[dict], temperature: float, step: int = 0, force_level: int | None = None, is_async: bool = False) -> dict:
-        """执行 AI 调用并收集运行指标，内部根据 is_async 分支调用。"""
+        """执行 AI 调用并收集运行指标。"""
+        rate_limiter = getattr(self, "_rate_limiter", None)
+        if rate_limiter is not None:
+            agent_key = getattr(self, "_trace_id", "unknown")
+            rate_limiter.check_or_raise(f"agent_llm:{agent_key}")
 
         def _sync():
-            prompt_text = json.dumps(messages, ensure_ascii=False)
-            input_len = len(prompt_text)
             call_start = time.time()
-
-            rate_limiter = getattr(self, "_rate_limiter", None)
-            if rate_limiter is not None:
-                agent_key = getattr(self, "_trace_id", "unknown")
-                rate_limiter.check_or_raise(f"agent_llm:{agent_key}")
-
             circuit_breaker: CircuitBreaker | None = getattr(self, "_circuit_breaker", None)
             if circuit_breaker is not None:
                 result = circuit_breaker.call(self._route_call, messages, temperature, force_level)
             else:
                 result = self._route_call(messages, temperature, force_level)
-
             duration_s = round(time.time() - call_start, 3)
-
-            if result["success"]:
-                ai_response = result["data"]
-                data = ai_response.get("data", {})
-                raw_response = json.dumps(ai_response, ensure_ascii=False)
-                output_len = len(raw_response)
-
-                tracer = getattr(self, "_tracer", None)
-                if tracer:
-                    tier = result.get("model_tier", "cloud_normal")
-                    usage = data.get("usage", {})
-                    tracer.log_llm_call(
-                        tier,
-                        int(usage.get("prompt_tokens", 0) or 0),
-                        int(usage.get("completion_tokens", 0) or 0),
-                        int(duration_s * 1000),
-                    )
-
-                self._trace_data.append(
-                    {
-                        "step": step,
-                        "input_len": input_len,
-                        "output_len": output_len,
-                        "duration_s": duration_s,
-                        "timestamp": datetime.now().isoformat(),
-                    }
-                )
-
-                model_tier = result.get("model_tier", "cloud_normal")
-                agent_llm_duration.labels(agent_name=getattr(self, "_trace_id", "unknown"), model=model_tier).observe(duration_s)
-                usage = data.get("usage", {})
-                total_tokens = int(usage.get("total_tokens", 0) or 0)
-                if total_tokens:
-                    agent_tokens_total.labels(agent_name=getattr(self, "_trace_id", "unknown")).inc(total_tokens)
-                return {
-                    "reply": data.get("reply", ""),
-                    "usage": usage,
-                    "prompt": prompt_text,
-                    "raw_response": raw_response,
-                    "retry_count": result["attempts"] - 1,
-                    "cost": result.get("cost", {}),
-                    "model_tier": model_tier,
-                }
-            raise RuntimeError(f"LLM call failed after {result['attempts']} attempts: {result['error']}")
+            tracer = getattr(self, "_tracer", None)
+            return process_ai_response(
+                result=result,
+                messages=messages,
+                step=step,
+                duration_s=duration_s,
+                tracer=tracer,
+                trace_id=getattr(self, "_trace_id", "unknown"),
+                trace_data=getattr(self, "_trace_data", []),
+            )
 
         async def _async():
-            prompt_text = json.dumps(messages, ensure_ascii=False)
-            input_len = len(prompt_text)
             call_start = time.time()
-
-            rate_limiter = getattr(self, "_rate_limiter", None)
-            if rate_limiter is not None:
-                agent_key = getattr(self, "_trace_id", "unknown")
-                rate_limiter.check_or_raise(f"agent_llm:{agent_key}")
-
             circuit_breaker: CircuitBreaker | None = getattr(self, "_circuit_breaker", None)
             if circuit_breaker is not None:
                 result = circuit_breaker.call(self._route_call_async, messages, temperature, force_level)
             else:
                 result = await self._route_call_async(messages, temperature, force_level)
-
             duration_s = round(time.time() - call_start, 3)
-
-            if result["success"]:
-                ai_response = result["data"]
-                data = ai_response.get("data", {})
-                raw_response = json.dumps(ai_response, ensure_ascii=False)
-                output_len = len(raw_response)
-
-                tracer = getattr(self, "_tracer", None)
-                if tracer:
-                    tier = result.get("model_tier", "cloud_normal")
-                    usage = data.get("usage", {})
-                    tracer.log_llm_call(
-                        tier,
-                        int(usage.get("prompt_tokens", 0) or 0),
-                        int(usage.get("completion_tokens", 0) or 0),
-                        int(duration_s * 1000),
-                    )
-
-                self._trace_data.append(
-                    {
-                        "step": step,
-                        "input_len": input_len,
-                        "output_len": output_len,
-                        "duration_s": duration_s,
-                        "timestamp": datetime.now().isoformat(),
-                    }
-                )
-
-                model_tier = result.get("model_tier", "cloud_normal")
-                agent_llm_duration.labels(agent_name=getattr(self, "_trace_id", "unknown"), model=model_tier).observe(duration_s)
-                usage = data.get("usage", {})
-                total_tokens = int(usage.get("total_tokens", 0) or 0)
-                if total_tokens:
-                    agent_tokens_total.labels(agent_name=getattr(self, "_trace_id", "unknown")).inc(total_tokens)
-                return {
-                    "reply": data.get("reply", ""),
-                    "usage": usage,
-                    "prompt": prompt_text,
-                    "raw_response": raw_response,
-                    "retry_count": result["attempts"] - 1,
-                    "cost": result.get("cost", {}),
-                    "model_tier": model_tier,
-                }
-            raise RuntimeError(f"LLM call failed after {result['attempts']} attempts: {result['error']}")
+            tracer = getattr(self, "_tracer", None)
+            return process_ai_response(
+                result=result,
+                messages=messages,
+                step=step,
+                duration_s=duration_s,
+                tracer=tracer,
+                trace_id=getattr(self, "_trace_id", "unknown"),
+                trace_data=getattr(self, "_trace_data", []),
+            )
 
         return _async() if is_async else _sync()
 
