@@ -5,22 +5,22 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from opportunity.app.bidding_agent_router import (
+from opportunity.app.database import init_db
+from opportunity.app.routers.bidding_agent_router import (
     router as bidding_agent_router,
 )
-from opportunity.app.bidding_agent_router import (
+from opportunity.app.routers.bidding_agent_router import (
     start_bidding_scheduler,
 )
-from opportunity.app.bookmark_router import router as bookmark_router
-from opportunity.app.contact_router import router as contact_router
-from opportunity.app.database import init_db
-from opportunity.app.opportunity_bidding_router import router as bidding_router
-from opportunity.app.opportunity_opportunity_router import router as opportunity_router
-from opportunity.app.opportunity_stats_router import router as stats_router
-from opportunity.app.pubpeer_router import router as pubpeer_router
-from opportunity.app.research_router import router as research_router
-from opportunity.app.scoring_router import router as scoring_router
-from opportunity.app.trend_router import router as trend_router
+from opportunity.app.routers.bookmark_router import router as bookmark_router
+from opportunity.app.routers.contact_router import router as contact_router
+from opportunity.app.routers.opportunity_bidding_router import router as bidding_router
+from opportunity.app.routers.opportunity_opportunity_router import router as opportunity_router
+from opportunity.app.routers.opportunity_stats_router import router as stats_router
+from opportunity.app.routers.pubpeer_router import router as pubpeer_router
+from opportunity.app.routers.research_router import router as research_router
+from opportunity.app.routers.scoring_router import router as scoring_router
+from opportunity.app.routers.trend_router import router as trend_router
 from shared.app_settings import settings
 from shared.exception_handlers import register_exception_handlers
 from shared.health import router as health_router

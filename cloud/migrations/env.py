@@ -11,6 +11,7 @@ from sqlalchemy import engine_from_config, pool
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from shared.config import settings
+from cloud.app.models import metadata
 
 config = context.config
 
@@ -20,7 +21,7 @@ if config.config_file_name is not None:
 # 使用 shared.config 的 DATABASE_URL
 config.set_main_option("sqlalchemy.url", settings.database_url)
 
-target_metadata = None
+target_metadata = metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
