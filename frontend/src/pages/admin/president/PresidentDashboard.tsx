@@ -4,6 +4,7 @@ import { ShieldCheck, CalendarCheck, AlertTriangle, TrendingUp } from 'lucide-re
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
+import AgentInsightBar from '@/components/AgentInsightBar'
 
 interface MonthlySummary {
   summary: string
@@ -72,9 +73,10 @@ export default function PresidentDashboard() {
   }
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-2">
+    <div className="space-y-6 p-6">
+      <AgentInsightBar pageId="president_dashboard" />
+      <div>
+        <h1
           <CardTitle className="text-base flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-blue-500" />
             AI 月报摘要
