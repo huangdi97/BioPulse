@@ -165,3 +165,4 @@ wiki/*
 audit_script.py
 audit_script2.py
 .test-venv/
+deep_dive
