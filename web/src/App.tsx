@@ -10,6 +10,7 @@ const TrainingPage = lazy(() => import("./pages/coach/TrainingPage"))
 const IntelPage = lazy(() => import("./pages/intel/IntelPage"))
 const ConferencePage = lazy(() => import("./pages/conference/ConferencePage"))
 const SettingsPage = lazy(() => import("./pages/settings/SettingsPage"))
+const MarketAccessPage = lazy(() => import("./pages/market/MarketAccessPage"))
 const PricingPage = lazy(() => import("./pages/pricing/PricingPage"))
 const LoginPage = lazy(() => import("./pages/auth/LoginPage"))
 const RegisterPage = lazy(() => import("./pages/auth/RegisterPage"))
@@ -68,6 +69,7 @@ export default function App() {
             <Route path="conference" element={<ConferencePage />} />
             <Route path="settings/system" element={<SettingsPage />} />
             <Route path="pricing" element={<PricingPage />} />
+            <Route path="market" element={<MarketAccessPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
