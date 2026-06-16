@@ -25,7 +25,7 @@ from cloud.app.agent_runtime.runtime_core_tools import RuntimeCoreTools
 from cloud.app.agent_runtime.runtime_helpers import CompositionHelper
 from cloud.app.agent_runtime.runtime_llm import RuntimeLLM
 from cloud.app.agent_runtime.runtime_state import ApprovalManager, RuntimeState
-from cloud.app.agent_runtime.runtime_tool_exec import RuntimeToolExecMixin
+from cloud.app.agent_runtime.runtime_tool_exec import ToolExecutor
 from cloud.app.agent_runtime.state_snapshot import StateSnapshot
 from cloud.app.agent_runtime.streamer import AgentStreamer
 from cloud.app.agent_runtime.tool_bridge import ToolBridge
@@ -49,7 +49,7 @@ def _get_global_semaphore() -> threading.Semaphore:
     return _agent_exec_semaphore
 
 
-class RuntimeCore(ExecutionLoopMixin, CompositionHelper, RuntimeLLM, RuntimeCoreTools, RuntimeToolExecMixin):
+class RuntimeCore(ExecutionLoopMixin, CompositionHelper, RuntimeLLM, RuntimeCoreTools):
     def __init__(self, agent_db, business_db, auth_header: str, notifier: Notifier | None = None):
         self._agent_db, self._db, self._auth_header, self._notifier = agent_db, business_db, auth_header, notifier
         self._tool_registry = ToolBridge()
@@ -75,6 +75,7 @@ class RuntimeCore(ExecutionLoopMixin, CompositionHelper, RuntimeLLM, RuntimeCore
         self._vector_memory.set_db(self._agent_db)
         self._streamer: AgentStreamer | None = None
         self._rollback = RollbackHandler(self)
+        self._tool_exec = ToolExecutor(self)
 
     def set_streamer(self, streamer: AgentStreamer):
         """设置事件流推送器。"""
