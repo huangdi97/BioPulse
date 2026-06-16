@@ -128,6 +128,8 @@ class RuntimeCore:
                 self._tracer.end_trace("blocked", result.model_dump())
                 agent_requests_total.labels(agent_name=agent_key, status="blocked").inc()
                 agent_active_count.labels(agent_name=agent_key).dec()
+                if self._notifier:
+                    self._notifier.send(f"合规拦截: {agent_key} - {injection_reason}", priority="high")
                 return result
             user_key = f"user_agent:{self._auth_header or 'anonymous'}"
             self._rate_limiter.check_or_raise(user_key)
