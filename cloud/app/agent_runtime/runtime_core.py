@@ -21,8 +21,8 @@ from cloud.app.agent_runtime.planner import Planner
 from cloud.app.agent_runtime.rate_limiter import RateLimiter
 from cloud.app.agent_runtime.reflector import Reflector
 from cloud.app.agent_runtime.rollback_handler import RollbackHandlerMixin
-from cloud.app.agent_runtime.runtime_core_tools import RuntimeCoreToolsMixin
-from cloud.app.agent_runtime.runtime_helpers import RuntimeHelper
+from cloud.app.agent_runtime.runtime_core_tools import RuntimeCoreTools
+from cloud.app.agent_runtime.runtime_helpers import CompositionHelper
 from cloud.app.agent_runtime.runtime_llm import RuntimeLLM
 from cloud.app.agent_runtime.runtime_state import ApprovalManager, RuntimeState
 from cloud.app.agent_runtime.runtime_tool_exec import RuntimeToolExecMixin
@@ -49,7 +49,7 @@ def _get_global_semaphore() -> threading.Semaphore:
     return _agent_exec_semaphore
 
 
-class RuntimeCore(ExecutionLoopMixin, RollbackHandlerMixin, RuntimeHelper, RuntimeLLM, RuntimeCoreToolsMixin, RuntimeToolExecMixin):
+class RuntimeCore(ExecutionLoopMixin, RollbackHandlerMixin, CompositionHelper, RuntimeLLM, RuntimeCoreTools, RuntimeToolExecMixin):
     def __init__(self, agent_db, business_db, auth_header: str, notifier: Notifier | None = None):
         self._agent_db, self._db, self._auth_header, self._notifier = agent_db, business_db, auth_header, notifier
         self._tool_registry = ToolBridge()

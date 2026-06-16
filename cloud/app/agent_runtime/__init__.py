@@ -44,7 +44,7 @@ _EXPORTS = {
     "schema_validator": ("OutputSchemaValidator",),
     "rollback_handler": ("RollbackHandlerMixin",),
     "runtime_core": ("AgentRuntime", "RuntimeCore"),
-    "runtime_helpers": ("RuntimeHelper",),
+    "runtime_helpers": ("CompositionHelper",),
     "runtime_llm": ("RuntimeLLM",),
     "runtime_state": ("ApprovalManager", "CheckpointManager", "RuntimeState"),
     "scheduler": ("AgentScheduler",),
