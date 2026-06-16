@@ -20,7 +20,7 @@ from cloud.app.agent_runtime.notifier import Notifier
 from cloud.app.agent_runtime.planner import Planner
 from cloud.app.agent_runtime.rate_limiter import RateLimiter
 from cloud.app.agent_runtime.reflector import Reflector
-from cloud.app.agent_runtime.rollback_handler import RollbackHandlerMixin
+from cloud.app.agent_runtime.rollback_handler import RollbackHandler
 from cloud.app.agent_runtime.runtime_core_tools import RuntimeCoreTools
 from cloud.app.agent_runtime.runtime_helpers import CompositionHelper
 from cloud.app.agent_runtime.runtime_llm import RuntimeLLM
@@ -49,7 +49,7 @@ def _get_global_semaphore() -> threading.Semaphore:
     return _agent_exec_semaphore
 
 
-class RuntimeCore(ExecutionLoopMixin, RollbackHandlerMixin, CompositionHelper, RuntimeLLM, RuntimeCoreTools, RuntimeToolExecMixin):
+class RuntimeCore(ExecutionLoopMixin, CompositionHelper, RuntimeLLM, RuntimeCoreTools, RuntimeToolExecMixin):
     def __init__(self, agent_db, business_db, auth_header: str, notifier: Notifier | None = None):
         self._agent_db, self._db, self._auth_header, self._notifier = agent_db, business_db, auth_header, notifier
         self._tool_registry = ToolBridge()
@@ -74,6 +74,7 @@ class RuntimeCore(ExecutionLoopMixin, RollbackHandlerMixin, CompositionHelper, R
         self._vector_memory = VectorMemory()
         self._vector_memory.set_db(self._agent_db)
         self._streamer: AgentStreamer | None = None
+        self._rollback = RollbackHandler(self)
 
     def set_streamer(self, streamer: AgentStreamer):
         """设置事件流推送器。"""
@@ -176,6 +177,9 @@ class RuntimeCore(ExecutionLoopMixin, RollbackHandlerMixin, CompositionHelper, R
         self._trace_id = checkpoint["trace_id"]
         self._auth_header = auth_header
         return self.execute(goal, agent_key, checkpoint.get("context"))
+
+    def rollback(self, trace_id: str, target_step: int) -> dict:
+        return self._rollback.rollback(trace_id, target_step)
 
     def get_status(self) -> dict:
         """获取运行时状态统计。"""

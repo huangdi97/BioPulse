@@ -42,7 +42,7 @@ _EXPORTS = {
     "hot_reloader": ("PromptHotReloader",),
     "retry": ("retry_with_backoff",),
     "schema_validator": ("OutputSchemaValidator",),
-    "rollback_handler": ("RollbackHandlerMixin",),
+    "rollback_handler": ("RollbackHandler",),
     "runtime_core": ("AgentRuntime", "RuntimeCore"),
     "runtime_helpers": ("CompositionHelper",),
     "runtime_llm": ("RuntimeLLM",),
