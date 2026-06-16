@@ -1,0 +1,4 @@
+# BioPulse 数据库备份 crontab 配置
+# 每日凌晨 3 点执行备份
+# crontab -e 添加下行：
+# 0 3 * * * cd /path/to/biopulse && bash scripts/backup.sh >> /var/log/db-backup.log 2>&1
