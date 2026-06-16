@@ -30,11 +30,14 @@ def _identity_to_spec(agent) -> dict:
 logger = logging.getLogger(__name__)
 
 
-class ExecutionLoopMixin:
+class ExecutionEngine:
+    def __init__(self, host):
+        self._host = host
+
     def _load_approved_tool(self, agent_key, goal, checkpoint):
         if not checkpoint:
             return None, None
-        app = self._agent_db.execute(
+        app = self._host._agent_db.execute(
             "SELECT tool, params FROM agent_runtime_approvals WHERE agent_key=? AND goal=? AND status='approved' ORDER BY id DESC LIMIT 1",
             (agent_key, goal),
         ).fetchone()
@@ -46,7 +49,7 @@ class ExecutionLoopMixin:
             hot_spec = hot_reloader.get_spec(agent_key)
             if hot_spec:
                 spec = {**spec, **hot_spec}
-        checkpoint = self._load_checkpoint(agent_key, goal)
+        checkpoint = self._host._helper._load_checkpoint(agent_key, goal)
         if checkpoint:
             messages = checkpoint["messages"]
             logs = checkpoint["logs"]
@@ -55,13 +58,13 @@ class ExecutionLoopMixin:
         else:
             prompt = (
                 f"你是一个{spec['role_desc']}\n\n"
-                f"可用工具（JSON格式）：{json.dumps(self._tool_registry.list_tools(), ensure_ascii=False)}\n\n"
+                f"可用工具（JSON格式）：{json.dumps(self._host._tool_registry.list_tools(), ensure_ascii=False)}\n\n"
                 f"当前上下文：{json.dumps(context or {}, ensure_ascii=False)}\n\n"
                 '请回复JSON格式：{"action": "call_tool"|"complete"|"error", "tool": "tool_name", "params": {...}, "reasoning": "..."}'
             )
             messages, logs, tool_calls, start_step = [{"role": "system", "content": prompt}, {"role": "user", "content": goal}], [], 0, 0
         approved_tool, approved_params = self._load_approved_tool(agent_key, goal, checkpoint)
-        logs.append(self._planner.plan(goal, agent_key, context))
+        logs.append(self._host._planner.plan(goal, agent_key, context))
         return {
             "goal": goal,
             "agent_key": agent_key,
@@ -85,19 +88,19 @@ class ExecutionLoopMixin:
             return RuntimeResult(status="error", result=f"unknown agent_key: {agent_key}", iterations=0, tool_calls=0, logs=[])
         c, max_iter = self._new_context(goal, agent_key, context, spec), min(spec["max_iterations"], 15)
         for step in range(c["start_step"], max_iter):
-            c["messages"], step_start = self._compress_messages(c["messages"]), time.time()
+            c["messages"], step_start = self._host._compress_messages(c["messages"]), time.time()
             if c["approved_tool"] and step == c["start_step"]:
                 self._run_approved_tool(c, step)
                 c["approved_tool"] = None
                 continue
-            if not self._check_budget(c["messages"]):
+            if not self._host._core_tools._check_budget(c["messages"]):
                 return self._handle_budget_exceeded(c, step, step_start)
             try:
                 streamer = getattr(self, "_streamer", None)
                 trace_id = getattr(self, "_trace_id", None)
                 if streamer and trace_id:
                     streamer.stream(trace_id, "agent.llm_call", {"step": step, "agent": c["agent_key"]})
-                ai_resp = self._call_ai(c["messages"], spec["default_temperature"], step, force_level=None)
+                ai_resp = self._host._call_ai(c["messages"], spec["default_temperature"], step, force_level=None)
                 if streamer and trace_id:
                     streamer.stream(trace_id, "agent.llm_result", {"step": step, "reply_preview": ai_resp.get("reply", "")[:200]})
                 validator = OutputSchemaValidator()
@@ -110,12 +113,12 @@ class ExecutionLoopMixin:
                         logger.warning("Schema validation for %s failed: %s; coerced output", c["agent_key"], errors)
                 except (json.JSONDecodeError, TypeError):
                     logger.warning("执行循环异常", exc_info=True)
-                self._accumulate_cost(ai_resp, step)
+                self._host._core_tools._accumulate_cost(ai_resp, step)
             except (KeyError, TypeError, ValueError) as exc:
                 if self._handle_step_error(c, step, str(exc), duration_ms=int((time.time() - step_start) * 1000)):
                     continue
                 raise
-            if not self._check_budget():
+            if not self._host._core_tools._check_budget():
                 return self._handle_budget_exceeded(c, step, step_start)
             result = self._handle_step_result(c, step, ai_resp, int((time.time() - step_start) * 1000), spec)
             if isinstance(result, RuntimeResult):
@@ -125,25 +128,25 @@ class ExecutionLoopMixin:
     def _run_approved_tool(self, c, step):
         started = time.time()
         tool, params = c["approved_tool"], c["approved_params"]
-        tool_result = self._tool_registry.call(tool, params, self._auth_header, caller_permission="write")
-        self._verifier.verify(tool_result)
+        tool_result = self._host._tool_registry.call(tool, params, self._host._auth_header, caller_permission="write")
+        self._host._verifier.verify(tool_result)
         if tool_result.get("needs_approval"):
             tool_result = {"success": False, "data": None, "error": "still requires approval"}
         self._record_tool_output(c, step, tool, params, tool_result, int((time.time() - started) * 1000))
         c["tool_calls"] += 1
-        self._save_step_checkpoint(c, step)
+        self._host._tool_exec._save_step_checkpoint(c, step)
 
     def _handle_step_result(self, c, step, ai_resp, duration_ms, spec):
         decision, error = Validator.validate(ai_resp["reply"])
         if error or decision is None:
-            self._append_invalid_step(c, step, error or "invalid decision", duration_ms, ai_resp)
+            self._host._tool_exec._append_invalid_step(c, step, error or "invalid decision", duration_ms, ai_resp)
             return None
         tool_name, tool_params = decision.tool, decision.params or {}
-        if self._is_completed(decision):
+        if self._host._is_completed(decision):
             return self._handle_completion(c, step, decision, ai_resp, duration_ms)
         if decision.action == "call_tool" and tool_name:
             return self._process_tool_call(c, step, tool_name, tool_params, decision, ai_resp, duration_ms, spec)
-        self._append_invalid_step(c, step, f"invalid action: {decision.action}", duration_ms, ai_resp, tool_name, tool_params)
+        self._host._tool_exec._append_invalid_step(c, step, f"invalid action: {decision.action}", duration_ms, ai_resp, tool_name, tool_params)
         return None
 
     def _process_tool_call(self, c, step, tool_name, tool_params, decision, ai_resp, duration_ms, spec):
@@ -156,9 +159,11 @@ class ExecutionLoopMixin:
             streamer.stream(trace_id, "agent.tool_call", {"step": step, "tool": tool_name, "params": tool_params})
         try:
             t_start = time.time()
-            tool_result = self._tool_registry.call(tool_name, tool_params, self._auth_header, caller_permission=spec.get("max_permission", "read"))
+            tool_result = self._host._tool_registry.call(
+                tool_name, tool_params, self._host._auth_header, caller_permission=spec.get("max_permission", "read")
+            )
             t_elapsed = int((time.time() - t_start) * 1000)
-            self._verifier.verify(tool_result)
+            self._host._verifier.verify(tool_result)
             if streamer and trace_id:
                 preview = str(tool_result.get("data", ""))[:200]
                 streamer.stream(trace_id, "agent.tool_result", {"step": step, "tool": tool_name, "result_preview": preview})
@@ -173,25 +178,25 @@ class ExecutionLoopMixin:
             return self._handle_approval_needed(c, step, tool_name, tool_params, decision)
         self._record_tool_output(c, step, tool_name, tool_params, tool_result, duration_ms, ai_resp, decision)
         c["tool_calls"] += 1
-        self._loop_detector.record(decision)
-        loop_result = self._loop_detector.detect()
+        self._host._loop_detector.record(decision)
+        loop_result = self._host._loop_detector.detect()
         if loop_result:
             return self._handle_loop_detected(c, step, tool_name, tool_params, loop_result, duration_ms)
-        self._save_step_checkpoint(c, step)
+        self._host._tool_exec._save_step_checkpoint(c, step)
         return None
 
     def _record_tool_output(self, c, step, tool, params, tool_result, duration_ms, ai_resp=None, decision=None):
         tool_output_text = json.dumps(tool_result, ensure_ascii=False)
         safe_output = sanitize_tool_output(tool_output_text)
         c["logs"].append(
-            self._build_step_log(
+            self._host._core_tools._build_step_log(
                 step,
                 "call_tool",
                 tool=tool,
                 params=params,
                 result=safe_output,
                 duration_ms=duration_ms,
-                **self._llm_meta(ai_resp, params, tool_output_text),
+                **self._host._core_tools._llm_meta(ai_resp, params, tool_output_text),
             )
         )
         payload = decision.model_dump() if decision and hasattr(decision, "model_dump") else decision

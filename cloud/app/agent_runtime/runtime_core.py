@@ -11,7 +11,7 @@ from cloud.app.agent_runtime.bulkhead import Bulkhead
 from cloud.app.agent_runtime.circuit_breaker import CircuitBreaker
 from cloud.app.agent_runtime.content_filter import ContentBlocked, ContentFilter
 from cloud.app.agent_runtime.cost_governor import CostGovernor
-from cloud.app.agent_runtime.execution_loop import ExecutionLoopMixin
+from cloud.app.agent_runtime.execution_loop import ExecutionEngine
 from cloud.app.agent_runtime.loop_detector import LoopDetector
 from cloud.app.agent_runtime.memory import Memory
 from cloud.app.agent_runtime.metrics import agent_active_count, agent_requests_total
@@ -21,8 +21,6 @@ from cloud.app.agent_runtime.planner import Planner
 from cloud.app.agent_runtime.rate_limiter import RateLimiter
 from cloud.app.agent_runtime.reflector import Reflector
 from cloud.app.agent_runtime.rollback_handler import RollbackHandler
-from cloud.app.agent_runtime.runtime_core_tools import RuntimeCoreTools
-from cloud.app.agent_runtime.runtime_helpers import CompositionHelper
 from cloud.app.agent_runtime.runtime_llm import RuntimeLLM
 from cloud.app.agent_runtime.runtime_state import ApprovalManager, RuntimeState
 from cloud.app.agent_runtime.runtime_tool_exec import ToolExecutor
@@ -49,7 +47,7 @@ def _get_global_semaphore() -> threading.Semaphore:
     return _agent_exec_semaphore
 
 
-class RuntimeCore(ExecutionLoopMixin, CompositionHelper, RuntimeLLM, RuntimeCoreTools):
+class RuntimeCore(RuntimeLLM):
     def __init__(self, agent_db, business_db, auth_header: str, notifier: Notifier | None = None):
         self._agent_db, self._db, self._auth_header, self._notifier = agent_db, business_db, auth_header, notifier
         self._tool_registry = ToolBridge()
@@ -76,6 +74,7 @@ class RuntimeCore(ExecutionLoopMixin, CompositionHelper, RuntimeLLM, RuntimeCore
         self._streamer: AgentStreamer | None = None
         self._rollback = RollbackHandler(self)
         self._tool_exec = ToolExecutor(self)
+        self._engine = ExecutionEngine(self)
 
     def set_streamer(self, streamer: AgentStreamer):
         """设置事件流推送器。"""
@@ -135,7 +134,7 @@ class RuntimeCore(ExecutionLoopMixin, CompositionHelper, RuntimeLLM, RuntimeCore
             if memories:
                 context = dict(context or {})
                 context["_vector_memories"] = [{"key": m["key"], "content": m["content"], "score": m["score"]} for m in memories]
-            result = self._execute_impl(goal, agent_key, context)
+            result = self._engine._execute_impl(goal, agent_key, context)
             if result.status == "success" and result.result:
                 try:
                     self._content_filter.filter_output(result.result)
