@@ -32,6 +32,9 @@ logger = logging.getLogger(__name__)
 class RuntimeLLM:
     """提供 LLM 调用、Token 估算与消息压缩的混入类。"""
 
+    def __init__(self, core=None):
+        self._core = core
+
     @staticmethod
     def _estimate_token_count(messages: list[dict]) -> int:
         """估算消息列表的 Token 数量。"""
@@ -43,11 +46,11 @@ class RuntimeLLM:
 
     def _raw_llm_call(self, request_body: dict) -> dict:
         """执行同步原始 LLM 调用。"""
-        return raw_llm_call(request_body, self._auth_header)
+        return raw_llm_call(request_body, self._core._auth_header)
 
     async def _raw_llm_call_async(self, request_body: dict) -> dict:
         """执行异步原始 LLM 调用。"""
-        return await raw_llm_call_async(request_body, self._auth_header)
+        return await raw_llm_call_async(request_body, self._core._auth_header)
 
     @staticmethod
     def _estimate_complexity(messages: list[dict]) -> int:
@@ -194,47 +197,47 @@ class RuntimeLLM:
 
     def _do_call_ai(self, messages: list[dict], temperature: float, step: int = 0, force_level: int | None = None, is_async: bool = False) -> dict:
         """执行 AI 调用并收集运行指标。"""
-        rate_limiter = getattr(self, "_rate_limiter", None)
+        rate_limiter = getattr(self._core, "_rate_limiter", None)
         if rate_limiter is not None:
-            agent_key = getattr(self, "_trace_id", "unknown")
+            agent_key = getattr(self._core, "_trace_id", "unknown")
             rate_limiter.check_or_raise(f"agent_llm:{agent_key}")
 
         def _sync():
             call_start = time.time()
-            circuit_breaker: CircuitBreaker | None = getattr(self, "_circuit_breaker", None)
+            circuit_breaker: CircuitBreaker | None = getattr(self._core, "_circuit_breaker", None)
             if circuit_breaker is not None:
                 result = circuit_breaker.call(self._route_call, messages, temperature, force_level)
             else:
                 result = self._route_call(messages, temperature, force_level)
             duration_s = round(time.time() - call_start, 3)
-            tracer = getattr(self, "_tracer", None)
+            tracer = getattr(self._core, "_tracer", None)
             return process_ai_response(
                 result=result,
                 messages=messages,
                 step=step,
                 duration_s=duration_s,
                 tracer=tracer,
-                trace_id=getattr(self, "_trace_id", "unknown"),
-                trace_data=getattr(self, "_trace_data", []),
+                trace_id=getattr(self._core, "_trace_id", "unknown"),
+                trace_data=getattr(self._core, "_trace_data", []),
             )
 
         async def _async():
             call_start = time.time()
-            circuit_breaker: CircuitBreaker | None = getattr(self, "_circuit_breaker", None)
+            circuit_breaker: CircuitBreaker | None = getattr(self._core, "_circuit_breaker", None)
             if circuit_breaker is not None:
                 result = circuit_breaker.call(self._route_call_async, messages, temperature, force_level)
             else:
                 result = await self._route_call_async(messages, temperature, force_level)
             duration_s = round(time.time() - call_start, 3)
-            tracer = getattr(self, "_tracer", None)
+            tracer = getattr(self._core, "_tracer", None)
             return process_ai_response(
                 result=result,
                 messages=messages,
                 step=step,
                 duration_s=duration_s,
                 tracer=tracer,
-                trace_id=getattr(self, "_trace_id", "unknown"),
-                trace_data=getattr(self, "_trace_data", []),
+                trace_id=getattr(self._core, "_trace_id", "unknown"),
+                trace_data=getattr(self._core, "_trace_data", []),
             )
 
         return _async() if is_async else _sync()
