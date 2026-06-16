@@ -47,7 +47,7 @@ def _get_global_semaphore() -> threading.Semaphore:
     return _agent_exec_semaphore
 
 
-class RuntimeCore(RuntimeLLM):
+class RuntimeCore:
     def __init__(self, agent_db, business_db, auth_header: str, notifier: Notifier | None = None):
         self._agent_db, self._db, self._auth_header, self._notifier = agent_db, business_db, auth_header, notifier
         self._tool_registry = ToolBridge()
@@ -75,6 +75,7 @@ class RuntimeCore(RuntimeLLM):
         self._rollback = RollbackHandler(self)
         self._tool_exec = ToolExecutor(self)
         self._engine = ExecutionEngine(self)
+        self._llm = RuntimeLLM(core=self)
 
     def set_streamer(self, streamer: AgentStreamer):
         """设置事件流推送器。"""
@@ -221,6 +222,12 @@ class RuntimeCore(RuntimeLLM):
         )
         self._save_step_checkpoint(c, step, "budget_exceeded")
         return self._finish(c, "budget_exceeded", "cost budget exceeded", step, step + 1, False)
+
+    def _call_ai(self, messages: list[dict], temperature: float, step: int = 0, force_level: int | None = None) -> dict:
+        return self._llm._call_ai(messages, temperature, step, force_level)
+
+    def _compress_messages(self, messages: list[dict]) -> list[dict]:
+        return self._llm._compress_messages(messages)
 
     def _is_completed(self, decision) -> bool:
         return decision.action == "complete"
