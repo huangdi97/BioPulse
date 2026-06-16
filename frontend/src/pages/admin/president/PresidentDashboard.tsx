@@ -75,8 +75,8 @@ export default function PresidentDashboard() {
   return (
     <div className="space-y-6 p-6">
       <AgentInsightBar pageId="president_dashboard" />
-      <div>
-        <h1
+      <Card>
+        <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-blue-500" />
             AI 月报摘要
