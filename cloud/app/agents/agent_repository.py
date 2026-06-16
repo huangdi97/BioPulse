@@ -1,7 +1,7 @@
-"""Agent 仓库 — 从 agents/*/identity.yaml 加载 AgentModel。
+"""Agent 仓库 — 从 agents/*/identity.yaml 加载 AgentIdentity。
 
 注意：identity.yaml 是 Agent 定义的主要来源。
-agent_specs.py 中的 AGENT_SPECS 是运行时运行时覆盖/补充（用于 L4 编排等高级配置）。
+agent_specs.py 中的 AGENT_SPECS 是运行时覆盖/补充（用于 L4 编排等高级配置）。
 当 identity.yaml 与 AGENT_SPECS 同时存在时，identity.yaml 优先作为源数据。"""
 
 from __future__ import annotations
@@ -11,8 +11,7 @@ from pathlib import Path
 
 import yaml
 
-from cloud.app.agents.agent_model import AgentModel
-from cloud.app.agents.safety_profile import AgentSafetyProfile
+from cloud.app.agent_runtime.models import AgentIdentity
 
 logger = logging.getLogger(__name__)
 
@@ -22,20 +21,20 @@ _AGENTS_DIR = Path("agents")
 
 
 class AgentRepository:
-    """从文件系统加载 AgentModel 实例的仓库。"""
+    """从文件系统加载 AgentIdentity 实例的仓库。"""
 
     @staticmethod
-    def load(agent_id: str, agents_dir: str | Path | None = None) -> AgentModel | None:
-        """加载指定 agent_id 对应的 AgentModel（匹配目录名）。"""
+    def load(agent_id: str, agents_dir: str | Path | None = None) -> AgentIdentity | None:
+        """加载指定 agent_id 对应的 AgentIdentity（匹配目录名）。"""
         base = Path(agents_dir) if agents_dir else _AGENTS_DIR
         yaml_path = base / agent_id / "identity.yaml"
         return AgentRepository._parse_yaml(yaml_path)
 
     @staticmethod
-    def list_all(agents_dir: str | Path | None = None) -> list[AgentModel]:
-        """扫描所有 agents/*/identity.yaml 并返回 AgentModel 列表。"""
+    def list_all(agents_dir: str | Path | None = None) -> list[AgentIdentity]:
+        """扫描所有 agents/*/identity.yaml 并返回 AgentIdentity 列表。"""
         base = Path(agents_dir) if agents_dir else _AGENTS_DIR
-        result: list[AgentModel] = []
+        result: list[AgentIdentity] = []
         for yaml_path in sorted(base.rglob("identity.yaml")):
             try:
                 model = AgentRepository._parse_yaml(yaml_path)
@@ -46,8 +45,8 @@ class AgentRepository:
         return result
 
     @staticmethod
-    def _parse_yaml(path: Path) -> AgentModel | None:
-        """从 identity.yaml 文件解析为 AgentModel。"""
+    def _parse_yaml(path: Path) -> AgentIdentity | None:
+        """从 identity.yaml 文件解析为 AgentIdentity。"""
         try:
             with open(path, encoding="utf-8") as f:
                 data = yaml.safe_load(f)
@@ -56,29 +55,5 @@ class AgentRepository:
             return None
         if not isinstance(data, dict):
             logger.warning("Empty or invalid YAML in %s, using defaults", path)
-            return AgentModel(agent_id=path.parent.name, name=path.parent.name, persona="")
-        agent_id = path.parent.name
-        model_preference_raw = data.get("model_preference", {})
-        if isinstance(model_preference_raw, dict):
-            provider = model_preference_raw.get("provider", "deepseek")
-            level = model_preference_raw.get("level", "cloud_normal")
-            model_preference = f"{provider}/{level}"
-        else:
-            model_preference = str(model_preference_raw)
-        safety = data.get("safety_profile", {})
-        if isinstance(safety, dict):
-            safety_level = safety.get("max_permission", "read")
-        else:
-            safety_level = "read"
-        allowed_tools = data.get("allowed_tools", [])
-        safety_profile = AgentSafetyProfile.from_safety_level(safety_level, allowed_tools=allowed_tools)
-        return AgentModel(
-            agent_id=agent_id,
-            name=data.get("name", agent_id),
-            persona=f"{data.get('role', '')}: {data.get('goal', '')}",
-            capabilities=allowed_tools,
-            model_preference=model_preference,
-            safety_level=safety_level,
-            interrupt_behavior=data.get("trigger_mode", "user_request"),
-            safety_profile=safety_profile,
-        )
+            return AgentIdentity(key=path.parent.name, name=path.parent.name, role="", goal="")
+        return AgentIdentity(**data)

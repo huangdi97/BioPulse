@@ -61,10 +61,19 @@ class ModelRouter:
         return ModelRouter._first_fallback()
 
     @staticmethod
-    def _parse_preference(preference: str, provider_type: ProviderType) -> RouteResult | None:
+    def _parse_preference(preference: object, provider_type: ProviderType) -> RouteResult | None:
         if not preference:
             return None
-        parts = preference.split("/", 1)
+        # AgentIdentity 的 model_preference 是 ModelPreference 对象
+        if hasattr(preference, "provider") and hasattr(preference, "level"):
+            return RouteResult(
+                provider=preference.provider,
+                model=f"{preference.provider}/{preference.level}",
+                mode="api",
+            )
+        # 兼容字符串格式 "provider/model"
+        pref_str = str(preference)
+        parts = pref_str.split("/", 1)
         provider = parts[0].strip()
         model = parts[1].strip() if len(parts) > 1 else provider
         mode = "api"

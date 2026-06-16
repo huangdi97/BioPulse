@@ -1,4 +1,4 @@
-"""AgentModel + AgentRepository 单元测试。"""
+"""AgentRepository 单元测试 + AgentIdentity 验证。"""
 
 from __future__ import annotations
 
@@ -8,7 +8,6 @@ from unittest.mock import mock_open, patch
 import pytest
 import yaml
 
-from cloud.app.agents.agent_model import AgentModel
 from cloud.app.agents.agent_repository import AgentRepository
 
 SAMPLE_YAML = {
@@ -36,8 +35,6 @@ SAMPLE_YAML = {
         "max_permission": "write",
         "bulkhead_max_concurrent": 3,
         "rate_limit_per_minute": 20,
-        "side_effect_check": True,
-        "layer3_deep_check": True,
     },
 }
 
@@ -67,89 +64,58 @@ SAMPLE_YAML_2 = {
         "max_permission": "read",
         "bulkhead_max_concurrent": 10,
         "rate_limit_per_minute": 100,
-        "side_effect_check": True,
-        "layer3_deep_check": True,
     },
 }
-
-
-class TestAgentModel:
-    def test_create_minimal(self) -> None:
-        model = AgentModel(agent_id="test", name="测试代理", persona="测试角色: 测试目标")
-        assert model.agent_id == "test"
-        assert model.name == "测试代理"
-        assert model.persona == "测试角色: 测试目标"
-        assert model.capabilities == []
-        assert model.model_preference == ""
-
-    def test_create_full(self) -> None:
-        model = AgentModel(
-            agent_id="scanner",
-            name="商机雷达",
-            persona="商机雷达: 发现商机",
-            capabilities=["query_bidding", "query_opportunity"],
-            model_preference="deepseek/cloud_normal",
-            safety_level="write",
-            interrupt_behavior="cron",
-        )
-        assert model.agent_id == "scanner"
-        assert model.model_preference == "deepseek/cloud_normal"
-        assert model.safety_level == "write"
-        assert model.interrupt_behavior == "cron"
-
-    def test_immutable(self) -> None:
-        model = AgentModel(agent_id="fix", name="固定", persona="角色: 目标")
-        with pytest.raises(AttributeError):
-            model.agent_id = "changed"  # type: ignore[misc]
 
 
 class TestAgentRepositoryLoad:
     @patch("cloud.app.agents.agent_repository.yaml.safe_load")
     @patch("cloud.app.agents.agent_repository.open", new_callable=mock_open)
-    def test_load_returns_model(self, mock_file: mock_open, mock_yaml_load: object) -> None:
+    def test_load_returns_identity(self, mock_file: mock_open, mock_yaml_load: object) -> None:
         mock_yaml_load.return_value = SAMPLE_YAML
-        model = AgentRepository.load("opportunity_scanner", agents_dir="/fake/agents")
-        assert model is not None
-        assert model.agent_id == "opportunity_scanner"
-        assert model.name == "商机雷达"
-        assert "商机雷达" in model.persona
-        assert "query_bidding" in model.capabilities
-        assert model.model_preference == "deepseek/cloud_normal"
-        assert model.safety_level == "write"
-        assert model.interrupt_behavior == "cron"
+        identity = AgentRepository.load("opportunity_scanner", agents_dir="/fake/agents")
+        assert identity is not None
+        assert identity.key == "opportunity_scanner"
+        assert identity.name == "商机雷达"
+        assert identity.role == "商机雷达"
+        assert "query_bidding" in identity.allowed_tools
+        assert identity.model_preference.provider == "deepseek"
+        assert identity.model_preference.level == "cloud_normal"
+        assert identity.trigger_mode == "cron"
+        assert identity.safety_profile.max_permission == "write"
 
     @patch("cloud.app.agents.agent_repository.yaml.safe_load")
     @patch("cloud.app.agents.agent_repository.open", new_callable=mock_open)
     def test_load_returns_none_for_missing(self, mock_file: mock_open, mock_yaml_load: object) -> None:
         mock_file.side_effect = FileNotFoundError
-        model = AgentRepository.load("nonexistent", agents_dir="/fake/agents")
-        assert model is None
+        identity = AgentRepository.load("nonexistent", agents_dir="/fake/agents")
+        assert identity is None
 
     def test_load_from_real_file(self) -> None:
         agents_dir = Path("agents")
         if not agents_dir.is_dir():
             pytest.skip("agents directory not found")
-        model = AgentRepository.load("opportunity_scanner")
-        assert model is not None
-        assert model.agent_id == "opportunity_scanner"
-        assert len(model.capabilities) > 0
+        identity = AgentRepository.load("opportunity_scanner")
+        assert identity is not None
+        assert identity.key == "opportunity_scanner"
+        assert len(identity.allowed_tools) > 0
 
     @patch("cloud.app.agents.agent_repository.yaml.safe_load")
     @patch("cloud.app.agents.agent_repository.open", new_callable=mock_open)
     def test_load_handles_empty_yaml(self, mock_file: mock_open, mock_yaml_load: object) -> None:
         mock_yaml_load.return_value = None
-        model = AgentRepository.load("empty_agent", agents_dir="/fake/agents")
-        assert model is not None
-        assert model.agent_id == "empty_agent"
+        identity = AgentRepository.load("empty_agent", agents_dir="/fake/agents")
+        assert identity is not None
+        assert identity.key == "empty_agent"
 
     @patch("cloud.app.agents.agent_repository.yaml.safe_load")
     @patch("cloud.app.agents.agent_repository.open", new_callable=mock_open)
     def test_load_handles_missing_fields(self, mock_file: mock_open, mock_yaml_load: object) -> None:
-        mock_yaml_load.return_value = {"key": "minimal"}
-        model = AgentRepository.load("minimal", agents_dir="/fake/agents")
-        assert model is not None
-        assert model.name == "minimal"
-        assert model.capabilities == []
+        mock_yaml_load.return_value = {"key": "minimal", "name": "minimal", "role": "", "goal": ""}
+        identity = AgentRepository.load("minimal", agents_dir="/fake/agents")
+        assert identity is not None
+        assert identity.name == "minimal"
+        assert identity.allowed_tools == []
 
 
 class TestAgentRepositoryListAll:
@@ -158,47 +124,47 @@ class TestAgentRepositoryListAll:
     @patch("cloud.app.agents.agent_repository.open", new_callable=mock_open)
     def test_list_all_returns_multiple(self, mock_file: mock_open, mock_yaml_load: object, mock_rglob: object) -> None:
         mock_rglob.return_value = sorted(
-            [  # sorted alphabetically = knowledge_worker before opportunity_scanner
+            [
                 Path("/fake/agents/opportunity_scanner/identity.yaml"),
                 Path("/fake/agents/knowledge_worker/identity.yaml"),
             ]
         )
         mock_yaml_load.side_effect = [SAMPLE_YAML_2, SAMPLE_YAML]
-        models = AgentRepository.list_all(agents_dir="/fake/agents")
-        assert len(models) == 2
-        assert models[0].agent_id == "knowledge_worker"
-        assert models[1].agent_id == "opportunity_scanner"
+        identities = AgentRepository.list_all(agents_dir="/fake/agents")
+        assert len(identities) == 2
+        assert identities[0].key == SAMPLE_YAML_2["key"]
+        assert identities[1].key == SAMPLE_YAML["key"]
 
     def test_list_all_from_real_fs(self) -> None:
         agents_dir = Path("agents")
         if not agents_dir.is_dir():
             pytest.skip("agents directory not found")
-        models = AgentRepository.list_all()
-        assert len(models) >= 5
-        ids = [m.agent_id for m in models]
-        assert "opportunity_scanner" in ids
-        assert "knowledge_worker" in ids
-        assert "compliance_monitor" in ids
-        assert "anomaly_analysis" in ids
-        assert "sales_suggestion" in ids
+        identities = AgentRepository.list_all()
+        assert len(identities) >= 5
+        keys = [i.key for i in identities]
+        assert "opportunity_scanner" in keys
+        assert "knowledge_worker" in keys
+        assert "compliance_monitor" in keys
+        assert "anomaly_analysis" in keys
+        assert "sales_suggestion" in keys
 
     @patch("cloud.app.agents.agent_repository.Path.is_dir")
     def test_list_all_empty_when_no_dir(self, mock_is_dir: object) -> None:
         mock_is_dir.return_value = False
-        models = AgentRepository.list_all(agents_dir="/nonexistent")
-        assert models == []
+        identities = AgentRepository.list_all(agents_dir="/nonexistent")
+        assert identities == []
 
     @patch("cloud.app.agents.agent_repository.Path.rglob")
     @patch("cloud.app.agents.agent_repository.yaml.safe_load")
     @patch("cloud.app.agents.agent_repository.open", new_callable=mock_open)
     def test_list_all_skips_failed_yaml(self, mock_file: mock_open, mock_yaml_load: object, mock_rglob: object) -> None:
         mock_rglob.return_value = sorted(
-            [  # sorted alphabetically = bad before good
+            [
                 Path("/fake/agents/good/identity.yaml"),
                 Path("/fake/agents/bad/identity.yaml"),
             ]
         )
         mock_yaml_load.side_effect = [yaml.YAMLError("bad"), SAMPLE_YAML]
-        models = AgentRepository.list_all(agents_dir="/fake/agents")
-        assert len(models) == 1
-        assert models[0].agent_id == "good"
+        identities = AgentRepository.list_all(agents_dir="/fake/agents")
+        assert len(identities) == 1
+        assert identities[0].key == SAMPLE_YAML["key"]

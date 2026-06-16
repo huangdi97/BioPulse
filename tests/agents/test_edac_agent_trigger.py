@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
+from cloud.app.agent_runtime.models import AgentIdentity
 from cloud.app.agents.edac_agent_trigger import EdacAgentTrigger
 
 
@@ -25,9 +26,9 @@ class TestEdacAgentTriggerLoadsFromRepository:
 
     @patch("cloud.app.agents.agent_repository.AgentRepository.list_all")
     def test_loads_single_agent(self, mock_list_all: object) -> None:
-        from cloud.app.agents.agent_model import AgentModel
-
-        mock_list_all.return_value = [AgentModel(agent_id="test_agent", name="测试代理", persona="测试角色: 测试目标")]
+        mock_list_all.return_value = [
+            AgentIdentity(key="test_agent", name="测试代理", role="测试角色", goal="测试目标"),
+        ]
         trigger = EdacAgentTrigger()
         assert trigger.agent_ids == ["test_agent"]
         assert trigger.get_agent("test_agent") is not None
@@ -43,34 +44,28 @@ class TestEdacAgentTriggerLoadsFromRepository:
 class TestEdacAgentTriggerWakewordMatch:
     @patch("cloud.app.agents.agent_repository.AgentRepository.list_all")
     def test_find_agent_by_id(self, mock_list_all: object) -> None:
-        from cloud.app.agents.agent_model import AgentModel
-
         mock_list_all.return_value = [
-            AgentModel(agent_id="compliance_agent", name="合规审查", persona="合规审计专家: 确保合规"),
+            AgentIdentity(key="compliance_agent", name="合规审查", role="合规审计专家", goal="确保合规"),
         ]
         trigger = EdacAgentTrigger()
         found = trigger.find_agent("请 compliance_agent 检查合规")
         assert found is not None
-        assert found.agent_id == "compliance_agent"
+        assert found.key == "compliance_agent"
 
     @patch("cloud.app.agents.agent_repository.AgentRepository.list_all")
     def test_find_agent_by_name(self, mock_list_all: object) -> None:
-        from cloud.app.agents.agent_model import AgentModel
-
         mock_list_all.return_value = [
-            AgentModel(agent_id="kw", name="知识检索", persona="知识库检索: 检索信息"),
+            AgentIdentity(key="kw", name="知识检索", role="知识库检索", goal="检索信息"),
         ]
         trigger = EdacAgentTrigger()
         found = trigger.find_agent("知识检索 帮我查一下")
         assert found is not None
-        assert found.agent_id == "kw"
+        assert found.key == "kw"
 
     @patch("cloud.app.agents.agent_repository.AgentRepository.list_all")
     def test_no_match_returns_none(self, mock_list_all: object) -> None:
-        from cloud.app.agents.agent_model import AgentModel
-
         mock_list_all.return_value = [
-            AgentModel(agent_id="agent_a", name="Agent A", persona="A: 测试"),
+            AgentIdentity(key="agent_a", name="Agent A", role="A", goal="测试"),
         ]
         trigger = EdacAgentTrigger()
         found = trigger.find_agent("无关消息")
@@ -78,10 +73,8 @@ class TestEdacAgentTriggerWakewordMatch:
 
     @patch("cloud.app.agents.agent_repository.AgentRepository.list_all")
     def test_match_is_case_insensitive(self, mock_list_all: object) -> None:
-        from cloud.app.agents.agent_model import AgentModel
-
         mock_list_all.return_value = [
-            AgentModel(agent_id="Compliance_Agent", name="Compliance Check", persona="合规: 检查"),
+            AgentIdentity(key="Compliance_Agent", name="Compliance Check", role="合规", goal="检查"),
         ]
         trigger = EdacAgentTrigger()
         found = trigger.find_agent("compliance_agent please run")
@@ -89,10 +82,8 @@ class TestEdacAgentTriggerWakewordMatch:
 
     @patch("cloud.app.agents.agent_repository.AgentRepository.list_all")
     def test_removed_agent_not_triggerable(self, mock_list_all: object) -> None:
-        from cloud.app.agents.agent_model import AgentModel
-
         mock_list_all.return_value = [
-            AgentModel(agent_id="existing", name="Existing Agent", persona="存在: 测试"),
+            AgentIdentity(key="existing", name="Existing Agent", role="存在", goal="测试"),
         ]
         trigger = EdacAgentTrigger()
         assert trigger.find_agent("removed_agent") is None
@@ -100,11 +91,9 @@ class TestEdacAgentTriggerWakewordMatch:
 
     @patch("cloud.app.agents.agent_repository.AgentRepository.list_all")
     def test_new_identity_yaml_autodiscovered(self, mock_list_all: object) -> None:
-        from cloud.app.agents.agent_model import AgentModel
-
         mock_list_all.return_value = [
-            AgentModel(agent_id="existing", name="现有", persona="现有: 测试"),
-            AgentModel(agent_id="new_agent", name="新代理", persona="新: 测试"),
+            AgentIdentity(key="existing", name="现有", role="现有", goal="测试"),
+            AgentIdentity(key="new_agent", name="新代理", role="新", goal="测试"),
         ]
         trigger = EdacAgentTrigger()
         assert trigger.get_agent("new_agent") is not None

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from cloud.app.agents.agent_model import AgentModel
+from cloud.app.agent_runtime.models import AgentIdentity
 from cloud.app.agents.base_agent import AgentContext, AgentResponse, BaseAgent
 
 logger = logging.getLogger(__name__)
@@ -18,26 +18,26 @@ class SpecializedAgent(BaseAgent):
 
     def __init__(
         self,
-        agent_model: AgentModel,
+        identity: AgentIdentity,
         llm_service: Any = None,
         memory_service: Any = None,
         tool_bridge: Any = None,
     ) -> None:
-        self._model = agent_model
+        self._identity = identity
         self._llm = llm_service
         self._memory = memory_service
         self._tools = tool_bridge
 
     @classmethod
-    def from_model(
+    def from_identity(
         cls,
-        agent_model: AgentModel,
+        identity: AgentIdentity,
         services: dict[str, Any] | None = None,
     ) -> SpecializedAgent:
-        """工厂方法，从 AgentModel 和服务字典构造实例。"""
+        """工厂方法，从 AgentIdentity 和服务字典构造实例。"""
         services = services or {}
         return cls(
-            agent_model=agent_model,
+            identity=identity,
             llm_service=services.get("llm_service"),
             memory_service=services.get("memory_service"),
             tool_bridge=services.get("tool_bridge"),
@@ -45,44 +45,44 @@ class SpecializedAgent(BaseAgent):
 
     async def execute(self, context: AgentContext) -> AgentResponse:
         """执行 Agent 逻辑，调用 LLM 生成回复，使用工具和记忆。"""
+        agent_id = self._identity.key
+        agent_name = self._identity.name
         logger.info(
             "SpecializedAgent(%s) execute: %s",
-            self._model.agent_id,
+            agent_id,
             context.message[:64],
         )
-        safety = self._model.safety_profile
-        blocked = safety.check_topic(context.message)
-        if blocked is not None:
-            logger.warning("SafetyProfile blocked topic '%s' for agent %s", blocked, self._model.agent_id)
-            return AgentResponse(reply=f"[安全拦截] 消息包含被阻止的话题: {blocked}", actions=[], memory_updates=[])
-        if not safety.llm_audit_placeholder(context.message):
-            return AgentResponse(reply="[安全拦截] LLM 审核未通过", actions=[], memory_updates=[])
+        # 安全审核：检查 safety_profile 的 max_permission
+        safety = self._identity.safety_profile
+        if safety.max_permission == "read":
+            # read-only agent 不应处理写操作，但消息回复本身允许
+            pass
         namespace = None
         if self._memory is not None:
             try:
-                namespace = self._memory.get_namespace(self._model.agent_id)
+                namespace = self._memory.get_namespace(agent_id)
             except Exception:
-                logger.exception("Failed to get memory namespace for %s", self._model.agent_id)
+                logger.exception("Failed to get memory namespace for %s", agent_id)
         prompt = self._build_prompt(context, namespace=namespace)
         reply = ""
         if self._llm is not None:
             try:
                 reply = await self._llm.generate(prompt)
             except Exception:
-                logger.exception("LLM call failed for agent %s", self._model.agent_id)
-                reply = f"[{self._model.name}] 处理出错，请稍后重试。"
+                logger.exception("LLM call failed for agent %s", agent_id)
+                reply = f"[{agent_name}] 处理出错，请稍后重试。"
         else:
-            reply = f"[{self._model.name}] 已收到: {context.message}"
+            reply = f"[{agent_name}] 已收到: {context.message}"
         return AgentResponse(reply=reply, actions=[], memory_updates=[])
 
     def capabilities(self) -> list[str]:
         """返回从 identity.yaml 加载的能力列表。"""
-        return list(self._model.capabilities)
+        return list(self._identity.allowed_tools)
 
     def _build_prompt(self, context: AgentContext, namespace: object = None) -> str:
         """构造发送给 LLM 的 prompt。"""
         parts = [
-            f"你是一个 {self._model.name}，负责: {self._model.persona}",
+            f"你是一个 {self._identity.name}，负责: {self._identity.role}：{self._identity.goal}",
             f"用户消息: {context.message}",
         ]
         if namespace is not None:

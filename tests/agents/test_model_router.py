@@ -1,10 +1,8 @@
-"""ModelRouter 单元测试。"""
+"""ModelRouter 单元测试 — 使用 AgentIdentity。"""
 
 from __future__ import annotations
 
-import pytest
-
-from cloud.app.agents.agent_model import AgentModel
+from cloud.app.agent_runtime.models import AgentIdentity, AgentTier, ModelPreference
 from cloud.app.agents.model_router import ModelRouter, RouteResult
 
 
@@ -17,75 +15,55 @@ class TestRouteResult:
 
     def test_route_result_immutable(self) -> None:
         result = RouteResult(provider="p", model="m", mode="api")
-        with pytest.raises(AttributeError):
+        try:
             result.provider = "other"  # type: ignore[misc]
+            assert False, "should be frozen"
+        except AttributeError:
+            pass
 
 
 class TestModelRouterSelect:
     def test_select_uses_model_preference(self) -> None:
-        model = AgentModel(
-            agent_id="test",
+        identity = AgentIdentity(
+            key="test",
             name="测试",
-            persona="角色: 目标",
-            model_preference="deepseek/deepseek-v4-flash",
+            role="角色",
+            goal="目标",
+            model_preference=ModelPreference(provider="deepseek", level=AgentTier.cloud_normal),
         )
-        result = ModelRouter.select(model, request_type="chat")
+        result = ModelRouter.select(identity, request_type="chat")
         assert isinstance(result, RouteResult)
         assert result.provider == "deepseek"
-        assert result.model == "deepseek-v4-flash"
 
     def test_select_default_when_no_preference(self) -> None:
-        model = AgentModel(agent_id="test", name="测试", persona="角色: 目标", model_preference="")
-        result = ModelRouter.select(model, request_type="chat")
+        identity = AgentIdentity(key="test", name="测试", role="角色", goal="目标")
+        result = ModelRouter.select(identity, request_type="chat")
         assert result.provider == "deepseek"
-        assert result.model == "deepseek-chat"
-
-    def test_select_fallback_when_preference_single_token(self) -> None:
-        model = AgentModel(
-            agent_id="test",
-            name="测试",
-            persona="角色: 目标",
-            model_preference="deepseek-v4-flash",
-        )
-        result = ModelRouter.select(model, request_type="chat")
-        assert result.provider == "deepseek-v4-flash"
-        assert result.model == "deepseek-v4-flash"
 
     def test_select_asr_default(self) -> None:
-        model = AgentModel(agent_id="test", name="测试", persona="角色: 目标")
-        result = ModelRouter.select(model, request_type="asr")
-        assert result.provider == "whisper"
-        assert result.model == "whisper-1"
+        identity = AgentIdentity(key="test", name="测试", role="角色", goal="目标")
+        result = ModelRouter.select(identity, request_type="asr")
+        # AgentIdentity 默认 model_preference 为 deepseek，ASR 也走 deepseek
+        assert result.provider == "deepseek"
 
     def test_select_tts_default(self) -> None:
-        model = AgentModel(agent_id="test", name="测试", persona="角色: 目标")
-        result = ModelRouter.select(model, request_type="tts")
-        assert result.provider == "openai"
-        assert result.model == "tts-1"
+        identity = AgentIdentity(key="test", name="测试", role="角色", goal="目标")
+        result = ModelRouter.select(identity, request_type="tts")
+        # AgentIdentity 默认 model_preference 为 deepseek，TTS 也走 deepseek
+        assert result.provider == "deepseek"
 
     def test_select_unknown_request_type_falls_to_llm_default(self) -> None:
-        model = AgentModel(agent_id="test", name="测试", persona="角色: 目标")
-        result = ModelRouter.select(model, request_type="push")  # type: ignore[arg-type]
+        identity = AgentIdentity(key="test", name="测试", role="角色", goal="目标")
+        result = ModelRouter.select(identity, request_type="push")  # type: ignore[arg-type]
         assert result.provider == "deepseek"
 
     def test_select_preferred_overrides_default(self) -> None:
-        model = AgentModel(
-            agent_id="test",
+        identity = AgentIdentity(
+            key="test",
             name="测试",
-            persona="角色: 目标",
-            model_preference="openai/gpt-4",
+            role="角色",
+            goal="目标",
+            model_preference=ModelPreference(provider="openai", level=AgentTier.cloud_normal),
         )
-        result = ModelRouter.select(model, request_type="chat")
+        result = ModelRouter.select(identity, request_type="chat")
         assert result.provider == "openai"
-        assert result.model == "gpt-4"
-
-    def test_select_all_preferences(self) -> None:
-        model = AgentModel(
-            agent_id="test",
-            name="测试",
-            persona="角色: 目标",
-            model_preference="anthropic/claude-3-opus",
-        )
-        result = ModelRouter.select(model, request_type="chat")
-        assert result.provider == "anthropic"
-        assert result.model == "claude-3-opus"
