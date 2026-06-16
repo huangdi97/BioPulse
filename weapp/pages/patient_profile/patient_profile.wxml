@@ -1,3 +1,4 @@
+<insight_bar pageType="patient" />
 <view class='container'>
   <view class='card'>
     <text>患者信息</text>

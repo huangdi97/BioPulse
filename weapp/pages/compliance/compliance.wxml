@@ -1,3 +1,4 @@
+<insight_bar pageType="compliance" />
 <view class="page">
   <view wx:if="{{insights.length > 0}}" class="insight-card orange">
     <view class="insight-title">AI 洞察</view>
