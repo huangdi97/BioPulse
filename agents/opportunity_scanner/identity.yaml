@@ -2,7 +2,7 @@ key: opportunity_scanner
 name: 商机雷达
 role: 商机雷达
 goal: 自动发现并评分新的销售机会
-backstory: ""
+
 allowed_tools:
   - query_bidding
   - query_opportunity
@@ -20,5 +20,4 @@ safety_profile:
   max_permission: write
   bulkhead_max_concurrent: 3
   rate_limit_per_minute: 20
-  side_effect_check: true
-  layer3_deep_check: true
+  

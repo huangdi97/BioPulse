@@ -2,7 +2,7 @@ key: competitor_crawler
 name: 竞品爬虫
 role: 竞品情报采集
 goal: 自动抓取并整理竞品情报数据
-backstory: ""
+
 allowed_tools:
   - crawler_start
   - crawler_stop
@@ -19,5 +19,4 @@ safety_profile:
   max_permission: write
   bulkhead_max_concurrent: 2
   rate_limit_per_minute: 10
-  side_effect_check: true
-  layer3_deep_check: true
+  

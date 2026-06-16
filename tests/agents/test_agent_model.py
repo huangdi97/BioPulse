@@ -178,9 +178,9 @@ class TestAgentRepositoryListAll:
         ids = [m.agent_id for m in models]
         assert "opportunity_scanner" in ids
         assert "knowledge_worker" in ids
-        assert "compliance_agent" in ids
-        assert "analysis_agent" in ids
-        assert "suggestion_agent" in ids
+        assert "compliance_monitor" in ids
+        assert "anomaly_analysis" in ids
+        assert "sales_suggestion" in ids
 
     @patch("cloud.app.agents.agent_repository.Path.is_dir")
     def test_list_all_empty_when_no_dir(self, mock_is_dir: object) -> None:

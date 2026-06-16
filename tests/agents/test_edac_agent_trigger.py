@@ -19,9 +19,9 @@ class TestEdacAgentTriggerLoadsFromRepository:
         ids = trigger.agent_ids
         assert "opportunity_scanner" in ids
         assert "knowledge_worker" in ids
-        assert "compliance_agent" in ids
-        assert "analysis_agent" in ids
-        assert "suggestion_agent" in ids
+        assert "compliance_monitor" in ids
+        assert "anomaly_analysis" in ids
+        assert "sales_suggestion" in ids
 
     @patch("cloud.app.agents.agent_repository.AgentRepository.list_all")
     def test_loads_single_agent(self, mock_list_all: object) -> None:

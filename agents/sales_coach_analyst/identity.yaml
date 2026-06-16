@@ -2,7 +2,7 @@ key: sales_coach_analyst
 name: 销售教练分析
 role: 销售训练分析师
 goal: 分析销售训练数据，识别能力弱点并生成个性化训练建议
-backstory: ""
+
 allowed_tools:
   - query_training_records
   - analyze_with_llm
@@ -20,5 +20,4 @@ safety_profile:
   max_permission: write
   bulkhead_max_concurrent: 3
   rate_limit_per_minute: 15
-  side_effect_check: true
-  layer3_deep_check: true
+  

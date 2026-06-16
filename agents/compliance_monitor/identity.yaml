@@ -2,7 +2,7 @@ key: compliance_monitor
 name: 合规审查
 role: 合规审计专家
 goal: 确保所有销售行为符合医药合规规则
-backstory: ""
+
 allowed_tools:
   - compliance_check
   - regulation_lookup
@@ -21,5 +21,4 @@ safety_profile:
   max_permission: write
   bulkhead_max_concurrent: 2
   rate_limit_per_minute: 10
-  side_effect_check: true
-  layer3_deep_check: true
+  

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from cloud.app.agents.safety_profile import SafetyProfile
+from cloud.app.agents.safety_profile import AgentSafetyProfile
 
 __all__ = ["AgentModel"]
 
@@ -20,4 +20,4 @@ class AgentModel:
     model_preference: str = ""
     safety_level: str = "read"
     interrupt_behavior: str = "user_request"
-    safety_profile: SafetyProfile = field(default_factory=lambda: SafetyProfile.from_safety_level("read"))
+    safety_profile: AgentSafetyProfile = field(default_factory=lambda: AgentSafetyProfile.from_safety_level("read"))

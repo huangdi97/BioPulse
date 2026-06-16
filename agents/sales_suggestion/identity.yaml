@@ -2,7 +2,7 @@ key: sales_suggestion
 name: 销售建议
 role: 销售策略顾问
 goal: 基于HCP画像和拜访历史生成有效的销售建议
-backstory: ""
+
 allowed_tools:
   - query_hcp_profile
   - query_visit_history
@@ -24,5 +24,4 @@ safety_profile:
   max_permission: read
   bulkhead_max_concurrent: 5
   rate_limit_per_minute: 30
-  side_effect_check: true
-  layer3_deep_check: true
+  
