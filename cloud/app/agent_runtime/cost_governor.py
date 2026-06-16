@@ -82,7 +82,10 @@ class CostGovernor:
 
     def is_over_budget(self) -> bool:
         """检查是否已超出预算。"""
-        return self._total_cost > self._max_cost
+        over = self._total_cost > self._max_cost
+        if over:
+            logger.warning("CostGovernor: budget exceeded, total_cost=%.4f, max_cost=%.4f", self._total_cost, self._max_cost)
+        return over
 
     def reset(self):
         """重置成本跟踪数据。"""
