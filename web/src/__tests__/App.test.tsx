@@ -1,2 +1,8 @@
-import {describe,it,expect} from 'vitest';
-describe('App',()=>{it('renders',()=>{expect(true).toBe(true)})})
+import { render } from '@testing-library/react'
+import App from '../App'
+
+describe('App', () => {
+  it('renders without crashing', () => {
+    expect(() => render(<App />)).not.toThrow()
+  })
+})
