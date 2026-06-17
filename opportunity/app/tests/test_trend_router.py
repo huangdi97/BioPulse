@@ -2,7 +2,7 @@ import json
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from opportunity.app.trend_router import (
+from opportunity.app.routers.trend_router import (
     TrendPredictRequest,
     list_trends,
     trend_history,

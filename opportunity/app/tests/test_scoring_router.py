@@ -1,7 +1,7 @@
 import json
 from unittest.mock import MagicMock
 
-from opportunity.app.scoring_router import ScoreUpdate, leaderboard, recalculate, set_heat_score
+from opportunity.app.routers.scoring_router import ScoreUpdate, leaderboard, recalculate, set_heat_score
 
 
 def test_leaderboard_wraps_paginated_service_result():
