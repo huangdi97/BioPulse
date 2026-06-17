@@ -25,8 +25,14 @@ jobs:
 
       - name: Lint with ruff
         run: |
-          python -m ruff --version
-          python -m ruff check . --output-format=concise
+          ruff check . 2>&1 | tee /tmp/ruff_output.txt; exit_code=${PIPESTATUS[0]}; echo "RUFF_EXIT_CODE=$exit_code" >> $GITHUB_ENV; exit $exit_code
+
+      - name: Upload ruff output
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ruff-output
+          path: /tmp/ruff_output.txt
 
       - name: Run Python tests
         run: python -m pytest -q
