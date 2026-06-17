@@ -55,6 +55,7 @@ class Config(BaseSettings):
     sales_assistant_db_path: str = "data/sales_assistant.db"
     sales_coach_db_path: str = "data/sales_coach.db"
     cloud_port: int = 8000
+    opportunity_port: int = 8002
     admin_port: int = 8012
     assistant_port: int = 8003
     sales_assistant_port: int = 8004

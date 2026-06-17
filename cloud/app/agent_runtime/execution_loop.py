@@ -31,6 +31,9 @@ logger = logging.getLogger(__name__)
 
 
 class ExecutionEngine:
+    MAX_LLM_CALLS = 50
+    MAX_EXECUTION_SECONDS = 600
+
     def __init__(self, host):
         self._host = host
 
@@ -87,7 +90,17 @@ class ExecutionEngine:
         if spec is None:
             return RuntimeResult(status="error", result=f"unknown agent_key: {agent_key}", iterations=0, tool_calls=0, logs=[])
         c, max_iter = self._new_context(goal, agent_key, context, spec), min(spec["max_iterations"], 15)
+        start_time = time.time()
+        llm_call_count = 0
         for step in range(c["start_step"], max_iter):
+            if time.time() - start_time > self.MAX_EXECUTION_SECONDS:
+                return RuntimeResult(
+                    status="timeout",
+                    result="execution timeout",
+                    iterations=step - c["start_step"],
+                    tool_calls=c["tool_calls"],
+                    logs=c["logs"],
+                )
             c["messages"], step_start = self._host._compress_messages(c["messages"]), time.time()
             if c["approved_tool"] and step == c["start_step"]:
                 self._run_approved_tool(c, step)
@@ -101,6 +114,15 @@ class ExecutionEngine:
                 if streamer and trace_id:
                     streamer.stream(trace_id, "agent.llm_call", {"step": step, "agent": c["agent_key"]})
                 ai_resp = self._host._call_ai(c["messages"], spec["default_temperature"], step, force_level=None)
+                llm_call_count += 1
+                if llm_call_count > self.MAX_LLM_CALLS:
+                    return RuntimeResult(
+                        status="llm_limit_exceeded",
+                        result="LLM call limit exceeded",
+                        iterations=step - c["start_step"],
+                        tool_calls=c["tool_calls"],
+                        logs=c["logs"],
+                    )
                 if streamer and trace_id:
                     streamer.stream(trace_id, "agent.llm_result", {"step": step, "reply_preview": ai_resp.get("reply", "")[:200]})
                 validator = OutputSchemaValidator()
