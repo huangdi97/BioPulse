@@ -1,10 +1,27 @@
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 from starlette import status
 
-from cloud.app.models.approval_models import QuotationSubmit, ReviewRequest
+from typing import Optional
+
 from cloud.app.services.approval_service import ApprovalService
 from shared.auth_scope import require_scope
 from shared.base import success
+
+
+class QuotationSubmit(BaseModel):
+    """报价审批提交请求。"""
+    quotation_id: str = Field(..., description="报价单ID")
+    amount: float = Field(..., description="报价金额")
+    customer_id: str = Field(..., description="客户ID")
+    notes: Optional[str] = Field(None, description="备注")
+
+
+class ReviewRequest(BaseModel):
+    """审批请求。"""
+    action: str = Field(..., pattern="^(approve|reject)$", description="审批动作")
+    notes: Optional[str] = Field(None, description="审批意见")
+
 
 router = APIRouter(prefix="/api/v1/quotation", tags=["报价审批"])
 
