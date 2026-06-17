@@ -12,10 +12,66 @@ from cloud.app.repositories import (
     HcpSimulationsRepository,
 )
 from cloud.app.services.hcp_sandbox_sim import HcpSandboxSimMixin
-from cloud.app.services.sandbox_simulation import SandboxSimulationMixin
+from cloud.app.services.hcp_simulation_core import _call_ai, build_simulation_record
 from shared.base import PaginatedResponse, validate_columns
 from shared.base_service import BaseService
 from shared.columns import TABLE_HCP_PROFILES_COLS
+
+
+class SandboxSimulationMixin:
+    """HCP 行为模拟记录和统计方法。"""
+
+    def simulate(self, hcp_id: int, scenario: str, strategy: str, user_id: int) -> dict:
+        conn = self._connection()
+        profiles_repo = HcpProfilesRepository(conn)
+        interactions_repo = HcpInteractionsRepository(conn)
+        simulations_repo = HcpSimulationsRepository(conn)
+        hcp_row = profiles_repo.get_by_id(hcp_id)
+        if not hcp_row:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="HCP profile not found")
+        int_rows = interactions_repo.get_recent_by_hcp_id(hcp_id, limit=5)
+        data = build_simulation_record(hcp_id, hcp_row, int_rows, scenario, strategy, user_id, call_ai=_call_ai)
+        row_id = simulations_repo.create(data)
+        return simulations_repo.get_by_id(row_id)
+
+    def list_simulations(
+        self,
+        hcp_id: Optional[int] = None,
+        status: Optional[str] = None,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> PaginatedResponse:
+        repo = HcpSimulationsRepository(self._connection())
+        total, total_pages, items = repo.list_filtered(hcp_id=hcp_id, status_=status, page=page, page_size=page_size)
+        return PaginatedResponse(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )
+
+    def get_simulation(self, sim_id: int) -> dict:
+        repo = HcpSimulationsRepository(self._connection())
+        row = repo.get_by_id(sim_id)
+        if not row:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Simulation not found")
+        return row
+
+    def dashboard(self) -> dict:
+        conn = self._connection()
+        profiles_repo = HcpProfilesRepository(conn)
+        simulations_repo = HcpSimulationsRepository(conn)
+        total = profiles_repo.count_active()
+        tier_dist = profiles_repo.tier_distribution()
+        sim_total = simulations_repo.count_all()
+        recent = simulations_repo.get_recent(limit=5)
+        return {
+            "total_hcp": total,
+            "tier_distribution": tier_dist,
+            "total_simulations": sim_total,
+            "recent_simulations": recent,
+        }
 
 
 class HcpSandboxService(SandboxSimulationMixin, HcpSandboxSimMixin, BaseService):

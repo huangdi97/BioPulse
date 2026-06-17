@@ -9,13 +9,41 @@ from cloud.app.research_database import get_research_db
 from cloud.app.services.brain_evolution_service import BrainEvolutionService
 from cloud.app.services.brain_memory_service import BrainMemoryService
 from cloud.app.services.memory_consolidation_service import MemoryConsolidationService
-from cloud.app.services.sage_cache import SageCacheMixin
 from cloud.app.services.sage_linking import SageLinkingService
 from cloud.app.services.sage_scoring import (
     SageScoringMixin,
 )
 
 logger = logging.getLogger(__name__)
+
+
+class SageCacheMixin:
+    """评分缓存混入类，提供记忆评分解构查询。"""
+
+    def score_detail(self, memory_type, memory_id) -> dict | None:
+        row = self.repo.get_score(memory_type, memory_id)
+        if not row:
+            return None
+
+        logs = self.repo.get_recent_logs(limit=20)
+        related = [entry for entry in logs if entry.get("memory_type") == memory_type and entry.get("memory_id") == memory_id]
+
+        af_raw = row.get("access_count", 0) or 0
+        util = row.get("utility_score", 0.5) or 0.5
+        conf = row.get("confidence", 0.5) or 0.5
+        breakdown = {
+            "access_frequency_raw": af_raw,
+            "access_frequency_contribution": min(af_raw, 1.0) * 30,
+            "recency_contribution": 20,
+            "utility_contribution": util * 30,
+            "confidence_contribution": conf * 20,
+        }
+
+        return {
+            "score": row,
+            "breakdown": breakdown,
+            "evolution_logs": related,
+        }
 
 
 class SageEngineService(SageCacheMixin, SageScoringMixin):

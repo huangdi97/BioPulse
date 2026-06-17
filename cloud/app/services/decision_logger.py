@@ -7,12 +7,12 @@ from fastapi import HTTPException
 from starlette import status
 
 from cloud.app.repositories import (
+    CausalAnalysesRepository,
     CrossCaseInsightsRepository,
     DecisionCasesRepository,
     PipelineRunsRepository,
     PipelineStepRunsRepository,
 )
-from cloud.app.services.decision_report import DecisionReportMixin
 from shared.base import validate_columns
 from shared.base_service import BaseService
 from shared.columns import TABLE_CROSS_CASE_INSIGHTS_COLS, TABLE_DECISION_CASES_COLS
@@ -21,6 +21,27 @@ from shared.datetime_utils import now as _now
 
 def _e404(name: str = "Resource"):
     raise HTTPException(status.HTTP_404_NOT_FOUND, f"{name} not found")
+
+
+class DecisionReportMixin:
+    """决策报表混入类，提供汇总统计与仪表盘功能。"""
+
+    def dashboard(self) -> dict:
+        case_repo = DecisionCasesRepository(self._connection())
+        analysis_repo = CausalAnalysesRepository(self._connection())
+        insight_repo = CrossCaseInsightsRepository(self._connection())
+        total_cases = case_repo.count_active()
+        analyzed = analysis_repo.count_distinct_case_ids()
+        score_dist = case_repo.score_distribution()
+        insight_counts = insight_repo.count_by_type()
+        top_insights = insight_repo.top_by_confidence(5)
+        return {
+            "total_cases": total_cases,
+            "analyzed_cases": analyzed,
+            "score_distribution": score_dist,
+            "insights_by_type": insight_counts,
+            "top_insights": top_insights,
+        }
 
 
 class DecisionLogger(DecisionReportMixin, BaseService):
