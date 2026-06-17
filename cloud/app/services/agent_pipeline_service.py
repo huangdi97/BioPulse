@@ -7,7 +7,6 @@ from typing import Any
 from fastapi import HTTPException, Request
 from starlette import status
 
-from cloud.app.lg_utils.pipeline_graph import get_pipeline_graph
 from cloud.app.repositories import (
     AgentPipelinesRepository,
     PipelineRunsRepository,
@@ -15,6 +14,7 @@ from cloud.app.repositories import (
     PipelineStepsRepository,
 )
 from cloud.app.services.agent_pipeline_exec import PipelineRunQueryMixin
+from cloud.lg_utils.pipeline_graph import get_pipeline_graph
 from shared.base import ApiResponse, success
 from shared.base_service import BaseService
 
