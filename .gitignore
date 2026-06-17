@@ -165,4 +165,6 @@ wiki/*
 audit_script.py
 audit_script2.py
 .test-venv/
-deep_dive
+deep_dive*
+*health-report.md
+sales-coach/app/tests/conftest.py
