@@ -20,3 +20,21 @@ class TestDashboard:
         assert resp.status_code == 200
         data = resp.json()
         assert data["code"] == 0
+
+    def test_dashboard_unauthorized(self, client):
+        resp = client.get("/api/management/dashboard")
+        assert resp.status_code == 401
+
+    def test_dashboard_overview_returns_ok(self, client, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        resp = client.get("/api/management/dashboard/overview", headers=headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["code"] == 0
+
+    def test_dashboard_compliance_returns_ok2(self, client, auth_token):
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        resp = client.get("/api/management/dashboard/compliance", headers=headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["code"] == 0

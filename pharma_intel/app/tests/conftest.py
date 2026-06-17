@@ -26,6 +26,22 @@ def app():
 
 
 @pytest.fixture
+def auth_token():
+    from shared.auth import create_access_token
+
+    return create_access_token(user_id=1)
+
+
+@pytest.fixture(autouse=True)
+def _override_auth(app, auth_token):
+    from shared.auth import get_current_user
+
+    app.dependency_overrides[get_current_user] = lambda: {"user_id": 1}
+    yield
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
 def client(app):
     with TestClient(app) as c:
         yield c
