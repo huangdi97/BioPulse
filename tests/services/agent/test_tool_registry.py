@@ -1,5 +1,4 @@
 import pytest
-
 from cloud.app.services.agent_core import (
     DuplicateToolError,
     ToolNotFoundError,

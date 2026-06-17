@@ -2,7 +2,6 @@ from collections.abc import Generator
 from typing import Any
 
 import pytest
-
 from cloud.app.services.agent_core import EDAGNode, InferenceLoop, ToolRegistry
 
 
