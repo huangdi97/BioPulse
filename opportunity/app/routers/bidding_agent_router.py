@@ -3,8 +3,7 @@
 import logging
 from typing import Optional
 
-logger = logging.getLogger(__name__)
-
+from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -13,6 +12,8 @@ from starlette import status
 from opportunity.app.services.bidding_agent_service import BiddingAgentService
 from shared.auth_scope import require_scope
 from shared.base import ApiResponse, PaginatedResponse, success
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["bidding-agent"])
 
@@ -195,8 +196,6 @@ def schedule_bidding_scan():
     except Exception:
         logger.exception("投标路由异常")
 
-
-from apscheduler.schedulers.background import BackgroundScheduler
 
 bidding_scheduler = BackgroundScheduler()
 

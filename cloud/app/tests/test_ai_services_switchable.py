@@ -10,9 +10,9 @@ import pytest
 
 from cloud.app.config.provider_config import ProviderMode, ProviderSettings
 from cloud.app.services.asr_service import AsrService
-from cloud.app.services.tts_service import TtsService
 from cloud.app.services.llm_service import LlmService
 from cloud.app.services.notification_service import NotificationService
+from cloud.app.services.tts_service import TtsService
 
 
 class TestAsrService:

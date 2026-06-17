@@ -10,8 +10,8 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-from shared.config import settings
 from cloud.app.models import metadata
+from shared.config import settings
 
 config = context.config
 
