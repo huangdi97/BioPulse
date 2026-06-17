@@ -44,6 +44,7 @@ select = ["E", "F", "W", "I"]
 "sales-assistant/app/**" = ["E501"]
 "cloud/app/mcp_router.py" = ["E501"]
 "cloud/app/main.py" = ["E501"]
+"sales-coach/app/**" = ["I001"]
 
 [tool.flake8]
 max-line-length = 100
