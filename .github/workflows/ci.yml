@@ -49,7 +49,9 @@ jobs:
       - name: Create test databases
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
-          # 连接到已存在的 cloud_db 来创建其他数据库
+          # 1. 建一个跟用户名同名的默认库（空URL路径默认连它）
+          psql "${DATABASE_URL}cloud_db" -c "CREATE DATABASE hermes;" 2>&1 || true
+          # 2. 创建所有子项目数据库
           for db in assistant_db opportunity_db sales_assistant_db sales_coach_db management_db pharma_intel_db; do
             psql "${DATABASE_URL}cloud_db" -c "CREATE DATABASE ${db};" 2>&1 || true
           done
