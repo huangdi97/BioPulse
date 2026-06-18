@@ -56,6 +56,9 @@ jobs:
             psql "${DATABASE_URL}cloud_db" -c "CREATE DATABASE ${db};" 2>&1 || true
           done
 
+      - name: 'Initialize PG tables for all subprojects'
+        run: 'python .github/scripts/init_pg_tables.py'
+
       - name: Run Python tests
         run: python -m pytest -q
 
