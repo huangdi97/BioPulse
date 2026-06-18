@@ -1,13 +1,25 @@
 import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Bell, Search, ChevronDown, User, Settings, LogOut } from "lucide-react"
+import { Bell, Search, ChevronDown, User, Settings, LogOut, Menu, Sun, Moon } from "lucide-react"
 import { useAuth } from "../../auth/AuthContext"
 
-export default function TopNav() {
+interface TopNavProps {
+  onToggleSidebar: () => void
+}
+
+export default function TopNav({ onToggleSidebar }: TopNavProps) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"))
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const toggleTheme = () => {
+    const next = !dark
+    setDark(next)
+    document.documentElement.classList.toggle("dark", next)
+    localStorage.setItem("theme", next ? "dark" : "light")
+  }
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -31,6 +43,14 @@ export default function TopNav() {
 
   return (
     <header className="sticky top-0 h-16 bg-[var(--clr-white)] border-b border-[var(--clr-border-default)] flex items-center justify-between px-6 z-40">
+      <button
+        type="button"
+        onClick={onToggleSidebar}
+        className="md:hidden p-2 mr-2 rounded-md text-[var(--clr-text-secondary)] hover:bg-[var(--clr-surface-hover)] transition-colors"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
       <div className="flex items-center gap-3 flex-1 max-w-md">
         <Search className="w-4 h-4 text-[var(--clr-text-placeholder)]" />
         <input
@@ -41,6 +61,15 @@ export default function TopNav() {
       </div>
 
       <div className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="p-2 rounded-md text-[var(--clr-text-secondary)] hover:bg-[var(--clr-surface-hover)] transition-colors"
+          title={dark ? "切换到亮色模式" : "切换到暗色模式"}
+        >
+          {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </button>
+
         <button
           type="button"
           className="relative p-2 rounded-md text-[var(--clr-text-secondary)] hover:bg-[var(--clr-surface-hover)] transition-colors"

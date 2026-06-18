@@ -11,3 +11,33 @@ body {
 #root {
   min-height: 100vh;
 }
+
+.dark {
+  --clr-gray-10: #262626;
+  --clr-gray-100: #f4f4f4;
+  --clr-text-inverse: #161616;
+  --clr-gray-30: #6f6f6f;
+  --clr-gray-50: #c6c6c6;
+  --clr-gray-70: #f4f4f4;
+  --clr-gray-90: #e0e0e0;
+  --clr-white: #161616;
+  --clr-brand-light: #0f62fe;
+  --clr-text-primary: #f4f4f4;
+  --clr-text-secondary: #c6c6c6;
+  --clr-text-placeholder: #8d8d8d;
+  --clr-text-disabled: #6f6f6f;
+  --clr-surface-page: #161616;
+  --clr-surface-card: #262626;
+  --clr-surface-card-alt: #333333;
+  --clr-surface-hover: #333333;
+  --clr-surface-selected: #1a3a6b;
+  --clr-surface-overlay: rgba(0, 0, 0, 0.6);
+  --clr-border-default: #444444;
+  --clr-border-subtle: #525252;
+  --clr-border-input: #333333;
+  --clr-gray-20: #444444;
+  --clr-gray-60: #8d8d8d;
+  --clr-brand: #0f62fe;
+  --clr-brand-hover: #0353e9;
+  --clr-brand-active: #002d9c;
+}
