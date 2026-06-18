@@ -49,8 +49,9 @@ jobs:
       - name: Create test databases
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+          # 连接到已存在的 cloud_db 来创建其他数据库
           for db in assistant_db opportunity_db sales_assistant_db sales_coach_db management_db pharma_intel_db; do
-            psql "${DATABASE_URL}" -c "CREATE DATABASE ${db};" 2>/dev/null || true
+            psql "${DATABASE_URL}cloud_db" -c "CREATE DATABASE ${db};" 2>&1 || true
           done
 
       - name: Run Python tests
