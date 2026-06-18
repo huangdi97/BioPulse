@@ -74,6 +74,17 @@ class AttributionCheckMixin:
     """归因查询混入类，读取已计算的归因记录和因子元信息。"""
 
     def get_attribution(self, opp_id: int) -> dict:
+        """读取指定商机的归因记录。
+
+        Args:
+            opp_id: 商机 ID
+
+        Returns:
+            归因记录字典，包含 total_score、confidence、factors 等
+
+        Raises:
+            HTTPException: 归因记录不存在时返回 404
+        """
         row = self.db.execute(
             "SELECT * FROM opportunity_attributions WHERE opportunity_id=?",
             (opp_id,),
@@ -83,6 +94,11 @@ class AttributionCheckMixin:
         return self._row_to_dict(row)
 
     def list_factors(self) -> list[dict]:
+        """列出所有归因因子元信息。
+
+        Returns:
+            归因因子元信息列表
+        """
         return list(_FACTOR_META)
 
     @staticmethod
