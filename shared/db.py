@@ -26,6 +26,13 @@ class PGCompatCursor:
         sql = sql.replace("?", "%s")
         self._cur.execute(sql, params)
         self._desc = self._cur.description
+        # 捕获 INSERT 后的 lastrowid（psycopg 不自动设置，用 LASTVAL() 取序列值）
+        if self.lastrowid is None and sql.strip().upper().startswith("INSERT"):
+            try:
+                self._cur.execute("SELECT LASTVAL()")
+                self.lastrowid = self._cur.fetchone()[0]
+            except Exception:
+                pass
         return self
 
     def fetchone(self):

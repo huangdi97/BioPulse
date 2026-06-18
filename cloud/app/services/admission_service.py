@@ -10,8 +10,8 @@ class AdmissionService(BaseService):
     """入院申请服务 — 管理药品入院申请的创建、审批流程与状态跟踪。"""
 
     def create(self, data: dict) -> dict[str, Any]:
-        self.db.execute(
-            "INSERT INTO admission_records (hospital_name, department, product, status, meeting_date, notes, rep_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        cursor = self.db.execute(
+            "INSERT INTO admission_records (hospital_name, department, product, status, meeting_date, notes, rep_id) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id",
             (
                 data["hospital_name"],
                 data.get("department", ""),
@@ -22,8 +22,8 @@ class AdmissionService(BaseService):
                 data.get("rep_id", 0),
             ),
         )
+        row_id = cursor.fetchone()[0]
         self.db.commit()
-        row_id = self.db.execute("SELECT last_insert_rowid()").fetchone()[0]
         return self.get_by_id(row_id)
 
     def get_by_id(self, record_id: int) -> Optional[dict[str, Any]]:
