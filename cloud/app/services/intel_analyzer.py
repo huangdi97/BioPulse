@@ -61,6 +61,7 @@ class IntelAnalyzerMixin:
         page: int = 1,
         page_size: int = 20,
     ) -> PaginatedResponse:
+        """分页查询情报条目，支持按类型、状态、影响级别、关键词和时间范围过滤。"""
         items_repo = MarketIntelItemsRepository(self._connection())
         conds, pars = [], []
         if item_type:
@@ -103,6 +104,7 @@ class IntelAnalyzerMixin:
         )
 
     def get_item(self, item_id: int) -> dict:
+        """根据 ID 获取情报条目详情（含 AI 分析解析）。"""
         items_repo = MarketIntelItemsRepository(self._connection())
         sources_repo = MarketIntelSourcesRepository(self._connection())
         row = items_repo.get_by_id(item_id)
@@ -114,6 +116,7 @@ class IntelAnalyzerMixin:
         return d
 
     def update_item_status(self, item_id: int, status_value: str) -> None:
+        """更新指定情报条目的状态。"""
         items_repo = MarketIntelItemsRepository(self._connection())
         existing = items_repo.get_by_id(item_id)
         if not existing:
@@ -122,6 +125,7 @@ class IntelAnalyzerMixin:
         items_repo.update_fields(item_id, {"status": status_value, "updated_at": now})
 
     def analyze_item(self, item_id: int, request: Request) -> dict:
+        """调用 AI 分析指定情报条目，返回分析结果并持久化。"""
         items_repo = MarketIntelItemsRepository(self._connection())
         row = items_repo.get_by_id(item_id)
         if not row:
@@ -168,6 +172,7 @@ class IntelAnalyzerMixin:
         return {"analysis": ai_result}
 
     def dashboard(self) -> dict:
+        """获取情报看板统计数据，包含总数、未读数、类型/影响分布和趋势。"""
         items_repo = MarketIntelItemsRepository(self._connection())
         t = items_repo.count()
         u = items_repo.count(conditions=["status='unread'"])
@@ -189,6 +194,7 @@ class IntelAnalyzer(IntelAnalyzerMixin):
     """Standalone analyzer wrapping IntelAnalyzerMixin."""
 
     def __init__(self, db):
+        """初始化情报分析器。"""
         self.db = db
 
 

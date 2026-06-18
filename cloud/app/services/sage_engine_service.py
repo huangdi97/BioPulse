@@ -21,6 +21,7 @@ class SageCacheMixin:
     """评分缓存混入类，提供记忆评分解构查询。"""
 
     def score_detail(self, memory_type, memory_id) -> dict | None:
+        """查询指定记忆的评分详情，含分解项和进化日志。"""
         row = self.repo.get_score(memory_type, memory_id)
         if not row:
             return None
