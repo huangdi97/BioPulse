@@ -27,7 +27,7 @@ class OpportunityService(BaseCrudService):
         Returns:
             int: 新商机记录ID
         """
-        repo = OpportunityRepository(self.db)
+        repo = OpportunityRepository(self._connection())
         now = datetime.now(timezone.utc).isoformat()
         extra = {"created_by": user_id, "created_at": now, "updated_at": now}
         return repo.create(body.model_dump(), extra=extra)
@@ -48,7 +48,7 @@ class OpportunityService(BaseCrudService):
         Returns:
             tuple: (items, total, page, page_size, total_pages)
         """
-        repo = OpportunityRepository(self.db)
+        repo = OpportunityRepository(self._connection())
         conditions = ["is_active = 1"]
         params: list = []
 
@@ -78,7 +78,7 @@ class OpportunityService(BaseCrudService):
         Returns:
             dict: 商机记录详情
         """
-        repo = OpportunityRepository(self.db)
+        repo = OpportunityRepository(self._connection())
         row = repo.get_by_id(opportunity_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found")
@@ -93,7 +93,7 @@ class OpportunityService(BaseCrudService):
         Returns:
             dict: 更新后的商机记录
         """
-        repo = OpportunityRepository(self.db)
+        repo = OpportunityRepository(self._connection())
         row = repo.get_by_id(opportunity_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found")
@@ -112,7 +112,7 @@ class OpportunityService(BaseCrudService):
         Args:
             opportunity_id: 商机ID
         """
-        repo = OpportunityRepository(self.db)
+        repo = OpportunityRepository(self._connection())
         row = repo.get_by_id(opportunity_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found")
@@ -124,5 +124,5 @@ class OpportunityService(BaseCrudService):
         Returns:
             list: 活跃商机列表
         """
-        repo = OpportunityRepository(self.db)
+        repo = OpportunityRepository(self._connection())
         return repo.list_all(conditions=["is_active = 1"])

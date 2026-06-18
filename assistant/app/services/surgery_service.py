@@ -33,7 +33,7 @@ class SurgeryService(BaseCrudService):
         from fastapi import HTTPException
         from starlette import status
 
-        repo = SurgeryReminderRepository(self.db)
+        repo = SurgeryReminderRepository(self._connection())
         now = datetime.now(timezone.utc).isoformat()
         initial_status = body.status if body.status else "scheduled"
         if initial_status not in VALID_STATUSES:
@@ -85,7 +85,7 @@ class SurgeryService(BaseCrudService):
         Returns:
             list: 当日手术记录列表
         """
-        repo = SurgeryReminderRepository(self.db)
+        repo = SurgeryReminderRepository(self._connection())
         today_str = date.today().isoformat()
         rows = repo.list_all(
             conditions=["surgery_date = ?", "is_active = 1"],
@@ -110,7 +110,7 @@ class SurgeryService(BaseCrudService):
         Returns:
             tuple: (items, total, page, page_size, total_pages)
         """
-        repo = SurgeryReminderRepository(self.db)
+        repo = SurgeryReminderRepository(self._connection())
         conditions = ["is_active = 1"]
         params: list = []
         if patient_name:
@@ -146,7 +146,7 @@ class SurgeryService(BaseCrudService):
         Returns:
             tuple: (items, total, page, page_size, total_pages)
         """
-        repo = SurgeryReminderRepository(self.db)
+        repo = SurgeryReminderRepository(self._connection())
         conditions = [
             "is_active = 1",
             "surgery_date >= date('now')",
@@ -163,7 +163,7 @@ class SurgeryService(BaseCrudService):
         Returns:
             dict: 手术提醒记录详情
         """
-        repo = SurgeryReminderRepository(self.db)
+        repo = SurgeryReminderRepository(self._connection())
         return dict(repo.get_or_404(surgery_id))
 
     def update(self, surgery_id: int, body) -> dict:
@@ -178,7 +178,7 @@ class SurgeryService(BaseCrudService):
         from fastapi import HTTPException
         from starlette import status
 
-        repo = SurgeryReminderRepository(self.db)
+        repo = SurgeryReminderRepository(self._connection())
         repo.get_or_404(surgery_id)
         updates = body.model_dump(exclude_unset=True)
         if not updates:
@@ -198,6 +198,6 @@ class SurgeryService(BaseCrudService):
         Args:
             surgery_id: 手术提醒ID
         """
-        repo = SurgeryReminderRepository(self.db)
+        repo = SurgeryReminderRepository(self._connection())
         repo.get_or_404(surgery_id)
         repo.soft_delete(surgery_id)

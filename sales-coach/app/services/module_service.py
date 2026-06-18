@@ -20,7 +20,7 @@ class ModuleService(BaseService):
         Returns:
             包含新创建模块ID的字典。
         """
-        repo = ModuleRepository(self.db)
+        repo = ModuleRepository(self._connection())
         now = datetime.now(timezone.utc).isoformat()
         data = body.model_dump()
         extra = {"created_by": user_id, "created_at": now, "updated_at": now}
@@ -45,7 +45,7 @@ class ModuleService(BaseService):
         Returns:
             (记录列表, 总条数) 元组。
         """
-        repo = ModuleRepository(self.db)
+        repo = ModuleRepository(self._connection())
         conditions = []
         params = []
 
@@ -73,7 +73,7 @@ class ModuleService(BaseService):
         Returns:
             模块详情字典，不存在或已删除则抛404。
         """
-        repo = ModuleRepository(self.db)
+        repo = ModuleRepository(self._connection())
         return dict(repo.get_active_or_404(module_id))
 
     def update(self, module_id: int, body) -> dict:
@@ -86,7 +86,7 @@ class ModuleService(BaseService):
         Returns:
             更新后的模块详情。
         """
-        repo = ModuleRepository(self.db)
+        repo = ModuleRepository(self._connection())
         repo.get_active_or_404(module_id)
         updates = body.model_dump(exclude_unset=True)
         if not updates:
@@ -101,6 +101,6 @@ class ModuleService(BaseService):
         Args:
             module_id: 模块ID。
         """
-        repo = ModuleRepository(self.db)
+        repo = ModuleRepository(self._connection())
         repo.get_active_or_404(module_id)
         repo.soft_delete(module_id)

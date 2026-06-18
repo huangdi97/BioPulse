@@ -18,8 +18,8 @@ class FunnelService(BaseService):
         Returns:
             包含总日程数、完成率、笔记覆盖率及按类型分布的字典。
         """
-        schedule_repo = ScheduleRepository(self.db)
-        note_repo = NoteRepository(self.db)
+        schedule_repo = ScheduleRepository(self._connection())
+        note_repo = NoteRepository(self._connection())
 
         total_schedules = schedule_repo.count()
         completed_schedules = schedule_repo.count(conditions=["is_completed = 1"])

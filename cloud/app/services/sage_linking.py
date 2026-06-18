@@ -37,7 +37,7 @@ def _extract_common_area(a: dict, b: dict) -> list:
 class SageLinkingService:
     def __init__(self, db=None):
         self.db = db or get_research_db()
-        self.repo = SageRepository(self.db)
+        self.repo = SageRepository(self._connection())
 
     def auto_link(self) -> dict:
         """自动执行情景→语义、语义→过程、世界树记忆链接三阶段关联。"""

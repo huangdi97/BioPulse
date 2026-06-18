@@ -35,7 +35,7 @@ class ContactService(BaseCrudService):
             int: 新联系记录ID
         """
         self._check_opportunity_exists(opportunity_id)
-        repo = ContactRecordRepository(self.db)
+        repo = ContactRecordRepository(self._connection())
         now = datetime.now(timezone.utc).isoformat()
         return repo.create(
             body.model_dump(),
@@ -56,7 +56,7 @@ class ContactService(BaseCrudService):
             tuple: (items, total, page, page_size, total_pages)
         """
         self._check_opportunity_exists(opportunity_id)
-        repo = ContactRecordRepository(self.db)
+        repo = ContactRecordRepository(self._connection())
         return repo.paginate(
             page,
             page_size,
@@ -74,7 +74,7 @@ class ContactService(BaseCrudService):
         Returns:
             dict: 联系记录详情
         """
-        repo = ContactRecordRepository(self.db)
+        repo = ContactRecordRepository(self._connection())
         row = repo.get_by_id(contact_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")
@@ -89,7 +89,7 @@ class ContactService(BaseCrudService):
         Returns:
             dict: 更新后的联系记录
         """
-        repo = ContactRecordRepository(self.db)
+        repo = ContactRecordRepository(self._connection())
         row = repo.get_by_id(contact_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")
@@ -107,7 +107,7 @@ class ContactService(BaseCrudService):
         Args:
             contact_id: 联系记录ID
         """
-        repo = ContactRecordRepository(self.db)
+        repo = ContactRecordRepository(self._connection())
         row = repo.get_by_id(contact_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contact not found")

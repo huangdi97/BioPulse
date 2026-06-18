@@ -64,7 +64,7 @@ class PubpeerService(BaseService):
     def _check_or_get_cache(self, pubmed_id: Optional[str], doi: Optional[str]) -> Optional[dict]:
         if not pubmed_id and not doi:
             return None
-        repo = PaperIntegrityRepository(self.db)
+        repo = PaperIntegrityRepository(self._connection())
         if pubmed_id:
             row = repo.get_by_pubmed_id(pubmed_id)
         else:
@@ -100,7 +100,7 @@ class PubpeerService(BaseService):
         reply = self._call_llm(auth_header, prompt)
         result = self._parse_ai_reply(reply)
         now = datetime.now(timezone.utc).isoformat()
-        repo = PaperIntegrityRepository(self.db)
+        repo = PaperIntegrityRepository(self._connection())
         existing = None
         if pubmed_id:
             existing = repo.get_by_pubmed_id(pubmed_id)
@@ -159,7 +159,7 @@ class PubpeerService(BaseService):
         Returns:
             dict: 包含 integrity_score、retraction_warning、concerns 的诚信检查结果
         """
-        repo = ResearchTrailRepository(self.db)
+        repo = ResearchTrailRepository(self._connection())
         trail = dict(repo.get_or_404(trail_id))
         cached = self._check_or_get_cache(trail.get("pubmed_id"), None)
         if cached:
@@ -182,7 +182,7 @@ class PubpeerService(BaseService):
         Returns:
             Optional[dict]: 已有诚信记录，无记录时返回 None
         """
-        trail = dict(ResearchTrailRepository(self.db).get_or_404(trail_id))
+        trail = dict(ResearchTrailRepository(self._connection()).get_or_404(trail_id))
         conditions = ["is_active = 1"]
         params: list = []
         if trail.get("pubmed_id"):
@@ -232,7 +232,7 @@ class PubpeerService(BaseService):
         Returns:
             tuple: (items, total, page, page_size, total_pages)
         """
-        repo = PaperIntegrityRepository(self.db)
+        repo = PaperIntegrityRepository(self._connection())
         return repo.paginate(
             page,
             page_size,

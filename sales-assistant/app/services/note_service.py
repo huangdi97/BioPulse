@@ -33,7 +33,7 @@ class NoteService(BaseCrudService):
         """
         self._check_schedule_exists(schedule_id)
         now = datetime.now(timezone.utc).isoformat()
-        repo = NoteRepository(self.db)
+        repo = NoteRepository(self._connection())
         return repo.create(
             {
                 "schedule_id": schedule_id,
@@ -59,7 +59,7 @@ class NoteService(BaseCrudService):
             (记录列表, 总条数) 元组。
         """
         self._check_schedule_exists(schedule_id)
-        repo = NoteRepository(self.db)
+        repo = NoteRepository(self._connection())
         return repo.paginate(
             page=page,
             page_size=page_size,
@@ -76,7 +76,7 @@ class NoteService(BaseCrudService):
         Returns:
             笔记详情字典，不存在则抛404。
         """
-        repo = NoteRepository(self.db)
+        repo = NoteRepository(self._connection())
         row = repo.get_by_id(note_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
@@ -92,7 +92,7 @@ class NoteService(BaseCrudService):
         Returns:
             更新后的笔记详情。
         """
-        repo = NoteRepository(self.db)
+        repo = NoteRepository(self._connection())
         row = repo.get_by_id(note_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Note not found")
@@ -109,6 +109,6 @@ class NoteService(BaseCrudService):
         Args:
             note_id: 笔记ID。
         """
-        repo = NoteRepository(self.db)
+        repo = NoteRepository(self._connection())
         repo.get_or_404(note_id)
         repo.soft_delete(note_id)

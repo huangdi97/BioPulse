@@ -28,7 +28,7 @@ class BookmarkService(BaseCrudService):
         Returns:
             int: 新收藏记录ID
         """
-        repo = UserBookmarkRepository(self.db)
+        repo = UserBookmarkRepository(self._connection())
         now = datetime.now(timezone.utc).isoformat()
         try:
             return repo.create(
@@ -58,7 +58,7 @@ class BookmarkService(BaseCrudService):
         if entity_type:
             conditions.append("entity_type = ?")
             params.append(entity_type)
-        repo = UserBookmarkRepository(self.db)
+        repo = UserBookmarkRepository(self._connection())
         return repo.paginate(
             page,
             page_size,
@@ -76,7 +76,7 @@ class BookmarkService(BaseCrudService):
         Returns:
             Optional[dict]: 已收藏时返回收藏记录，否则返回 None
         """
-        repo = UserBookmarkRepository(self.db)
+        repo = UserBookmarkRepository(self._connection())
         row = repo.get_by_entity(entity_type, entity_id, user_id)
         return dict(row) if row else None
 
@@ -86,7 +86,7 @@ class BookmarkService(BaseCrudService):
         Args:
             bookmark_id: 收藏记录ID; user_id: 用户ID（校验所有权）
         """
-        repo = UserBookmarkRepository(self.db)
+        repo = UserBookmarkRepository(self._connection())
         row = repo.get_by_id(bookmark_id)
         if not row or row["created_by"] != user_id:
             raise HTTPException(

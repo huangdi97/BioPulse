@@ -27,7 +27,7 @@ class ResearchService(BaseCrudService):
         Returns:
             int: 新科研轨迹记录ID
         """
-        repo = ResearchTrailRepository(self.db)
+        repo = ResearchTrailRepository(self._connection())
         now = datetime.now(timezone.utc).isoformat()
         return repo.create(
             body.model_dump(),
@@ -55,7 +55,7 @@ class ResearchService(BaseCrudService):
         Returns:
             tuple: (items, total, page, page_size, total_pages)
         """
-        repo = ResearchTrailRepository(self.db)
+        repo = ResearchTrailRepository(self._connection())
         conditions = ["is_active = 1"]
         params: list = []
 
@@ -108,7 +108,7 @@ class ResearchService(BaseCrudService):
         Returns:
             dict: 更新后的科研轨迹记录
         """
-        repo = ResearchTrailRepository(self.db)
+        repo = ResearchTrailRepository(self._connection())
         row = repo.get_by_id(trail_id)
         if not row:
             raise HTTPException(
@@ -130,7 +130,7 @@ class ResearchService(BaseCrudService):
         Args:
             trail_id: 科研轨迹ID
         """
-        repo = ResearchTrailRepository(self.db)
+        repo = ResearchTrailRepository(self._connection())
         row = repo.get_by_id(trail_id)
         if not row:
             raise HTTPException(

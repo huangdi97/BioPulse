@@ -20,7 +20,7 @@ class StatsService(BaseService):
         Returns:
             教练全局统计字典。
         """
-        repo = StatsRepository(self.db)
+        repo = StatsRepository(self._connection())
         return repo.get_coach_stats()
 
     def get_user_trend(self, user_id: int, months: int = 6) -> List[dict]:

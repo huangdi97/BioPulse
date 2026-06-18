@@ -53,7 +53,7 @@ class TrendService(BaseService):
             fmt = "%Y-%m"
         (f"'%{fmt.replace('%Y', 'Y').replace('%m', 'm').replace('%q', 'Q')}'")
         rows = (
-            ResearchTrailRepository(self.db)
+            ResearchTrailRepository(self._connection())
             .db.execute(
                 f"SELECT strftime('{fmt}', pub_date) as period, COUNT(*) as cnt "
                 f"FROM research_trail WHERE topic LIKE ? AND is_active=1 "
@@ -113,7 +113,7 @@ class TrendService(BaseService):
                 "similar_topics": [],
             }
         now = datetime.now(timezone.utc).isoformat()
-        TrendAnalysisRepository(self.db).create(
+        TrendAnalysisRepository(self._connection()).create(
             {
                 "topic": body.topic,
                 "analysis_type": "prediction",
@@ -144,5 +144,5 @@ class TrendService(BaseService):
         Returns:
             tuple: (items, total, page, page_size, total_pages)
         """
-        repo = TrendAnalysisRepository(self.db)
+        repo = TrendAnalysisRepository(self._connection())
         return repo.paginate(page=page, page_size=page_size, order_by="analyzed_at DESC")

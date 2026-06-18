@@ -44,7 +44,7 @@ class LocationService(BaseCrudService):
         hcp = self.db.execute("SELECT id FROM hcp WHERE id = ? AND is_active = 1", (hcp_id,)).fetchone()
         if not hcp:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
-        repo = HcpLocationRepository(self.db)
+        repo = HcpLocationRepository(self._connection())
         now = datetime.now(timezone.utc).isoformat()
         location_id = repo.create(
             data={
@@ -68,7 +68,7 @@ class LocationService(BaseCrudService):
         Returns:
             list: 地址记录列表（主地址优先）
         """
-        repo = HcpLocationRepository(self.db)
+        repo = HcpLocationRepository(self._connection())
         rows = repo.list_all(
             conditions=["hcp_id=?", "is_active=1"],
             params=[hcp_id],
@@ -85,7 +85,7 @@ class LocationService(BaseCrudService):
         Returns:
             dict: 更新后的地址记录
         """
-        repo = HcpLocationRepository(self.db)
+        repo = HcpLocationRepository(self._connection())
         row = repo.get_by_id(location_id)
         if not row or not row["is_active"]:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Location not found")
@@ -102,7 +102,7 @@ class LocationService(BaseCrudService):
         Args:
             location_id: 地址记录ID
         """
-        repo = HcpLocationRepository(self.db)
+        repo = HcpLocationRepository(self._connection())
         row = repo.get_by_id(location_id)
         if not row or not row["is_active"]:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Location not found")

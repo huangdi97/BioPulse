@@ -28,7 +28,7 @@ class StatsService(BaseService):
         Raises:
             sqlite3.Error: 当统计查询失败时由仓储层抛出。
         """
-        repo = StatsRepository(self.db)
+        repo = StatsRepository(self._connection())
         total_count, total_value = repo.get_totals(start_date, end_date)
 
         by_stage: dict = {}

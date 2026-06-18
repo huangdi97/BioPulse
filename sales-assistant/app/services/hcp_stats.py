@@ -22,7 +22,7 @@ class HcpStatsMixin:
         Raises:
             sqlite3.Error: 当产品写入失败时由仓储层抛出。
         """
-        repo = ProductRepository(self.db)
+        repo = ProductRepository(self._connection())
         now = self._now()
         return repo.create(body.model_dump(), extra={"created_by": user_id, "created_at": now, "updated_at": now})
 
@@ -41,7 +41,7 @@ class HcpStatsMixin:
         Raises:
             sqlite3.Error: 当产品查询失败时由仓储层抛出。
         """
-        repo = ProductRepository(self.db)
+        repo = ProductRepository(self._connection())
         conditions, params = ["is_active = 1"], []
         if category:
             conditions.append("category LIKE ?")
@@ -63,7 +63,7 @@ class HcpStatsMixin:
         Raises:
             HTTPException: 当产品不存在或已停用时抛出404。
         """
-        repo = ProductRepository(self.db)
+        repo = ProductRepository(self._connection())
         row = repo.get_by_id(product_id)
         if not row or not row["is_active"]:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
@@ -82,7 +82,7 @@ class HcpStatsMixin:
         Raises:
             HTTPException: 当产品不存在或已停用时抛出404。
         """
-        repo = ProductRepository(self.db)
+        repo = ProductRepository(self._connection())
         row = repo.get_by_id(product_id)
         if not row or not row["is_active"]:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
@@ -105,7 +105,7 @@ class HcpStatsMixin:
         Raises:
             HTTPException: 当产品不存在或已停用时抛出404。
         """
-        repo = ProductRepository(self.db)
+        repo = ProductRepository(self._connection())
         row = repo.get_by_id(product_id)
         if not row or not row["is_active"]:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
@@ -125,9 +125,9 @@ class HcpStatsMixin:
         Raises:
             HTTPException: 当HCP或产品不存在、已停用时抛出404。
         """
-        hcp_repo = HcpRepository(self.db)
-        product_repo = ProductRepository(self.db)
-        relation_repo = RelationRepository(self.db)
+        hcp_repo = HcpRepository(self._connection())
+        product_repo = ProductRepository(self._connection())
+        relation_repo = RelationRepository(self._connection())
         hcp_row = hcp_repo.get_by_id(hcp_id)
         if not hcp_row or not hcp_row["is_active"]:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
@@ -152,7 +152,7 @@ class HcpStatsMixin:
         Raises:
             HTTPException: 当HCP不存在或已停用时抛出404。
         """
-        hcp_repo = HcpRepository(self.db)
+        hcp_repo = HcpRepository(self._connection())
         hcp_row = hcp_repo.get_by_id(hcp_id)
         if not hcp_row or not hcp_row["is_active"]:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
@@ -177,7 +177,7 @@ class HcpStatsMixin:
         Raises:
             HTTPException: 当关联关系不存在或已停用时抛出404。
         """
-        repo = RelationRepository(self.db)
+        repo = RelationRepository(self._connection())
         row = repo.get_by_id(relation_id)
         if not row or not row["is_active"]:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Relation not found")

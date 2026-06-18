@@ -94,7 +94,7 @@ class ScoringService(BaseService):
             conditions.append("heat_score <= ?")
             params.append(max_score)
 
-        repo = OpportunityRepository(self.db)
+        repo = OpportunityRepository(self._connection())
         return repo.paginate(
             page=page,
             page_size=page_size,
@@ -112,7 +112,7 @@ class ScoringService(BaseService):
         Returns:
             dict: 更新后的商机记录
         """
-        repo = OpportunityRepository(self.db)
+        repo = OpportunityRepository(self._connection())
         row = repo.get_by_id(opportunity_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found")
@@ -126,7 +126,7 @@ class ScoringService(BaseService):
         Returns:
             dict: 包含 total_updated、average_score、top_score、bottom_score 的统计结果
         """
-        repo = OpportunityRepository(self.db)
+        repo = OpportunityRepository(self._connection())
         rows = repo.list_all(conditions=["is_active = 1"])
 
         if not rows:

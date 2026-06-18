@@ -57,7 +57,7 @@ class SageEngineService(SageCacheMixin, SageScoringMixin):
             db: 可选的研究数据库连接，为 None 时使用默认连接
         """
         self.db = db or get_research_db()
-        self.repo = SageRepository(self.db)
+        self.repo = SageRepository(self._connection())
         self.linking = SageLinkingService(db)
 
     def score_all_memories(self) -> dict:

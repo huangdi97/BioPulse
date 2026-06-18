@@ -70,7 +70,7 @@ class MediaService(BaseService):
 
         extracted = self._extract_text(filepath, ext) if ext in DOC_EXTS else ""
         now = datetime.now(timezone.utc).isoformat()
-        repo = MediaFileRepository(self.db)
+        repo = MediaFileRepository(self._connection())
         file_id = repo.create(
             data={
                 "file_type": file_type,
@@ -100,7 +100,7 @@ class MediaService(BaseService):
         """
         from fastapi import HTTPException
 
-        repo = MediaFileRepository(self.db)
+        repo = MediaFileRepository(self._connection())
         row = repo.get_by_id(file_id)
         if not row or not row["is_active"]:
             raise HTTPException(status_code=404, detail="Media not found")
@@ -117,7 +117,7 @@ class MediaService(BaseService):
         """
         from fastapi import HTTPException
 
-        repo = MediaFileRepository(self.db)
+        repo = MediaFileRepository(self._connection())
         row = repo.get_by_id(file_id)
         if not row or not row["is_active"]:
             raise HTTPException(status_code=404, detail="Media not found")

@@ -54,9 +54,9 @@ class PrecallService(BaseService):
 
     def _gather_db_context(self, customer_name: str, hospital: str | None = None) -> str:
         parts: list[str] = []
-        hcp_repo = HcpRepository(self.db)
-        visit_repo = VisitRepository(self.db)
-        schedule_repo = ScheduleRepository(self.db)
+        hcp_repo = HcpRepository(self._connection())
+        visit_repo = VisitRepository(self._connection())
+        schedule_repo = ScheduleRepository(self._connection())
 
         hcp_rows = hcp_repo.search(customer_name, limit=5)
         if hospital:

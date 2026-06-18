@@ -31,7 +31,7 @@ class CoachService(BaseCrudService):
         Returns:
             新创建的话术模板ID。
         """
-        repo = PromptRepository(self.db)
+        repo = PromptRepository(self._connection())
         data = body.model_dump()
         now = datetime.now(timezone.utc).isoformat()
         data["created_by"] = user_id
@@ -57,7 +57,7 @@ class CoachService(BaseCrudService):
         Returns:
             (记录列表, 总条数) 元组。
         """
-        repo = PromptRepository(self.db)
+        repo = PromptRepository(self._connection())
         conditions = ["is_active = 1"]
         params: list = []
         if scenario:
@@ -84,7 +84,7 @@ class CoachService(BaseCrudService):
         Returns:
             更新后的话术模板详情。
         """
-        repo = PromptRepository(self.db)
+        repo = PromptRepository(self._connection())
         repo.get_or_404(prompt_id)
         updates = body.model_dump(exclude_unset=True)
         if not updates:
@@ -99,7 +99,7 @@ class CoachService(BaseCrudService):
         Args:
             prompt_id: 话术模板ID。
         """
-        repo = PromptRepository(self.db)
+        repo = PromptRepository(self._connection())
         repo.get_or_404(prompt_id)
         repo.soft_delete(prompt_id)
 
@@ -112,7 +112,7 @@ class CoachService(BaseCrudService):
         Returns:
             包含建议列表的字典。
         """
-        repo = PromptRepository(self.db)
+        repo = PromptRepository(self._connection())
         rows = repo.list_all(
             conditions=["is_active = 1", "scenario LIKE ?"],
             params=[f"%{body.scenario}%"],
@@ -180,7 +180,7 @@ class CoachService(BaseCrudService):
         Returns:
             新创建的会话ID。
         """
-        repo = SessionRepository(self.db)
+        repo = SessionRepository(self._connection())
         data = body.model_dump()
         now = datetime.now(timezone.utc).isoformat()
         data["started_at"] = now
@@ -198,7 +198,7 @@ class CoachService(BaseCrudService):
         Returns:
             (记录列表, 总条数) 元组。
         """
-        repo = SessionRepository(self.db)
+        repo = SessionRepository(self._connection())
         return repo.paginate(
             page=page,
             page_size=page_size,
@@ -215,7 +215,7 @@ class CoachService(BaseCrudService):
         Returns:
             更新后的会话详情。
         """
-        repo = SessionRepository(self.db)
+        repo = SessionRepository(self._connection())
         repo.get_or_404(session_id)
         updates = body.model_dump(exclude_unset=True)
         if not updates:

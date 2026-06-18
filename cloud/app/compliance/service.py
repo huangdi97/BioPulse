@@ -31,12 +31,12 @@ class ComplianceService(BaseService):
         return self.db
 
     def create_rule(self, name: str, category: str, keyword: str, max_value: Optional[float], created_by: int) -> dict[str, Any]:
-        repo = ComplianceRulesRepository(self.db)
+        repo = ComplianceRulesRepository(self._connection())
         row_id = repo.create({"name": name, "category": category, "keyword": keyword, "max_value": max_value, "created_by": created_by})
         return {"id": row_id, "name": name, "category": category, "keyword": keyword, "max_value": max_value}
 
     def list_rules(self) -> list[dict[str, Any]]:
-        repo = ComplianceRulesRepository(self.db)
+        repo = ComplianceRulesRepository(self._connection())
         return [
             {"id": r["id"], "name": r["name"], "category": r["category"], "keyword": r["keyword"], "max_value": r["max_value"]}
             for r in repo.list_all()
@@ -50,7 +50,7 @@ class ComplianceService(BaseService):
         keyword: Optional[str] = None,
         max_value: Optional[float] = None,
     ) -> dict[str, Any]:
-        repo = ComplianceRulesRepository(self.db)
+        repo = ComplianceRulesRepository(self._connection())
         row = repo.get_by_id(rule_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Rule not found")
@@ -74,7 +74,7 @@ class ComplianceService(BaseService):
         }
 
     def delete_rule(self, rule_id: int) -> None:
-        repo = ComplianceRulesRepository(self.db)
+        repo = ComplianceRulesRepository(self._connection())
         row = repo.get_by_id(rule_id)
         if not row:
             raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Rule not found")

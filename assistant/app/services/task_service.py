@@ -16,7 +16,7 @@ class TaskService(BaseCrudService):
         super().__init__(repository_class=TaskRepository, entity_name="Task", db=db)
 
     def _check_hcp_exists(self, hcp_id: int) -> None:
-        repo = HcpRepository(self.db)
+        repo = HcpRepository(self._connection())
         row = repo.get_by_id(hcp_id)
         if not row or row["is_active"] != 1:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
@@ -32,7 +32,7 @@ class TaskService(BaseCrudService):
         """
         if body.hcp_id is not None:
             self._check_hcp_exists(body.hcp_id)
-        repo = TaskRepository(self.db)
+        repo = TaskRepository(self._connection())
         row_id = repo.create(
             body.model_dump(),
             extra={"created_by": user_id},
@@ -55,7 +55,7 @@ class TaskService(BaseCrudService):
         Returns:
             tuple: (items, total, page, page_size, total_pages)
         """
-        repo = TaskRepository(self.db)
+        repo = TaskRepository(self._connection())
         conditions: List[str] = []
         params: list = []
 
@@ -85,7 +85,7 @@ class TaskService(BaseCrudService):
         Returns:
             dict: 任务记录详情
         """
-        repo = TaskRepository(self.db)
+        repo = TaskRepository(self._connection())
         row = repo.get_by_id(task_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
@@ -100,7 +100,7 @@ class TaskService(BaseCrudService):
         Returns:
             dict: 更新后的任务记录
         """
-        repo = TaskRepository(self.db)
+        repo = TaskRepository(self._connection())
         row = repo.get_by_id(task_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
@@ -121,7 +121,7 @@ class TaskService(BaseCrudService):
         Args:
             task_id: 任务ID
         """
-        repo = TaskRepository(self.db)
+        repo = TaskRepository(self._connection())
         row = repo.get_by_id(task_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")

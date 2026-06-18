@@ -35,7 +35,7 @@ class ContentService(BaseCrudService):
             新创建的内容ID。
         """
         now = datetime.now(timezone.utc).isoformat()
-        repo = ContentRepository(self.db)
+        repo = ContentRepository(self._connection())
         return repo.create(
             body.model_dump(),
             extra={"created_by": user_id, "created_at": now, "updated_at": now},
@@ -78,7 +78,7 @@ class ContentService(BaseCrudService):
             conditions.append("(title LIKE ? OR summary LIKE ? OR tags LIKE ?)")
             like_q = f"%{q}%"
             params.extend([like_q, like_q, like_q])
-        repo = ContentRepository(self.db)
+        repo = ContentRepository(self._connection())
         return repo.paginate(
             page=page,
             page_size=page_size,
@@ -104,7 +104,7 @@ class ContentService(BaseCrudService):
         Returns:
             内容详情字典，不存在或已删除则抛404。
         """
-        repo = ContentRepository(self.db)
+        repo = ContentRepository(self._connection())
         row = repo.get_by_id(content_id)
         if not row or row["is_active"] != 1:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content not found")
@@ -120,7 +120,7 @@ class ContentService(BaseCrudService):
         Returns:
             更新后的内容详情。
         """
-        repo = ContentRepository(self.db)
+        repo = ContentRepository(self._connection())
         row = repo.get_by_id(content_id)
         if not row or row["is_active"] != 1:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content not found")
@@ -137,7 +137,7 @@ class ContentService(BaseCrudService):
         Args:
             content_id: 内容ID。
         """
-        repo = ContentRepository(self.db)
+        repo = ContentRepository(self._connection())
         row = repo.get_by_id(content_id)
         if not row or not row["is_active"]:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Content not found")

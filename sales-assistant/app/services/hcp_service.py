@@ -23,26 +23,26 @@ class HcpService(HcpSearchMixin, HcpStatsMixin, BaseHcpService, BaseCrudService)
         return datetime.now(timezone.utc).isoformat()
 
     def create_hcp(self, body, user_id: int) -> int:
-        repo = HcpRepository(self.db)
+        repo = HcpRepository(self._connection())
         now = self._now()
         return repo.create(body.model_dump(), extra={"created_by": user_id, "created_at": now, "updated_at": now})
 
     def list_hcps(
         self, page: int, page_size: int, name: Optional[str] = None, hospital: Optional[str] = None, department: Optional[str] = None
     ) -> tuple:
-        repo = HcpRepository(self.db)
+        repo = HcpRepository(self._connection())
         conditions, params = self._build_list_conditions(name, hospital, department)
         return repo.paginate(page, page_size, conditions, params)
 
     def get_hcp(self, hcp_id: int) -> dict:
-        repo = HcpRepository(self.db)
+        repo = HcpRepository(self._connection())
         row = repo.get_by_id(hcp_id)
         if not row or not row["is_active"]:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
         return dict(row)
 
     def update_hcp(self, hcp_id: int, body) -> dict:
-        repo = HcpRepository(self.db)
+        repo = HcpRepository(self._connection())
         row = repo.get_by_id(hcp_id)
         if not row or not row["is_active"]:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")
@@ -54,7 +54,7 @@ class HcpService(HcpSearchMixin, HcpStatsMixin, BaseHcpService, BaseCrudService)
         return dict(repo.get_by_id(hcp_id))
 
     def delete_hcp(self, hcp_id: int) -> None:
-        repo = HcpRepository(self.db)
+        repo = HcpRepository(self._connection())
         row = repo.get_by_id(hcp_id)
         if not row or not row["is_active"]:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="HCP not found")

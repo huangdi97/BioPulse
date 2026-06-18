@@ -27,7 +27,7 @@ class BiddingService(BaseCrudService):
         Returns:
             int: 新招标记录ID
         """
-        repo = BiddingInfoRepository(self.db)
+        repo = BiddingInfoRepository(self._connection())
         now = datetime.now(timezone.utc).isoformat()
         return repo.create(
             body.model_dump(),
@@ -55,7 +55,7 @@ class BiddingService(BaseCrudService):
         Returns:
             tuple: (items, total, page, page_size, total_pages)
         """
-        repo = BiddingInfoRepository(self.db)
+        repo = BiddingInfoRepository(self._connection())
         conditions = ["is_active = 1"]
         params: list = []
 
@@ -89,7 +89,7 @@ class BiddingService(BaseCrudService):
         Returns:
             dict: 招标信息记录详情
         """
-        repo = BiddingInfoRepository(self.db)
+        repo = BiddingInfoRepository(self._connection())
         row = repo.get_by_id(bidding_id)
         if not row or row["is_active"] != 1:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bidding record not found")
@@ -104,7 +104,7 @@ class BiddingService(BaseCrudService):
         Returns:
             dict: 更新后的招标信息记录
         """
-        repo = BiddingInfoRepository(self.db)
+        repo = BiddingInfoRepository(self._connection())
         row = repo.get_by_id(bidding_id)
         if not row or row["is_active"] != 1:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bidding record not found")
@@ -123,7 +123,7 @@ class BiddingService(BaseCrudService):
         Args:
             bidding_id: 招标信息ID
         """
-        repo = BiddingInfoRepository(self.db)
+        repo = BiddingInfoRepository(self._connection())
         row = repo.get_by_id(bidding_id)
         if not row or row["is_active"] != 1:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bidding record not found")

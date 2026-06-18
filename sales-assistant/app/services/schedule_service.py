@@ -27,7 +27,7 @@ class ScheduleService(BaseCrudService):
             新创建的日程ID。
         """
         now = datetime.now(timezone.utc).isoformat()
-        repo = ScheduleRepository(self.db)
+        repo = ScheduleRepository(self._connection())
         data = body.model_dump()
         data["created_by"] = user_id
         data["created_at"] = now
@@ -65,7 +65,7 @@ class ScheduleService(BaseCrudService):
         if end_date:
             conditions.append("start_time <= ?")
             params.append(end_date)
-        repo = ScheduleRepository(self.db)
+        repo = ScheduleRepository(self._connection())
         return repo.paginate(
             page,
             page_size,
@@ -83,7 +83,7 @@ class ScheduleService(BaseCrudService):
         Returns:
             日程详情字典，不存在则抛404。
         """
-        repo = ScheduleRepository(self.db)
+        repo = ScheduleRepository(self._connection())
         row = repo.get_by_id(schedule_id)
         if not row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Schedule not found")
@@ -99,7 +99,7 @@ class ScheduleService(BaseCrudService):
         Returns:
             更新后的日程详情。
         """
-        repo = ScheduleRepository(self.db)
+        repo = ScheduleRepository(self._connection())
         row = repo.get_or_404(schedule_id)
         updates = body.model_dump(exclude_unset=True)
         if not updates:
@@ -114,6 +114,6 @@ class ScheduleService(BaseCrudService):
         Args:
             schedule_id: 日程ID。
         """
-        repo = ScheduleRepository(self.db)
+        repo = ScheduleRepository(self._connection())
         repo.get_or_404(schedule_id)
         repo.soft_delete(schedule_id)

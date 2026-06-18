@@ -72,7 +72,7 @@ class SyncService(BaseService):
         synced_count = 0
         failed_count = 0
         conflict_count = 0
-        repo = SyncQueueRepository(self.db)
+        repo = SyncQueueRepository(self._connection())
         self._init_conflict_table()
 
         for op in body.operations:
@@ -141,7 +141,7 @@ class SyncService(BaseService):
         Returns:
             dict: 包含 total、pending、synced、failed、by_entity 的统计信息
         """
-        repo = SyncQueueRepository(self.db)
+        repo = SyncQueueRepository(self._connection())
         total = repo.count()
         pending = repo.count(conditions=["status='pending'"])
         by_entity = self.db.execute("SELECT entity_type, COUNT(*) as cnt FROM sync_queue GROUP BY entity_type").fetchall()

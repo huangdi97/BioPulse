@@ -15,7 +15,7 @@ class SessionService(BaseCrudService):
         super().__init__(repository_class=SessionRepository, entity_name="Session", db=db)
 
     def _check_module_exists(self, module_id: int) -> None:
-        ModuleRepository(self.db).get_active_or_404(module_id)
+        ModuleRepository(self._connection()).get_active_or_404(module_id)
 
     def create(self, module_id: int, body, user_id: int) -> dict:
         """创建教练模块下的训练会话。
@@ -32,7 +32,7 @@ class SessionService(BaseCrudService):
             HTTPException: 当训练模块不存在时由仓储层抛出。
         """
         self._check_module_exists(module_id)
-        repo = SessionRepository(self.db)
+        repo = SessionRepository(self._connection())
         now = datetime.now(timezone.utc).isoformat()
         data = body.model_dump()
         data["module_id"] = module_id
@@ -65,7 +65,7 @@ class SessionService(BaseCrudService):
             HTTPException: 当训练模块不存在时由仓储层抛出。
         """
         self._check_module_exists(module_id)
-        repo = SessionRepository(self.db)
+        repo = SessionRepository(self._connection())
         now = datetime.now(timezone.utc).isoformat()
         data = body.model_dump()
         data["module_id"] = module_id
@@ -91,7 +91,7 @@ class SessionService(BaseCrudService):
             HTTPException: 当会话不存在时由仓储层抛出。
             json.JSONDecodeError: 当已有对话日志不是合法JSON时抛出。
         """
-        repo = SessionRepository(self.db)
+        repo = SessionRepository(self._connection())
         row = repo.get_session_or_404(session_id)
         log = json.loads(row["dialogue_log"] or "[]")
         log.append(entry)
@@ -111,7 +111,7 @@ class SessionService(BaseCrudService):
             HTTPException: 当会话不存在时由仓储层抛出。
             json.JSONDecodeError: 当对话日志不是合法JSON时抛出。
         """
-        repo = SessionRepository(self.db)
+        repo = SessionRepository(self._connection())
         row = repo.get_session_or_404(session_id)
         return json.loads(row["dialogue_log"] or "[]")
 
@@ -128,7 +128,7 @@ class SessionService(BaseCrudService):
         Raises:
             HTTPException: 当会话不存在时由仓储层抛出。
         """
-        repo = SessionRepository(self.db)
+        repo = SessionRepository(self._connection())
         repo.get_session_or_404(session_id)
         repo.update(session_id, {"auto_assessment": json.dumps(assessment)})
         return dict(repo.get_session_or_404(session_id))
@@ -146,7 +146,7 @@ class SessionService(BaseCrudService):
         Raises:
             HTTPException: 当会话不存在时由仓储层抛出。
         """
-        repo = SessionRepository(self.db)
+        repo = SessionRepository(self._connection())
         repo.get_session_or_404(session_id)
         repo.update(session_id, {"reflection_report": json.dumps(report)})
         return dict(repo.get_session_or_404(session_id))
@@ -166,7 +166,7 @@ class SessionService(BaseCrudService):
             HTTPException: 当训练模块不存在时由仓储层抛出。
         """
         self._check_module_exists(module_id)
-        repo = SessionRepository(self.db)
+        repo = SessionRepository(self._connection())
         return repo.paginate_by_module(module_id, page=page, page_size=page_size)
 
     def get(self, session_id: int) -> dict:
@@ -181,7 +181,7 @@ class SessionService(BaseCrudService):
         Raises:
             HTTPException: 当会话不存在时由仓储层抛出。
         """
-        repo = SessionRepository(self.db)
+        repo = SessionRepository(self._connection())
         return dict(repo.get_session_or_404(session_id))
 
     def update(self, session_id: int, body) -> dict:
@@ -197,7 +197,7 @@ class SessionService(BaseCrudService):
         Raises:
             HTTPException: 当会话不存在时由仓储层抛出。
         """
-        repo = SessionRepository(self.db)
+        repo = SessionRepository(self._connection())
         repo.get_session_or_404(session_id)
         updates = body.model_dump(exclude_unset=True)
         if not updates:
@@ -217,6 +217,6 @@ class SessionService(BaseCrudService):
         Raises:
             HTTPException: 当会话不存在时由仓储层抛出。
         """
-        repo = SessionRepository(self.db)
+        repo = SessionRepository(self._connection())
         repo.get_session_or_404(session_id)
         repo.hard_delete(session_id)

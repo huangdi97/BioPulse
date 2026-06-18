@@ -23,7 +23,7 @@ class AnomalyService(BaseCrudService):
             新创建的规则ID。
         """
         now = datetime.now(timezone.utc).isoformat()
-        repo = AnomalyRuleRepository(self.db)
+        repo = AnomalyRuleRepository(self._connection())
         return repo.create(
             body.model_dump(),
             extra={"created_by": user_id, "created_at": now, "updated_at": now},
@@ -47,7 +47,7 @@ class AnomalyService(BaseCrudService):
         Returns:
             (记录列表, 总条数) 元组。
         """
-        repo = AnomalyRuleRepository(self.db)
+        repo = AnomalyRuleRepository(self._connection())
         conditions: List[str] = ["is_active = 1"]
         params: list = []
         if metric:
@@ -68,7 +68,7 @@ class AnomalyService(BaseCrudService):
         Returns:
             更新后的规则详情。
         """
-        repo = AnomalyRuleRepository(self.db)
+        repo = AnomalyRuleRepository(self._connection())
         row = repo.get_or_404(rule_id)
         updates = body.model_dump(exclude_unset=True)
         if not updates:
@@ -83,7 +83,7 @@ class AnomalyService(BaseCrudService):
         Args:
             rule_id: 规则ID。
         """
-        repo = AnomalyRuleRepository(self.db)
+        repo = AnomalyRuleRepository(self._connection())
         repo.get_or_404(rule_id)
         repo.soft_delete(rule_id)
 
@@ -132,8 +132,8 @@ class AnomalyService(BaseCrudService):
         Returns:
             新生成的告警数量。
         """
-        rule_repo = AnomalyRuleRepository(self.db)
-        alert_repo = AlertRepository(self.db)
+        rule_repo = AnomalyRuleRepository(self._connection())
+        alert_repo = AlertRepository(self._connection())
         rules = rule_repo.list_all(conditions=["is_active = 1"])
         now = datetime.now(timezone.utc).isoformat()
         created = 0
@@ -174,7 +174,7 @@ class AnomalyService(BaseCrudService):
         Returns:
             (记录列表, 总条数) 元组。
         """
-        repo = AlertRepository(self.db)
+        repo = AlertRepository(self._connection())
         conditions: List[str] = []
         params: list = []
         if severity:
@@ -196,7 +196,7 @@ class AnomalyService(BaseCrudService):
         Returns:
             更新后的告警详情。
         """
-        repo = AlertRepository(self.db)
+        repo = AlertRepository(self._connection())
         repo.get_or_404(alert_id)
         now = datetime.now(timezone.utc).isoformat()
         updates = {"status": body.status}

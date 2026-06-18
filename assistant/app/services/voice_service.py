@@ -46,7 +46,7 @@ class VoiceService(BaseService):
         async with aiofiles.open(filepath, "wb") as f:
             await f.write(content)
         now = datetime.now(timezone.utc).isoformat()
-        repo = MediaFileRepository(self.db)
+        repo = MediaFileRepository(self._connection())
         file_id = repo.create(
             {
                 "file_type": "audio",
@@ -81,7 +81,7 @@ class VoiceService(BaseService):
         async with aiofiles.open(filepath, "wb") as f:
             await f.write(content)
         now = datetime.now(timezone.utc).isoformat()
-        repo = MediaFileRepository(self.db)
+        repo = MediaFileRepository(self._connection())
         file_id = repo.create(
             {
                 "file_type": "audio",
@@ -150,7 +150,7 @@ class VoiceService(BaseService):
         Returns:
             dict: 音频文件记录
         """
-        repo = MediaFileRepository(self.db)
+        repo = MediaFileRepository(self._connection())
         row = repo.get_by_id(file_id)
         if not row or not row["is_active"]:
             from fastapi import HTTPException

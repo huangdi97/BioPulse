@@ -33,7 +33,7 @@ class StrategyService(BaseService):
             新创建的策略ID。
         """
         now = datetime.now(timezone.utc).isoformat()
-        repo = StrategyRepository(self.db)
+        repo = StrategyRepository(self._connection())
         return repo.create(
             body.model_dump(),
             extra={"created_by": user_id, "created_at": now, "updated_at": now},
@@ -70,7 +70,7 @@ class StrategyService(BaseService):
         if goal:
             conditions.append("goal LIKE ?")
             params.append(f"%{goal}%")
-        repo = StrategyRepository(self.db)
+        repo = StrategyRepository(self._connection())
         return repo.paginate(page, page_size, conditions, params, "created_at DESC")
 
     def get_strategy(self, strategy_id: int) -> dict:
@@ -82,7 +82,7 @@ class StrategyService(BaseService):
         Returns:
             策略详情字典，不存在或已删除则抛404。
         """
-        repo = StrategyRepository(self.db)
+        repo = StrategyRepository(self._connection())
         row = repo.get_by_id(strategy_id)
         if not row or row["is_active"] != 1:
             raise HTTPException(
@@ -101,7 +101,7 @@ class StrategyService(BaseService):
         Returns:
             更新后的策略详情字典。
         """
-        repo = StrategyRepository(self.db)
+        repo = StrategyRepository(self._connection())
         row = repo.get_by_id(strategy_id)
         if not row or row["is_active"] != 1:
             raise HTTPException(
@@ -121,7 +121,7 @@ class StrategyService(BaseService):
         Args:
             strategy_id: 策略ID。
         """
-        repo = StrategyRepository(self.db)
+        repo = StrategyRepository(self._connection())
         row = repo.get_by_id(strategy_id)
         if not row or not row["is_active"]:
             raise HTTPException(
@@ -169,7 +169,7 @@ class StrategyService(BaseService):
         except Exception:
             logger.exception("Strategy service parse异常")
             parsed = {}
-        repo = StrategyRepository(self.db)
+        repo = StrategyRepository(self._connection())
         strategy_id = repo.create(
             {
                 "hcp_name": body.hcp_name,
@@ -194,7 +194,7 @@ class StrategyService(BaseService):
         id_list = [int(x.strip()) for x in ids.split(",") if x.strip()]
         if not id_list:
             raise HTTPException(status_code=400, detail="Provide at least one strategy id")
-        repo = StrategyRepository(self.db)
+        repo = StrategyRepository(self._connection())
         conditions = [f"id IN ({','.join('?' * len(id_list))})", "is_active = 1"]
         rows = repo.list_all(conditions, id_list)
         if not rows:

@@ -34,7 +34,7 @@ class MemoryRetriever(BaseService):
 
     def working_get(self, session_id: str, slot_key: Optional[str] = None) -> dict:
         """查询工作记忆槽位，不传 slot_key 时返回该会话的所有槽位。"""
-        wm = WorkingMemoryRepository(self.db)
+        wm = WorkingMemoryRepository(self._connection())
         if slot_key:
             row = wm.db.execute(
                 "SELECT * FROM working_memory WHERE session_id=? AND slot_key=? AND expires_at>?",
@@ -72,7 +72,7 @@ class MemoryRetriever(BaseService):
         if date_to:
             c.append("created_at<=?")
             p.append(date_to)
-        total, pages, items = EpisodicMemoryRepository(self.db).paginate(
+        total, pages, items = EpisodicMemoryRepository(self._connection()).paginate(
             page=page,
             page_size=page_size,
             conditions=c,
@@ -89,11 +89,11 @@ class MemoryRetriever(BaseService):
 
     def episodic_detail(self, memory_id: int) -> dict:
         """获取单条情景记忆详情，并记录再巩固日志。"""
-        em_repo = EpisodicMemoryRepository(self.db)
+        em_repo = EpisodicMemoryRepository(self._connection())
         row = em_repo.get_by_id(memory_id)
         if not row:
             raise _n404("Episodic memory")
-        MemoryConsolidationLogRepository(self.db).create(
+        MemoryConsolidationLogRepository(self._connection()).create(
             {
                 "consolidation_type": "retrieval_reconsolidation",
                 "source_table": "episodic_memory",
@@ -108,8 +108,8 @@ class MemoryRetriever(BaseService):
     def dashboard(self) -> dict:
         """返回记忆系统仪表盘，包含活跃会话、槽位统计与最近情景。"""
         now_val = _now()
-        wm_repo = WorkingMemoryRepository(self.db)
-        em_repo = EpisodicMemoryRepository(self.db)
+        wm_repo = WorkingMemoryRepository(self._connection())
+        em_repo = EpisodicMemoryRepository(self._connection())
         active_sessions = wm_repo.db.execute(
             "SELECT COUNT(DISTINCT session_id) FROM working_memory WHERE expires_at > ?",
             (now_val,),
@@ -129,7 +129,7 @@ class MemoryRetriever(BaseService):
         """语义搜索，在语义记忆中匹配标题或内容。"""
         kw = f"%{query}%"
         rows = (
-            MemoryEntriesRepository(self.db)
+            MemoryEntriesRepository(self._connection())
             .db.execute(
                 "SELECT * FROM memory_entries WHERE memory_type='semantic' AND is_active=1 AND "
                 "(title LIKE ? OR content LIKE ?) ORDER BY importance DESC LIMIT ?",
@@ -142,7 +142,7 @@ class MemoryRetriever(BaseService):
     def procedural_recall(self, trigger_context: str) -> dict:
         """依据触发上下文召回程序性记忆（前三高重要性）。"""
         rows = (
-            MemoryEntriesRepository(self.db)
+            MemoryEntriesRepository(self._connection())
             .db.execute("SELECT * FROM memory_entries WHERE memory_type='procedural' AND is_active=1 ORDER BY importance DESC LIMIT 3")
             .fetchall()
         )
@@ -164,11 +164,11 @@ class MemoryRetriever(BaseService):
 
     def holographic_get(self, memory_id: int, depth: int = 3) -> dict:
         """全息检索，返回记忆条目及其关联图（递归指定深度）。"""
-        me_repo = MemoryEntriesRepository(self.db)
+        me_repo = MemoryEntriesRepository(self._connection())
         entry = me_repo.get_by_id(memory_id)
         if not entry:
             raise _n404(f"Memory entry {memory_id}")
-        assoc_repo = MemoryAssociationsRepository(self.db)
+        assoc_repo = MemoryAssociationsRepository(self._connection())
         visited = {memory_id}
         root = dict(entry)
         root["associations"] = self._traverse_graph(memory_id, depth, visited, assoc_repo, me_repo)

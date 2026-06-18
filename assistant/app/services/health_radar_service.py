@@ -22,7 +22,7 @@ class HealthRadarService(BaseCrudService):
         Returns:
             dict: 包含新记录 id 的结果
         """
-        repo = HealthRadarRepository(self.db)
+        repo = HealthRadarRepository(self._connection())
         now = datetime.now(timezone.utc).isoformat()
         row_id = repo.create(
             {
@@ -52,7 +52,7 @@ class HealthRadarService(BaseCrudService):
         Returns:
             tuple: (items, total, page, page_size, total_pages)
         """
-        repo = HealthRadarRepository(self.db)
+        repo = HealthRadarRepository(self._connection())
         conditions = ["is_active = 1"]
         params: list = []
 
@@ -80,7 +80,7 @@ class HealthRadarService(BaseCrudService):
         Returns:
             dict: 包含 total_assessments、average_score、score_distribution、recent_trend 的统计信息
         """
-        repo = HealthRadarRepository(self.db)
+        repo = HealthRadarRepository(self._connection())
         total = repo.count(conditions=["is_active = 1"])
 
         avg_row = self.db.execute("SELECT AVG(score) FROM health_radar WHERE is_active = 1").fetchone()
@@ -138,7 +138,7 @@ class HealthRadarService(BaseCrudService):
         Returns:
             dict: 健康评估记录详情
         """
-        repo = HealthRadarRepository(self.db)
+        repo = HealthRadarRepository(self._connection())
         return dict(repo.get_or_404(health_radar_id))
 
     def update(self, health_radar_id: int, body) -> dict:
@@ -150,7 +150,7 @@ class HealthRadarService(BaseCrudService):
         Returns:
             dict: 更新后的健康评估记录
         """
-        repo = HealthRadarRepository(self.db)
+        repo = HealthRadarRepository(self._connection())
         repo.get_or_404(health_radar_id)
         updates = body.model_dump(exclude_unset=True)
         if not updates:
@@ -165,6 +165,6 @@ class HealthRadarService(BaseCrudService):
         Args:
             health_radar_id: 健康评估记录ID
         """
-        repo = HealthRadarRepository(self.db)
+        repo = HealthRadarRepository(self._connection())
         repo.get_or_404(health_radar_id)
         repo.soft_delete(health_radar_id)
