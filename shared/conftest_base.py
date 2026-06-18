@@ -26,6 +26,7 @@ def get_pg_url(test_db_path: str) -> str:
         "test_opportunity.db": "opportunity_db",
         "test_sales_assistant.db": "sales_assistant_db",
         "test_sales_coach.db": "sales_coach_db",
+        "test_management.db": "management_db",
     }
     basename = os.path.basename(test_db_path)
     db_name = name_map.get(basename, basename.replace(".db", ""))
@@ -79,10 +80,6 @@ def setup_test_db(module_db, schema_sql: str, test_db_path: str):
         pg_url = get_pg_url(test_db_path)
         conn = psycopg.connect(pg_url)
         cur = conn.cursor()
-        cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
-        tables = [row[0] for row in cur.fetchall()]
-        for t in tables:
-            cur.execute(f'DROP TABLE IF EXISTS "{t}" CASCADE')
         pg_schema = convert_schema_to_pg(schema_sql)
         cur.execute(pg_schema)
         conn.commit()
@@ -110,7 +107,10 @@ def clean_test_tables(tables: list):
             conn.autocommit = True
             with conn.cursor() as cur:
                 for t in tables:
-                    cur.execute(f'TRUNCATE TABLE "{t}" CASCADE')
+                    try:
+                        cur.execute(f'TRUNCATE TABLE "{t}" CASCADE')
+                    except Exception:
+                        pass
     else:
         with sqlite3.connect(test_db) as conn:
             conn.execute("PRAGMA foreign_keys=OFF")

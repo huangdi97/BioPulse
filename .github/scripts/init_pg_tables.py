@@ -48,8 +48,6 @@ def main():
 
         # Convert to PG-compatible SQL
         pg_schema = convert_schema_to_pg(schema_sql)
-        # Remove IF NOT EXISTS since we want clean tables
-        pg_schema = pg_schema.replace("CREATE TABLE IF NOT EXISTS", "CREATE TABLE IF NOT EXISTS")
 
         # Connect and execute
         full_url = get_pg_url(test_db)
@@ -57,13 +55,6 @@ def main():
             conn = psycopg.connect(full_url)
             conn.autocommit = True
             cur = conn.cursor()
-            # Drop all existing tables first
-            cur.execute("""
-                SELECT table_name FROM information_schema.tables
-                WHERE table_schema='public' AND table_type='BASE TABLE'
-            """)
-            for row in cur.fetchall():
-                cur.execute(f'DROP TABLE IF EXISTS "{row[0]}" CASCADE')
             # Create tables
             cur.execute(pg_schema)
             cur.close()
