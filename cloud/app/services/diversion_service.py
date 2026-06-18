@@ -1,7 +1,11 @@
-"""窜货检测服务 — 检测产品流向与授权区域的一致性。"""
+"""窜货检测服务 — 检测产品流向与授权区域的一致性，接入三角稽核引擎。"""
 
 import sqlite3
+from dataclasses import asdict
 from datetime import datetime, timedelta
+from typing import Any
+
+from cloud.app.compliance.triangulation import TriangulationEngine
 
 
 class DiversionDetectionService:
@@ -80,6 +84,27 @@ class DiversionDetectionService:
             "is_diversion": is_diversion,
             "reason": reason,
             "severity": severity,
+        }
+
+    def run_triangulation_check(self, distribution_data: dict[str, Any]) -> dict[str, Any]:
+        """将窜货数据送入三角稽核引擎进行深度交叉验证。
+
+        调用 TriangulationEngine.check() 对 distribution_data 做多维度分析，
+        返回引擎的置信度评分与异常发现。
+        """
+        engine = TriangulationEngine(db=self.db)
+        result = engine.check(
+            expense_data=None,
+            visit_data=None,
+            distribution_data=[distribution_data],
+            distribution_area=[
+                {"product": distribution_data.get("product", ""), "authorized_region": distribution_data.get("authorized_region", "")}
+            ],
+        )
+        return {
+            "triangulation_score": result.score,
+            "triangulation_level": result.level,
+            "findings": [asdict(f) for f in result.findings],
         }
 
     def get_diversion_records(self, rep_id: str, days: int = 30) -> list[dict]:

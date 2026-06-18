@@ -16,7 +16,7 @@ export default function IntelPage() {
         <p className="text-sm mt-1" style={{color: 'var(--clr-text-secondary)'}}>论文检索、PI画像与靶点热度分析</p>
       </div>
 
-      <div className="flex gap-1 p-1 rounded-lg w-fit" style={{backgroundColor: 'var(--clr-gray-10)'}}>
+      <div className="flex gap-1 p-1 rounded-lg flex-wrap" style={{backgroundColor: 'var(--clr-gray-10)'}}>
         {TABS.map((t, i) => (
           <button
             key={t}

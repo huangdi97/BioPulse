@@ -73,7 +73,7 @@ export default function ConferencePage() {
         <p className="text-sm mt-1" style={{ color: 'var(--clr-text-secondary)' }}>创建、签到与数据分析</p>
       </div>
 
-      <div className="flex gap-1 p-1 rounded-lg w-fit" style={{ backgroundColor: 'var(--clr-gray-10)' }}>
+      <div className="flex gap-1 p-1 rounded-lg flex-wrap" style={{ backgroundColor: 'var(--clr-gray-10)' }}>
         {([['create', '创建会议'], ['checkin', '签到管理'], ['analytics', '会议分析']] as const).map(([key, label]) => (
           <button
             key={key}

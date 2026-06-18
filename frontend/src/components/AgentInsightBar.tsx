@@ -46,26 +46,31 @@ export default function AgentInsightBar({ pageId }: AgentInsightBarProps) {
   if (dismissed) return null
   if (loading)
     return (
-      <div className="h-10 bg-gray-200 rounded animate-pulse" />
+      <div className="h-12 animate-pulse rounded-md bg-[var(--clr-gray-20)]" />
     )
   if (insights.length === 0) return null
 
   return (
-    <div className="border border-blue-400 rounded p-3 bg-blue-50 relative">
+    <div className="border-l-4 border-[var(--clr-brand)] bg-[var(--clr-brand-light)] rounded-r-md p-3 flex items-start gap-3 relative">
+      <div className="flex-1 space-y-2 pr-4">
+        {insights.map((insight, i) => (
+          <div key={i}>
+            <span className="font-semibold text-sm text-[var(--clr-brand)]">
+              {insight.agent_name}
+            </span>
+            <span className="ml-2 text-sm text-[var(--clr-text-primary)]">
+              {insight.insight_text}
+            </span>
+          </div>
+        ))}
+      </div>
       <button
-        className="absolute top-1 right-1 text-gray-400 hover:text-gray-600 text-sm leading-none"
+        className="shrink-0 text-[var(--clr-gray-50)] hover:text-[var(--clr-text-primary)] transition-colors"
         onClick={() => setDismissed(true)}
+        aria-label="Close"
       >
         ✕
       </button>
-      <div className="space-y-1 pr-4">
-        {insights.map((insight, i) => (
-          <p key={i} className="text-sm text-gray-700">
-            <span className="font-semibold">{insight.agent_name}</span>:{' '}
-            {insight.insight_text}
-          </p>
-        ))}
-      </div>
     </div>
   )
 }
