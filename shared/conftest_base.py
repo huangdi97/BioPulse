@@ -87,6 +87,10 @@ def setup_test_db(module_db, schema_sql: str, test_db_path: str):
         conn.close()
         module_db.DB_PATH = test_db_path
         module_db.init_db = lambda: None
+        # 让 get_db() 指向 PG，否则模块的 database_url 仍是 SQLite 默认值
+        module_db.DATABASE_URL = pg_url
+        if hasattr(module_db, "_db") and hasattr(module_db._db, "database_url"):
+            module_db._db.database_url = pg_url
     else:
         os.makedirs(os.path.dirname(test_db_path), exist_ok=True)
         conn = sqlite3.connect(test_db_path)
