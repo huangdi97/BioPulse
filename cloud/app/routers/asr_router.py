@@ -1,10 +1,28 @@
 from fastapi import APIRouter, Depends, File, UploadFile
+from pydantic import BaseModel
 from starlette import status
 
-from cloud.app.models.asr_models import SummaryResponse, TranscriptResponse, UploadResponse
 from cloud.app.services.asr_service import AsrService
 from shared.auth_scope import require_scope
 from shared.base import success
+
+
+class UploadResponse(BaseModel):
+    task_id: str
+    status: str = "pending"
+
+
+class TranscriptResponse(BaseModel):
+    task_id: str
+    transcript: str
+    status: str
+
+
+class SummaryResponse(BaseModel):
+    task_id: str
+    summary: dict
+    status: str
+
 
 router = APIRouter(prefix="/api/v1/asr", tags=["ASR录音摘要"])
 
