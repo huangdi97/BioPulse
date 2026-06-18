@@ -8,9 +8,10 @@ from starlette import status
 
 
 class BaseService:
-    """服务基类，支持两种数据库连接模式：
+    """服务基类，支持三种数据库连接模式：
 
-    - sqlite3 直连：通过 `_connection(db_path)` 打开并返回连接
+    - sqlite3 直连：通过 `_connect(db_path)` 打开并返回连接
+    - PostgreSQL 连接：若 `DATABASE_URL` 为 PG 协议，自动切换 psycopg
     - FastAPI 依赖注入：通过 `__init__(db=...)` 注入连接后，`self.db` 可用
     """
 
@@ -24,18 +25,28 @@ class BaseService:
         if self.db is None:
             try:
                 self.db = self._connection()
-            except (NotImplementedError, ImportError):
+            except (NotImplementedError, ImportError, ModuleNotFoundError):
                 pass
 
     def _connect(self, db_path: str):
-        """根据路径创建 SQLite 连接并设置 pragma。
+        """根据路径创建连接。
+
+        支持 SQLite 和 PostgreSQL 两种模式：
+        - SQLite: `sqlite3.connect(db_path)`
+        - PostgreSQL: `psycopg.connect(db_path)` + `PGCompatConnection` 包装
 
         参数:
-            db_path: 数据库文件路径
+            db_path: 数据库文件路径或 PG 连接串
 
         返回:
-            sqlite3.Connection 对象
+            sqlite3.Connection 或 PGCompatConnection 对象
         """
+        if db_path.startswith("postgresql://") or db_path.startswith("postgres://"):
+            import psycopg
+
+            from shared.db import PGCompatConnection
+
+            return PGCompatConnection(psycopg.connect(db_path))
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA journal_mode=WAL")
@@ -43,14 +54,7 @@ class BaseService:
         return conn
 
     def _connection(self):
-        """获取数据库连接，优先使用已存在的连接，否则自动创建。
-
-        返回:
-            sqlite3.Connection 对象
-
-        抛出:
-            NotImplementedError: 无法自动获取连接时抛出
-        """
+        """获取数据库连接，优先使用已存在的连接，否则自动创建。"""
         if hasattr(self, "db") and self.db is not None:
             return self.db
         db_path = self._default_db_path()
@@ -62,8 +66,10 @@ class BaseService:
     def _default_db_path(self) -> str | None:
         """根据类的模块名推断默认数据库路径。
 
+        PG 模式时返回 DATABASE_URL，SQLite 模式时返回 DB_PATH。
+
         返回:
-            数据库路径字符串，若无法推断则返回 None
+            数据库路径字符串或 PG 连接串，若无法推断则返回 None
         """
         module_name = self.__class__.__module__
         marker = ".app.services"
@@ -72,8 +78,12 @@ class BaseService:
         app_root = module_name.split(marker, 1)[0]
         try:
             database_module = importlib.import_module(f"{app_root}.app.database")
-        except ImportError:
+        except (ImportError, ModuleNotFoundError):
             return None
+        # PG 模式：优先使用 DATABASE_URL
+        database_url = getattr(database_module, "DATABASE_URL", None)
+        if database_url and (database_url.startswith("postgresql://") or database_url.startswith("postgres://")):
+            return database_url
         return getattr(database_module, "DB_PATH", None)
 
 
