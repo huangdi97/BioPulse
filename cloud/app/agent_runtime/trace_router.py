@@ -1,6 +1,11 @@
 """Trace 查询路由 — 查看单条 trace、按条件搜索、指标汇总。"""
 
+import json
+import logging
+import os
 import sqlite3
+from datetime import datetime
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import PlainTextResponse, StreamingResponse
@@ -89,4 +94,106 @@ def stream_trace(trace_id: str, user=Depends(require_scope("visit"))):
             "Connection": "keep-alive",
             "X-Accel-Buffering": "no",
         },
+    )
+
+
+BIOPULSE_AUDIT_LOG = os.environ.get("BIOPULSE_AUDIT_LOG", "data/biopulse_audit.log")
+
+
+def _get_audit_logger() -> logging.Logger:
+    logger = logging.getLogger("biopulse-audit")
+    if not logger.handlers:
+        logger.setLevel(logging.INFO)
+        log_dir = os.path.dirname(BIOPULSE_AUDIT_LOG)
+        if log_dir:
+            os.makedirs(log_dir, exist_ok=True)
+        handler = logging.FileHandler(BIOPULSE_AUDIT_LOG, encoding="utf-8")
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        logger.addHandler(handler)
+        logger.propagate = False
+    return logger
+
+
+def log_agent_decision(
+    agent_name: str,
+    input_summary: str,
+    decisions: list,
+    risk_level: str,
+    approval_status: str,
+    human_reviewer: str = "",
+) -> None:
+    record = {
+        "timestamp": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+        "agent_name": agent_name,
+        "input_summary": input_summary,
+        "decisions": decisions,
+        "risk_level": risk_level,
+        "approval_status": approval_status,
+        "human_reviewer": human_reviewer,
+    }
+    _get_audit_logger().info(json.dumps(record, ensure_ascii=False))
+
+    if risk_level == "high":
+        auto_record = {
+            "timestamp": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "agent_name": agent_name,
+            "input_summary": input_summary,
+            "decisions": decisions,
+            "risk_level": risk_level,
+            "approval_status": approval_status,
+            "human_reviewer": human_reviewer,
+            "auto_audit": True,
+            "auto_audit_reason": "high_risk",
+        }
+        _get_audit_logger().info(json.dumps(auto_record, ensure_ascii=False))
+
+
+def get_agent_decisions(
+    agent_name: str | None = None,
+    risk_level: str | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
+    limit: int = 50,
+) -> list[dict]:
+    log_file = Path(BIOPULSE_AUDIT_LOG)
+    if not log_file.exists():
+        return []
+
+    records: list[dict] = []
+    with open(log_file, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                record = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if agent_name and record.get("agent_name") != agent_name:
+                continue
+            if risk_level and record.get("risk_level") != risk_level:
+                continue
+            if date_from and record.get("timestamp", "") < date_from:
+                continue
+            if date_to and record.get("timestamp", "") > date_to:
+                continue
+            records.append(record)
+
+    records.reverse()
+    return records[:limit]
+
+
+def auto_audit_decision(
+    agent_name: str,
+    input_summary: str,
+    decisions: list,
+    risk_level: str,
+) -> None:
+    log_agent_decision(
+        agent_name=agent_name,
+        input_summary=input_summary,
+        decisions=decisions,
+        risk_level=risk_level,
+        approval_status="auto_audited",
+        human_reviewer="system",
     )

@@ -3,14 +3,18 @@
 import json
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FuturesTimeoutError
 from datetime import datetime
 
 from cloud.app.agent_runtime.agent_registry import AgentRegistry
 from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
+from cloud.app.agent_runtime.dead_letter_queue import DeadLetterQueue
 from cloud.app.agent_runtime.guard import sanitize_tool_output
 from cloud.app.agent_runtime.models import RuntimeResult
 from cloud.app.agent_runtime.runtime_llm import AllModelsFailedError
 from cloud.app.agent_runtime.schema_validator import OutputSchemaValidator
+from cloud.app.agent_runtime.telemetry import trace_step
 from cloud.app.agent_runtime.validator import Validator
 
 
@@ -34,9 +38,13 @@ logger = logging.getLogger(__name__)
 class ExecutionEngine:
     MAX_LLM_CALLS = 50
     MAX_EXECUTION_SECONDS = 600
+    STEP_TIMEOUT_SECONDS = 60
 
     def __init__(self, host):
         self._host = host
+        self._executor = ThreadPoolExecutor(max_workers=4)
+        self._dead_letter_queue = DeadLetterQueue()
+        self._timeout_count = 0
 
     def _load_approved_tool(self, agent_key, goal, checkpoint):
         if not checkpoint:
@@ -114,7 +122,21 @@ class ExecutionEngine:
                 trace_id = getattr(self, "_trace_id", None)
                 if streamer and trace_id:
                     streamer.stream(trace_id, "agent.llm_call", {"step": step, "agent": c["agent_key"]})
-                ai_resp = self._host._call_ai(c["messages"], spec["default_temperature"], step, force_level=None)
+                future = self._executor.submit(self._host._call_ai, c["messages"], spec["default_temperature"], step, None)
+                try:
+                    ai_resp = future.result(timeout=self.STEP_TIMEOUT_SECONDS)
+                except FuturesTimeoutError:
+                    self._timeout_count += 1
+                    with trace_step("llm_call_timeout", {"step": step, "agent": c["agent_key"]}):
+                        pass
+                    logger.warning("Step %d timed out after %ds for agent %s", step, self.STEP_TIMEOUT_SECONDS, c["agent_key"])
+                    return RuntimeResult(
+                        status="timeout",
+                        result="Agent step timed out",
+                        iterations=step - c["start_step"],
+                        tool_calls=c["tool_calls"],
+                        logs=c["logs"],
+                    )
                 llm_call_count += 1
                 if llm_call_count > self.MAX_LLM_CALLS:
                     return RuntimeResult(
@@ -169,17 +191,18 @@ class ExecutionEngine:
         self._host._tool_exec._save_step_checkpoint(c, step)
 
     def _handle_step_result(self, c, step, ai_resp, duration_ms, spec):
-        decision, error = Validator.validate(ai_resp["reply"])
-        if error or decision is None:
-            self._host._tool_exec._append_invalid_step(c, step, error or "invalid decision", duration_ms, ai_resp)
+        with trace_step("decide_next_action"):
+            decision, error = Validator.validate(ai_resp["reply"])
+            if error or decision is None:
+                self._host._tool_exec._append_invalid_step(c, step, error or "invalid decision", duration_ms, ai_resp)
+                return None
+            tool_name, tool_params = decision.tool, decision.params or {}
+            if self._host._is_completed(decision):
+                return self._host._tool_exec._handle_completion(c, step, decision, ai_resp, duration_ms)
+            if decision.action == "call_tool" and tool_name:
+                return self._process_tool_call(c, step, tool_name, tool_params, decision, ai_resp, duration_ms, spec)
+            self._host._tool_exec._append_invalid_step(c, step, f"invalid action: {decision.action}", duration_ms, ai_resp, tool_name, tool_params)
             return None
-        tool_name, tool_params = decision.tool, decision.params or {}
-        if self._host._is_completed(decision):
-            return self._host._tool_exec._handle_completion(c, step, decision, ai_resp, duration_ms)
-        if decision.action == "call_tool" and tool_name:
-            return self._process_tool_call(c, step, tool_name, tool_params, decision, ai_resp, duration_ms, spec)
-        self._host._tool_exec._append_invalid_step(c, step, f"invalid action: {decision.action}", duration_ms, ai_resp, tool_name, tool_params)
-        return None
 
     def _process_tool_call(self, c, step, tool_name, tool_params, decision, ai_resp, duration_ms, spec):
         tool_params = self._host._tool_exec._reflect_before_tool(
@@ -190,11 +213,12 @@ class ExecutionEngine:
         if streamer and trace_id:
             streamer.stream(trace_id, "agent.tool_call", {"step": step, "tool": tool_name, "params": tool_params})
         try:
-            t_start = time.time()
-            tool_result = self._host._tool_registry.call(
-                tool_name, tool_params, self._host._auth_header, caller_permission=spec.get("max_permission", "read")
-            )
-            t_elapsed = int((time.time() - t_start) * 1000)
+            with trace_step("tool_call", {"tool": tool_name}):
+                t_start = time.time()
+                tool_result = self._host._tool_registry.call(
+                    tool_name, tool_params, self._host._auth_header, caller_permission=spec.get("max_permission", "read")
+                )
+                t_elapsed = int((time.time() - t_start) * 1000)
             self._host._verifier.verify(tool_result)
             if streamer and trace_id:
                 preview = str(tool_result.get("data", ""))[:200]
@@ -237,3 +261,43 @@ class ExecutionEngine:
         )
         c["messages"].append({"role": "user", "content": f"工具返回：{safe_output}"})
         return safe_output
+
+    def execute(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
+        try:
+            return self._execute_impl(goal, agent_key, context)
+        except AllModelsFailedError as exc:
+            logger.error("LLM degraded for %s: %s", agent_key, exc)
+            self._dead_letter_queue.push(
+                {
+                    "agent_key": agent_key,
+                    "input": goal,
+                    "error": f"LLM failed: {exc}",
+                    "timestamp": time.time(),
+                    "retry_count": 0,
+                }
+            )
+            return RuntimeResult(
+                status="degraded",
+                result=f"{agent_key} temporarily unavailable",
+                iterations=0,
+                tool_calls=0,
+                logs=[],
+            )
+        except (KeyError, TypeError, ValueError, ConnectionError, TimeoutError) as exc:
+            logger.error("Tool degraded for %s: %s", agent_key, exc)
+            self._dead_letter_queue.push(
+                {
+                    "agent_key": agent_key,
+                    "input": goal,
+                    "error": f"Tool call failed: {exc}",
+                    "timestamp": time.time(),
+                    "retry_count": 0,
+                }
+            )
+            return RuntimeResult(
+                status="degraded",
+                result=f"Tool {agent_key} unavailable",
+                iterations=0,
+                tool_calls=0,
+                logs=[],
+            )

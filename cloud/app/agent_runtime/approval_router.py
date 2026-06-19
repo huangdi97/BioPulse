@@ -10,6 +10,18 @@ from cloud.app.database import DB_PATH
 from shared.auth_scope import require_scope
 from shared.base import success
 
+
+def route_for_approval(agent_name: str, content: dict, risk_level: str | None = None) -> str:
+    if risk_level:
+        return risk_level
+    mapping = {
+        'compliance': 'high',
+        'analysis': 'medium',
+        'suggestion': 'low',
+    }
+    return mapping.get(agent_name, 'low')
+
+
 router = APIRouter(prefix="/agent/approvals", tags=["Agent Approvals"])
 
 

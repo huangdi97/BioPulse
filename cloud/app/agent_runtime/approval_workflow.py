@@ -7,7 +7,13 @@ from cloud.app.agent_runtime.approval_models import ApprovalRequestManager
 
 logger = logging.getLogger(__name__)
 
-APPROVAL_TIMEOUT_HOURS = 24
+def require_compliance_approval(agent_output: dict, rules_checked: list, risk_level: str) -> tuple[bool, str, str]:
+    if risk_level == 'high':
+        return (False, 'Requires human review', 'pending')
+    elif risk_level == 'medium':
+        return (True, 'AI auto-approved', 'auto')
+    else:
+        return (True, 'Auto-approved', 'auto')
 ESCALATION_INTERVAL_HOURS = [2, 8, 24]
 
 
@@ -64,7 +70,7 @@ class ApprovalWorkflow:
         if request.status == "pending" and request.created_at:
             created = datetime.fromisoformat(request.created_at)
             elapsed_hours = (datetime.now() - created).total_seconds() / 3600
-            if elapsed_hours >= APPROVAL_TIMEOUT_HOURS:
+            if elapsed_hours >= 72:
                 self._manager.reject(request_id, "system")
                 return "timed_out"
         return request.status

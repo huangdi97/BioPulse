@@ -24,6 +24,8 @@ class CostGovernor:
         self._total_output_tokens = 0
         self._call_count = 0
         self._step_costs: list[dict] = []
+        self._budget_alerts: dict[str, dict] = {}
+        self._agent_costs: dict[str, float] = {}
 
     @staticmethod
     def estimate_cost(tokens_input: int, tokens_output: int, model_tier: str) -> float:
@@ -146,6 +148,26 @@ class CostGovernor:
             "FROM agent_cost_tracking GROUP BY model ORDER BY total_cost DESC"
         ).fetchall()
         return [dict(r) for r in rows]
+
+    def set_budget_alert(self, agent_name: str, threshold: float, callback=None):
+        self._budget_alerts[agent_name] = {"threshold": threshold, "callback": callback}
+
+    def _check_budget_alerts(self, agent_name: str, cost: float):
+        if agent_name not in self._budget_alerts:
+            return
+        alert = self._budget_alerts[agent_name]
+        total = self._agent_costs.get(agent_name, 0.0)
+        if total > alert["threshold"]:
+            cb = alert["callback"] or (lambda an, c, t: logger.warning(
+                "CostGovernor: budget alert for %s, cost=%.4f, total=%.4f, threshold=%.4f", an, c, t, alert["threshold"]
+            ))
+            cb(agent_name, cost, total)
+
+    def record_cost(self, agent_name: str, cost: float) -> float:
+        self._agent_costs[agent_name] = self._agent_costs.get(agent_name, 0.0) + cost
+        self._total_cost += cost
+        self._check_budget_alerts(agent_name, cost)
+        return cost
 
     def get_usage(self) -> dict:
         """获取当前成本使用详情。"""

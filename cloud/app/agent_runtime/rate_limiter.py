@@ -32,6 +32,7 @@ class RateLimiter:
 
     def __init__(self):
         self._lock = Lock()
+        self._enabled = True
         self._limits: dict[str, tuple[int, int]] = dict(self.DEFAULTS)
         self._windows: dict[str, list[float]] = {}
 
@@ -42,6 +43,8 @@ class RateLimiter:
 
     def check(self, key: str) -> bool:
         """check."""
+        if not self._enabled:
+            return True
         now = time.time()
         max_calls, window = self._limits.get(key, (0, 0))
         if max_calls <= 0:
@@ -57,6 +60,8 @@ class RateLimiter:
 
     def check_or_raise(self, key: str) -> None:
         """check or raise."""
+        if not self._enabled:
+            return
         now = time.time()
         max_calls, window = self._limits.get(key, (0, 0))
         if max_calls <= 0:
@@ -94,3 +99,22 @@ class RateLimiter:
     @property
     def limits(self) -> dict[str, tuple[int, int]]:
         return dict(self._limits)
+
+    @property
+    def enabled(self) -> bool:
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value: bool) -> None:
+        self._enabled = value
+
+    def get_rate_limit_status(self, key: str) -> dict:
+        max_calls, window = self._limits.get(key, (0, 0))
+        remaining = self.get_remaining(key)
+        current_count = max(0, max_calls - remaining) if max_calls > 0 else 0
+        return {
+            "enabled": self._enabled,
+            "current_count": current_count,
+            "remaining": remaining,
+            "limit": max_calls,
+        }

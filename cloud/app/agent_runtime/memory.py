@@ -1,16 +1,22 @@
 """Agent 记忆与脑状态管理模块。"""
 
+from __future__ import annotations
+
 import json
+import sqlite3
 from datetime import datetime
+from typing import Any
 
 
 class Memory:
     """Agent 短期脑状态存储，支持键值对读写及 JSON/str/int/float 类型。"""
 
-    def __init__(self, agent_db):
+    _agent_db: sqlite3.Connection
+
+    def __init__(self, agent_db: sqlite3.Connection) -> None:
         self._agent_db = agent_db
 
-    def get(self, agent_key: str, key: str, user_id: int = 0) -> any:
+    def get(self, agent_key: str, key: str, user_id: int = 0) -> Any | None:
         """获取 Agent 短期记忆值。"""
         row = self._agent_db.execute(
             "SELECT value, value_type FROM agent_brains WHERE agent_key=? AND user_id=? AND key=?",
@@ -26,7 +32,7 @@ class Memory:
             return float(row["value"])
         return row["value"]
 
-    def set(self, agent_key: str, key: str, value: any, user_id: int = 0):
+    def set(self, agent_key: str, key: str, value: Any, user_id: int = 0) -> None:
         """设置 Agent 短期记忆值。"""
         if isinstance(value, str):
             value_type = "str"
@@ -45,7 +51,7 @@ class Memory:
         )
         self._agent_db.commit()
 
-    def delete(self, agent_key: str, key: str, user_id: int = 0):
+    def delete(self, agent_key: str, key: str, user_id: int = 0) -> None:
         """删除 Agent 短期记忆值。"""
         self._agent_db.execute(
             "DELETE FROM agent_brains WHERE agent_key=? AND user_id=? AND key=?",
@@ -53,7 +59,7 @@ class Memory:
         )
         self._agent_db.commit()
 
-    def search(self, agent_key: str, keyword: str, limit: int = 5) -> list[dict]:
+    def search(self, agent_key: str, keyword: str, limit: int = 5) -> list[dict[str, Any]]:
         """搜索 Agent 短期记忆。"""
         rows = self._agent_db.execute(
             "SELECT key, value, value_type FROM agent_brains WHERE agent_key=? AND (key LIKE ? OR value LIKE ?) ORDER BY updated_at DESC LIMIT ?",
@@ -65,10 +71,12 @@ class Memory:
 class AgentMemory:
     """Agent 长期记忆存储，支持按 session 存取及关键词搜索。"""
 
-    def __init__(self, business_db):
+    _business_db: sqlite3.Connection
+
+    def __init__(self, business_db: sqlite3.Connection) -> None:
         self._business_db = business_db
 
-    def save(self, agent_key: str, session_id: str, entry: dict) -> None:
+    def save(self, agent_key: str, session_id: str, entry: dict[str, Any]) -> None:
         """保存 Agent 长期记忆条目。"""
         self._business_db.execute(
             "INSERT INTO memory_gates (agent_key, session_id, content, created_at) VALUES (?, ?, ?, ?)",
@@ -76,7 +84,7 @@ class AgentMemory:
         )
         self._business_db.commit()
 
-    def load(self, agent_key: str, limit: int = 5) -> list[dict]:
+    def load(self, agent_key: str, limit: int = 5) -> list[dict[str, Any]]:
         """加载 Agent 长期记忆。"""
         cur = self._business_db.execute(
             "SELECT * FROM memory_gates WHERE agent_key = ? ORDER BY created_at DESC LIMIT ?",
@@ -84,7 +92,7 @@ class AgentMemory:
         )
         return [dict(r) for r in cur.fetchall()]
 
-    def search(self, agent_key: str, keyword: str, limit: int = 5) -> list[dict]:
+    def search(self, agent_key: str, keyword: str, limit: int = 5) -> list[dict[str, Any]]:
         """搜索 Agent 长期记忆。"""
         rows = self._business_db.execute(
             "SELECT * FROM memory_gates WHERE agent_key=? AND content LIKE ? ORDER BY created_at DESC LIMIT ?",
@@ -92,7 +100,7 @@ class AgentMemory:
         ).fetchall()
         return [dict(r) for r in rows]
 
-    def get_session(self, agent_key: str, session_id: str) -> dict:
+    def get_session(self, agent_key: str, session_id: str) -> dict[str, Any]:
         """获取指定 session 的全部记忆条目。"""
         cur = self._business_db.execute(
             "SELECT * FROM memory_gates WHERE agent_key = ? AND session_id = ? ORDER BY created_at",
