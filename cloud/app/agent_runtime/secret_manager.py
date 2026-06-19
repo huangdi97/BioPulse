@@ -109,12 +109,16 @@ class SecretManager:
         logger.info("Secret %s updated", key_name)
 
     def get(self, key_name: str) -> str | None:
-        """获取并解密密钥值。"""
+        """获取并解密密钥值。先从SQLite查，查不到时回退到 SECRET_{key_name} 环境变量。"""
         conn = self._get_connection()
         row = conn.execute("SELECT encrypted_value FROM agent_secrets WHERE key_name=?", (key_name,)).fetchone()
-        if not row:
-            return None
-        return self._decrypt(row["encrypted_value"])
+        if row:
+            return self._decrypt(row["encrypted_value"])
+        env_key = f"SECRET_{key_name.upper()}"
+        env_val = os.environ.get(env_key)
+        if env_val:
+            return env_val
+        return None
 
     def list_keys(self) -> list[str]:
         """列出所有密钥名称。"""
@@ -131,3 +135,38 @@ class SecretManager:
         conn = self._get_connection()
         conn.execute("DELETE FROM agent_secrets WHERE key_name=?", (key_name,))
         conn.commit()
+
+    def validate_config(self, expected_keys: list[str]) -> dict:
+        """验证配置完整性，检查必填密钥是否存在。"""
+        present = []
+        missing = []
+        warnings = []
+        for key in expected_keys:
+            val = self.get(key)
+            if val is not None:
+                present.append(key)
+            else:
+                missing.append(key)
+        if not HAS_CRYPTO:
+            warnings.append("Cryptography library not installed — secrets stored in plaintext")
+        return {
+            "missing": missing,
+            "present": present,
+            "warnings": warnings,
+            "crypto_available": HAS_CRYPTO,
+        }
+
+    def export_keys(self) -> dict:
+        """导出所有密钥名称和状态（不泄露值）。"""
+        conn = self._get_connection()
+        rows = conn.execute("SELECT key_name, created_at, updated_at FROM agent_secrets ORDER BY key_name").fetchall()
+        result = {}
+        for r in rows:
+            env_key = f"SECRET_{r['key_name'].upper()}"
+            result[r["key_name"]] = {
+                "exists": True,
+                "has_env_fallback": os.environ.get(env_key) is not None,
+                "created_at": r["created_at"],
+                "updated_at": r["updated_at"],
+            }
+        return result

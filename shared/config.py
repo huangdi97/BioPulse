@@ -65,6 +65,7 @@ class Config(BaseSettings):
     clinical_ops_port: int = 8010
     patient_engage_port: int = 8011
 
+    ai_routing_mode: str = "cloud"
     ai_routing_enabled: bool = False
     ai_local_endpoint: str = ""
     ai_local_model: str = ""

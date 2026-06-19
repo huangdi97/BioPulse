@@ -60,19 +60,20 @@ def build_cloud_body(messages: list[dict], temperature: float, agent_mode: bool 
 
 
 def call_local(config, messages: list[dict], temperature: float, fallback_fn) -> dict:
-    """call local."""
-    prompt_text = "\n\n".join(f"{m.get('role', 'user')}: {m.get('content', '')}" for m in messages)
+    """调用本地模型（OpenAI兼容格式，llama.cpp/vLLM/LocalAI等）。"""
     body = {
         "model": config.ai_local_model,
-        "prompt": prompt_text,
-        "stream": False,
-        "options": {"temperature": temperature},
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": 2048,
     }
+    url = config.ai_local_endpoint.rstrip("/") + "/v1/chat/completions"
     try:
         with httpx.Client(timeout=LLM_INFERENCE_TIMEOUT) as client:
             resp = client.post(
-                config.ai_local_endpoint,
+                url,
                 json=body,
+                headers={"Content-Type": "application/json", "Authorization": "Bearer not-needed"},
             )
             raw = resp.json()
     except (httpx.HTTPError, json.JSONDecodeError) as e:
@@ -81,13 +82,16 @@ def call_local(config, messages: list[dict], temperature: float, fallback_fn) ->
         result["model_tier"] = "cloud_normal"
         return result
 
+    choices = raw.get("choices", [])
+    reply = choices[0].get("message", {}).get("content", "") if choices else ""
+    usage = raw.get("usage", {}) or {}
     normalized = {
         "data": {
-            "reply": raw.get("response", ""),
+            "reply": reply,
             "usage": {
-                "prompt_tokens": raw.get("prompt_eval_count", 0),
-                "completion_tokens": raw.get("eval_count", 0),
-                "total_tokens": raw.get("prompt_eval_count", 0) + raw.get("eval_count", 0),
+                "prompt_tokens": usage.get("prompt_tokens", 0),
+                "completion_tokens": usage.get("completion_tokens", 0),
+                "total_tokens": usage.get("total_tokens", 0),
             },
         }
     }
@@ -95,19 +99,20 @@ def call_local(config, messages: list[dict], temperature: float, fallback_fn) ->
 
 
 async def call_local_async(config, messages: list[dict], temperature: float, fallback_fn) -> dict:
-    """call local async."""
-    prompt_text = "\n\n".join(f"{m.get('role', 'user')}: {m.get('content', '')}" for m in messages)
+    """异步调用本地模型（OpenAI兼容格式，llama.cpp/vLLM/LocalAI等）。"""
     body = {
         "model": config.ai_local_model,
-        "prompt": prompt_text,
-        "stream": False,
-        "options": {"temperature": temperature},
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": 2048,
     }
+    url = config.ai_local_endpoint.rstrip("/") + "/v1/chat/completions"
     try:
         async with httpx.AsyncClient(timeout=LLM_INFERENCE_TIMEOUT) as client:
             resp = await client.post(
-                config.ai_local_endpoint,
+                url,
                 json=body,
+                headers={"Content-Type": "application/json", "Authorization": "Bearer not-needed"},
             )
             raw = resp.json()
     except (httpx.HTTPError, json.JSONDecodeError) as e:
@@ -116,13 +121,16 @@ async def call_local_async(config, messages: list[dict], temperature: float, fal
         result["model_tier"] = "cloud_normal"
         return result
 
+    choices = raw.get("choices", [])
+    reply = choices[0].get("message", {}).get("content", "") if choices else ""
+    usage = raw.get("usage", {}) or {}
     normalized = {
         "data": {
-            "reply": raw.get("response", ""),
+            "reply": reply,
             "usage": {
-                "prompt_tokens": raw.get("prompt_eval_count", 0),
-                "completion_tokens": raw.get("eval_count", 0),
-                "total_tokens": raw.get("prompt_eval_count", 0) + raw.get("eval_count", 0),
+                "prompt_tokens": usage.get("prompt_tokens", 0),
+                "completion_tokens": usage.get("completion_tokens", 0),
+                "total_tokens": usage.get("total_tokens", 0),
             },
         }
     }

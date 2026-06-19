@@ -121,6 +121,78 @@ export async function getTargetPipeline(targetId: string) {
   return []
 }
 
+export interface CompetitorIntelResponse<T = unknown> {
+  code: number
+  message: string
+  data: T
+}
+
+export interface PaperSearchResponse {
+  items: Paper[]
+  total: number
+  page: number
+}
+
+export interface PiProfileResponse {
+  items: PiProfile[]
+  total: number
+  page: number
+}
+
+export interface PipelineResponse {
+  items: unknown[]
+  total: number
+}
+
+export interface TrendDataPoint {
+  date: string
+  value: number
+  label?: string
+}
+
+export interface CompetitorProduct {
+  id: string
+  name: string
+  status: string
+  category: string
+  price: number
+  company: string
+  phase: string
+  updated_at: string
+}
+
+export interface SentimentResponse {
+  keyword: string
+  trend: TrendDataPoint[]
+  summary: string
+}
+
+export interface VolumeResponse {
+  platform: string
+  data: TrendDataPoint[]
+}
+
+export interface PriceAnomalyItem {
+  date: string
+  price: number
+  is_anomaly: boolean
+}
+
+export interface PriceAnomalyResponse {
+  product_id: string
+  anomalies: PriceAnomalyItem[]
+}
+
+export interface CompareProductMetric {
+  id: string
+  name: string
+  metrics: Record<string, number>
+}
+
+export interface CompareResponse {
+  products: CompareProductMetric[]
+}
+
 // ── Competitor Intelligence API ──
 
 async function fetchCompetitorApi<T>(path: string, options?: RequestInit): Promise<T | null> {
@@ -135,26 +207,37 @@ async function fetchCompetitorApi<T>(path: string, options?: RequestInit): Promi
   }
 }
 
-export async function getCompetitorProducts(status?: string): Promise<any[]> {
+export async function getCompetitorProducts(
+  status?: string,
+): Promise<CompetitorProduct[]> {
   const params = status ? `?status=${status}` : ''
-  return (await fetchCompetitorApi<any[]>(`/products${params}`)) || []
+  return (await fetchCompetitorApi<CompetitorProduct[]>(`/products${params}`)) || []
 }
 
-export async function getCompetitorSentiment(keyword: string, days = 30): Promise<any> {
+export async function getCompetitorSentiment(
+  keyword: string,
+  days = 30,
+): Promise<SentimentResponse | null> {
   const params = new URLSearchParams({ keyword, days: String(days) })
-  return fetchCompetitorApi<any>(`/sentiment?${params}`)
+  return fetchCompetitorApi<SentimentResponse>(`/sentiment?${params}`)
 }
 
-export async function getCompetitorVolume(platform = 'weibo'): Promise<any> {
-  return fetchCompetitorApi<any>(`/volume?platform=${platform}`)
+export async function getCompetitorVolume(
+  platform = 'weibo',
+): Promise<VolumeResponse | null> {
+  return fetchCompetitorApi<VolumeResponse>(`/volume?platform=${platform}`)
 }
 
-export async function getCompetitorPriceAnomaly(productId: string): Promise<any> {
-  return fetchCompetitorApi<any>(`/price/anomaly?product_id=${productId}`)
+export async function getCompetitorPriceAnomaly(
+  productId: string,
+): Promise<PriceAnomalyResponse | null> {
+  return fetchCompetitorApi<PriceAnomalyResponse>(`/price/anomaly?product_id=${productId}`)
 }
 
-export async function getCompetitorCompare(productIds: string): Promise<any> {
-  return fetchCompetitorApi<any>(`/compare?product_ids=${productIds}`)
+export async function getCompetitorCompare(
+  productIds: string,
+): Promise<CompareResponse | null> {
+  return fetchCompetitorApi<CompareResponse>(`/compare?product_ids=${productIds}`)
 }
 
 export async function getCompetitorBriefLatest(): Promise<any> {

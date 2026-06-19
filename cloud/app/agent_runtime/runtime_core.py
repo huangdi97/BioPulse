@@ -61,6 +61,7 @@ class RuntimeCore:
         self._cost_tracker = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0, "total_cost": 0.0, "step_costs": []}
         self._loop_detector, self._checkpoint = LoopDetector(), RuntimeState(agent_db)
         self._approval, self._snapshot_manager, self._cost_governor = ApprovalManager(agent_db), StateSnapshot(agent_db), CostGovernor()
+        self._scan_recoverable_checkpoints()
         self._planner = Planner()
         self._reflector = Reflector(plan_generator=self._planner)
         self._reflector_level, self._reflector_light_clean_streak, self._reflector_timeout_seconds = "balanced", 0, 2.0
@@ -199,6 +200,42 @@ class RuntimeCore:
     def brain(self) -> Memory:
         """获取 Agent 脑状态存储器。"""
         return self._brain
+
+    def list_recoverable(self) -> list[dict]:
+        """列出所有可恢复的checkpoint（中断且未过期）。"""
+        from cloud.app.agent_runtime.state_snapshot import recover as recover_fn
+
+        snapshots = recover_fn(self._agent_db)
+        result = []
+        for snap in snapshots:
+            state = snap.get("state", {})
+            result.append(
+                {
+                    "trace_id": snap.get("trace_id", ""),
+                    "agent_key": state.get("agent_key", ""),
+                    "goal": state.get("goal", ""),
+                    "step": snap.get("step", 0),
+                    "created_at": snap.get("created_at", ""),
+                    "status": state.get("status", "interrupted"),
+                }
+            )
+        return result
+
+    def _scan_recoverable_checkpoints(self) -> None:
+        """启动时扫描可恢复的checkpoint并记录日志。"""
+        recoverable = self.list_recoverable()
+        if recoverable:
+            logger.info("Found %d recoverable checkpoints on startup", len(recoverable))
+            for ck in recoverable:
+                logger.info(
+                    "Recoverable checkpoint: trace=%s agent=%s goal=%s step=%s",
+                    ck["trace_id"],
+                    ck["agent_key"],
+                    ck["goal"][:50],
+                    ck["step"],
+                )
+        else:
+            logger.info("No recoverable checkpoints found on startup")
 
     def _save_snapshot(self, agent_id, step_id, plan, results, context, status="active"):
         """保存状态快照到 StateSnapshot 管理器。"""

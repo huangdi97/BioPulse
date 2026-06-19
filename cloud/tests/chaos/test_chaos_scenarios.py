@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch
 from cloud.app.agent_runtime.execution_loop import ExecutionEngine
 from cloud.app.agent_runtime.models import RuntimeResult
 
-from .chaos_agent_test import inject_db_failure, inject_api_timeout, inject_rate_limit
+from .chaos_agent_test import inject_api_timeout, inject_db_failure
 
 
 def _make_host():
@@ -88,18 +88,18 @@ def test_rate_limit_graceful():
     mock_agent = _mock_agent()
 
     valid_llm_reply = {
-        "reply": json.dumps({
-            "action": "call_tool",
-            "tool": "query_db",
-            "params": {"key": "test"},
-            "reasoning": "testing rate limit",
-        })
+        "reply": json.dumps(
+            {
+                "action": "call_tool",
+                "tool": "query_db",
+                "params": {"key": "test"},
+                "reasoning": "testing rate limit",
+            }
+        )
     }
     host._call_ai = MagicMock(return_value=valid_llm_reply)
     host._is_completed = MagicMock(return_value=False)
-    host._tool_registry.call = MagicMock(
-        return_value={"success": False, "error": "rate_limit_exceeded: too many requests", "data": None}
-    )
+    host._tool_registry.call = MagicMock(return_value={"success": False, "error": "rate_limit_exceeded: too many requests", "data": None})
     host._tool_exec._handle_step_error = MagicMock(return_value=False)
     host._tool_exec._handle_max_iterations = MagicMock(
         return_value=RuntimeResult(status="degraded", result="rate limit exceeded", iterations=1, tool_calls=1, logs=[])

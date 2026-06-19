@@ -209,3 +209,73 @@ class TestNotificationService:
         svc = NotificationService(provider_settings=settings)
         svc._push_notification(title="Hi", body="There", user_id=7)
         assert "falling back to local" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_audio_to_visit_draft_pipeline() -> None:
+    from unittest.mock import patch
+
+    from cloud.app.services.visit_extraction_service import generate_visit_draft
+
+    mock_transcript = "Patient reports headache and fever since three days"
+    mock_confidence = 0.92
+    mock_fields = {"visit_summary": "Headache and fever reported, no medication prescribed"}
+
+    with (
+        patch(
+            "cloud.app.services.visit_extraction_service.transcribe_audio",
+            return_value={"text": mock_transcript, "confidence": mock_confidence},
+        ),
+        patch(
+            "cloud.app.services.visit_extraction_service.extract_visit_fields",
+            return_value=mock_fields,
+        ),
+    ):
+        result = await generate_visit_draft("/tmp/test_audio.wav", "user_001")
+
+    assert result["user_id"] == "user_001"
+    assert result["source_audio"] == "/tmp/test_audio.wav"
+    assert result["transcript"] == mock_transcript
+    assert result["asr_confidence"] == mock_confidence
+    assert result["extracted_fields"] == mock_fields
+
+
+@pytest.mark.asyncio
+async def test_audio_to_visit_draft_asr_fails() -> None:
+    from unittest.mock import patch
+
+    from cloud.app.services.visit_extraction_service import generate_visit_draft
+
+    with patch(
+        "cloud.app.services.visit_extraction_service.transcribe_audio",
+        return_value={"text": "", "confidence": 0.0},
+    ):
+        result = await generate_visit_draft("/tmp/test_audio.wav", "user_001")
+
+    assert result["user_id"] == "user_001"
+    assert result["transcript"] == ""
+    assert result["asr_confidence"] == 0.0
+    assert result["extracted_fields"] is None
+
+
+@pytest.mark.asyncio
+async def test_audio_to_visit_draft_extraction_fails() -> None:
+    from unittest.mock import patch
+
+    from cloud.app.services.visit_extraction_service import generate_visit_draft
+
+    mock_transcript = "Patient reports headache and fever since three days"
+    mock_confidence = 0.92
+
+    with (
+        patch(
+            "cloud.app.services.visit_extraction_service.transcribe_audio",
+            return_value={"text": mock_transcript, "confidence": mock_confidence},
+        ),
+        patch(
+            "cloud.app.services.visit_extraction_service.extract_visit_fields",
+            side_effect=Exception("LLM extraction failed"),
+        ),
+    ):
+        with pytest.raises(Exception, match="LLM extraction failed"):
+            await generate_visit_draft("/tmp/test_audio.wav", "user_001")

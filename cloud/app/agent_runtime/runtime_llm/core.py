@@ -34,6 +34,8 @@ class RuntimeLLM:
 
     def __init__(self, core=None):
         self._core = core
+        self._local_consecutive_failures = 0
+        self._local_disabled = False
 
     @staticmethod
     def _estimate_token_count(messages: list[dict]) -> int:
@@ -57,12 +59,30 @@ class RuntimeLLM:
         """估算消息列表的复杂度等级。"""
         return estimate_complexity(messages)
 
+    def _check_local_failures(self, result: dict) -> None:
+        """追踪本地模型失败次数，连续3次失败后自动禁用。"""
+        if result.get("success"):
+            self._local_consecutive_failures = 0
+        else:
+            self._local_consecutive_failures += 1
+            if self._local_consecutive_failures >= 3:
+                self._local_disabled = True
+                logger.warning(
+                    "本地模型连续失败%d次，已自动禁用，后续请求跳过本地",
+                    self._local_consecutive_failures,
+                )
+
     def _do_call_local(self, messages: list[dict], temperature: float, is_async: bool):
+        if self._local_disabled:
+            fn = self._call_cloud_normal_async if is_async else self._call_cloud_normal
+            return fn(messages, temperature)
         fn = call_local_async if is_async else call_local
         fallback_fn = (
             (lambda: self._call_cloud_normal_async(messages, temperature)) if is_async else (lambda: self._call_cloud_normal(messages, temperature))
         )
-        return fn(config_settings, messages, temperature, fallback_fn=fallback_fn)
+        result = fn(config_settings, messages, temperature, fallback_fn=fallback_fn)
+        self._check_local_failures(result)
+        return result
 
     def _call_local(self, messages: list[dict], temperature: float) -> dict:
         return self._do_call_local(messages, temperature, False)
@@ -102,33 +122,43 @@ class RuntimeLLM:
         return annotate_route_result(result, model_tier)
 
     def _do_route(self, messages: list[dict], temperature: float, force_level: int | None, is_async: bool):
-        def _sync():
-            if force_level is not None:
-                level = force_level
-            elif not config_settings.ai_routing_enabled:
-                return self._annotate_route_result(self._call_cloud_normal(messages, temperature), "cloud_normal")
-            else:
-                level = self._estimate_complexity(messages)
+        mode = config_settings.ai_routing_mode
 
+        def _route_sync(level):
             if level <= 2:
                 return self._annotate_route_result(self._call_local(messages, temperature), "local")
             if level == 3:
                 return self._annotate_route_result(self._call_cloud_normal(messages, temperature), "cloud_normal")
             return self._annotate_route_result(self._call_cloud_agent(messages, temperature), "cloud_agent")
 
-        async def _async():
-            if force_level is not None:
-                level = force_level
-            elif not config_settings.ai_routing_enabled:
-                return self._annotate_route_result(await self._call_cloud_normal_async(messages, temperature), "cloud_normal")
-            else:
-                level = self._estimate_complexity(messages)
-
+        async def _route_async(level):
             if level <= 2:
                 return self._annotate_route_result(await self._call_local_async(messages, temperature), "local")
             if level == 3:
                 return self._annotate_route_result(await self._call_cloud_normal_async(messages, temperature), "cloud_normal")
             return self._annotate_route_result(await self._call_cloud_agent_async(messages, temperature), "cloud_agent")
+
+        def _sync():
+            if force_level is not None:
+                return _route_sync(force_level)
+            if mode == "cloud":
+                return self._annotate_route_result(self._call_cloud_normal(messages, temperature), "cloud_normal")
+            if mode == "local":
+                return self._annotate_route_result(self._call_local(messages, temperature), "local")
+            # hybrid
+            level = self._estimate_complexity(messages)
+            return _route_sync(level)
+
+        async def _async():
+            if force_level is not None:
+                return await _route_async(force_level)
+            if mode == "cloud":
+                return self._annotate_route_result(await self._call_cloud_normal_async(messages, temperature), "cloud_normal")
+            if mode == "local":
+                return self._annotate_route_result(await self._call_local_async(messages, temperature), "local")
+            # hybrid
+            level = self._estimate_complexity(messages)
+            return await _route_async(level)
 
         return _async() if is_async else _sync()
 

@@ -109,68 +109,42 @@ class ToolBridge:
         for t in DEFAULT_TOOLS + BRAIN_TOOLS:
             self.register_tool(t)
 
-    def call(
+    def _format_error(self, error: str) -> dict:
+        return {
+            "success": False,
+            "data": None,
+            "error": error,
+            "needs_approval": False,
+        }
+
+    def _check_permission(
+        self,
+        tool: ToolDef,
+        tool_name: str,
+        params: dict,
+        caller_permission: str,
+    ) -> dict | None:
+        level_order = {"read": 0, "write": 1, "admin": 2}
+        if level_order.get(tool.permission_level, 0) > level_order.get(caller_permission, 0):
+            return self._format_error(f"permission denied: {tool_name} requires {tool.permission_level}, caller has {caller_permission}")
+        if level_order.get(tool.permission_level, 0) >= 1:
+            return {
+                "success": False,
+                "data": None,
+                "needs_approval": True,
+                "tool": tool_name,
+                "params": params,
+            }
+        return None
+
+    def _call_http_tool(
         self,
         tool_name: str,
         params: dict,
         auth_header: str,
-        caller_permission: str = "read",
-        idempotency_agent: str | None = None,
-        idempotency_step: int = 0,
+        idempotency_agent: str | None,
+        idempotency_step: int,
     ) -> dict:
-        """执行工具调用，包含权限校验、熔断检查、参数校验、幂等性和重试。"""
-        now = time.time()
-        if tool_name in self._breaker_expiry:
-            if now < self._breaker_expiry[tool_name]:
-                return {"success": False, "data": None, "error": f"circuit breaker open for {tool_name}", "needs_approval": False}
-            else:
-                del self._breaker_expiry[tool_name]
-                self._failure_counts.pop(tool_name, None)
-
-        tool = self._tools.get(tool_name)
-        if tool is None:
-            return {"success": False, "data": None, "error": f"unknown tool: {tool_name}", "needs_approval": False}
-
-        # --- P0-4: Parameter validation ---
-        param_err = self._validate_params(tool_name, params)
-        if param_err:
-            return {"success": False, "data": None, "error": param_err, "needs_approval": False}
-
-        # --- P0-5: Idempotency check ---
-        if idempotency_agent:
-            idem_key = self._idempotency_key(idempotency_agent, tool_name, idempotency_step)
-            cached = self._check_idempotency(idem_key)
-            if cached is not None:
-                return cached
-
-        level_order = {"read": 0, "write": 1, "admin": 2}
-        if level_order.get(tool.permission_level, 0) > level_order.get(caller_permission, 0):
-            return {
-                "success": False,
-                "data": None,
-                "error": f"permission denied: {tool_name} requires {tool.permission_level}, caller has {caller_permission}",
-                "needs_approval": False,
-            }
-
-        if level_order.get(tool.permission_level, 0) >= 1:
-            return {"success": False, "data": None, "needs_approval": True, "tool": tool_name, "params": params}
-
-        if tool.sandbox:
-            return self._run_sandboxed(tool_name, params, idempotency_agent, idempotency_step)
-
-        if tool_name == "agent_brain_get":
-            data = self._brain.get(params.get("key"), params.get("user_id", 0))
-            result = {"success": True, "data": data, "error": None}
-            if idempotency_agent:
-                self._set_idempotency(self._idempotency_key(idempotency_agent, tool_name, idempotency_step), result)
-            return result
-        if tool_name == "agent_brain_set":
-            self._brain.set(params.get("key"), params.get("value"), params.get("user_id", 0))
-            result = {"success": True, "data": "ok", "error": None}
-            if idempotency_agent:
-                self._set_idempotency(self._idempotency_key(idempotency_agent, tool_name, idempotency_step), result)
-            return result
-
         url = f"{settings.cloud_api_base}/agent-gateway/execute"
         payload = {"tool_name": tool_name, "params": params}
         data = json.dumps(payload).encode("utf-8")
@@ -200,17 +174,113 @@ class ToolBridge:
             self._failure_counts[tool_name] = self._failure_counts.get(tool_name, 0) + 1
             if self._failure_counts[tool_name] >= 3:
                 self._breaker_expiry[tool_name] = time.time() + 30
-            return {"success": False, "data": None, "error": f"tool call failed: {e}"}
+            return self._format_error(f"tool call failed: {e}")
         if result["success"]:
             self._failure_counts[tool_name] = 0
             ret = {"success": True, "data": result["data"], "error": None}
             if idempotency_agent:
-                self._set_idempotency(self._idempotency_key(idempotency_agent, tool_name, idempotency_step), ret)
+                self._set_idempotency(
+                    self._idempotency_key(idempotency_agent, tool_name, idempotency_step),
+                    ret,
+                )
             return ret
         self._failure_counts[tool_name] = self._failure_counts.get(tool_name, 0) + 1
         if self._failure_counts[tool_name] >= 3:
             self._breaker_expiry[tool_name] = time.time() + 30
         return {"success": False, "data": None, "error": result["error"]}
+
+    def _route_tool(
+        self,
+        tool: ToolDef,
+        tool_name: str,
+        params: dict,
+        auth_header: str,
+        idempotency_agent: str | None,
+        idempotency_step: int,
+    ) -> dict:
+        if tool.sandbox:
+            return self._run_sandboxed(tool_name, params, idempotency_agent, idempotency_step)
+
+        if tool_name == "agent_brain_get":
+            data = self._brain.get(params.get("key"), params.get("user_id", 0))
+            result = {"success": True, "data": data, "error": None}
+            if idempotency_agent:
+                self._set_idempotency(
+                    self._idempotency_key(idempotency_agent, tool_name, idempotency_step),
+                    result,
+                )
+            return result
+        if tool_name == "agent_brain_set":
+            self._brain.set(params.get("key"), params.get("value"), params.get("user_id", 0))
+            result = {"success": True, "data": "ok", "error": None}
+            if idempotency_agent:
+                self._set_idempotency(
+                    self._idempotency_key(idempotency_agent, tool_name, idempotency_step),
+                    result,
+                )
+            return result
+
+        return self._call_http_tool(
+            tool_name,
+            params,
+            auth_header,
+            idempotency_agent,
+            idempotency_step,
+        )
+
+    def call(
+        self,
+        tool_name: str,
+        params: dict,
+        auth_header: str,
+        caller_permission: str = "read",
+        idempotency_agent: str | None = None,
+        idempotency_step: int = 0,
+    ) -> dict:
+        """执行工具调用，包含权限校验、熔断检查、参数校验、幂等性和重试。"""
+        now = time.time()
+        if tool_name in self._breaker_expiry:
+            if now < self._breaker_expiry[tool_name]:
+                return self._format_error(f"circuit breaker open for {tool_name}")
+            else:
+                del self._breaker_expiry[tool_name]
+                self._failure_counts.pop(tool_name, None)
+
+        tool = self._tools.get(tool_name)
+        if tool is None:
+            return self._format_error(f"unknown tool: {tool_name}")
+
+        param_err = self._validate_params(tool_name, params)
+        if param_err:
+            return self._format_error(param_err)
+
+        if idempotency_agent:
+            idem_key = self._idempotency_key(
+                idempotency_agent,
+                tool_name,
+                idempotency_step,
+            )
+            cached = self._check_idempotency(idem_key)
+            if cached is not None:
+                return cached
+
+        perm_result = self._check_permission(
+            tool,
+            tool_name,
+            params,
+            caller_permission,
+        )
+        if perm_result is not None:
+            return perm_result
+
+        return self._route_tool(
+            tool,
+            tool_name,
+            params,
+            auth_header,
+            idempotency_agent,
+            idempotency_step,
+        )
 
     def _run_sandboxed(self, tool_name: str, params: dict, idempotency_agent: str | None, idempotency_step: int) -> dict:
         script = params.pop("_script", "")
@@ -225,10 +295,10 @@ class ToolBridge:
                 timeout=30,
             )
             result = {
-            "success": completed.returncode == 0,
-            "data": completed.stdout,
-            "error": completed.stderr if completed.returncode != 0 else None,
-        }
+                "success": completed.returncode == 0,
+                "data": completed.stdout,
+                "error": completed.stderr if completed.returncode != 0 else None,
+            }
             if idempotency_agent:
                 self._set_idempotency(self._idempotency_key(idempotency_agent, tool_name, idempotency_step), result)
             return result

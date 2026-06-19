@@ -1,0 +1,3 @@
+{"timestamp": "2026-06-19T06:04:09.925934Z", "agent_name": "compliance", "input_summary": "test", "decisions": [], "risk_level": "high", "approval_status": "pending", "human_reviewer": ""}
+{"timestamp": "2026-06-19T07:15:16.429340Z", "agent_name": "compliance", "input_summary": "auto test", "decisions": [], "risk_level": "high", "approval_status": "auto_audited", "human_reviewer": "system"}
+{"timestamp": "2026-06-19T07:15:16.430001Z", "agent_name": "compliance", "input_summary": "auto test", "decisions": [], "risk_level": "high", "approval_status": "auto_audited", "human_reviewer": "system", "auto_audit": true, "auto_audit_reason": "high_risk"}

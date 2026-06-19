@@ -24,6 +24,10 @@ app = FastAPI(
     title="BioPulse · Cloud API",
     description="面向医药+生物双主线的智能CRM SaaS。包含认证、合规、商机、Agent、记忆系统、知识图谱、MDT会诊、因果推理、合规规则引擎等核心模块。",
     version=settings.version,
+    contact={"name": "BioPulse", "url": "https://biopulse.ai"},
+    license_info={"name": "Proprietary", "identifier": "Proprietary"},
+    terms_of_service="https://biopulse.ai/terms",
+    swagger_ui_parameters={"docExpansion": "list", "defaultModelsExpandDepth": -1},
     openapi_tags=[
         {"name": "认证", "description": "用户登录、注册、令牌刷新、JWT验证"},
         {"name": "合规", "description": "合规检测、规则管理、合规仪表板、合规证书"},

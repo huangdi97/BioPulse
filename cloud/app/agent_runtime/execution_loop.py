@@ -16,6 +16,7 @@ from cloud.app.agent_runtime.guard import sanitize_tool_output
 from cloud.app.agent_runtime.models import RuntimeResult
 from cloud.app.agent_runtime.orchestrator import Orchestrator
 from cloud.app.agent_runtime.pii_redactor import PIIRedactionFilter
+from cloud.app.agent_runtime.planner import PlanStep
 from cloud.app.agent_runtime.runtime_llm import AllModelsFailedError
 from cloud.app.agent_runtime.schema_validator import OutputSchemaValidator
 from cloud.app.agent_runtime.telemetry import trace_step
@@ -134,14 +135,31 @@ class ExecutionEngine:
             if hot_spec:
                 spec = {**spec, **hot_spec}
         checkpoint = self._host._helper._load_checkpoint(agent_key, goal)
+        plan = None
+        plan_available = False
         if checkpoint:
             messages = checkpoint["messages"]
             logs = checkpoint["logs"]
             tool_calls = checkpoint["tool_calls_so_far"]
             start_step = checkpoint["step"] + 1
         else:
+            tools_list = spec.get("allowed_tools", [])
+            if not tools_list:
+                tools_list = [t["name"] for t in self._host._tool_registry.list_tools() if t.get("name")]
+            plan = self._host._planner.generate_plan(goal, tools_list, context)
+            plan_available = plan is not None and bool(plan.steps) and plan.plan_confidence > 0
+            plan_section = ""
+            if plan_available:
+                plan_lines = ["你的计划："]
+                for i, step in enumerate(plan.steps, 1):
+                    plan_lines.append(f"步骤{i}: {step.description} — 工具：{step.tool}")
+                plan_lines.append("")
+                plan_lines.append(f"当前进度：第 0 步 / 共 {len(plan.steps)} 步")
+                plan_lines.append(f"完成条件：{json.dumps(plan.completion_conditions, ensure_ascii=False)}")
+                plan_section = "\n".join(plan_lines) + "\n\n"
             prompt = (
                 f"你是一个{spec['role_desc']}\n\n"
+                f"{plan_section}"
                 f"可用工具（JSON格式）：{json.dumps(self._host._tool_registry.list_tools(), ensure_ascii=False)}\n\n"
                 f"当前上下文：{json.dumps(context or {}, ensure_ascii=False)}\n\n"
                 '请回复JSON格式：{"action": "call_tool"|"complete"|"error", "tool": "tool_name", "params": {...}, "reasoning": "..."}'
@@ -160,6 +178,8 @@ class ExecutionEngine:
             "started_at": datetime.now().isoformat(),
             "approved_tool": approved_tool,
             "approved_params": approved_params,
+            "_plan": plan,
+            "_plan_step_index": 0 if plan_available else -1,
         }
 
     def _execute_impl(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
@@ -197,6 +217,22 @@ class ExecutionEngine:
                 continue
             if not self._host._core_tools._check_budget(c["messages"]):
                 return self._handle_budget_exceeded(c, step, step_start)
+            if c.get("_plan") and c["_plan"].steps:
+                _plan = c["_plan"]
+                _total = len(_plan.steps)
+                _completed = c.get("_plan_step_index", 0)
+                _next_desc = _plan.steps[_completed].description if _completed < _total else "全部完成"
+                _last_output = ""
+                for _msg in reversed(c["messages"]):
+                    if isinstance(_msg.get("content"), str) and _msg["content"].startswith("工具返回："):
+                        _last_output = _msg["content"][:100]
+                        break
+                c["messages"].append(
+                    {
+                        "role": "user",
+                        "content": (f"当前进度：已完成步骤 {_completed}/{_total}\n上一步结果：{_last_output}\n计划中下一步：{_next_desc}"),
+                    }
+                )
             try:
                 streamer = getattr(self, "_streamer", None)
                 trace_id = getattr(self, "_trace_id", None)
@@ -280,6 +316,14 @@ class ExecutionEngine:
             if self._host._is_completed(decision):
                 return self._host._tool_exec._handle_completion(c, step, decision, ai_resp, duration_ms)
             if decision.action == "call_tool" and tool_name:
+                if c.get("_plan") and c["_plan"].steps:
+                    _plan = c["_plan"]
+                    _plan_idx = c.get("_plan_step_index", 0)
+                    if _plan_idx < len(_plan.steps):
+                        _expected = _plan.steps[_plan_idx].tool
+                        if tool_name != _expected:
+                            logger.warning("plan deviation: expected %s, got %s for step %d", _expected, tool_name, step)
+                            c["_plan_step_index"] = _plan_idx + 1
                 return self._process_tool_call(c, step, tool_name, tool_params, decision, ai_resp, duration_ms, spec)
             self._host._tool_exec._append_invalid_step(c, step, f"invalid action: {decision.action}", duration_ms, ai_resp, tool_name, tool_params)
             return None
@@ -299,6 +343,40 @@ class ExecutionEngine:
                     tool_name, tool_params, self._host._auth_header, caller_permission=spec.get("max_permission", "read")
                 )
                 t_elapsed = int((time.time() - t_start) * 1000)
+            if c.get("_reflection_step") != step or c.get("_reflection_tool") != tool_name:
+                c["_reflection_retries"] = 0
+                c["_reflection_step"] = step
+                c["_reflection_tool"] = tool_name
+            _plan_step = PlanStep(
+                step_id=f"exec_step_{step}",
+                description=getattr(decision, "reasoning", "") or "",
+                tool=tool_name,
+                params_template=tool_params or {},
+            )
+            _v_result = self._host._verifier.verify_step(_plan_step, tool_result)
+            if not _v_result.passed:
+                c["_reflection_retries"] = c.get("_reflection_retries", 0) + 1
+                _failed = [chk for chk in _v_result.checks if not chk.passed]
+                _fail_detail = "; ".join(f"{chk.name}: {chk.detail}" for chk in _failed)
+                logger.warning("Reflection failed for step %s tool %s: %s", step, tool_name, _fail_detail)
+                c["logs"].append(
+                    {
+                        "step": step,
+                        "type": "reflection_failure",
+                        "detail": _fail_detail,
+                        "retries": c["_reflection_retries"],
+                    }
+                )
+                if c["_reflection_retries"] < 3:
+                    c["messages"].append({"role": "user", "content": f"反思反馈：上一步结果未通过验证。\n问题：{_fail_detail}\n请修正后重试。"})
+                    return None
+                c["messages"].append(
+                    {"role": "user", "content": f"反思反馈：上一步结果未通过验证（已达最大重试次数）。\n问题：{_fail_detail}\n请谨慎继续。"}
+                )
+            else:
+                _llm_ok = [chk for chk in _v_result.checks if chk.name == "llm_verification" and chk.passed and "Skipped" not in chk.detail]
+                if _llm_ok:
+                    c["messages"].append({"role": "user", "content": f"上一步结果已通过验证：{_llm_ok[0].detail}"})
             self._host._verifier.verify(tool_result)
             if streamer and trace_id:
                 preview = str(tool_result.get("data", ""))[:200]

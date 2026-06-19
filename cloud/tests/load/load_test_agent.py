@@ -5,7 +5,7 @@ import asyncio
 import json
 import statistics
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -85,12 +85,11 @@ def simulate_concurrent_agents(
         max_concurrent = count
     report = Report()
     semaphore = asyncio.Semaphore(max_concurrent)
+
     async def _run_all():
-        tasks = [
-            asyncio.create_task(_worker(i, url, duration_seconds, report, semaphore))
-            for i in range(count)
-        ]
+        tasks = [asyncio.create_task(_worker(i, url, duration_seconds, report, semaphore)) for i in range(count)]
         await asyncio.gather(*tasks)
+
     start = time.monotonic()
     asyncio.run(_run_all())
     report.duration_seconds = time.monotonic() - start
