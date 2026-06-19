@@ -12,6 +12,7 @@ from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
 from cloud.app.agent_runtime.dead_letter_queue import DeadLetterQueue
 from cloud.app.agent_runtime.guard import sanitize_tool_output
 from cloud.app.agent_runtime.models import RuntimeResult
+from cloud.app.agent_runtime.pii_redactor import PIIRedactionFilter
 from cloud.app.agent_runtime.runtime_llm import AllModelsFailedError
 from cloud.app.agent_runtime.schema_validator import OutputSchemaValidator
 from cloud.app.agent_runtime.telemetry import trace_step
@@ -33,6 +34,7 @@ def _identity_to_spec(agent) -> dict:
 
 
 logger = logging.getLogger(__name__)
+logger.addFilter(PIIRedactionFilter())
 
 
 class ExecutionEngine:
