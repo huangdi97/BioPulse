@@ -46,6 +46,22 @@ DB_PATH = os.path.join(
 
 DATABASE_URL = settings.database_url
 
+_engine = None
+
+
+def _get_engine():
+    global _engine
+    if _engine is None and (DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://")):
+        from sqlalchemy import create_engine
+        _engine = create_engine(
+            DATABASE_URL,
+            pool_size=10,
+            max_overflow=20,
+            pool_timeout=30,
+            pool_pre_ping=True,
+        )
+    return _engine
+
 
 def get_db() -> Generator:
     if DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://"):

@@ -73,6 +73,7 @@ class RuntimeCore:
         self._bulkhead = Bulkhead()
         self._vector_memory = VectorMemory()
         self._vector_memory.set_db(self._agent_db)
+        self._brain.set_vector_memory(self._vector_memory)
         self._streamer: AgentStreamer | None = None
         self._rollback = RollbackHandler(self)
         self._tool_exec = ToolExecutor(self)

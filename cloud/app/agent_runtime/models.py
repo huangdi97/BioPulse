@@ -78,6 +78,7 @@ class ToolDef(BaseModel):
     params: dict
     permission_level: str = "read"
     allowed_agents: list[str] = []
+    sandbox: bool = False
 
 
 class AgentSpec(BaseModel):

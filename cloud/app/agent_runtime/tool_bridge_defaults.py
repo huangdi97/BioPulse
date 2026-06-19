@@ -56,6 +56,7 @@ DEFAULT_TOOLS = [
         description="写入记忆",
         params={},
         permission_level="write",
+        sandbox=True,
     ),
     ToolDef(
         name="collect_related_data",
@@ -161,6 +162,7 @@ DEFAULT_TOOLS = [
         params={},
         permission_level="write",
         allowed_agents=["sales_suggestion"],
+        sandbox=True,
     ),
 ]
 

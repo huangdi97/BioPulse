@@ -15,6 +15,10 @@ class Memory:
 
     def __init__(self, agent_db: sqlite3.Connection) -> None:
         self._agent_db = agent_db
+        self._vector_memory = None
+
+    def set_vector_memory(self, vm) -> None:
+        self._vector_memory = vm
 
     def get(self, agent_key: str, key: str, user_id: int = 0) -> Any | None:
         """获取 Agent 短期记忆值。"""
@@ -67,6 +71,36 @@ class Memory:
             (agent_key, f"%{keyword}%", f"%{keyword}%", limit),
         ).fetchall()
         return [dict(r) for r in rows]
+
+    def hybrid_search(self, query: str, agent_key: str, limit: int = 5) -> list[dict[str, Any]]:
+        """混合检索：关键词 + 向量语义检索，合并去重排序。"""
+        seen = set()
+        results = []
+
+        kw_results = self.search(agent_key, query, limit=limit)
+        for r in kw_results:
+            key = r.get("key", "")
+            if key not in seen:
+                seen.add(key)
+                r["_source"] = "keyword"
+                r["_score"] = 0.5
+                results.append(r)
+
+        if self._vector_memory:
+            try:
+                vec_results = self._vector_memory.search(agent_key, query, top_k=limit)
+                for r in vec_results:
+                    key = r.get("key", "")
+                    if key not in seen:
+                        seen.add(key)
+                        r["_source"] = "vector"
+                        r["_score"] = r.get("score", 0.0)
+                        results.append(r)
+            except Exception:
+                pass
+
+        results.sort(key=lambda x: x.get("_score", 0), reverse=True)
+        return results[:limit]
 
 
 # --- 记忆压缩 & 淘汰 ---

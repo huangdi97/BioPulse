@@ -2,6 +2,32 @@
 
 > 生命科学行业全场景 AI 工作台 — 医药代表拜访管理、商机挖掘、销售助理、销售教练
 
+## Quick Start（5 分钟）
+
+**依赖：** Python 3.12、PostgreSQL（可选，默认 SQLite）、API Key（DeepSeek / OpenAI）
+
+```bash
+# 1. 克隆仓库
+git clone https://github.com/huangdi97/BioPulse.git
+cd BioPulse
+
+# 2. 创建虚拟环境并安装依赖
+python -m venv venv && source venv/bin/activate
+pip install -r cloud/requirements.txt
+
+# 3. 配置环境变量
+cp .env.example .env   # 填入 DEEPSEEK_API_KEY 等必要配置
+
+# 4. 初始化数据库并启动
+python -c "from cloud.app.database import init_db; init_db()"
+uvicorn cloud.app.main:app --reload --port 8000
+
+# 5. 查看 Agent 运行（新终端）
+curl http://localhost:8000/agent-gateway/execute -H "Content-Type: application/json" -d '{"agent_key":"analyst","goal":"分析最近的拜访数据"}' | python -m json.tool
+```
+
+> 使用 Docker 一键部署见 `docker-compose up -d`。
+
 ## 技术栈
 
 | **后端** — Python 3.12 / FastAPI / SQLite / LangGraph / 自研 Agent Harness  |

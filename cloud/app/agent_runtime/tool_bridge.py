@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import time
 import urllib.request
 import uuid
@@ -151,6 +152,9 @@ class ToolBridge:
         if level_order.get(tool.permission_level, 0) >= 1:
             return {"success": False, "data": None, "needs_approval": True, "tool": tool_name, "params": params}
 
+        if tool.sandbox:
+            return self._run_sandboxed(tool_name, params, idempotency_agent, idempotency_step)
+
         if tool_name == "agent_brain_get":
             data = self._brain.get(params.get("key"), params.get("user_id", 0))
             result = {"success": True, "data": data, "error": None}
@@ -194,6 +198,31 @@ class ToolBridge:
         if self._failure_counts[tool_name] >= 3:
             self._breaker_expiry[tool_name] = time.time() + 30
         return {"success": False, "data": None, "error": result["error"]}
+
+    def _run_sandboxed(self, tool_name: str, params: dict, idempotency_agent: str | None, idempotency_step: int) -> dict:
+        script = params.pop("_script", "")
+        if not script:
+            return {"success": False, "data": None, "error": "sandbox tool requires _script param", "needs_approval": False}
+        try:
+            completed = subprocess.run(
+                script,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            result = {
+            "success": completed.returncode == 0,
+            "data": completed.stdout,
+            "error": completed.stderr if completed.returncode != 0 else None,
+        }
+            if idempotency_agent:
+                self._set_idempotency(self._idempotency_key(idempotency_agent, tool_name, idempotency_step), result)
+            return result
+        except subprocess.TimeoutExpired:
+            return {"success": False, "data": None, "error": "sandbox execution timed out after 30s", "needs_approval": False}
+        except Exception as e:
+            return {"success": False, "data": None, "error": f"sandbox execution failed: {e}", "needs_approval": False}
 
     def execute(self, tool_name: str, args: dict[str, Any] | None = None, caller_agent_id: str | None = None) -> ToolResult:
         """执行工具调用，含 caller_agent_id 白名单校验。

@@ -2,6 +2,7 @@
 
 import json
 import logging
+import signal
 import time
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FuturesTimeoutError
@@ -41,12 +42,40 @@ class ExecutionEngine:
     MAX_LLM_CALLS = 50
     MAX_EXECUTION_SECONDS = 600
     STEP_TIMEOUT_SECONDS = 60
+    _shutdown_flag = False
 
     def __init__(self, host):
         self._host = host
         self._executor = ThreadPoolExecutor(max_workers=4)
         self._dead_letter_queue = DeadLetterQueue()
         self._timeout_count = 0
+        signal.signal(signal.SIGTERM, self._signal_handler)
+        signal.signal(signal.SIGINT, self._signal_handler)
+
+    def _signal_handler(self, sig, frame):
+        logger.warning("收到信号 %s，保存 checkpoint 后关闭", sig)
+        self.__class__._shutdown_flag = True
+        self._save_checkpoint_on_shutdown()
+
+    def _save_checkpoint_on_shutdown(self):
+        if not hasattr(self._host, "_trace_id") or not self._host._trace_id:
+            return
+        try:
+            state = {
+                "trace_id": self._host._trace_id,
+                "step": -1,
+                "messages": [],
+                "logs": [],
+                "tool_calls_so_far": 0,
+                "goal": "",
+                "agent_key": "",
+                "context": {},
+                "status": "interrupted",
+            }
+            self._host._helper._save_checkpoint("", "", state)
+            logger.info("Checkpoint 已保存 (trace=%s)", self._host._trace_id)
+        except Exception:
+            logger.exception("保存中断 checkpoint 失败")
 
     def _load_approved_tool(self, agent_key, goal, checkpoint):
         if not checkpoint:
@@ -104,6 +133,14 @@ class ExecutionEngine:
         start_time = time.time()
         llm_call_count = 0
         for step in range(c["start_step"], max_iter):
+            if self.__class__._shutdown_flag:
+                return RuntimeResult(
+                    status="interrupted",
+                    result="execution interrupted by shutdown signal",
+                    iterations=step - c["start_step"],
+                    tool_calls=c["tool_calls"],
+                    logs=c["logs"],
+                )
             if time.time() - start_time > self.MAX_EXECUTION_SECONDS:
                 return RuntimeResult(
                     status="timeout",

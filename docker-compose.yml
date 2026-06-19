@@ -1,6 +1,27 @@
 version: "3.8"
 
 services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: biopulse
+      POSTGRES_USER: biopulse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-biopulse}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U biopulse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - yysd-net
+
   cloud:
     build:
       context: .
@@ -9,10 +30,11 @@ services:
       - "8000:8000"
     volumes:
       - ./data/cloud.db:/app/data/cloud.db
+      - db
     env_file:
       - .env
     environment:
-      - DSN=sqlite:///data/cloud.db
+      - DATABASE_URL=postgresql://biopulse:${POSTGRES_PASSWORD:-biopulse}@db:5432/biopulse
     networks:
       - yysd-net
     healthcheck:
@@ -264,3 +286,4 @@ networks:
 
 volumes:
   redis_data:
+  pgdata:

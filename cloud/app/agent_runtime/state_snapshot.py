@@ -90,6 +90,28 @@ def delete_expired_snapshots(db) -> int:
     return cur.rowcount
 
 
+def recover(db, trace_id: str | None = None) -> list[dict]:
+    """扫描未完成的 checkpoint 并返回可恢复的快照列表。
+
+    返回状态为 'interrupted' 或 'active' 且 expires_at 未过期的快照。
+    """
+    ensure_snapshot_table(db)
+    now = datetime.now().isoformat()
+    if trace_id:
+        rows = db.execute(
+            "SELECT * FROM agent_runtime_snapshots WHERE trace_id=? AND (status='interrupted' OR status='active') "
+            "AND (expires_at IS NULL OR expires_at > ?) ORDER BY step DESC LIMIT 1",
+            (trace_id, now),
+        ).fetchall()
+    else:
+        rows = db.execute(
+            "SELECT * FROM agent_runtime_snapshots WHERE (status='interrupted' OR status='active') "
+            "AND (expires_at IS NULL OR expires_at > ?) ORDER BY created_at DESC",
+            (now,),
+        ).fetchall()
+    return [_row_to_snapshot(r) for r in rows]
+
+
 class StateSnapshot:
     """Compatibility wrapper around runtime snapshots and the old agent snapshot table."""
 
