@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import subprocess
 import time
 import urllib.request
@@ -15,6 +16,8 @@ from cloud.app.agent_runtime.retry import retry_with_backoff
 from cloud.app.agent_runtime.telemetry import trace_step
 from cloud.app.agent_runtime.tool_bridge_defaults import BRAIN_TOOLS, DEFAULT_TOOLS
 from shared.app_settings import settings
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -185,9 +188,19 @@ class ToolBridge:
             )
             with urllib.request.urlopen(req, timeout=15) as rp:
                 raw = rp.read().decode("utf-8")
-                return json.loads(raw)
+                try:
+                    return json.loads(raw)
+                except json.JSONDecodeError as e:
+                    return {"success": False, "data": None, "error": f"invalid JSON response: {e}"}
 
-        result = retry_with_backoff(_do_post, max_attempts=3, base_delay=1.0)
+        try:
+            result = retry_with_backoff(_do_post, max_attempts=3, base_delay=1.0)
+        except Exception as e:
+            logger.error("HTTP tool call %s failed after retries: %s", tool_name, e)
+            self._failure_counts[tool_name] = self._failure_counts.get(tool_name, 0) + 1
+            if self._failure_counts[tool_name] >= 3:
+                self._breaker_expiry[tool_name] = time.time() + 30
+            return {"success": False, "data": None, "error": f"tool call failed: {e}"}
         if result["success"]:
             self._failure_counts[tool_name] = 0
             ret = {"success": True, "data": result["data"], "error": None}

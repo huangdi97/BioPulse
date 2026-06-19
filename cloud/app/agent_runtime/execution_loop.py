@@ -7,12 +7,14 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FuturesTimeoutError
 from datetime import datetime
+from typing import Any
 
 from cloud.app.agent_runtime.agent_registry import AgentRegistry
 from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
 from cloud.app.agent_runtime.dead_letter_queue import DeadLetterQueue
 from cloud.app.agent_runtime.guard import sanitize_tool_output
 from cloud.app.agent_runtime.models import RuntimeResult
+from cloud.app.agent_runtime.orchestrator import Orchestrator
 from cloud.app.agent_runtime.pii_redactor import PIIRedactionFilter
 from cloud.app.agent_runtime.runtime_llm import AllModelsFailedError
 from cloud.app.agent_runtime.schema_validator import OutputSchemaValidator
@@ -38,19 +40,58 @@ logger = logging.getLogger(__name__)
 logger.addFilter(PIIRedactionFilter())
 
 
+class OrchestratedExecution:
+    def __init__(self, engine: "ExecutionEngine | None" = None):
+        self._engine = engine
+        self._orchestrator = Orchestrator(runtime_core=engine)
+
+    def register_agent(self, agent_key: str, agent: Any) -> None:
+        self._orchestrator.register(agent_key, agent)
+
+    def dispatch_to_agents(self, goal: str, agent_keys: list[str]) -> list[RuntimeResult]:
+        results = self._orchestrator.dispatch(goal, agent_keys)
+        return [
+            RuntimeResult(
+                status=r.status,
+                result=r.result,
+                iterations=0,
+                tool_calls=0,
+                logs=[],
+                metadata={"agent_key": r.agent_key, "confidence": r.confidence},
+            )
+            for r in results
+        ]
+
+    def chain_agents(self, goal: str, steps: list[str]) -> RuntimeResult:
+        result = self._orchestrator.chain(goal, steps)
+        return RuntimeResult(
+            status=result.status,
+            result=result.result,
+            iterations=0,
+            tool_calls=0,
+            logs=[],
+            metadata={"agent_key": result.agent_key, "confidence": result.confidence},
+        )
+
+
 class ExecutionEngine:
     MAX_LLM_CALLS = 50
     MAX_EXECUTION_SECONDS = 600
     STEP_TIMEOUT_SECONDS = 60
     _shutdown_flag = False
 
-    def __init__(self, host):
+    def __init__(self, host, enable_orchestrator: bool = False):
         self._host = host
         self._executor = ThreadPoolExecutor(max_workers=4)
         self._dead_letter_queue = DeadLetterQueue()
         self._timeout_count = 0
+        self._orchestrated = OrchestratedExecution(engine=self) if enable_orchestrator else None
         signal.signal(signal.SIGTERM, self._signal_handler)
         signal.signal(signal.SIGINT, self._signal_handler)
+
+    @property
+    def orchestrator(self) -> OrchestratedExecution | None:
+        return self._orchestrated
 
     def _signal_handler(self, sig, frame):
         logger.warning("收到信号 %s，保存 checkpoint 后关闭", sig)
@@ -336,6 +377,24 @@ class ExecutionEngine:
             return RuntimeResult(
                 status="degraded",
                 result=f"Tool {agent_key} unavailable",
+                iterations=0,
+                tool_calls=0,
+                logs=[],
+            )
+        except Exception as exc:
+            logger.error("Unexpected execution error for %s: %s", agent_key, exc, exc_info=True)
+            self._dead_letter_queue.push(
+                {
+                    "agent_key": agent_key,
+                    "input": goal,
+                    "error": f"Unexpected error: {exc}",
+                    "timestamp": time.time(),
+                    "retry_count": 0,
+                }
+            )
+            return RuntimeResult(
+                status="error",
+                result=f"Execution failed: {exc}",
                 iterations=0,
                 tool_calls=0,
                 logs=[],

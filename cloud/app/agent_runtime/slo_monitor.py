@@ -1,6 +1,10 @@
 """SLO 监控 — 服务等级目标定义与检查。"""
 
+import logging
 from dataclasses import dataclass
+from datetime import datetime, timedelta
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -91,3 +95,28 @@ def report_slo_breach(agent_name: str, slo_name: str, current: float, threshold:
 def get_breach_log(limit: int = 20) -> list[dict]:
     """获取最近的 SLO 违约记录。"""
     return _breach_log[-limit:]
+
+
+def get_breach_summary(hours: int = 24) -> dict:
+    """返回过去 N 小时的 SLO 违约汇总。"""
+    cutoff = (datetime.now() - timedelta(hours=hours)).isoformat()
+    recent = [b for b in _breach_log if b.get("timestamp", "") >= cutoff]
+    by_agent: dict[str, int] = {}
+    for b in recent:
+        by_agent[b["agent_name"]] = by_agent.get(b["agent_name"], 0) + 1
+    return {
+        "period_hours": hours,
+        "total_breaches": len(recent),
+        "by_agent": by_agent,
+        "breaches": recent[-20:],
+    }
+
+
+def notify_breach(agent_name: str, slo_name: str, current: float, threshold: float) -> None:
+    """触发 SLO 违约通知（如 notification_service 可用）。"""
+    report_slo_breach(agent_name, slo_name, current, threshold)
+    try:
+        from cloud.app.services.notification_service import send_alert
+        send_alert(f"SLO Breach: {agent_name} {slo_name} = {current} (threshold: {threshold})")
+    except ImportError:
+        pass  # notification_service not available
