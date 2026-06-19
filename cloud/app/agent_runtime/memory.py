@@ -16,6 +16,10 @@ class Memory:
     def __init__(self, agent_db: sqlite3.Connection) -> None:
         self._agent_db = agent_db
         self._vector_memory = None
+        self._audit_logger = None
+
+    def set_audit_logger(self, logger) -> None:
+        self._audit_logger = logger
 
     def set_vector_memory(self, vm) -> None:
         self._vector_memory = vm
@@ -38,6 +42,11 @@ class Memory:
 
     def set(self, agent_key: str, key: str, value: Any, user_id: int = 0, importance: float = 0.5) -> None:
         """设置 Agent 短期记忆值。importance（0-1）用于后续淘汰策略。"""
+        # 去重：内容相同则跳过
+        existing = self.get(agent_key, key, user_id)
+        if existing is not None and existing == value:
+            return
+
         if isinstance(value, str):
             value_type = "str"
         elif isinstance(value, (int, float)):
@@ -55,14 +64,50 @@ class Memory:
             (agent_key, user_id, key, value, value_type, importance),
         )
         self._agent_db.commit()
+        if self._audit_logger:
+            self._audit_logger.log("set", agent_key, user_id, key, str(value)[:100])
 
     def delete(self, agent_key: str, key: str, user_id: int = 0) -> None:
         """删除 Agent 短期记忆值。"""
+        if self._audit_logger:
+            existing = self.get(agent_key, key, user_id)
+            self._audit_logger.log("delete", agent_key, user_id, key, str(existing)[:100] if existing else "")
         self._agent_db.execute(
             "DELETE FROM agent_brains WHERE agent_key=? AND user_id=? AND key=?",
             (agent_key, user_id, key),
         )
         self._agent_db.commit()
+
+    def dedup(self, agent_key: str | None = None) -> int:
+        """扫描并合并重复条目：内容完全相同的保留最新一条。返回删除数。"""
+        deleted = 0
+        if agent_key:
+            rows = self._agent_db.execute(
+                "SELECT key, value, value_type, user_id, MAX(updated_at) as max_ts "
+                "FROM agent_brains WHERE agent_key=? GROUP BY key, value, value_type, user_id HAVING COUNT(*) > 1",
+                (agent_key,)
+            ).fetchall()
+        else:
+            rows = self._agent_db.execute(
+                "SELECT key, value, value_type, user_id, MAX(updated_at) as max_ts "
+                "FROM agent_brains GROUP BY key, value, value_type, user_id HAVING COUNT(*) > 1"
+            ).fetchall()
+        for row in rows:
+            if agent_key:
+                cur = self._agent_db.execute(
+                    "DELETE FROM agent_brains WHERE agent_key=? AND key=? AND value=? AND value_type=? "
+                    "AND user_id=? AND updated_at < ?",
+                    (agent_key, row["key"], row["value"], row["value_type"], row["user_id"], row["max_ts"]),
+                )
+            else:
+                cur = self._agent_db.execute(
+                    "DELETE FROM agent_brains WHERE key=? AND value=? AND value_type=? "
+                    "AND user_id=? AND updated_at < ?",
+                    (row["key"], row["value"], row["value_type"], row["user_id"], row["max_ts"]),
+                )
+            deleted += cur.rowcount
+        self._agent_db.commit()
+        return deleted
 
     def search(self, agent_key: str, keyword: str, limit: int = 5) -> list[dict[str, Any]]:
         """搜索 Agent 短期记忆。"""

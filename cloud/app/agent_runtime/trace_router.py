@@ -37,6 +37,58 @@ def _get_tracer() -> AgentTracer:
     return AgentTracer(conn)
 
 
+@router.get("/traces/ui", tags=["Agent Traces"], include_in_schema=False)
+def trace_dashboard_ui(user=Depends(require_scope("visit"))):
+    """Agent Trace Dashboard HTML UI."""
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse("""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Trace Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f7fa;color:#333;padding:24px}
+h1{font-size:24px;margin-bottom:20px;color:#1a1a2e}
+.cards{display:flex;gap:16px;margin-bottom:24px}
+.card{flex:1;background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card .label{font-size:13px;color:#888;margin-bottom:6px}
+.card .value{font-size:28px;font-weight:700;color:#1a1a2e}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+th{background:#f0f2f5;text-align:left;padding:12px 16px;font-size:13px;font-weight:600;color:#666}
+td{padding:12px 16px;border-top:1px solid #eee;font-size:14px}
+tr{cursor:pointer;transition:background .15s}
+tr:hover{background:#f8f9ff}
+.detail-row{display:none}
+.detail-row.active{display:table-row}
+.detail-cell{padding:16px 24px;background:#fafbff;border-top:2px solid #e8eaff}
+.step{border-left:3px solid;padding:8px 12px;margin:6px 0;background:#fff;border-radius:4px;font-size:13px}
+.step.success{border-color:#2ecc71} .step.error{border-color:#e74c3c} .step.warning{border-color:#f39c12}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:12px;font-weight:600}
+.badge.success{background:#d4edda;color:#155724} .badge.error{background:#f8d7da;color:#721c24}
+.badge.warning{background:#fff3cd;color:#856404}
+.loading{text-align:center;padding:60px;color:#999;font-size:16px}
+</style>
+</head>
+<body>
+<h1>Agent Trace Dashboard</h1>
+<div class="cards" id="cards">
+  <div class="card"><div class="label">Total Requests</div><div class="value" id="total-requests">-</div></div>
+  <div class="card"><div class="label">Error Rate</div><div class="value" id="error-rate">-</div></div>
+  <div class="card"><div class="label">Active Agents</div><div class="value" id="active-agents">-</div></div>
+</div>
+<div id="table-container"><div class="loading">Loading...</div></div>
+<script>
+async function loadSummary(){try{const r=await fetch('/agent/metrics/summary');const d=await r.json();const data=d.data||{};document.getElementById('total-requests').textContent=data.total_requests??'-';document.getElementById('error-rate').textContent=data.error_rate!=null?(data.error_rate+'%'):'-';document.getElementById('active-agents').textContent=data.active_agents??'-'}catch(e){document.getElementById('total-requests').textContent='ERR'}}
+async function loadTraces(){try{const r=await fetch('/agent/traces?page_size=20');const d=await r.json();const traces=d.data?.items||d.data||[];let html='<table><thead><tr><th>Agent</th><th>Status</th><th>Duration</th><th>Time</th></tr></thead><tbody>';traces.forEach((t,i)=>{const sc=t.status==='success'?'success':t.status==='error'?'error':'warning';html+='<tr onclick=\"toggleDetail('+i+')\"><td>'+(t.agent_name||t.agent||'-')+'</td><td><span class=\"badge '+sc+'\">'+(t.status||'unknown')+'</span></td><td>'+(t.duration_ms?t.duration_ms+'ms':'-')+'</td><td>'+(t.created_at||t.timestamp||'-')+'</td></tr>';html+='<tr class=\"detail-row\" id=\"detail-'+i+'\"><td colspan=\"4\"><div class=\"detail-cell\" id=\"detail-content-'+i+'\">Loading...</div></td></tr>'});html+='</tbody></table>';document.getElementById('table-container').innerHTML=html}catch(e){document.getElementById('table-container').innerHTML='Error: '+e.message}}
+async function toggleDetail(i){const row=document.getElementById('detail-'+i);const active=row.classList.contains('active');document.querySelectorAll('.detail-row.active').forEach(r=>r.classList.remove('active'));if(active)return;row.classList.add('active');const el=document.getElementById('detail-content-'+i);if(el.dataset.loaded)return;el.dataset.loaded='true';try{const t=await(await fetch('/agent/traces?page_size=20')).json();const items=t.data?.items||t.data||[];const item=items[i];if(!item){el.innerHTML='No data';return}const tr=await(await fetch('/agent/traces/'+(item.trace_id||item.id))).json();const trace=tr.data||tr;let s='';(trace.steps||trace.execution_steps||[]).forEach(st=>{s+='<div class=\"step '+(st.status==='success'?'success':'error')+'\">'+ (st.tool||st.action||st.name||'step')+'</div>'});el.innerHTML=s||'No step details'}catch(e){el.innerHTML='Error loading'}}
+loadSummary();loadTraces();
+</script>
+</body>
+</html>""")
+
+
 @router.get("/traces/{trace_id}", tags=["Agent Traces"])
 def get_trace(trace_id: str, user=Depends(require_scope("visit"))):
     tracer = _get_tracer()
