@@ -1,0 +1,28 @@
+{
+  "scenarios": [
+    {
+      "name": "light",
+      "concurrent_agents": 10,
+      "duration_seconds": 30,
+      "description": "轻度负载 — 10 个并发 Agent 运行 30 秒",
+      "expected_max_p99_ms": 5000,
+      "expected_max_error_rate_pct": 1.0
+    },
+    {
+      "name": "medium",
+      "concurrent_agents": 30,
+      "duration_seconds": 60,
+      "description": "中度负载 — 30 个并发 Agent 运行 60 秒",
+      "expected_max_p99_ms": 8000,
+      "expected_max_error_rate_pct": 5.0
+    },
+    {
+      "name": "heavy",
+      "concurrent_agents": 50,
+      "duration_seconds": 120,
+      "description": "重度负载 — 50 个并发 Agent 运行 120 秒",
+      "expected_max_p99_ms": 15000,
+      "expected_max_error_rate_pct": 10.0
+    }
+  ]
+}
