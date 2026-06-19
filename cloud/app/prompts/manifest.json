@@ -1,0 +1,23 @@
+{
+  "compliance_checker/v1": {
+    "file": "compliance_checker.txt",
+    "hash": "2f4ccd56ba8bd42c2d0f12232d2cdcec1f1711190d23252ca554be15a26d22d9",
+    "description": "compliance_checker system prompt",
+    "author": "system",
+    "created": "2026-06-19"
+  },
+  "analysis_agent/v1": {
+    "file": "analysis_agent.txt",
+    "hash": "2f7fddf49f7d2e17b6e2a7fa76685c24f7c5240d4ace11ece2862a6e30f8e952",
+    "description": "analysis_agent system prompt",
+    "author": "system",
+    "created": "2026-06-19"
+  },
+  "suggestion_agent/v1": {
+    "file": "suggestion_agent.txt",
+    "hash": "c0719195d8beb602f9c4802e37ede001c6b9bc00370f0581d51fa3b9c6610f84",
+    "description": "suggestion_agent system prompt",
+    "author": "system",
+    "created": "2026-06-19"
+  }
+}

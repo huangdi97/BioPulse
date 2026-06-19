@@ -62,8 +62,7 @@ def get_agent_metrics(agent_name: str, time_range_hours: int = 24) -> dict:
         ).fetchone()
 
         cost_row = conn.execute(
-            "SELECT COALESCE(SUM(cost), 0) as total_cost FROM agent_cost_tracking "
-            "WHERE agent_name=? AND timestamp >= ?",
+            "SELECT COALESCE(SUM(cost), 0) as total_cost FROM agent_cost_tracking WHERE agent_name=? AND timestamp >= ?",
             (agent_name, cutoff),
         ).fetchone()
 
@@ -139,14 +138,16 @@ def get_cost_breakdown(period: str = "daily") -> dict:
         total_tokens = 0
         total_cost = 0.0
         for r in rows:
-            items.append({
-                "period": r["period"],
-                "agent_name": r["agent_name"],
-                "input_tokens": r["input_tokens"],
-                "output_tokens": r["output_tokens"],
-                "total_tokens": r["total_tokens"],
-                "cost": round(r["cost"], 4),
-            })
+            items.append(
+                {
+                    "period": r["period"],
+                    "agent_name": r["agent_name"],
+                    "input_tokens": r["input_tokens"],
+                    "output_tokens": r["output_tokens"],
+                    "total_tokens": r["total_tokens"],
+                    "cost": round(r["cost"], 4),
+                }
+            )
             total_tokens += r["total_tokens"]
             total_cost += r["cost"]
 
@@ -157,3 +158,37 @@ def get_cost_breakdown(period: str = "daily") -> dict:
         }
     finally:
         conn.close()
+
+
+def record_success(agent_name: str) -> None:
+    """记录一次成功的 Agent 调用。"""
+    agent_requests_total.labels(agent_name=agent_name, status="success").inc()
+
+
+def record_failure(agent_name: str) -> None:
+    """记录一次失败的 Agent 调用。"""
+    agent_requests_total.labels(agent_name=agent_name, status="failure").inc()
+
+
+def get_success_rate(agent_name: str, hours: int = 24) -> float:
+    """获取指定 Agent 最近 N 小时的成功率 (0-1)。"""
+    try:
+        conn = _get_db()
+        cutoff = (datetime.utcnow() - timedelta(hours=hours)).strftime("%Y-%m-%d %H:%M:%S")
+        row = conn.execute(
+            "SELECT "
+            "COALESCE(SUM(CASE WHEN status IN ('success','completed') THEN 1 ELSE 0 END), 0) as success,"
+            "COUNT(*) as total FROM agent_traces WHERE agent_name=? AND started_at >= ?",
+            (agent_name, cutoff),
+        ).fetchone()
+        conn.close()
+        if row["total"] == 0:
+            return 1.0
+        return row["success"] / row["total"]
+    except Exception:
+        return 1.0
+
+
+def get_error_rate(agent_name: str, hours: int = 24) -> float:
+    """获取指定 Agent 最近 N 小时的错误率 (0-1)。"""
+    return 1.0 - get_success_rate(agent_name, hours)

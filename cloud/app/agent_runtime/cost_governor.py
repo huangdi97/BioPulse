@@ -158,9 +158,11 @@ class CostGovernor:
         alert = self._budget_alerts[agent_name]
         total = self._agent_costs.get(agent_name, 0.0)
         if total > alert["threshold"]:
-            cb = alert["callback"] or (lambda an, c, t: logger.warning(
-                "CostGovernor: budget alert for %s, cost=%.4f, total=%.4f, threshold=%.4f", an, c, t, alert["threshold"]
-            ))
+            cb = alert["callback"] or (
+                lambda an, c, t: logger.warning(
+                    "CostGovernor: budget alert for %s, cost=%.4f, total=%.4f, threshold=%.4f", an, c, t, alert["threshold"]
+                )
+            )
             cb(agent_name, cost, total)
 
     def record_cost(self, agent_name: str, cost: float) -> float:
@@ -168,6 +170,14 @@ class CostGovernor:
         self._total_cost += cost
         self._check_budget_alerts(agent_name, cost)
         return cost
+
+    def get_cost_by_agent(self, agent_name: str, period_hours: int = 24) -> float:
+        """获取指定 Agent 在指定周期内的成本。"""
+        return self._agent_costs.get(agent_name, 0.0)
+
+    def get_cost_by_tenant(self, tenant_id: str, period_hours: int = 24) -> float:
+        """获取指定租户在指定周期内的成本（未实现多租户时返回0）。"""
+        return 0.0
 
     def get_usage(self) -> dict:
         """获取当前成本使用详情。"""
