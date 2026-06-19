@@ -46,7 +46,8 @@ class Memory:
         self._agent_db.execute(
             "INSERT INTO agent_brains (agent_key, user_id, key, value, value_type, updated_at, importance) "
             "VALUES (?, ?, ?, ?, ?, datetime('now'), ?) "
-            "ON CONFLICT(agent_key, user_id, key) DO UPDATE SET value=excluded.value, value_type=excluded.value_type, updated_at=excluded.updated_at, importance=excluded.importance",
+            "ON CONFLICT(agent_key, user_id, key) DO UPDATE SET value=excluded.value, "
+            "value_type=excluded.value_type, updated_at=excluded.updated_at, importance=excluded.importance",
             (agent_key, user_id, key, value, value_type, importance),
         )
         self._agent_db.commit()
