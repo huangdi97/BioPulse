@@ -32,8 +32,8 @@ class Memory:
             return float(row["value"])
         return row["value"]
 
-    def set(self, agent_key: str, key: str, value: Any, user_id: int = 0) -> None:
-        """设置 Agent 短期记忆值。"""
+    def set(self, agent_key: str, key: str, value: Any, user_id: int = 0, importance: float = 0.5) -> None:
+        """设置 Agent 短期记忆值。importance（0-1）用于后续淘汰策略。"""
         if isinstance(value, str):
             value_type = "str"
         elif isinstance(value, (int, float)):
@@ -44,10 +44,10 @@ class Memory:
             value = json.dumps(value, ensure_ascii=False)
 
         self._agent_db.execute(
-            "INSERT INTO agent_brains (agent_key, user_id, key, value, value_type, updated_at) "
-            "VALUES (?, ?, ?, ?, ?, datetime('now')) "
-            "ON CONFLICT(agent_key, user_id, key) DO UPDATE SET value=excluded.value, value_type=excluded.value_type, updated_at=excluded.updated_at",
-            (agent_key, user_id, key, value, value_type),
+            "INSERT INTO agent_brains (agent_key, user_id, key, value, value_type, updated_at, importance) "
+            "VALUES (?, ?, ?, ?, ?, datetime('now'), ?) "
+            "ON CONFLICT(agent_key, user_id, key) DO UPDATE SET value=excluded.value, value_type=excluded.value_type, updated_at=excluded.updated_at, importance=excluded.importance",
+            (agent_key, user_id, key, value, value_type, importance),
         )
         self._agent_db.commit()
 
@@ -66,6 +66,60 @@ class Memory:
             (agent_key, f"%{keyword}%", f"%{keyword}%", limit),
         ).fetchall()
         return [dict(r) for r in rows]
+
+
+# --- 记忆压缩 & 淘汰 ---
+
+def compress_messages(messages: list[dict], max_tokens: int = 4000) -> list[dict]:
+    """压缩消息列表。"""
+    if not messages:
+        return messages
+    total_chars = sum(len(m.get("content", "") or "") for m in messages)
+    total_tokens = total_chars // 4
+    if total_tokens <= max_tokens:
+        return messages
+    system_msgs = [m for m in messages if m.get("role") == "system"]
+    non_system = [m for m in messages if m.get("role") != "system"]
+    keep = non_system[-4:] if len(non_system) >= 4 else non_system
+    mid = non_system[:-4] if len(non_system) >= 4 else []
+    if mid:
+        summary_text = " ".join(m.get("content", "")[:100] for m in mid if m.get("content"))
+        summary = {"role": "system", "content": f"[记忆摘要：{summary_text[:200]}...]"}
+        result = system_msgs + [summary] + keep
+    else:
+        result = system_msgs + keep
+    return result
+
+
+def evict_old_entries(db, agent_key: str | None = None, ttl_hours: int = 168) -> int:
+    """删除超过 ttl_hours 的记忆条目。"""
+    import time
+    cutoff = time.time() - ttl_hours * 3600
+    if agent_key:
+        cur = db.execute("DELETE FROM agent_brains WHERE agent_key=? AND updated_at < ?",
+                         (agent_key, cutoff))
+    else:
+        cur = db.execute("DELETE FROM agent_brains WHERE updated_at < ?", (cutoff,))
+    db.commit()
+    return cur.rowcount
+
+
+def evict_low_importance(db, threshold: float = 0.2, agent_key: str | None = None) -> int:
+    """删除重要性低于 threshold 的记忆条目。"""
+    if agent_key:
+        cur = db.execute("DELETE FROM agent_brains WHERE agent_key=? AND importance < ?",
+                         (agent_key, threshold))
+    else:
+        cur = db.execute("DELETE FROM agent_brains WHERE importance < ?", (threshold,))
+    db.commit()
+    return cur.rowcount
+
+
+def scheduled_maintenance(db, ttl_hours: int = 168, importance_threshold: float = 0.2) -> dict:
+    """执行全部维护任务。"""
+    old = evict_old_entries(db, ttl_hours=ttl_hours)
+    low = evict_low_importance(db, threshold=importance_threshold)
+    return {"evicted_old": old, "evicted_low_importance": low, "total": old + low}
 
 
 class AgentMemory:
