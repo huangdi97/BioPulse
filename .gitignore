@@ -28,6 +28,12 @@ Thumbs.db
 *.db-shm
 *.db-wal
 *.db-journal
+
+# Design docs — only README.md and CONTRIBUTING.md allowed in repo
+*.md
+!README.md
+!CONTRIBUTING.md
+!**/README.md
 data/*.db
 data/*.db-shm
 data/*.db-wal
