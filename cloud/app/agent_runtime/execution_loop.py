@@ -9,6 +9,7 @@ from cloud.app.agent_runtime.agent_registry import AgentRegistry
 from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
 from cloud.app.agent_runtime.guard import sanitize_tool_output
 from cloud.app.agent_runtime.models import RuntimeResult
+from cloud.app.agent_runtime.runtime_llm import AllModelsFailedError
 from cloud.app.agent_runtime.schema_validator import OutputSchemaValidator
 from cloud.app.agent_runtime.validator import Validator
 
@@ -136,6 +137,15 @@ class ExecutionEngine:
                 except (json.JSONDecodeError, TypeError):
                     logger.warning("执行循环异常", exc_info=True)
                 self._host._core_tools._accumulate_cost(ai_resp, step)
+            except AllModelsFailedError as exc:
+                logger.error("All LLM providers failed for %s: %s", c["agent_key"], exc)
+                return RuntimeResult(
+                    status="llm_failed",
+                    result=f"All LLM providers failed: {exc}",
+                    iterations=step - c["start_step"],
+                    tool_calls=c["tool_calls"],
+                    logs=c["logs"],
+                )
             except (KeyError, TypeError, ValueError) as exc:
                 if self._host._tool_exec._handle_step_error(c, step, str(exc), duration_ms=int((time.time() - step_start) * 1000)):
                     continue

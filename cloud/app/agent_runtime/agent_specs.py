@@ -1,4 +1,7 @@
-"""Agent 规格定义，包含各 Agent 的角色描述、允许工具、迭代上限等配置。"""
+"""Agent 规格定义，包含各 Agent 的角色描述、允许工具、迭代上限等配置。
+
+@deprecated 使用 agents/*/identity.yaml 替代。保留用于 identity.yaml 未覆盖的 Agent 场景向后兼容。
+"""
 
 AGENT_SPECS = {
     "opportunity_scanner": {

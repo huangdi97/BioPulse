@@ -8,6 +8,7 @@ import yaml
 
 from cloud.app.agent_runtime.cost_governor import CostGovernor
 from cloud.app.agent_runtime.memory import Memory
+from cloud.app.agent_runtime.model_router import ModelRouter
 from cloud.app.agent_runtime.models import AgentIdentity, Insight
 from cloud.app.agent_runtime.safety_guard import SafetyGuard
 from cloud.app.agent_runtime.tool_bridge import ToolBridge
@@ -16,13 +17,13 @@ logger = logging.getLogger(__name__)
 
 
 class Agent:
-    def __init__(self, identity: AgentIdentity):
+    def __init__(self, identity: AgentIdentity, db=None):
         self.identity = identity
         self.tools = ToolBridge()
-        self.memory = Memory(None)
+        self.memory = Memory(db)
         self.cost_governor = CostGovernor(max_cost=identity.cost_budget)
         self.safety = SafetyGuard()
-        self.model_router = None
+        self.model_router = ModelRouter(identity.model_preference)
 
     @classmethod
     def from_yaml(cls, path: str | os.PathLike) -> "Agent":
