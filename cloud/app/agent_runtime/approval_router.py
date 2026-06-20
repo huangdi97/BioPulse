@@ -15,11 +15,11 @@ def route_for_approval(agent_name: str, content: dict, risk_level: str | None = 
     if risk_level:
         return risk_level
     mapping = {
-        'compliance': 'high',
-        'analysis': 'medium',
-        'suggestion': 'low',
+        "compliance": "high",
+        "analysis": "medium",
+        "suggestion": "low",
     }
-    return mapping.get(agent_name, 'low')
+    return mapping.get(agent_name, "low")
 
 
 router = APIRouter(prefix="/agent/approvals", tags=["Agent Approvals"])
@@ -45,6 +45,11 @@ class ApprovalRequestCreate(BaseModel):
 class ApprovalAction(BaseModel):
     approver: str
     reason: str = ""
+
+
+class ApprovalResubmit(BaseModel):
+    editor: str
+    params: dict
 
 
 @router.post("", tags=["Agent Approvals"])
@@ -85,6 +90,19 @@ def reject_request(request_id: str, body: ApprovalAction, user=Depends(require_s
         if not ok:
             raise HTTPException(status_code=404, detail="Approval request not found or already processed")
         return success(data={"request_id": request_id, "status": "rejected"})
+    finally:
+        conn.close()
+
+
+@router.put("/{request_id}/resubmit", tags=["Agent Approvals"])
+def resubmit_approval(request_id: str, body: ApprovalResubmit, user=Depends(require_scope("visit"))):
+    conn = _get_db()
+    try:
+        workflow = _get_workflow(conn)
+        ok = workflow.begin_editing(request_id, body.editor) and workflow.resubmit(request_id, body.editor, body.params)
+        if not ok:
+            raise HTTPException(status_code=404, detail="Approval request not found or not in rejected state")
+        return success(data={"request_id": request_id, "status": "resubmitted"})
     finally:
         conn.close()
 

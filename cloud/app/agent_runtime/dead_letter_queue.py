@@ -1,16 +1,20 @@
 """死信队列 — 无法处理的请求持久化存储，支持重试。"""
 
 import time
+from collections import Counter
 from typing import Any
 
 
 class DeadLetterEntry:
-    def __init__(self, agent_key: str, input_data: str, error: str, timestamp: float | None = None, retry_count: int = 0):
+    def __init__(
+        self, agent_key: str, input_data: str, error: str, timestamp: float | None = None, retry_count: int = 0, error_category: str = "unknown"
+    ):
         self.agent_key = agent_key
         self.input = input_data
         self.error = error
         self.timestamp = timestamp or time.time()
         self.retry_count = retry_count
+        self.error_category = error_category
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -19,6 +23,7 @@ class DeadLetterEntry:
             "error": self.error,
             "timestamp": self.timestamp,
             "retry_count": self.retry_count,
+            "error_category": self.error_category,
         }
 
     @classmethod
@@ -29,6 +34,7 @@ class DeadLetterEntry:
             error=d["error"],
             timestamp=d.get("timestamp", time.time()),
             retry_count=d.get("retry_count", 0),
+            error_category=d.get("error_category", "unknown"),
         )
 
 
@@ -53,6 +59,28 @@ class DeadLetterQueue:
             return False
         entry.retry_count += 1
         return True
+
+    def replay_all(self, max_retries: int = 3) -> list[dict[str, Any]]:
+        results = []
+        for entry in self._entries:
+            ok = self.retry(entry, max_retries)
+            results.append({"agent_key": entry.agent_key, "retried": ok, "error_category": entry.error_category})
+        return results
+
+    def replay_by_error_type(self, error_type: str, max_retries: int = 3) -> list[dict[str, Any]]:
+        results = []
+        for entry in self._entries:
+            if entry.error_category == error_type:
+                ok = self.retry(entry, max_retries)
+                results.append({"agent_key": entry.agent_key, "retried": ok, "error_category": entry.error_category})
+        return results
+
+    def get_stats(self) -> dict[str, Any]:
+        categories = Counter(e.error_category for e in self._entries)
+        return {
+            "total": len(self._entries),
+            "by_error_type": dict(categories),
+        }
 
     def __len__(self) -> int:
         return len(self._entries)

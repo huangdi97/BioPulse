@@ -1,0 +1,20 @@
+{
+  "agent_key": "analysis_agent",
+  "goal": "分析华东区Q2销售额趋势",
+  "input_context": {
+    "region": "华东",
+    "quarter": "Q2",
+    "year": 2025,
+    "sales_data": [
+      {"month": "2025-04", "amount": 1200000},
+      {"month": "2025-05", "amount": 1350000},
+      {"month": "2025-06", "amount": 1100000}
+    ]
+  },
+  "expected": {
+    "status": "success",
+    "output_contains": ["趋势", "华东", "环比"],
+    "output_not_contains": ["错误", "异常"]
+  },
+  "tags": ["smoke"]
+}

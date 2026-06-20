@@ -1,3 +1,5 @@
+"""Market module."""
+
 TABLE_MARKET_INTEL_ITEMS_COLS = frozenset(
     {
         "id",

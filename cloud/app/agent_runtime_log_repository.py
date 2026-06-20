@@ -1,3 +1,6 @@
+"""AgentRuntimeLogRepository & AgentApprovalRepository."""
+
+import json
 import sqlite3
 from datetime import datetime
 
@@ -114,6 +117,15 @@ class AgentApprovalRepository:
         cur = self.db.execute(
             "UPDATE agent_runtime_approvals SET status = 'rejected', responded_at = ?, responded_by = ? WHERE id = ? AND status = 'pending'",
             (now, responded_by, approval_id),
+        )
+        self.db.commit()
+        return cur.rowcount > 0
+
+    def update_approval_params(self, approval_id: int, params: dict) -> bool:
+        now = datetime.now().isoformat()
+        cur = self.db.execute(
+            "UPDATE agent_runtime_approvals SET params = ?, responded_at = ? WHERE id = ? AND status = 'editing'",
+            (json.dumps(params, ensure_ascii=False), now, approval_id),
         )
         self.db.commit()
         return cur.rowcount > 0

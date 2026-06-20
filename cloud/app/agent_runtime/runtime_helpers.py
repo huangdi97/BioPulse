@@ -6,6 +6,7 @@ import sqlite3
 from datetime import datetime
 
 from cloud.app.agent_runtime.state_snapshot import load_snapshot, save_snapshot
+from cloud.app.agent_runtime.state_snapshot import recover as recover_fn
 
 logger = logging.getLogger(__name__)
 
@@ -122,3 +123,42 @@ class CompositionHelper:
     def get_cost_usage(self) -> dict:
         """获取当前成本使用详情。"""
         return self._core._cost_governor.get_usage()
+
+    def get_status(self) -> dict:
+        """获取运行时状态统计。"""
+        cur = self._agent_db.execute("SELECT status, COUNT(*) as cnt FROM agent_runtime_logs GROUP BY status")
+        return {**self._core._stats, "by_status": {r["status"]: r["cnt"] for r in cur.fetchall()}}
+
+    def list_recoverable(self) -> list[dict]:
+        """列出所有可恢复的checkpoint（中断且未过期）。"""
+        snapshots = recover_fn(self._agent_db)
+        result = []
+        for snap in snapshots:
+            state = snap.get("state", {})
+            result.append(
+                {
+                    "trace_id": snap.get("trace_id", ""),
+                    "agent_key": state.get("agent_key", ""),
+                    "goal": state.get("goal", ""),
+                    "step": snap.get("step", 0),
+                    "created_at": snap.get("created_at", ""),
+                    "status": state.get("status", "interrupted"),
+                }
+            )
+        return result
+
+    def scan_recoverable_checkpoints(self) -> None:
+        """启动时扫描可恢复的checkpoint并记录日志。"""
+        recoverable = self.list_recoverable()
+        if recoverable:
+            logger.info("Found %d recoverable checkpoints on startup", len(recoverable))
+            for ck in recoverable:
+                logger.info(
+                    "Recoverable checkpoint: trace=%s agent=%s goal=%s step=%s",
+                    ck["trace_id"],
+                    ck["agent_key"],
+                    ck["goal"][:50],
+                    ck["step"],
+                )
+        else:
+            logger.info("No recoverable checkpoints found on startup")

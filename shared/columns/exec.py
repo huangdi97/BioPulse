@@ -1,3 +1,5 @@
+"""Exec module."""
+
 TABLE_AGENT_EXECUTION_TASKS_COLS = frozenset(
     {
         "id",

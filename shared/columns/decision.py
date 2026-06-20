@@ -1,3 +1,5 @@
+"""Decision module."""
+
 TABLE_CAUSAL_ANALYSES_COLS = frozenset(
     {
         "id",

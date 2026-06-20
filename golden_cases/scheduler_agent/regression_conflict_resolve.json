@@ -1,0 +1,19 @@
+{
+  "agent_key": "scheduler_agent",
+  "goal": "解决两场会议时间冲突并重新安排",
+  "input_context": {
+    "conflicts": [
+      {
+        "rep": "张三",
+        "meeting_a": {"doctor": "医生A", "time": "2025-06-21 10:00"},
+        "meeting_b": {"doctor": "医生B", "time": "2025-06-21 10:00"}
+      }
+    ]
+  },
+  "expected": {
+    "status": "success",
+    "output_contains": ["冲突", "调整", "方案"],
+    "output_not_contains": ["系统错误"]
+  },
+  "tags": ["regression"]
+}

@@ -1,3 +1,5 @@
+"""End assistant module."""
+
 TABLE_ASSISTANT_HCP_COLS = frozenset(
     {
         "id",

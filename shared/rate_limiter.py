@@ -1,3 +1,5 @@
+"""Rate limiter module."""
+
 import asyncio
 import logging
 import os

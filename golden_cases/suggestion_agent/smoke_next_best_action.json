@@ -1,0 +1,16 @@
+{
+  "agent_key": "suggestion_agent",
+  "goal": "为医生A推荐下一步最佳拜访行动",
+  "input_context": {
+    "doctor": "医生A",
+    "specialty": "心内科",
+    "last_visit": "2025-06-01",
+    "prescription_trend": "稳定"
+  },
+  "expected": {
+    "status": "success",
+    "output_contains": ["建议", "拜访", "行动"],
+    "output_not_contains": ["系统错误"]
+  },
+  "tags": ["smoke"]
+}

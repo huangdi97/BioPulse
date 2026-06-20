@@ -1,3 +1,5 @@
+"""Json formatter module."""
+
 import json
 import logging
 from contextvars import ContextVar

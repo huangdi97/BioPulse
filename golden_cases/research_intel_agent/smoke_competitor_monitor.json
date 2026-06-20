@@ -1,0 +1,18 @@
+{
+  "agent_key": "research_intel_agent",
+  "goal": "监控竞品X的最新临床研究进展",
+  "input_context": {
+    "competitor": "竞品X",
+    "therapeutic_area": "高血压",
+    "recent_events": [
+      {"date": "2025-06-10", "type": "clinical_trial", "detail": "III期临床试验达到主要终点"},
+      {"date": "2025-06-15", "type": "publication", "detail": "新英格兰杂志发表"}
+    ]
+  },
+  "expected": {
+    "status": "success",
+    "output_contains": ["竞品", "进展", "影响"],
+    "output_not_contains": ["系统错误"]
+  },
+  "tags": ["smoke"]
+}

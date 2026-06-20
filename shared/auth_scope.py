@@ -1,3 +1,5 @@
+"""Auth scope module."""
+
 from typing import Union
 
 from fastapi import Depends, HTTPException

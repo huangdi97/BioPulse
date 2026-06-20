@@ -1,3 +1,5 @@
+"""L1 cache module."""
+
 import json
 import logging
 import os

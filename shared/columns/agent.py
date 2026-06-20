@@ -1,3 +1,5 @@
+"""Agent module."""
+
 TABLE_AGENT_PIPELINES_COLS = frozenset(
     {
         "id",

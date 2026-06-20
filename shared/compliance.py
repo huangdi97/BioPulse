@@ -1,3 +1,5 @@
+"""Compliance module."""
+
 import re
 from typing import List
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 interface TraceItem {
   trace_id: string
@@ -41,7 +41,7 @@ export default function AgentTraceDashboard() {
   const [error, setError] = useState<string | null>(null)
   const pageSize = 20
 
-  const fetchTraces = async (agentName = filterAgent) => {
+  const fetchTraces = useCallback(async (agentName = filterAgent) => {
     setLoading(true)
     setError(null)
     try {
@@ -57,9 +57,9 @@ export default function AgentTraceDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filterAgent])
 
-  const fetchTraceDetail = async (traceId: string) => {
+  const fetchTraceDetail = useCallback(async (traceId: string) => {
     try {
       const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
       const res = await fetch(`${baseUrl}/agent/traces/${traceId}`)
@@ -69,11 +69,11 @@ export default function AgentTraceDashboard() {
     } catch (err) {
       console.error('Failed to fetch trace detail:', err)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchTraces()
-  }, [])
+  }, [fetchTraces])
 
   const parseTimeline = (trace: TraceDetail) => {
     const events: { type: string; time: string; detail: string }[] = []

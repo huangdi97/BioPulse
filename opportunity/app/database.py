@@ -1,3 +1,5 @@
+"""数据库模块，管理 SQLite/PostgreSQL 连接、Schema 初始化与迁移。"""
+
 import os
 import sqlite3
 

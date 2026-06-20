@@ -4,29 +4,25 @@ from __future__ import annotations
 
 import json
 import logging
-import subprocess
 import time
 import urllib.request
-import uuid
-from dataclasses import dataclass
 from typing import Any
 
 from cloud.app.agent_runtime.models import ToolDef
 from cloud.app.agent_runtime.retry import retry_with_backoff
 from cloud.app.agent_runtime.telemetry import trace_step
 from cloud.app.agent_runtime.tool_bridge_defaults import BRAIN_TOOLS, DEFAULT_TOOLS
+from cloud.app.agent_runtime.tool_bridge_sandbox import run_sandboxed
+from cloud.app.agent_runtime.tool_bridge_utils import (
+    ToolResult,
+    check_idempotency,
+    format_error,
+    idempotency_key,
+    set_idempotency,
+)
 from shared.app_settings import settings
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class ToolResult:
-    """工具执行结果。"""
-
-    success: bool = False
-    data: Any = None
-    error: str = ""
 
 
 class ToolBridge:
@@ -74,27 +70,6 @@ class ToolBridge:
                 return err
         return None
 
-    def _idempotency_key(self, agent_key: str, trace_id: str, step: int) -> str:
-        """生成幂等键：(agent_key, trace_id, step) -> uuid。"""
-        raw = f"{agent_key}:{trace_id}:{step}"
-        return str(uuid.uuid5(uuid.NAMESPACE_DNS, raw))
-
-    def _check_idempotency(self, key: str) -> Any | None:
-        """检查幂等缓存。返回缓存结果或 None。"""
-        now = time.time()
-        entry = self._idempotency_cache.get(key)
-        if entry is None:
-            return None
-        cached_time, cached_result = entry
-        if now - cached_time > self._IDEMPOTENCY_TTL:
-            del self._idempotency_cache[key]
-            return None
-        return cached_result
-
-    def _set_idempotency(self, key: str, result: Any) -> None:
-        """写入幂等缓存。"""
-        self._idempotency_cache[key] = (time.time(), result)
-
     def register_tool(self, tool: ToolDef) -> None:
         """注册一个工具定义到注册中心。"""
         tool.permission_level = getattr(tool, "permission_level", "read")
@@ -109,14 +84,6 @@ class ToolBridge:
         for t in DEFAULT_TOOLS + BRAIN_TOOLS:
             self.register_tool(t)
 
-    def _format_error(self, error: str) -> dict:
-        return {
-            "success": False,
-            "data": None,
-            "error": error,
-            "needs_approval": False,
-        }
-
     def _check_permission(
         self,
         tool: ToolDef,
@@ -126,7 +93,7 @@ class ToolBridge:
     ) -> dict | None:
         level_order = {"read": 0, "write": 1, "admin": 2}
         if level_order.get(tool.permission_level, 0) > level_order.get(caller_permission, 0):
-            return self._format_error(f"permission denied: {tool_name} requires {tool.permission_level}, caller has {caller_permission}")
+            return format_error(f"permission denied: {tool_name} requires {tool.permission_level}, caller has {caller_permission}")
         if level_order.get(tool.permission_level, 0) >= 1:
             return {
                 "success": False,
@@ -144,6 +111,7 @@ class ToolBridge:
         auth_header: str,
         idempotency_agent: str | None,
         idempotency_step: int,
+        trace_id: str = "",
     ) -> dict:
         url = f"{settings.cloud_api_base}/agent-gateway/execute"
         payload = {"tool_name": tool_name, "params": params}
@@ -151,16 +119,19 @@ class ToolBridge:
 
         def _do_post():
             """执行 HTTP POST 请求并返回 JSON 结果。"""
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": auth_header,
+            }
+            if trace_id:
+                headers["X-BioPulse-Trace-Id"] = trace_id
             req = urllib.request.Request(
                 url,
                 data=data,
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": auth_header,
-                },
+                headers=headers,
                 method="POST",
             )
-            with urllib.request.urlopen(req, timeout=15) as rp:
+            with urllib.request.urlopen(req, timeout=settings.tool_timeout_seconds) as rp:
                 raw = rp.read().decode("utf-8")
                 try:
                     return json.loads(raw)
@@ -174,13 +145,14 @@ class ToolBridge:
             self._failure_counts[tool_name] = self._failure_counts.get(tool_name, 0) + 1
             if self._failure_counts[tool_name] >= 3:
                 self._breaker_expiry[tool_name] = time.time() + 30
-            return self._format_error(f"tool call failed: {e}")
+            return format_error(f"tool call failed: {e}")
         if result["success"]:
             self._failure_counts[tool_name] = 0
             ret = {"success": True, "data": result["data"], "error": None}
             if idempotency_agent:
-                self._set_idempotency(
-                    self._idempotency_key(idempotency_agent, tool_name, idempotency_step),
+                set_idempotency(
+                    self._idempotency_cache,
+                    idempotency_key(idempotency_agent, tool_name, idempotency_step),
                     ret,
                 )
             return ret
@@ -197,16 +169,18 @@ class ToolBridge:
         auth_header: str,
         idempotency_agent: str | None,
         idempotency_step: int,
+        trace_id: str = "",
     ) -> dict:
         if tool.sandbox:
-            return self._run_sandboxed(tool_name, params, idempotency_agent, idempotency_step)
+            return run_sandboxed(tool_name, params, idempotency_agent, idempotency_step, self._idempotency_cache)
 
         if tool_name == "agent_brain_get":
             data = self._brain.get(params.get("key"), params.get("user_id", 0))
             result = {"success": True, "data": data, "error": None}
             if idempotency_agent:
-                self._set_idempotency(
-                    self._idempotency_key(idempotency_agent, tool_name, idempotency_step),
+                set_idempotency(
+                    self._idempotency_cache,
+                    idempotency_key(idempotency_agent, tool_name, idempotency_step),
                     result,
                 )
             return result
@@ -214,8 +188,9 @@ class ToolBridge:
             self._brain.set(params.get("key"), params.get("value"), params.get("user_id", 0))
             result = {"success": True, "data": "ok", "error": None}
             if idempotency_agent:
-                self._set_idempotency(
-                    self._idempotency_key(idempotency_agent, tool_name, idempotency_step),
+                set_idempotency(
+                    self._idempotency_cache,
+                    idempotency_key(idempotency_agent, tool_name, idempotency_step),
                     result,
                 )
             return result
@@ -226,6 +201,7 @@ class ToolBridge:
             auth_header,
             idempotency_agent,
             idempotency_step,
+            trace_id,
         )
 
     def call(
@@ -236,31 +212,32 @@ class ToolBridge:
         caller_permission: str = "read",
         idempotency_agent: str | None = None,
         idempotency_step: int = 0,
+        trace_id: str = "",
     ) -> dict:
         """执行工具调用，包含权限校验、熔断检查、参数校验、幂等性和重试。"""
         now = time.time()
         if tool_name in self._breaker_expiry:
             if now < self._breaker_expiry[tool_name]:
-                return self._format_error(f"circuit breaker open for {tool_name}")
+                return format_error(f"circuit breaker open for {tool_name}")
             else:
                 del self._breaker_expiry[tool_name]
                 self._failure_counts.pop(tool_name, None)
 
         tool = self._tools.get(tool_name)
         if tool is None:
-            return self._format_error(f"unknown tool: {tool_name}")
+            return format_error(f"unknown tool: {tool_name}")
 
         param_err = self._validate_params(tool_name, params)
         if param_err:
-            return self._format_error(param_err)
+            return format_error(param_err)
 
         if idempotency_agent:
-            idem_key = self._idempotency_key(
+            idem_key = idempotency_key(
                 idempotency_agent,
                 tool_name,
                 idempotency_step,
             )
-            cached = self._check_idempotency(idem_key)
+            cached = check_idempotency(self._idempotency_cache, idem_key, self._IDEMPOTENCY_TTL)
             if cached is not None:
                 return cached
 
@@ -280,32 +257,8 @@ class ToolBridge:
             auth_header,
             idempotency_agent,
             idempotency_step,
+            trace_id,
         )
-
-    def _run_sandboxed(self, tool_name: str, params: dict, idempotency_agent: str | None, idempotency_step: int) -> dict:
-        script = params.pop("_script", "")
-        if not script:
-            return {"success": False, "data": None, "error": "sandbox tool requires _script param", "needs_approval": False}
-        try:
-            completed = subprocess.run(
-                script,
-                shell=True,
-                capture_output=True,
-                text=True,
-                timeout=30,
-            )
-            result = {
-                "success": completed.returncode == 0,
-                "data": completed.stdout,
-                "error": completed.stderr if completed.returncode != 0 else None,
-            }
-            if idempotency_agent:
-                self._set_idempotency(self._idempotency_key(idempotency_agent, tool_name, idempotency_step), result)
-            return result
-        except subprocess.TimeoutExpired:
-            return {"success": False, "data": None, "error": "sandbox execution timed out after 30s", "needs_approval": False}
-        except Exception as e:
-            return {"success": False, "data": None, "error": f"sandbox execution failed: {e}", "needs_approval": False}
 
     def execute(self, tool_name: str, args: dict[str, Any] | None = None, caller_agent_id: str | None = None) -> ToolResult:
         """执行工具调用，含 caller_agent_id 白名单校验。

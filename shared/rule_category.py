@@ -1,3 +1,5 @@
+"""Rule category module."""
+
 from enum import Enum
 
 

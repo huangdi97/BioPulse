@@ -1,3 +1,5 @@
+"""Kg module."""
+
 TABLE_KG_ENTITIES_COLS = frozenset(
     {
         "id",

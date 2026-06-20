@@ -1,3 +1,5 @@
+"""Mdt module."""
+
 TABLE_ASYNC_MDT_OPINIONS_COLS = frozenset(
     {
         "id",

@@ -95,6 +95,26 @@ class ApprovalRequestManager:
         self._db.commit()
         return cur.rowcount > 0
 
+    def begin_editing(self, request_id: str, editor: str = "") -> bool:
+        """transition rejected → editing."""
+        now = datetime.now().isoformat()
+        cur = self._db.execute(
+            "UPDATE agent_runtime_approvals SET status='editing', responded_at=?, responded_by=? WHERE trace_id=? AND status='rejected'",
+            (now, editor, request_id),
+        )
+        self._db.commit()
+        return cur.rowcount > 0
+
+    def resubmit(self, request_id: str, params: dict) -> bool:
+        """transition editing → resubmitted, updating params."""
+        now = datetime.now().isoformat()
+        cur = self._db.execute(
+            "UPDATE agent_runtime_approvals SET status='resubmitted', params=?, responded_at=? WHERE trace_id=? AND status='editing'",
+            (json.dumps(params, ensure_ascii=False), now, request_id),
+        )
+        self._db.commit()
+        return cur.rowcount > 0
+
     def get_pending_requests(self) -> list[ApprovalRequest]:
         """get pending requests."""
         rows = self._db.execute("SELECT * FROM agent_runtime_approvals WHERE status='pending' ORDER BY created_at ASC").fetchall()

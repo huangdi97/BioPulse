@@ -1,3 +1,5 @@
+"""Collab module."""
+
 TABLE_AGENT_SKILLS_COLS = frozenset(
     {
         "id",

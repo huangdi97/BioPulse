@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchHcps, type HcpQueryParams } from '@/api/hcps'
 import type { HCP } from '@/types'

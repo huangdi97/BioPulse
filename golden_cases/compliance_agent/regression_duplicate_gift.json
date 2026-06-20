@@ -1,0 +1,17 @@
+{
+  "agent_key": "compliance_agent",
+  "goal": "审查该医生半年内是否收到重复礼品",
+  "input_context": {
+    "doctor_id": "D12345",
+    "gift_history": [
+      {"date": "2025-01-10", "item": "笔记本", "value": 150},
+      {"date": "2025-03-20", "item": "笔记本", "value": 150}
+    ]
+  },
+  "expected": {
+    "status": "success",
+    "output_contains": ["重复", "礼品", "合规"],
+    "output_not_contains": ["系统错误"]
+  },
+  "tags": ["regression"]
+}

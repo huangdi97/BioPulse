@@ -1,3 +1,5 @@
+"""Error code module."""
+
 from enum import IntEnum
 
 

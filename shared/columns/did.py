@@ -1,3 +1,5 @@
+"""Did module."""
+
 TABLE_DATA_MASKING_RULES_COLS = frozenset(
     {
         "id",

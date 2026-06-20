@@ -1,8 +1,11 @@
 """Tool execution handlers for the runtime core — step-level error, completion, approval, and reflection."""
 
 import concurrent.futures
+import json
 import logging
 import time
+
+from shared.app_settings import settings
 
 logger = logging.getLogger(__name__)
 _KEEP_CONTEXT = object()
@@ -12,12 +15,44 @@ class ToolExecutor:
     def __init__(self, host):
         self._host = host
 
+    def execute_with_timeout(self, tool_name: str, params: dict, timeout: int | None = None) -> dict:
+        timeout = timeout or settings.tool_timeout_seconds
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(
+                self._host._tool_registry.call,
+                tool_name,
+                params,
+                self._host._auth_header,
+                caller_permission="write",
+                trace_id=self._host._trace_id,
+            )
+            try:
+                result = future.result(timeout=timeout)
+            except concurrent.futures.TimeoutError:
+                future.cancel()
+                return {"success": False, "data": None, "error": f"tool execution timed out after {timeout}s"}
+        return result
+
     def _save_step_checkpoint(self, c, step, status="active", context=_KEEP_CONTEXT):
         context = c["context"] if context is _KEEP_CONTEXT else context
-        self._host._helper._save_checkpoint(
+        state = self._host._helper._make_checkpoint_state(
             c["agent_key"],
             c["goal"],
-            self._host._helper._make_checkpoint_state(
+            step,
+            c["messages"],
+            c["logs"],
+            c["tool_calls"],
+            context,
+            status,
+        )
+        state_json = json.dumps(state, ensure_ascii=False, default=str)
+        size_bytes = len(state_json.encode("utf-8"))
+        if size_bytes > 500 * 1024:
+            logger.warning("Checkpoint size %d bytes > 500KB, truncating tool return content", size_bytes)
+            for msg in c["messages"]:
+                if isinstance(msg.get("content"), str) and msg["content"].startswith("工具返回："):
+                    msg["content"] = msg["content"][:2000] + "... [truncated]"
+            state = self._host._helper._make_checkpoint_state(
                 c["agent_key"],
                 c["goal"],
                 step,
@@ -26,7 +61,13 @@ class ToolExecutor:
                 c["tool_calls"],
                 context,
                 status,
-            ),
+            )
+        elif size_bytes > 100 * 1024:
+            logger.warning("Checkpoint size %d bytes exceeds 100KB threshold", size_bytes)
+        self._host._helper._save_checkpoint(
+            c["agent_key"],
+            c["goal"],
+            state,
         )
 
     def _handle_step_error(self, c, step, error_msg, tool=None, params=None, duration_ms=0, ai_resp=None):
@@ -118,7 +159,7 @@ class ToolExecutor:
             executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
             future = executor.submit(self._host._reflector.review_decision, goal, decision, review_context, level)
             try:
-                result = future.result(timeout=self._host._reflector_timeout_seconds)
+                result = future.result(timeout=settings.tool_timeout_seconds)
             except concurrent.futures.TimeoutError:
                 future.cancel()
                 status = "timeout_pass"

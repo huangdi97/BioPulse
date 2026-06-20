@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { RefreshCw, BarChart3, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react'
-import { getOpportunityAttribution, refreshAttribution, type AttributionResponse, type AttributionFactor } from '@/api/opportunity-api'
+import { getOpportunityAttribution, refreshAttribution, type AttributionResponse } from '@/api/opportunity-api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/Skeleton'
 import { EmptyState } from '@/components/EmptyState'

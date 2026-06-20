@@ -1,0 +1,18 @@
+{
+  "agent_key": "suggestion_agent",
+  "goal": "基于医生A的处方历史，推荐适合的交叉销售产品",
+  "input_context": {
+    "doctor": "医生A",
+    "current_products": ["产品X", "产品Y"],
+    "prescription_history": [
+      {"product": "产品X", "count": 200, "trend": "增长"},
+      {"product": "产品Y", "count": 50, "trend": "下降"}
+    ]
+  },
+  "expected": {
+    "status": "success",
+    "output_contains": ["推荐", "产品", "处方"],
+    "output_not_contains": ["系统错误"]
+  },
+  "tags": ["regression"]
+}

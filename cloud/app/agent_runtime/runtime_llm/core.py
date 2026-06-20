@@ -9,11 +9,11 @@ from cloud.app.agent_runtime.retry import async_retry_with_backoff, retry_with_b
 from cloud.app.agent_runtime.runtime_llm.call_orchestration import process_ai_response
 from cloud.app.agent_runtime.runtime_llm.config import (
     AllModelsFailedError,
-    compress_messages,
     estimate_complexity,
     estimate_token_count,
     get_fallback_chain,
 )
+from cloud.app.agent_runtime.runtime_llm.context_warning import check_and_warn
 from cloud.app.agent_runtime.runtime_llm.request import (
     build_cloud_body,
     call_local,
@@ -43,16 +43,15 @@ class RuntimeLLM:
         return estimate_token_count(messages)
 
     def _compress_messages(self, messages: list[dict]) -> list[dict]:
-        """压缩消息列表以降低 Token 消耗。"""
-        return compress_messages(messages)
+        return check_and_warn(messages, self._core)
 
     def _raw_llm_call(self, request_body: dict) -> dict:
         """执行同步原始 LLM 调用。"""
-        return raw_llm_call(request_body, self._core._auth_header)
+        return raw_llm_call(request_body, self._core._auth_header, trace_id=getattr(self._core, "_trace_id", ""))
 
     async def _raw_llm_call_async(self, request_body: dict) -> dict:
         """执行异步原始 LLM 调用。"""
-        return await raw_llm_call_async(request_body, self._core._auth_header)
+        return await raw_llm_call_async(request_body, self._core._auth_header, trace_id=getattr(self._core, "_trace_id", ""))
 
     @staticmethod
     def _estimate_complexity(messages: list[dict]) -> int:

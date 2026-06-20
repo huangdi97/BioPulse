@@ -17,25 +17,6 @@ export function useKeyboard({
   const navigate = useNavigate()
   const location = useLocation()
 
-  const isListPage = () => {
-    const pages = [
-      '/hcps',
-      '/tasks',
-      '/scenarios',
-      '/sessions',
-      '/opport',
-      '/bidding',
-      '/contacts',
-      '/notes',
-      '/objections',
-      '/visits',
-      '/assessments',
-      '/reflections',
-      '/manager/visits',
-    ]
-    return pages.some((p) => location.pathname.includes(p))
-  }
-
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey
@@ -45,6 +26,25 @@ export function useKeyboard({
         target.tagName === 'TEXTAREA' ||
         target.tagName === 'SELECT' ||
         target.isContentEditable
+
+      const isListPage = () => {
+        const pages = [
+          '/hcps',
+          '/tasks',
+          '/scenarios',
+          '/sessions',
+          '/opport',
+          '/bidding',
+          '/contacts',
+          '/notes',
+          '/objections',
+          '/visits',
+          '/assessments',
+          '/reflections',
+          '/manager/visits',
+        ]
+        return pages.some((p) => location.pathname.includes(p))
+      }
 
       if (mod && e.key === 'k') {
         e.preventDefault()

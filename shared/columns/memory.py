@@ -1,3 +1,5 @@
+"""Memory module."""
+
 TABLE_MEMORY_CONSOLIDATION_LOG_COLS = frozenset(
     {
         "id",

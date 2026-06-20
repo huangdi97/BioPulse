@@ -21,6 +21,7 @@ class AgentStreamer:
         "agent.thinking",
         "agent.error",
         "agent.end",
+        "context.warning",
     ]
 
     def __init__(self):

@@ -1,0 +1,19 @@
+{
+  "agent_key": "mdt_debate_agent",
+  "goal": "组织多学科团队讨论复杂病例的治疗方案",
+  "input_context": {
+    "case_id": "CASE-2025-0089",
+    "diagnosis": "非小细胞肺癌IIIB期",
+    "proposals": [
+      {"dept": "肿瘤内科", "plan": "化疗+免疫", "evidence": "KEYNOTE-189"},
+      {"dept": "放疗科", "plan": "立体定向放疗", "evidence": "RTOG 0617"},
+      {"dept": "胸外科", "plan": "手术切除", "evidence": "NCCN指南"}
+    ]
+  },
+  "expected": {
+    "status": "success",
+    "output_contains": ["建议", "方案", "共识"],
+    "output_not_contains": ["系统错误"]
+  },
+  "tags": ["smoke"]
+}

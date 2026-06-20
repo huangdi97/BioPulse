@@ -1,0 +1,19 @@
+{
+  "agent_key": "scheduler_agent",
+  "goal": "为明天北京区域的拜访安排最优路线",
+  "input_context": {
+    "region": "北京",
+    "date": "2025-06-20",
+    "doctors": [
+      {"name": "医生A", "address": "朝阳区", "priority": "high"},
+      {"name": "医生B", "address": "海淀区", "priority": "medium"},
+      {"name": "医生C", "address": "东城区", "priority": "high"}
+    ]
+  },
+  "expected": {
+    "status": "success",
+    "output_contains": ["路线", "安排", "顺序"],
+    "output_not_contains": ["系统错误"]
+  },
+  "tags": ["smoke"]
+}

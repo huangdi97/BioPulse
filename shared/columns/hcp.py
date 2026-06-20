@@ -1,3 +1,5 @@
+"""Hcp module."""
+
 TABLE_HCP_INTERACTIONS_COLS = frozenset(
     {
         "id",

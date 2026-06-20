@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -27,22 +27,22 @@ export default function VisitDrafts() {
 
   const userId = localStorage.getItem('user_id') || 'unknown'
 
-  useEffect(() => {
-    loadDrafts()
-  }, [])
-
-  const loadDrafts = async () => {
+  const loadDrafts = useCallback(async () => {
     setLoading(true)
     try {
       const res = await client.get('/api/cloud/visit/drafts', { params: { user_id: userId } })
-      const data = (res as any)?.data
+      const data = (res as Record<string, unknown>)?.data
       setDrafts(Array.isArray(data) ? data : [])
     } catch {
       toast.error('加载草稿列表失败')
     } finally {
       setLoading(false)
     }
-  }
+  }, [userId, toast])
+
+  useEffect(() => {
+    loadDrafts()
+  }, [loadDrafts])
 
   const handleEdit = (draft: DraftItem) => {
     setEditingId(draft.id)

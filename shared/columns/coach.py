@@ -1,3 +1,5 @@
+"""Coach module."""
+
 TABLE_COACHING_PROMPT_COLS = frozenset(
     {
         "id",

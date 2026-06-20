@@ -1,3 +1,5 @@
+"""Auth module."""
+
 TABLE_SYSTEM_CONFIGS_COLS = frozenset(
     {
         "id",

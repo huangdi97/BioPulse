@@ -1,3 +1,6 @@
+"""Pg row module."""
+
+
 class PGRow(dict):
     def __getitem__(self, key):
         if isinstance(key, (int, slice)):

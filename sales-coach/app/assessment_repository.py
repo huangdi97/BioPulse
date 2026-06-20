@@ -1,3 +1,5 @@
+"""评估数据仓库，封装评估表的 CRUD 操作。"""
+
 import sqlite3
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional

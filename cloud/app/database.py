@@ -32,7 +32,7 @@ from cloud.app.seeds import (
     seed_world_tree,
 )
 from cloud.app.seeds.seed_model_compression import seed_model_compression
-from cloud.seed_data import seed_products
+from cloud.seed_products import seed_products
 from shared.config import settings
 from shared.db import PGCompatConnection
 
@@ -53,6 +53,7 @@ def _get_engine():
     global _engine
     if _engine is None and (DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://")):
         from sqlalchemy import create_engine
+
         _engine = create_engine(
             DATABASE_URL,
             pool_size=10,

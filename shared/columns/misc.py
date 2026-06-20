@@ -1,3 +1,5 @@
+"""Misc module."""
+
 TABLE_AGENT_MARKETPLACE_COLS = frozenset(
     {
         "id",

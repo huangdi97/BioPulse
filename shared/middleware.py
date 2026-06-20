@@ -1,3 +1,5 @@
+"""Middleware module."""
+
 import logging
 import time
 import uuid

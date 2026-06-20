@@ -89,7 +89,7 @@ export function useAgentStream(): UseAgentStreamResult {
       es.close()
       eventSourceRef.current = null
     }
-  }, [])
+  }, [disconnect])
 
   const disconnect = useCallback(() => {
     if (eventSourceRef.current) {

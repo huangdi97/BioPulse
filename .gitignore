@@ -140,9 +140,15 @@ archive/
 # 本地助手/规划文件
 .hermes/
 
-# 设计文档/架构文档（不上传）
+# design docs
 design.md
 ARCHITECTURE.md
+
+# backups and data
+cloud/backups/
+cloud/scripts/
+data/
+*.db.gz
 code_cleanup_report.md
 scripts/backup_schedule.md
 

@@ -1,3 +1,5 @@
+"""Privacy module."""
+
 TABLE_FEDERATED_NODES_COLS = frozenset(
     {
         "id",

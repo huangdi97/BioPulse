@@ -11,8 +11,6 @@ const STAGE_LABELS: Record<OpportunityStage, string> = {
   closed_won: '已赢单',
 }
 
-const STAGE_ORDER: OpportunityStage[] = ['lead', 'follow_up', 'negotiation', 'closed_won']
-
 const STAGE_BARS: { stage: OpportunityStage; color: string; bg: string; text: string }[] = [
   { stage: 'lead', color: 'bg-blue-400', bg: 'bg-blue-50', text: 'text-blue-700' },
   { stage: 'follow_up', color: 'bg-yellow-400', bg: 'bg-yellow-50', text: 'text-yellow-700' },

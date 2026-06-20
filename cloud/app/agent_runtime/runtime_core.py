@@ -11,6 +11,7 @@ from cloud.app.agent_runtime.bulkhead import Bulkhead
 from cloud.app.agent_runtime.circuit_breaker import CircuitBreaker
 from cloud.app.agent_runtime.content_filter import ContentBlocked, ContentFilter
 from cloud.app.agent_runtime.cost_governor import CostGovernor
+from cloud.app.agent_runtime.error_categories import categorize_error
 from cloud.app.agent_runtime.execution_loop import ExecutionEngine
 from cloud.app.agent_runtime.loop_detector import LoopDetector
 from cloud.app.agent_runtime.memory import Memory
@@ -158,6 +159,9 @@ class RuntimeCore:
                     )
                     self._tracer.end_trace("blocked", result.model_dump())
                     return result
+            error_category = categorize_error(result.status)
+            if result.status != "success":
+                result.metadata["error_category"] = error_category
             self._tracer.end_trace(result.status, result.model_dump())
             agent_requests_total.labels(agent_name=agent_key, status=result.status).inc()
             agent_active_count.labels(agent_name=agent_key).dec()
@@ -177,6 +181,21 @@ class RuntimeCore:
         checkpoint = self._load_checkpoint(agent_key, goal)
         if not checkpoint:
             return RuntimeResult(status="error", result="no checkpoint found", iterations=0, tool_calls=0, logs=[])
+        # 状态一致性校验：检查 snapshot 中的 trace_id 是否在日志表中存在
+        trace_id = checkpoint.get("trace_id", "")
+        if trace_id:
+            row = self._agent_db.execute(
+                "SELECT COUNT(*) as cnt FROM agent_runtime_logs WHERE trace_id=?",
+                (trace_id,),
+            ).fetchone()
+            if row and row["cnt"] == 0:
+                return RuntimeResult(
+                    status="inconsistent",
+                    result=f"Snapshot state inconsistent with DB: trace_id={trace_id} not found in agent_runtime_logs",
+                    iterations=0,
+                    tool_calls=0,
+                    logs=[],
+                )
         approval = self._agent_db.execute(
             "SELECT * FROM agent_runtime_approvals WHERE trace_id=? AND status='approved' ORDER BY id DESC LIMIT 1",
             (checkpoint["trace_id"],),
@@ -193,8 +212,7 @@ class RuntimeCore:
 
     def get_status(self) -> dict:
         """获取运行时状态统计。"""
-        cur = self._agent_db.execute("SELECT status, COUNT(*) as cnt FROM agent_runtime_logs GROUP BY status")
-        return {**self._stats, "by_status": {r["status"]: r["cnt"] for r in cur.fetchall()}}
+        return self._helper.get_status()
 
     @property
     def brain(self) -> Memory:
@@ -203,39 +221,11 @@ class RuntimeCore:
 
     def list_recoverable(self) -> list[dict]:
         """列出所有可恢复的checkpoint（中断且未过期）。"""
-        from cloud.app.agent_runtime.state_snapshot import recover as recover_fn
-
-        snapshots = recover_fn(self._agent_db)
-        result = []
-        for snap in snapshots:
-            state = snap.get("state", {})
-            result.append(
-                {
-                    "trace_id": snap.get("trace_id", ""),
-                    "agent_key": state.get("agent_key", ""),
-                    "goal": state.get("goal", ""),
-                    "step": snap.get("step", 0),
-                    "created_at": snap.get("created_at", ""),
-                    "status": state.get("status", "interrupted"),
-                }
-            )
-        return result
+        return self._helper.list_recoverable()
 
     def _scan_recoverable_checkpoints(self) -> None:
         """启动时扫描可恢复的checkpoint并记录日志。"""
-        recoverable = self.list_recoverable()
-        if recoverable:
-            logger.info("Found %d recoverable checkpoints on startup", len(recoverable))
-            for ck in recoverable:
-                logger.info(
-                    "Recoverable checkpoint: trace=%s agent=%s goal=%s step=%s",
-                    ck["trace_id"],
-                    ck["agent_key"],
-                    ck["goal"][:50],
-                    ck["step"],
-                )
-        else:
-            logger.info("No recoverable checkpoints found on startup")
+        self._helper.scan_recoverable_checkpoints()
 
     def _save_snapshot(self, agent_id, step_id, plan, results, context, status="active"):
         """保存状态快照到 StateSnapshot 管理器。"""

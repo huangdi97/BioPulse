@@ -1,3 +1,5 @@
+"""数据仓库聚合导出。"""
+
 from .bidding_repository import BiddingAgentConfigRepository, BiddingAgentLogRepository, BiddingInfoRepository, UserBookmarkRepository
 from .contact_repository import ContactRecordRepository, OpportunityRepository, ResearchTrailRepository
 from .scoring_repository import PaperIntegrityRepository, StatsRepository, TrendAnalysisRepository

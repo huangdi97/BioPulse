@@ -7,13 +7,16 @@ from cloud.app.agent_runtime.approval_models import ApprovalRequestManager
 
 logger = logging.getLogger(__name__)
 
+
 def require_compliance_approval(agent_output: dict, rules_checked: list, risk_level: str) -> tuple[bool, str, str]:
-    if risk_level == 'high':
-        return (False, 'Requires human review', 'pending')
-    elif risk_level == 'medium':
-        return (True, 'AI auto-approved', 'auto')
+    if risk_level == "high":
+        return (False, "Requires human review", "pending")
+    elif risk_level == "medium":
+        return (True, "AI auto-approved", "auto")
     else:
-        return (True, 'Auto-approved', 'auto')
+        return (True, "Auto-approved", "auto")
+
+
 ESCALATION_INTERVAL_HOURS = [2, 8, 24]
 
 
@@ -60,6 +63,25 @@ class ApprovalWorkflow:
             )
             self._db.commit()
             logger.info("Approval rejected: request_id=%s approver=%s reason=%s", request_id, approver, reason)
+        return success
+
+    def begin_editing(self, request_id: str, editor: str = ""):
+        """transition rejected → editing so the user can modify params."""
+        success = self._manager.begin_editing(request_id, editor)
+        if success:
+            logger.info("Approval editing started: request_id=%s editor=%s", request_id, editor)
+        return success
+
+    def resubmit(self, request_id: str, editor: str, params: dict):
+        """transition editing → resubmitted with updated params."""
+        success = self._manager.resubmit(request_id, params)
+        if success:
+            self._db.execute(
+                "UPDATE agent_runtime_approvals SET responded_by=? WHERE trace_id=? AND status='resubmitted'",
+                (editor, request_id),
+            )
+            self._db.commit()
+            logger.info("Approval resubmitted: request_id=%s editor=%s", request_id, editor)
         return success
 
     def check_status(self, request_id: str) -> str:

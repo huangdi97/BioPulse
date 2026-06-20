@@ -1,3 +1,5 @@
+"""Auth module."""
+
 import uuid
 from datetime import datetime, timedelta, timezone
 

@@ -1,0 +1,22 @@
+{
+  "agent_key": "research_intel_agent",
+  "goal": "分析降血脂药物市场格局变化",
+  "input_context": {
+    "market": "降血脂药物",
+    "year": 2025,
+    "competitors": [
+      {"name": "竞品A", "market_share": 0.35, "growth": "5%"},
+      {"name": "竞品B", "market_share": 0.25, "growth": "-2%"},
+      {"name": "竞品C", "market_share": 0.15, "growth": "12%"}
+    ],
+    "new_entrants": [
+      {"name": "新药D", "phase": "NDA审评中", "expected_launch": "2025Q4"}
+    ]
+  },
+  "expected": {
+    "status": "success",
+    "output_contains": ["格局", "份额", "趋势"],
+    "output_not_contains": ["系统错误"]
+  },
+  "tags": ["regression"]
+}

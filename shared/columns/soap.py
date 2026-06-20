@@ -1,3 +1,5 @@
+"""Soap module."""
+
 TABLE_SOAP_DECISIONS_COLS = frozenset(
     {
         "id",

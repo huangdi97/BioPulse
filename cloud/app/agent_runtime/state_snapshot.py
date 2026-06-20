@@ -1,7 +1,14 @@
-"""Runtime state snapshot persistence."""
+"""Runtime state snapshot persistence with incremental diffs."""
 
-import json
 from datetime import datetime, timedelta
+
+from cloud.app.agent_runtime.snapshot_diff import (
+    _apply_diff,
+    _compute_diff,
+    _deserialize,
+    _is_anchor_step,
+    _serialize,
+)
 
 
 def ensure_snapshot_table(db) -> None:
@@ -12,26 +19,18 @@ def ensure_snapshot_table(db) -> None:
         "trace_id TEXT NOT NULL, "
         "step INTEGER NOT NULL, "
         "state_json TEXT NOT NULL, "
+        "snapshot_type TEXT DEFAULT 'full', "
         "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
         "expires_at TIMESTAMP"
         ")"
     )
     db.execute("CREATE INDEX IF NOT EXISTS idx_agent_runtime_snapshots_trace_step ON agent_runtime_snapshots(trace_id, step)")
-    db.commit()
-
-
-def _serialize(state_dict: dict) -> str:
-    return json.dumps(state_dict, ensure_ascii=False, default=str)
-
-
-def _deserialize(text: str | None) -> dict:
-    if not text:
-        return {}
+    db.execute("CREATE INDEX IF NOT EXISTS idx_agent_runtime_snapshots_type ON agent_runtime_snapshots(trace_id, snapshot_type)")
     try:
-        data = json.loads(text)
-    except (json.JSONDecodeError, TypeError):
-        return {}
-    return data if isinstance(data, dict) else {}
+        db.execute("ALTER TABLE agent_runtime_snapshots ADD COLUMN snapshot_type TEXT DEFAULT 'full'")
+    except Exception:
+        pass
+    db.commit()
 
 
 def _row_to_snapshot(row) -> dict | None:
@@ -44,31 +43,83 @@ def _row_to_snapshot(row) -> dict | None:
         "step": row["step"],
         "state": state,
         "state_json": row["state_json"],
+        "snapshot_type": row.get("snapshot_type", "full"),
         "created_at": row["created_at"],
         "expires_at": row["expires_at"],
     }
 
 
 def save_snapshot(db, trace_id: str, step: int, state_dict: dict) -> int:
-    """保存运行时状态快照。"""
+    """保存运行时状态快照。step>0 时保存 diff（与上一步差异），每 5 步存全量锚点。"""
     ensure_snapshot_table(db)
     expires_at = datetime.now() + timedelta(days=7)
-    cur = db.execute(
-        "INSERT INTO agent_runtime_snapshots (trace_id, step, state_json, expires_at) VALUES (?, ?, ?, ?)",
-        (trace_id, step, _serialize(state_dict), expires_at.isoformat()),
-    )
+    is_anchor = _is_anchor_step(step)
+    if is_anchor:
+        serialized = _serialize(state_dict)
+        cur = db.execute(
+            "INSERT INTO agent_runtime_snapshots (trace_id, step, state_json, snapshot_type, expires_at) VALUES (?, ?, ?, 'full', ?)",
+            (trace_id, step, serialized, expires_at.isoformat()),
+        )
+    else:
+        prev = db.execute(
+            "SELECT * FROM agent_runtime_snapshots WHERE trace_id=? AND step=? ORDER BY id DESC LIMIT 1",
+            (trace_id, step - 1),
+        ).fetchone()
+        if prev:
+            prev_state = _deserialize(prev["state_json"])
+            if prev.get("snapshot_type") == "diff":
+                prev_full_row = db.execute(
+                    "SELECT * FROM agent_runtime_snapshots WHERE trace_id=? AND snapshot_type='full' AND step<=? ORDER BY step DESC LIMIT 1",
+                    (trace_id, step - 1),
+                ).fetchone()
+                if prev_full_row:
+                    prev_state = _deserialize(prev_full_row["state_json"])
+            diff = _compute_diff(state_dict, prev_state)
+            serialized = _serialize(diff)
+        else:
+            serialized = _serialize(state_dict)
+        cur = db.execute(
+            "INSERT INTO agent_runtime_snapshots (trace_id, step, state_json, snapshot_type, expires_at) VALUES (?, ?, ?, 'diff', ?)",
+            (trace_id, step, serialized, expires_at.isoformat()),
+        )
     db.commit()
     return cur.lastrowid
 
 
 def load_latest_snapshot(db, trace_id: str) -> dict | None:
-    """加载指定 trace 的最新快照。"""
+    """加载指定 trace 的最新快照，从全量锚点 + 逐层 diff 重建。"""
     ensure_snapshot_table(db)
-    row = db.execute(
+    latest = db.execute(
         "SELECT * FROM agent_runtime_snapshots WHERE trace_id=? ORDER BY step DESC, id DESC LIMIT 1",
         (trace_id,),
     ).fetchone()
-    return _row_to_snapshot(row)
+    if not latest:
+        return None
+    target_step = latest["step"]
+    anchor = db.execute(
+        "SELECT * FROM agent_runtime_snapshots WHERE trace_id=? AND snapshot_type='full' AND step<=? ORDER BY step DESC LIMIT 1",
+        (trace_id, target_step),
+    ).fetchone()
+    if not anchor:
+        return _row_to_snapshot(latest)
+    state = _deserialize(anchor["state_json"])
+    diffs = db.execute(
+        "SELECT * FROM agent_runtime_snapshots WHERE trace_id=? AND snapshot_type='diff' AND step>? AND step<=? ORDER BY step ASC",
+        (trace_id, anchor["step"], target_step),
+    ).fetchall()
+    for d in diffs:
+        diff_data = _deserialize(d["state_json"])
+        state = _apply_diff(state, diff_data)
+    return {
+        "id": latest["id"],
+        "trace_id": latest["trace_id"],
+        "step": latest["step"],
+        "state": state,
+        "state_json": _serialize(state),
+        "snapshot_type": latest.get("snapshot_type", "full"),
+        "created_at": latest["created_at"],
+        "expires_at": latest["expires_at"],
+    }
 
 
 def load_snapshot(db, trace_id: str, step: int) -> dict | None:
@@ -78,7 +129,35 @@ def load_snapshot(db, trace_id: str, step: int) -> dict | None:
         "SELECT * FROM agent_runtime_snapshots WHERE trace_id=? AND step=? ORDER BY id DESC LIMIT 1",
         (trace_id, step),
     ).fetchone()
-    return _row_to_snapshot(row)
+    if not row:
+        return None
+    snapshot_type = row.get("snapshot_type", "full")
+    if snapshot_type == "full":
+        return _row_to_snapshot(row)
+    anchor = db.execute(
+        "SELECT * FROM agent_runtime_snapshots WHERE trace_id=? AND snapshot_type='full' AND step<=? ORDER BY step DESC LIMIT 1",
+        (trace_id, step),
+    ).fetchone()
+    if not anchor:
+        return _row_to_snapshot(row)
+    state = _deserialize(anchor["state_json"])
+    diffs = db.execute(
+        "SELECT * FROM agent_runtime_snapshots WHERE trace_id=? AND snapshot_type='diff' AND step>? AND step<=? ORDER BY step ASC",
+        (trace_id, anchor["step"], step),
+    ).fetchall()
+    for d in diffs:
+        diff_data = _deserialize(d["state_json"])
+        state = _apply_diff(state, diff_data)
+    return {
+        "id": row["id"],
+        "trace_id": row["trace_id"],
+        "step": row["step"],
+        "state": state,
+        "state_json": _serialize(state),
+        "snapshot_type": snapshot_type,
+        "created_at": row["created_at"],
+        "expires_at": row["expires_at"],
+    }
 
 
 def delete_expired_snapshots(db) -> int:

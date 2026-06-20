@@ -1,3 +1,5 @@
+"""Db module."""
+
 import logging
 import re
 

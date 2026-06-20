@@ -1,0 +1,16 @@
+{
+  "agent_key": "coach_agent",
+  "goal": "对销售代表的模拟拜访进行评分并给出反馈",
+  "input_context": {
+    "rep": "李四",
+    "scenario": "首次拜访三甲医院主任医师",
+    "transcript": "代表：您好，我是XX公司代表。\\n医生：你好。\\n代表：我们的产品在降低心血管事件方面有显著效果。\\n医生：有没有头对头研究？\\n代表：我回去查一下再回复您。\\n代表：感谢您的时间。",
+    "score_dimensions": ["开场白", "产品知识", "异议处理", "收尾"]
+  },
+  "expected": {
+    "status": "success",
+    "output_contains": ["评分", "反馈", "改进"],
+    "output_not_contains": ["系统错误"]
+  },
+  "tags": ["regression"]
+}

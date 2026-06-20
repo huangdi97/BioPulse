@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { fetchBiddings, type Bidding } from '@/api/opportunity-api'
 import { Card, CardContent } from '@/components/ui/card'
-import { FileText, Calendar, Clock } from 'lucide-react'
+import { Calendar, Clock } from 'lucide-react'
 import { SearchBar } from '@/components/SearchBar'
 import { FilterDropdown } from '@/components/FilterDropdown'
 import { Skeleton } from '@/components/Skeleton'

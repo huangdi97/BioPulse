@@ -1,0 +1,15 @@
+{
+  "agent_key": "coach_agent",
+  "goal": "分析销售代表的拜访录音并提供改进建议",
+  "input_context": {
+    "rep": "张三",
+    "call_summary": "代表介绍了产品A的两个适应症，但未提及副作用管理。医生询问了竞品对比数据，代表未能完整回答。",
+    "duration_minutes": 15
+  },
+  "expected": {
+    "status": "success",
+    "output_contains": ["建议", "改进", "培训"],
+    "output_not_contains": ["系统错误"]
+  },
+  "tags": ["smoke"]
+}

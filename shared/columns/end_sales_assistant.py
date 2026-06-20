@@ -1,3 +1,5 @@
+"""End sales assistant module."""
+
 TABLE_BIDDING_AGENT_CONFIG_COLS = frozenset(
     {
         "id",

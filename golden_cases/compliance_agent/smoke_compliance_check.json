@@ -1,0 +1,13 @@
+{
+  "agent_key": "compliance_agent",
+  "goal": "检查这份拜访记录是否有合规风险",
+  "input_context": {
+    "visit_record": "医生A于2025-06-15参加晚宴，费用超标2000元"
+  },
+  "expected": {
+    "status": "success",
+    "output_contains": ["违规", "超标"],
+    "output_not_contains": ["系统错误"]
+  },
+  "tags": ["smoke"]
+}

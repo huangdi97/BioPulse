@@ -1,3 +1,5 @@
+"""场景数据仓库，封装教练场景表的 CRUD 操作。"""
+
 import sqlite3
 from datetime import datetime, timezone
 from typing import Optional

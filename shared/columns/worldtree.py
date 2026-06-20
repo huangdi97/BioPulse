@@ -1,3 +1,5 @@
+"""Worldtree module."""
+
 TABLE_NODE_MEMORY_LINKS_COLS = frozenset(
     {
         "id",

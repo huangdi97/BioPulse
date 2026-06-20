@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Search, AlertTriangle } from 'lucide-react'
@@ -39,7 +39,7 @@ export default function ComplianceRecords() {
   const [riskFilter, setRiskFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
 
-  const loadRecords = () => {
+  const loadRecords = useCallback(() => {
     setLoading(true)
     const params: { status?: string; riskLevel?: string; repName?: string } = {}
     if (statusFilter !== 'all') params.status = statusFilter
@@ -49,11 +49,11 @@ export default function ComplianceRecords() {
       setRecords(res)
       setLoading(false)
     })
-  }
+  }, [statusFilter, riskFilter, search])
 
   useEffect(() => {
     loadRecords()
-  }, [statusFilter, riskFilter, search])
+  }, [loadRecords])
 
   return (
     <div className="space-y-4">

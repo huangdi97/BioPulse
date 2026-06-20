@@ -1,3 +1,5 @@
+"""Audit module."""
+
 TABLE_AUDIT_CHAIN_ENTRIES_COLS = frozenset(
     {
         "id",

@@ -1,3 +1,5 @@
+"""Userprofile module."""
+
 TABLE_RECOMMENDATIONS_COLS = frozenset(
     {
         "id",

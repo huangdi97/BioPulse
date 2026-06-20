@@ -58,7 +58,6 @@ export default function VisitNew() {
   const [photos, setPhotos] = useState<File[]>([])
   const [location, setLocation] = useState('')
   const [locationMode, setLocationMode] = useState('auto')
-  const [settings, setSettings] = useState<Record<string,string>>({})
 
   const [recording, setRecording] = useState(false)
   const [uploadingAudio, setUploadingAudio] = useState(false)
@@ -116,16 +115,15 @@ export default function VisitNew() {
       const fd = new FormData()
       fd.append('file', f)
       const r = await client.post('/api/cloud/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-      if ((r as any)?.url) urls.push((r as any).url)
+      if ((r as Record<string, unknown>)?.url) urls.push((r as Record<string, string>).url)
     }
     return urls
   }
   useEffect(() => {
     let cancelled = false
-    client.get('/api/cloud/admin/settings').then((res: any) => {
+    client.get('/api/cloud/admin/settings').then((res: Record<string, unknown>) => {
       if (!cancelled) {
-        if (res?.data) setSettings(res.data)
-        if (res?.data?.location_mode) setLocationMode(res.data.location_mode)
+        if (res?.data) setLocationMode((res.data as Record<string, string>)?.location_mode || 'auto')
       }
     }).catch(err => console.error('Failed to load settings:', err))
     return () => { cancelled = true }
@@ -207,7 +205,7 @@ export default function VisitNew() {
       const res = await client.post('/api/cloud/visit/upload-recording', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      const data = (res as any)?.data
+      const data = (res as Record<string, unknown>)?.data as Record<string, unknown> | undefined
       if (data?.transcript) {
         setContent(data.transcript)
       }

@@ -1,3 +1,5 @@
+"""Core exports module."""
+
 from .agent import (
     TABLE_AGENT_PIPELINES_COLS,
     TABLE_AGENT_ROLES_COLS,

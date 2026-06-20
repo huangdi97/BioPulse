@@ -13,35 +13,41 @@ from shared.config import settings as config_settings
 logger = logging.getLogger(__name__)
 
 
-def raw_llm_call(request_body: dict, auth_header: str, url: str | None = None) -> dict:
+def raw_llm_call(request_body: dict, auth_header: str, url: str | None = None, trace_id: str = "") -> dict:
     """raw llm call."""
     if url is None:
         url = f"{config_settings.ai_chat_url}"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": auth_header,
+    }
+    if trace_id:
+        headers["X-BioPulse-Trace-Id"] = trace_id
     with httpx.Client(timeout=LLM_INFERENCE_TIMEOUT) as client:
         resp = client.post(
             url,
             json=request_body,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": auth_header,
-            },
+            headers=headers,
         )
         resp.raise_for_status()
         return resp.json()
 
 
-async def raw_llm_call_async(request_body: dict, auth_header: str, url: str | None = None) -> dict:
+async def raw_llm_call_async(request_body: dict, auth_header: str, url: str | None = None, trace_id: str = "") -> dict:
     """raw llm call async."""
     if url is None:
         url = f"{config_settings.ai_chat_url}"
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": auth_header,
+    }
+    if trace_id:
+        headers["X-BioPulse-Trace-Id"] = trace_id
     async with httpx.AsyncClient(timeout=LLM_INFERENCE_TIMEOUT) as client:
         resp = await client.post(
             url,
             json=request_body,
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": auth_header,
-            },
+            headers=headers,
         )
         resp.raise_for_status()
         return resp.json()

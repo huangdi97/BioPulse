@@ -1,3 +1,5 @@
+"""Workingmem module."""
+
 TABLE_EPISODIC_MEMORY_COLS = frozenset(
     {
         "id",

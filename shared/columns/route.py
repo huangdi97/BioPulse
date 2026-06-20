@@ -1,3 +1,5 @@
+"""Route module."""
+
 TABLE_ROUTE_LOGS_COLS = frozenset(
     {
         "id",

@@ -30,7 +30,7 @@ const variantStyles = {
 
 export default function AgentSummaryCard({
   title,
-  agentKey,
+  _agentKey,
   pageId,
   variant,
 }: AgentSummaryCardProps) {

@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState, useEffect, useCallback } from 'react'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { CheckCircle, XCircle, Clock, Plus } from 'lucide-react'
 import { fetchChecklist, createTask } from '@/api/inspection'
@@ -24,12 +23,12 @@ export default function InspectionChecklist() {
   const [showTaskForm, setShowTaskForm] = useState(false)
   const [taskResult, setTaskResult] = useState<unknown>(null)
 
-  function loadChecklist() {
+  const loadChecklist = useCallback(() => {
     setLoading(true)
     fetchChecklist(category).then(setChecklist).finally(() => setLoading(false))
-  }
+  }, [category])
 
-  useEffect(() => { loadChecklist() }, [category])
+  useEffect(() => { loadChecklist() }, [loadChecklist])
 
   async function handleCreateTask(data: TaskFormData) {
     const res = await createTask(data)

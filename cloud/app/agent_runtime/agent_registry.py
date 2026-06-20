@@ -45,6 +45,27 @@ class AgentRegistry:
         return list(cls._agents.values())
 
     @classmethod
+    def find_failover_agent(cls, agent_key: str) -> str | None:
+        """Find another agent with the same role/tags for failover."""
+        failed = cls._agents.get(agent_key)
+        if failed is None:
+            return None
+        failed_tags = set(failed.identity.tags or [])
+        if not failed_tags:
+            return None
+        best = None
+        best_score = 0
+        for key, agent in cls._agents.items():
+            if key == agent_key:
+                continue
+            agent_tags = set(agent.identity.tags or [])
+            score = len(failed_tags & agent_tags)
+            if score > best_score:
+                best = key
+                best_score = score
+        return best
+
+    @classmethod
     def reload(cls) -> None:
         cls._loaded = False
         cls.load()

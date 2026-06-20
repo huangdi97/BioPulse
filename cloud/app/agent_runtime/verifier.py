@@ -61,6 +61,34 @@ class Verifier:
         confidence = sum(1.0 for c in checks if c.passed) / max(len(checks), 1)
         return VerificationResult(passed=passed, checks=checks, confidence=confidence)
 
+    def verify_completion(self, completion_conditions: list[str], context: dict) -> tuple[bool, str]:
+        conditions_text = " | ".join(completion_conditions)
+        messages = context.get("messages", [])
+        last_tool_result = context.get("last_tool_result", "")
+        combined_text = last_tool_result + " " + " ".join(m.get("content", "") for m in messages if isinstance(m.get("content"), str))
+
+        l1_passed = any(cond.lower() in combined_text.lower() for cond in completion_conditions)
+        if l1_passed:
+            return True, f"Layer1 keyword match: '{conditions_text}' found in output"
+
+        l2_result = self._guard.check_params("complete", {"conditions": completion_conditions, "output": combined_text})
+        if l2_result.passed:
+            return True, f"Layer2 rule match: {l2_result.detail}"
+
+        prompt = (
+            f"Completion conditions: {json.dumps(completion_conditions, ensure_ascii=False)}\n"
+            f"Context: {json.dumps(context, ensure_ascii=False)}\n\n"
+            'Are all completion conditions satisfied? Reply ONLY a JSON: {"passed": bool, "reason": "..."}'
+        )
+        try:
+            reply = self._call_llm([{"role": "user", "content": prompt}])
+            parsed = self._extract_json(reply)
+            passed = parsed.get("passed", False)
+            reason = parsed.get("reason", "LLM returned no reason")
+            return passed, f"Layer3 LLM: {reason}"
+        except (KeyError, ValueError, json.JSONDecodeError) as e:
+            return False, f"LLM verification error: {e}"
+
     def verify_global(self, plan: Plan, results: list[dict]) -> bool:
         """验证整个计划的完成条件。"""
         if not plan.completion_conditions:

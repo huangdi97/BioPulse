@@ -1,3 +1,5 @@
+"""Content module."""
+
 TABLE_COMPLIANCE_RULES_COLS = frozenset(
     {
         "id",

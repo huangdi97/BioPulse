@@ -1,3 +1,5 @@
+"""Config module."""
+
 import logging
 import os
 

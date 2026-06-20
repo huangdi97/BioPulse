@@ -30,11 +30,7 @@ class OpportunityAnalysisMixin:
         validate_stage_transition(current, target)
 
     def get_pipeline(self) -> dict:
-        """获取销售漏斗数据，按阶段统计机会数量和金额。
-
-        Returns:
-            包含 pipeline 列表的字典，每项含 stage、count、total_value
-        """
+        """获取销售漏斗数据，按阶段统计机会数量和金额。"""
         opp_repo = OpportunitiesRepository(self._connection())
         rows = self.db.execute(
             f"""SELECT stage, COUNT(*) as count, SUM(estimated_value) as total_value
@@ -53,19 +49,7 @@ class OpportunityAnalysisMixin:
         return {"pipeline": pipeline}
 
     def transition_stage(self, opp_id: int, stage: str, actual_value: Optional[float] = None) -> dict:
-        """执行机会阶段流转操作。
-
-        Args:
-            opp_id: 机会 ID
-            stage: 目标阶段，必须是有效阶段之一
-            actual_value: 可选，当流转到 won 阶段时的实际成交金额
-
-        Returns:
-            更新后的机会记录字典
-
-        Raises:
-            HTTPException: 机会不存在、阶段无效或从终态流转时抛出
-        """
+        """执行机会阶段流转，含概率重算、终态校验和 won 阶段金额处理。"""
         row = self._get_opp_or_404(opp_id)
 
         if stage not in VALID_STAGES:
@@ -113,26 +97,7 @@ class OpportunityService(OpportunityAnalysisMixin, BaseService):
         notes: str,
         user_id: int,
     ) -> dict:
-        """创建销售机会并按阶段设置默认赢率。
-
-        Args:
-            customer_id: 关联客户ID，客户必须处于active状态。
-            name: 机会名称。
-            description: 机会描述。
-            stage: 机会阶段，必须属于有效阶段集合。
-            estimated_value: 预估金额。
-            actual_value: 实际成交金额。
-            assigned_to: 可选的负责人用户ID。
-            close_date: 可选的预计或实际关闭日期。
-            notes: 机会备注。
-            user_id: 创建人用户ID。
-
-        Returns:
-            新建机会的字典表示。
-
-        Raises:
-            HTTPException: 当客户不存在、客户非活跃或阶段非法时抛出。
-        """
+        """创建销售机会并按阶段设置默认赢率。"""
         cust_repo = CustomersRepository(self._connection())
         placeholders = ", ".join(cust_repo.cols)
         customer = self.db.execute(
@@ -178,22 +143,7 @@ class OpportunityService(OpportunityAnalysisMixin, BaseService):
         page: int = 1,
         page_size: int = 20,
     ) -> dict:
-        """按条件分页查询活跃销售机会。
-
-        Args:
-            stage: 可选的机会阶段过滤条件。
-            assigned_to: 可选的负责人用户ID过滤条件。
-            customer_id: 可选的客户ID过滤条件。
-            search: 可选的名称或描述模糊搜索关键词。
-            page: 当前页码。
-            page_size: 每页数量。
-
-        Returns:
-            包含机会列表和分页字段的字典。
-
-        Raises:
-            HTTPException: 当底层数据库查询失败时由调用栈抛出。
-        """
+        """按条件分页查询活跃销售机会。"""
         opp_repo = OpportunitiesRepository(self._connection())
         conditions = ["is_active = 1"]
         params: list = []
@@ -224,17 +174,7 @@ class OpportunityService(OpportunityAnalysisMixin, BaseService):
         }
 
     def get_opportunity(self, opp_id: int) -> dict:
-        """读取单个销售机会。
-
-        Args:
-            opp_id: 销售机会ID。
-
-        Returns:
-            销售机会的字典表示。
-
-        Raises:
-            HTTPException: 当机会不存在时抛出404。
-        """
+        """读取单个销售机会。"""
         row = get_opp_or_404(self.db, opp_id)
         return row_to_dict(self.db, row)
 
@@ -250,25 +190,7 @@ class OpportunityService(OpportunityAnalysisMixin, BaseService):
         close_date: Optional[str] = None,
         notes: Optional[str] = None,
     ) -> dict:
-        """更新销售机会字段并校验阶段流转。
-
-        Args:
-            opp_id: 销售机会ID。
-            name: 可选的新机会名称。
-            description: 可选的新机会描述。
-            stage: 可选的新阶段。
-            estimated_value: 可选的新预估金额。
-            actual_value: 可选的新实际金额。
-            assigned_to: 可选的新负责人用户ID。
-            close_date: 可选的新关闭日期。
-            notes: 可选的新备注。
-
-        Returns:
-            更新后的销售机会字典。
-
-        Raises:
-            HTTPException: 当机会不存在、阶段非法或阶段流转不允许时抛出。
-        """
+        """更新销售机会字段并校验阶段流转。"""
         get_opp_or_404(self.db, opp_id)
         opp_repo = OpportunitiesRepository(self._connection())
         updates = {}
@@ -307,17 +229,7 @@ class OpportunityService(OpportunityAnalysisMixin, BaseService):
         return row_to_dict(self.db, row)
 
     def delete_opportunity(self, opp_id: int) -> None:
-        """软删除销售机会。
-
-        Args:
-            opp_id: 销售机会ID。
-
-        Returns:
-            None。
-
-        Raises:
-            HTTPException: 当机会不存在时抛出404。
-        """
+        """软删除销售机会。"""
         get_opp_or_404(self.db, opp_id)
         opp_repo = OpportunitiesRepository(self._connection())
         opp_repo.soft_delete(opp_id)

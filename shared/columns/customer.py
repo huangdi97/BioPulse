@@ -1,3 +1,5 @@
+"""Customer module."""
+
 TABLE_CUSTOMERS_COLS = frozenset(
     {
         "id",

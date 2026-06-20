@@ -1,3 +1,5 @@
+"""场景模板，包含预定义的固定场景数据定义。"""
+
 from .scenario_weights import _S, _S2, _S3, _S4, _S5, _S6, _S7, _S8, _S9, _S10, _S11, _S12, _S13
 
 FIXED_SCENARIOS_PART1 = [

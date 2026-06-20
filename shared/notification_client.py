@@ -1,3 +1,5 @@
+"""Notification client module."""
+
 import json
 from datetime import datetime
 

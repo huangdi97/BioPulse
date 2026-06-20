@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fetchFunnel, type FunnelStage } from '@/api/sales-assistant-api'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Filter } from 'lucide-react'
 
 const STAGE_COLORS = [

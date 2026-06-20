@@ -1,3 +1,5 @@
+"""Training module."""
+
 TABLE_TRAINING_ATTRIBUTIONS_COLS = frozenset(
     {
         "id",

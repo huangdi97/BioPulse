@@ -1,3 +1,5 @@
+"""Structured logging module."""
+
 import logging
 import uuid
 

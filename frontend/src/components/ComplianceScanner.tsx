@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { scanContent } from '@/api/compliance'
 import type { ScanResult } from '@/types'
 
@@ -8,14 +8,12 @@ interface ComplianceScannerProps {
 }
 
 export default function ComplianceScanner({ content, onResult }: ComplianceScannerProps) {
-  const [status, setStatus] = useState<'idle' | 'scanning'>('idle')
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onResultRef = useRef(onResult)
   onResultRef.current = onResult
 
   useEffect(() => {
     if (!content.trim()) {
-      setStatus('idle')
       onResultRef.current({
         passed: true,
         riskLevel: 'low',
@@ -29,13 +27,9 @@ export default function ComplianceScanner({ content, onResult }: ComplianceScann
       clearTimeout(timerRef.current)
     }
 
-    setStatus('idle')
-
     timerRef.current = setTimeout(async () => {
-      setStatus('scanning')
       const result = await scanContent(content)
       onResultRef.current(result)
-      setStatus('idle')
     }, 500)
 
     return () => {

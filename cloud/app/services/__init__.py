@@ -3,7 +3,8 @@
 from cloud.app.services.attribution_calc import AttributionCalcMixin, AttributionCheckMixin
 from cloud.app.services.coach_ability import CoachAbility
 from cloud.app.services.coach_gap import CoachGap
-from cloud.app.services.intel_analyzer import IntelAnalyzerMixin, IntelCollectorMixin
+from cloud.app.services.intel_analyzer_mixin import IntelAnalyzerMixin
+from cloud.app.services.intel_collector_mixin import IntelCollectorMixin
 from cloud.app.services.memory_namespace import MemoryNamespace
 from cloud.app.services.memory_service import MemoryService
 from cloud.app.services.network_crud import NetworkCrudMixin

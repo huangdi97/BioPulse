@@ -1,3 +1,5 @@
+"""场景加载器，从固定场景模板加载场景数据。"""
+
 from typing import List
 
 from .scenario_template import FIXED_SCENARIOS_PART1

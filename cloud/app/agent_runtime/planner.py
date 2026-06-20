@@ -54,7 +54,7 @@ class Planner:
             "context": context or {},
         }
 
-    def generate_plan(self, goal: str, tools: list[str], context: dict | None = None) -> Plan:
+    def generate_plan(self, goal: str, tools: list[str], context: dict | None = None, execution_context: dict | None = None) -> Plan:
         """Generate a structured Plan for the given goal using LLM."""
         ctx = context or {}
         prompt = self.PLAN_SCHEMA_HINT.format(tools=json.dumps(tools), context=json.dumps(ctx, ensure_ascii=False))
@@ -64,6 +64,8 @@ class Planner:
             reply = self._call_llm(messages)
             raw = self._extract_json(reply)
             plan = Plan(**raw)
+            if not plan.completion_conditions:
+                plan.completion_conditions = ["Task goal achieved"]
             if not self.validate_plan(plan):
                 logger.warning("Generated plan failed validation, returning empty plan")
                 return Plan(goal=goal, steps=[], plan_confidence=0.0)

@@ -1,0 +1,17 @@
+{
+  "agent_key": "analysis_agent",
+  "goal": "检测本季度拜访数据中的异常模式",
+  "input_context": {
+    "visit_data": [
+      {"rep": "张三", "visits": 45, "avg_duration": 12},
+      {"rep": "李四", "visits": 120, "avg_duration": 45},
+      {"rep": "王五", "visits": 38, "avg_duration": 10}
+    ]
+  },
+  "expected": {
+    "status": "success",
+    "output_contains": ["异常", "李四", "偏差"],
+    "output_not_contains": ["系统错误"]
+  },
+  "tags": ["regression"]
+}

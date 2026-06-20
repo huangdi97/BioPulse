@@ -1,3 +1,5 @@
+"""Task module."""
+
 TABLE_BOARD_TASKS_COLS = frozenset(
     {
         "id",
