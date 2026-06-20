@@ -13,6 +13,8 @@ logger.addFilter(PIIRedactionFilter())
 
 
 class FailoverHandler:
+    """Handles execution failover by switching to a fallback agent or dead-lettering."""
+
     def __init__(self, host):
         self._host = host
         self._dead_letter_queue = DeadLetterQueue()

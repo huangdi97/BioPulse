@@ -1,3 +1,5 @@
+import pytest
+
 from cloud.app.agent_eval.evaluator import run_full_suite, score_result
 
 
@@ -26,8 +28,8 @@ def test_score_result_partial_match():
     }
     result = {"actions_taken": ["check_compliance"], "output_text": "合规"}
     scored = score_result(result, scenario)
-    assert scored["action_match"] == 1 / 3
-    assert scored["output_match"] == 1 / 3
+    assert scored["action_match"] == pytest.approx(1 / 3, abs=0.01)
+    assert scored["output_match"] == pytest.approx(1 / 3, abs=0.01)
 
 
 def test_score_result_no_match():

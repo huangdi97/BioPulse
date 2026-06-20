@@ -24,6 +24,7 @@ _DEFAULT_MAX_CONTEXT_TOKENS = 128000
     include_in_schema=False,
 )
 def get_context(trace_id: str, user=Depends(require_scope("visit"))):
+    """Get context usage info (token count, usage %) for a given trace."""
     from cloud.app.agent_runtime.runtime_llm.config import estimate_token_count
 
     conn = sqlite3.connect(DB_PATH)
@@ -57,6 +58,8 @@ def get_context(trace_id: str, user=Depends(require_scope("visit"))):
 
 
 class PruneContextRequest(BaseModel):
+    """Request model for context pruning, specifying how many rounds to keep."""
+
     keep_rounds: int = Field(default=10, ge=1)
 
 
@@ -68,6 +71,7 @@ class PruneContextRequest(BaseModel):
     include_in_schema=False,
 )
 def prune_context(trace_id: str, body: PruneContextRequest, user=Depends(require_scope("admin"))):
+    """Prune conversation history for a trace, keeping only the last N rounds."""
     from cloud.app.agent_runtime.runtime_llm.config import estimate_token_count
 
     keep_rounds = body.keep_rounds

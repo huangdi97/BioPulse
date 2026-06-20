@@ -16,6 +16,8 @@ logger.addFilter(PIIRedactionFilter())
 
 
 class StepHandler:
+    """Handles step-level execution: tool calls, step result processing, and reflection."""
+
     def __init__(self, host):
         self._host = host
         self._completion_verifier = CompletionVerifier(self._host)

@@ -7,10 +7,13 @@ logger = logging.getLogger(__name__)
 
 
 class CompletionVerifier:
+    """Verifies completion conditions and handles retry logic when conditions are unmet."""
+
     def __init__(self, host):
         self._host = host
 
     def verify_and_handle(self, c, step, decision, ai_resp, duration_ms) -> RuntimeResult | None:
+        """Verify completion conditions and either complete or retry the step."""
         plan = c.get("_plan")
         conditions = plan.completion_conditions if plan else []
         if not conditions:

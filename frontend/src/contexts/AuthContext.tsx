@@ -2,14 +2,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { login as loginApi } from '@/api/auth'
 import type { User } from '@/types'
-
-interface AuthContextType {
-  user: User | null
-  token: string | null
-  login: (username: string, password: string) => Promise<Partial<User>>
-  logout: () => void
-  isAuthenticated: boolean
-}
+import type { AuthContextType } from './AuthContextType'
 
 const AuthContext = createContext<AuthContextType | null>(null)
 

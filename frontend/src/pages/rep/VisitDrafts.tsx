@@ -4,18 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/contexts/ToastContext'
 import client from '@/api/client'
+import type { DraftItem, DraftListResponse } from '@/api/visits'
 import { FileText, CheckCircle2, Clock, ArrowLeft, Save } from 'lucide-react'
-
-interface DraftItem {
-  id: string
-  user_id: string
-  audio_file_path: string | null
-  transcript: string
-  extracted_fields: string | null
-  status: string
-  created_at: string
-  confirmed_at: string | null
-}
 
 export default function VisitDrafts() {
   const navigate = useNavigate()
@@ -30,9 +20,8 @@ export default function VisitDrafts() {
   const loadDrafts = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await client.get('/api/cloud/visit/drafts', { params: { user_id: userId } })
-      const data = (res as Record<string, unknown>)?.data
-      setDrafts(Array.isArray(data) ? data : [])
+      const res: DraftListResponse = await client.get('/api/cloud/visit/drafts', { params: { user_id: userId } })
+      setDrafts(Array.isArray(res.data) ? res.data : [])
     } catch {
       toast.error('加载草稿列表失败')
     } finally {

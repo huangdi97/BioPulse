@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def check_and_warn(messages: list[dict], core) -> list[dict]:
+    """Check context token usage against thresholds and stream warnings if exceeded."""
     total = estimate_token_count(messages)
     max_tokens = getattr(config_settings, "max_context_tokens", 128000)
     usage_pct = round(total / max_tokens * 100, 1) if max_tokens > 0 else 0

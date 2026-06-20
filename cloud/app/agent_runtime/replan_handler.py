@@ -6,10 +6,13 @@ logger = logging.getLogger(__name__)
 
 
 class ReplanHandler:
+    """Handles dynamic replanning when the agent deviates too far from the current plan."""
+
     def __init__(self, host):
         self._host = host
 
     def trigger(self, c) -> dict:
+        """Regenerate the execution plan for the given context and update deviation counters."""
         tools_list = [t["name"] for t in self._host._tool_registry.list_tools() if t.get("name")]
         new_plan = self._host._planner.generate_plan(c["goal"], tools_list, c.get("context"))
         if new_plan and new_plan.steps:

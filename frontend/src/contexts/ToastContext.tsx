@@ -1,19 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+import { useContext, useState, useCallback, type ReactNode } from 'react'
 import { Toast, ToastContainer, type ToastData, type ToastType } from '@/components/Toast'
+import { ToastContext } from './ToastContextType'
 
 let toastId = 0
-
-interface ToastContextType {
-  toast: {
-    success: (message: string) => void
-    error: (message: string) => void
-    warning: (message: string) => void
-    info: (message: string) => void
-  }
-}
-
-const ToastContext = createContext<ToastContextType | null>(null)
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastData[]>([])

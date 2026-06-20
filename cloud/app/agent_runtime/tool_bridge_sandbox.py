@@ -8,6 +8,7 @@ from .tool_bridge_utils import idempotency_key, set_idempotency
 
 
 def run_sandboxed(tool_name: str, params: dict, idempotency_agent: str | None, idempotency_step: int, cache: dict) -> dict:
+    """Execute a tool script in a subprocess sandbox with idempotency support."""
     script = params.pop("_script", "")
     if not script:
         return {"success": False, "data": None, "error": "sandbox tool requires _script param", "needs_approval": False}

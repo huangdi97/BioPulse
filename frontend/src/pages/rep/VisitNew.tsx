@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useMemo, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { mockHcps } from '@/mock/hcps'
 import { createVisit } from '@/api/visits'
+import type { UploadResponse, SettingsResponse, AudioUploadResponse } from '@/api/visits'
 import ComplianceScanner from '@/components/ComplianceScanner'
 import ViolationDialog from '@/components/ViolationDialog'
 import { Button } from '@/components/ui/button'
@@ -61,7 +62,7 @@ export default function VisitNew() {
 
   const [recording, setRecording] = useState(false)
   const [uploadingAudio, setUploadingAudio] = useState(false)
-  const [extractedCards, setExtractedCards] = useState<Record<string, unknown> | null>(null)
+  const [extractedCards, setExtractedCards] = useState<Record<string, string> | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
 
@@ -114,16 +115,16 @@ export default function VisitNew() {
     for (const f of photos) {
       const fd = new FormData()
       fd.append('file', f)
-      const r = await client.post('/api/cloud/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
-      if ((r as Record<string, unknown>)?.url) urls.push((r as Record<string, string>).url)
+      const r: UploadResponse = await client.post('/api/cloud/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+      if (r?.url) urls.push(r.url)
     }
     return urls
   }
   useEffect(() => {
     let cancelled = false
-    client.get('/api/cloud/admin/settings').then((res: Record<string, unknown>) => {
+    client.get('/api/cloud/admin/settings').then((res: SettingsResponse) => {
       if (!cancelled) {
-        if (res?.data) setLocationMode((res.data as Record<string, string>)?.location_mode || 'auto')
+        if (res?.data) setLocationMode(res.data.location_mode || 'auto')
       }
     }).catch(err => console.error('Failed to load settings:', err))
     return () => { cancelled = true }
@@ -202,10 +203,10 @@ export default function VisitNew() {
       const fd = new FormData()
       fd.append('audio_file', blob, 'recording.webm')
       fd.append('user_id', localStorage.getItem('user_id') || 'unknown')
-      const res = await client.post('/api/cloud/visit/upload-recording', fd, {
+      const res: AudioUploadResponse = await client.post('/api/cloud/visit/upload-recording', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      const data = (res as Record<string, unknown>)?.data as Record<string, unknown> | undefined
+      const data = res?.data
       if (data?.transcript) {
         setContent(data.transcript)
       }

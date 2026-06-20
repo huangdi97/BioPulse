@@ -9,6 +9,38 @@ export interface CreateVisitParams {
   visitType: string
 }
 
+export interface UploadResponse {
+  url: string
+}
+
+export interface SettingsResponse {
+  data: {
+    location_mode: string
+  }
+}
+
+export interface AudioUploadResponse {
+  data?: {
+    transcript?: string
+    extracted_fields?: Record<string, string>
+  }
+}
+
+export interface DraftListResponse {
+  data?: DraftItem[]
+}
+
+export interface DraftItem {
+  id: string
+  user_id: string
+  audio_file_path: string | null
+  transcript: string
+  extracted_fields: string | null
+  status: string
+  created_at: string
+  confirmed_at: string | null
+}
+
 let mockIdCounter = Math.max(...mockVisits.map((v) => v.id), 0)
 
 export async function createVisit(data: CreateVisitParams): Promise<VisitRecord> {

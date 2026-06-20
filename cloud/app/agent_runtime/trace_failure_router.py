@@ -23,6 +23,7 @@ router = APIRouter(prefix="/agent", tags=["Agent Traces"])
     include_in_schema=False,
 )
 def failure_stats(days: int = Query(7, ge=1, le=90), user=Depends(require_scope("visit"))):
+    """Return failure statistics grouped by error_category over the past N days."""
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     try:

@@ -24,14 +24,18 @@ def _identity_to_spec(agent) -> dict:
 
 
 class OrchestratedExecution:
+    """Orchestrates multi-agent execution: registration, parallel dispatch, and chaining."""
+
     def __init__(self, engine: ExecutionEngine | None = None):
         self._engine = engine
         self._orchestrator = Orchestrator(runtime_core=engine)
 
     def register_agent(self, agent_key: str, agent: Any) -> None:
+        """Register an agent with the underlying orchestrator."""
         self._orchestrator.register(agent_key, agent)
 
     def dispatch_to_agents(self, goal: str, agent_keys: list[str]) -> list[RuntimeResult]:
+        """Dispatch a goal to multiple agents in parallel and return their results."""
         results = self._orchestrator.dispatch(goal, agent_keys)
         return [
             RuntimeResult(
@@ -46,6 +50,7 @@ class OrchestratedExecution:
         ]
 
     def chain_agents(self, goal: str, steps: list[str]) -> RuntimeResult:
+        """Chain agents sequentially, where each agent's output feeds the next."""
         result = self._orchestrator.chain(goal, steps)
         return RuntimeResult(
             status=result.status,

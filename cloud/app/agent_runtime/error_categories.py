@@ -2,6 +2,7 @@
 
 
 def categorize_error(status: str) -> str:
+    """Map a runtime status string to a high-level error category."""
     mapping = {
         "timeout": "timeout",
         "llm_failed": "llm_failed",

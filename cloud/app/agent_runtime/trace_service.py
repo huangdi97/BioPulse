@@ -17,11 +17,14 @@ BIOPULSE_AUDIT_LOG = os.environ.get("BIOPULSE_AUDIT_LOG", "data/biopulse_audit.l
 
 
 class TraceService:
+    """Service layer for trace query, search, evaluation, audit, and secret management."""
+
     def __init__(self):
         self._tracer: AgentTracer | None = None
         self._secret_manager: SecretManager | None = None
 
     def get_tracer(self) -> AgentTracer:
+        """Lazy-init and return the AgentTracer instance."""
         if self._tracer is None:
             conn = sqlite3.connect(DB_PATH)
             conn.row_factory = sqlite3.Row
@@ -47,15 +50,19 @@ class TraceService:
         return logger
 
     def get_trace(self, trace_id: str) -> dict | None:
+        """Retrieve a single trace by ID."""
         return self.get_tracer().get_trace(trace_id)
 
     def list_traces(self, agent_name: str | None = None, page: int = 1, page_size: int = 20) -> dict:
+        """List traces, optionally filtered by agent name, with pagination."""
         return self.get_tracer().list_traces(agent_name=agent_name, page=page, page_size=page_size)
 
     def get_metrics_summary(self) -> dict:
+        """Return a summary of aggregate trace metrics."""
         return self.get_tracer().get_metrics_summary()
 
     def get_eval_dashboard(self) -> dict:
+        """Return the evaluation dashboard data from the AgentEvaluator."""
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
         try:
@@ -65,6 +72,7 @@ class TraceService:
             conn.close()
 
     def list_recoverable(self) -> list[dict]:
+        """List all recoverable (checkpointed) execution snapshots."""
         from cloud.app.agent_runtime.state_snapshot import recover as recover_fn
 
         conn = sqlite3.connect(DB_PATH)
@@ -88,6 +96,7 @@ class TraceService:
             conn.close()
 
     def resume_checkpoint(self, trace_id: str, auth_header: str) -> dict | None:
+        """Resume execution from the latest checkpoint for the given trace."""
         import sqlite3
 
         from cloud.app.agent_runtime.state_snapshot import load_latest_snapshot
@@ -112,14 +121,17 @@ class TraceService:
             conn.close()
 
     def list_secrets(self) -> list[dict]:
+        """List all stored secret keys."""
         return self._get_secret_manager().export_keys()
 
     def set_secret(self, key_name: str, value: str) -> dict:
+        """Set or update a secret by key name."""
         sm = self._get_secret_manager()
         sm.set(key_name, value)
         return {"key_name": key_name, "updated": True}
 
     def delete_secret(self, key_name: str) -> dict:
+        """Delete a secret by key name."""
         self._get_secret_manager().delete(key_name)
         return {"key_name": key_name, "deleted": True}
 
@@ -199,6 +211,7 @@ class TraceService:
         decisions: list,
         risk_level: str,
     ) -> None:
+        """Log an auto-audited decision with approval_status set to auto_audited."""
         self.log_agent_decision(
             agent_name=agent_name,
             input_summary=input_summary,
