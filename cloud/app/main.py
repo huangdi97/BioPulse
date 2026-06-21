@@ -2,6 +2,7 @@
 
 import logging
 import os
+from logging.handlers import RotatingFileHandler
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -15,10 +16,15 @@ from shared.health import router as health_router
 
 _logger = logging.getLogger("cloud")
 _logger.setLevel(getattr(logging, settings.log_level.upper(), logging.INFO))
-_handler = logging.StreamHandler()
-_handler.setFormatter(JSONFormatter())
+
+os.makedirs("logs", exist_ok=True)
+_stream_handler = logging.StreamHandler()
+_stream_handler.setFormatter(JSONFormatter())
+_file_handler = RotatingFileHandler("logs/biopulse.log", maxBytes=100 * 1024 * 1024, backupCount=5)
+_file_handler.setFormatter(JSONFormatter())
 if not _logger.handlers:
-    _logger.addHandler(_handler)
+    _logger.addHandler(_stream_handler)
+    _logger.addHandler(_file_handler)
 
 app = FastAPI(
     title="BioPulse · Cloud API",

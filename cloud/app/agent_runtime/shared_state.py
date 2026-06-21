@@ -9,6 +9,18 @@ from typing import Any, Generator, List
 
 logger = logging.getLogger(__name__)
 
+_global_shared_state: "SharedState | None" = None
+_global_ss_lock = threading.Lock()
+
+
+def get_shared_state() -> "SharedState":
+    global _global_shared_state
+    if _global_shared_state is None:
+        with _global_ss_lock:
+            if _global_shared_state is None:
+                _global_shared_state = SharedState()
+    return _global_shared_state
+
 
 @dataclass
 class SharedStateEntry:
@@ -36,23 +48,19 @@ class SharedState:
         self._lock = threading.Lock()
         self._entries: List[SharedStateEntry] = []
         self._watchers: dict[str, List[callable]] = {}
+        self._subscribers: dict[str, List[callable]] = {}
         self._version_counter = 0
 
     def write(self, entry: SharedStateEntry, caller_agent_key: str | None = None) -> None:
         if caller_agent_key:
             _validate_namespace(caller_agent_key, entry.namespace)
-        if entry.confidence < 0.3:
+        if not entry.evidence:
+            entry.confidence *= 0.5
             logger.warning(
-                "Low confidence write: namespace=%s key=%s confidence=%.2f",
+                "Empty evidence on write: namespace=%s key=%s confidence reduced to %.2f",
                 entry.namespace,
                 entry.key,
                 entry.confidence,
-            )
-        if not entry.evidence:
-            logger.warning(
-                "Empty evidence on write: namespace=%s key=%s",
-                entry.namespace,
-                entry.key,
             )
         with self._lock:
             self._version_counter += 1
@@ -102,6 +110,20 @@ class SharedState:
                 if namespace_pattern in self._watchers:
                     self._watchers[namespace_pattern] = [cb for cb in self._watchers[namespace_pattern] if cb is not _callback]
 
+    def subscribe(self, callback: callable) -> None:
+        """Register a callback to be invoked on every namespace write.
+
+        The callback receives the SharedStateEntry that was just written.
+        """
+        with self._lock:
+            self._subscribers.setdefault("__all__", []).append(callback)
+
+    def unsubscribe(self, callback: callable) -> None:
+        with self._lock:
+            callbacks = self._subscribers.get("__all__", [])
+            if callback in callbacks:
+                callbacks.remove(callback)
+
     def _notify_watchers(self, entry: SharedStateEntry) -> None:
         for pattern, callbacks in list(self._watchers.items()):
             if re.match(pattern, entry.namespace):
@@ -110,3 +132,8 @@ class SharedState:
                         cb(entry)
                     except Exception:
                         logger.exception("Watcher callback failed for pattern=%s", pattern)
+        for cb in list(self._subscribers.get("__all__", [])):
+            try:
+                cb(entry)
+            except Exception:
+                logger.exception("Subscriber callback failed")

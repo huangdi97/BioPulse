@@ -170,6 +170,7 @@ class ToolBridge:
         idempotency_agent: str | None,
         idempotency_step: int,
         trace_id: str = "",
+        caller_agent_id: str | None = None,
     ) -> dict:
         if tool.sandbox:
             return run_sandboxed(tool_name, params, idempotency_agent, idempotency_step, self._idempotency_cache)
@@ -185,7 +186,7 @@ class ToolBridge:
                 )
             return result
         if tool_name == "agent_brain_set":
-            self._brain.set(params.get("key"), params.get("value"), params.get("user_id", 0))
+            self._brain.set(params.get("key"), params.get("value"), params.get("user_id", 0), caller_agent_key=caller_agent_id)
             result = {"success": True, "data": "ok", "error": None}
             if idempotency_agent:
                 set_idempotency(
@@ -213,6 +214,7 @@ class ToolBridge:
         idempotency_agent: str | None = None,
         idempotency_step: int = 0,
         trace_id: str = "",
+        caller_agent_id: str | None = None,
     ) -> dict:
         """执行工具调用，包含权限校验、熔断检查、参数校验、幂等性和重试。"""
         now = time.time()
@@ -230,6 +232,11 @@ class ToolBridge:
         param_err = self._validate_params(tool_name, params)
         if param_err:
             return format_error(param_err)
+
+        if caller_agent_id is not None:
+            exec_result = self.execute(tool_name, params, caller_agent_id)
+            if not exec_result.success:
+                return format_error(exec_result.error or "agent not allowed")
 
         if idempotency_agent:
             idem_key = idempotency_key(
@@ -258,6 +265,7 @@ class ToolBridge:
             idempotency_agent,
             idempotency_step,
             trace_id,
+            caller_agent_id,
         )
 
     def execute(self, tool_name: str, args: dict[str, Any] | None = None, caller_agent_id: str | None = None) -> ToolResult:

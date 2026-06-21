@@ -46,6 +46,8 @@ class AgentIdentity(BaseModel):
     trigger_mode: TriggerMode = TriggerMode.user_request
     event_subscriptions: list[str] = Field(default_factory=list)
     safety_profile: SafetyProfile = Field(default_factory=SafetyProfile)
+    trigger_cron: str | None = None
+    fallback_l2: str | None = None
 
 
 class ExecutionContext(BaseModel):

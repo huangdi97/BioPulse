@@ -25,7 +25,9 @@ class StepHandler:
     def _run_approved_tool(self, c, step):
         started = time.time()
         tool, params = c["approved_tool"], c["approved_params"]
-        tool_result = self._host._tool_registry.call(tool, params, self._host._auth_header, caller_permission="write", trace_id=self._host._trace_id)
+        tool_result = self._host._tool_registry.call(
+            tool, params, self._host._auth_header, caller_permission="write", trace_id=self._host._trace_id, caller_agent_id=c.get("agent_key")
+        )
         self._host._verifier.verify(tool_result)
         if tool_result.get("needs_approval"):
             tool_result = {"success": False, "data": None, "error": "still requires approval"}
@@ -76,6 +78,7 @@ class StepHandler:
                     self._host._auth_header,
                     caller_permission=spec.get("max_permission", "read"),
                     trace_id=self._host._trace_id,
+                    caller_agent_id=c.get("agent_key"),
                 )
                 t_elapsed = int((time.time() - t_start) * 1000)
             if c.get("_reflection_step") != step or c.get("_reflection_tool") != tool_name:

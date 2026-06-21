@@ -4,7 +4,6 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
-from uuid import uuid4
 
 logger = logging.getLogger(__name__)
 
@@ -47,39 +46,24 @@ class WorldModelService:
         self._last_full_scan: Optional[str] = None
 
     def full_scan(self) -> list[CognitionEntry]:
-        """全量扫描——读所有可用数据，找模式关联。
+        """全量扫描——触发世界模型后台循环全量扫描。"""
+        from cloud.app.agent_runtime.world_model import get_world_model
 
-        当前实现基于占位数据，对接实际namespace后替换。
-        """
+        get_world_model()._full_scan()
         now = datetime.now(timezone.utc).isoformat()
-        findings: list[CognitionEntry] = []
-
-        # 模拟扫描：从各领域数据发现关联模式
-        # 实际实现中会读取 compliance.* / intelligence.* / strategy.* / bidding.* 等namespace
-        mock_patterns = self._generate_mock_patterns()
-        for p in mock_patterns:
-            entry = CognitionEntry(
-                cognition_id=uuid4().hex[:12],
-                pattern=p["pattern"],
-                description=p["description"],
-                confidence=p["confidence"],
-                evidence=p["evidence"],
-                agent_keys=p["agent_keys"],
-                detected_at=now,
-                expires_at=datetime.now(timezone.utc).isoformat(),
-            )
-            self._cognitions[entry.cognition_id] = entry
-            findings.append(entry)
-
         self._last_full_scan = now
-        logger.info("世界模型全量扫描完成: %d 条认知发现", len(findings))
-        return findings
+        cognitions = self.get_cognitions(min_confidence=0.0)
+        logger.info("世界模型全量扫描完成: %d 条认知发现", len(cognitions))
+        return cognitions
 
     def incremental_scan(self, changed_namespaces: list[str]) -> list[CognitionEntry]:
         """增量扫描——namespace变更后触发。"""
         if not changed_namespaces:
             return []
-        return self.full_scan()
+        from cloud.app.agent_runtime.world_model import get_world_model
+
+        get_world_model()._incremental_scan(changed_namespaces)
+        return self.get_cognitions(min_confidence=0.0)
 
     def get_cognitions(
         self,
@@ -87,33 +71,28 @@ class WorldModelService:
         agent_key: Optional[str] = None,
         limit: int = 20,
     ) -> list[CognitionEntry]:
-        """获取认知列表，支持过滤。"""
-        results = [c for c in self._cognitions.values() if c.confidence >= min_confidence and (agent_key is None or agent_key in c.agent_keys)]
+        """获取认知列表，支持过滤。从 SharedState 的 shared.cognition namespace 读取。"""
+        from cloud.app.agent_runtime.shared_state import get_shared_state
+
+        ss = get_shared_state()
+        entries = ss.read("shared.cognition", min_confidence=min_confidence)
+        results = []
+        for e in entries:
+            val = e.value if isinstance(e.value, dict) else {}
+            agent_keys = val.get("agent_keys", [])
+            if agent_key and agent_key not in agent_keys:
+                continue
+            results.append(
+                CognitionEntry(
+                    cognition_id=e.key,
+                    pattern=val.get("pattern", ""),
+                    description=val.get("description", ""),
+                    confidence=e.confidence,
+                    evidence=e.evidence,
+                    agent_keys=agent_keys,
+                    detected_at=e.timestamp or "",
+                    expires_at="",
+                )
+            )
         results.sort(key=lambda x: (x.confidence, x.detected_at), reverse=True)
         return results[:limit]
-
-    def _generate_mock_patterns(self) -> list[dict]:
-        """生成模拟模式（用于演示，实际namespace对接后替换）。"""
-        return [
-            {
-                "pattern": "华北区合规评分下降 + 竞品C获批 + 拜访频率增加",
-                "description": "华北区正在经历竞品冲击，合规压力增大。建议关注竞品C的区域推广策略。",
-                "confidence": 0.78,
-                "evidence": ["compliance.华北区.评分趋势", "intelligence.竞品C.获批", "strategy.拜访.频率分布"],
-                "agent_keys": ["compliance_monitor", "competitor_crawler", "sales_suggestion"],
-            },
-            {
-                "pattern": "张代表费用上升 + 拜访量持平 + 流向下降",
-                "description": "张代表投入产出比持续下降，费用效率需重点关注。",
-                "confidence": 0.65,
-                "evidence": ["compliance.张代表.费用趋势", "compliance.张代表.拜访趋势", "compliance.张代表.流向趋势"],
-                "agent_keys": ["compliance_monitor", "anomaly_analysis"],
-            },
-            {
-                "pattern": "集采政策更新 + 多区域暂停招标 + 合规规则修改",
-                "description": "全国多地受集采政策影响，合规规则需同步调整排除闸配置。",
-                "confidence": 0.55,
-                "evidence": ["intelligence.集采.政策更新", "bidding.多区域.暂停", "compliance.规则.修改日志"],
-                "agent_keys": ["competitor_crawler", "opportunity_scanner", "compliance_monitor"],
-            },
-        ]

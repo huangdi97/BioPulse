@@ -1,11 +1,9 @@
-# BioPulse 应用日志轮转配置
-# 安装: sudo ln -s /path/to/deploy/logrotate/biopulse /etc/logrotate.d/biopulse
-
 /var/log/biopulse/*.log {
     size 100M
-    rotate 7
+    rotate 5
     compress
     delaycompress
     notifempty
     missingok
+    copytruncate
 }

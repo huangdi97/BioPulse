@@ -21,4 +21,4 @@ safety_profile:
   max_permission: write
   bulkhead_max_concurrent: 2
   rate_limit_per_minute: 10
-  
+fallback_l2: "记录合规异常到审计日志并发出预警通知"

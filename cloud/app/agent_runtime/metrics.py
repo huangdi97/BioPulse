@@ -30,6 +30,12 @@ agent_tokens_total = Counter(
     ["agent_name"],
 )
 
+agent_degradation_total = Counter(
+    "agent_degradation_total",
+    "Agent 降级次数",
+    ["agent_key", "level"],
+)
+
 
 def get_metrics() -> str:
     """get metrics."""

@@ -24,4 +24,4 @@ safety_profile:
   max_permission: read
   bulkhead_max_concurrent: 5
   rate_limit_per_minute: 30
-  
+fallback_l2: "基于HCP画像模板给出通用建议"

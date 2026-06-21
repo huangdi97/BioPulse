@@ -15,8 +15,9 @@ model_preference:
 cost_budget: 0.15
 trigger_mode: cron
 event_subscriptions: []
+trigger_cron: "0 */4 * * *"
 safety_profile:
   max_permission: write
   bulkhead_max_concurrent: 2
   rate_limit_per_minute: 10
-  
+fallback_l2: "返回上次缓存的竞品数据并标记数据时效"

@@ -1,9 +1,17 @@
 """成本管控模块，按 token 用量估算并限制 LLM 调用成本。"""
 
+import json
 import logging
+import os
 import sqlite3
+import urllib.error
+import urllib.request
+from datetime import date
 
 logger = logging.getLogger(__name__)
+
+_TELEGRAM_WEBHOOK_URL = os.getenv("TELEGRAM_WEBHOOK_URL", "")
+_alerted_today: set[tuple[str, str]] = set()
 
 
 class BudgetExhaustedError(Exception):
@@ -69,9 +77,15 @@ class CostGovernor:
 
     def _fire_low_budget_alert(self, budget_pct: float, budget_remaining: float) -> None:
         """预算低于20%时触发告警。"""
-        user_id = (self._user_context or {}).get("user_id", "unknown")
+        user_id = str((self._user_context or {}).get("user_id", "unknown"))
+        today_key = str(date.today())
+        dedup_key = (user_id, today_key)
+        if dedup_key in _alerted_today:
+            return
+        _alerted_today.add(dedup_key)
         msg = f"CostGovernor: 预算不足 (remaining={budget_pct:.1f}%, ${budget_remaining:.4f}, user={user_id}) — 请及时充值"
         logger.warning(msg)
+        self._send_alert(msg, "high")
         try:
             from cloud.app.agent_runtime.notifier import Notifier
 
@@ -82,9 +96,15 @@ class CostGovernor:
 
     def _fire_exhausted_alert(self) -> None:
         """预算耗尽时触发告警。"""
-        user_id = (self._user_context or {}).get("user_id", "unknown")
+        user_id = str((self._user_context or {}).get("user_id", "unknown"))
+        today_key = str(date.today())
+        dedup_key = (user_id, today_key)
+        if dedup_key in _alerted_today:
+            return
+        _alerted_today.add(dedup_key)
         msg = f"CostGovernor: 预算已耗尽 (total_cost=${self._total_cost:.4f}, max_cost=${self._max_cost:.4f}, user={user_id}) — 新请求被拒绝"
         logger.error(msg)
+        self._send_alert(msg, "critical")
         try:
             from cloud.app.agent_runtime.notifier import Notifier
 
@@ -92,6 +112,17 @@ class CostGovernor:
             notifier.send(msg, priority="critical")
         except Exception:
             logger.exception("CostGovernor: 发送预算耗尽通知失败")
+
+    @staticmethod
+    def _send_alert(message: str, priority: str) -> None:
+        if not _TELEGRAM_WEBHOOK_URL:
+            return
+        try:
+            body = json.dumps({"text": f"[{priority}] {message}", "priority": priority}).encode("utf-8")
+            req = urllib.request.Request(_TELEGRAM_WEBHOOK_URL, data=body, headers={"Content-Type": "application/json"}, method="POST")
+            urllib.request.urlopen(req, timeout=10)
+        except Exception:
+            logger.exception("CostGovernor: 发送 webhook 告警失败")
 
     def record(self, model: str, input_tokens: int, output_tokens: int, model_tier: str = "cloud_normal", step: int | None = None) -> float:
         """记录一次 LLM 调用的 token 消耗与成本。"""

@@ -20,4 +20,4 @@ safety_profile:
   max_permission: read
   bulkhead_max_concurrent: 10
   rate_limit_per_minute: 100
-  
+fallback_l2: "直接查询知识图谱返回原始结果"

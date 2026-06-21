@@ -21,4 +21,4 @@ safety_profile:
   max_permission: read
   bulkhead_max_concurrent: 2
   rate_limit_per_minute: 10
-  
+fallback_l2: "基于RuleEngine做基础规则匹配分析"

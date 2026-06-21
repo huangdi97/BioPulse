@@ -8,6 +8,7 @@ import uuid
 from datetime import datetime
 
 from cloud.app.agent_runtime.agent_health import get_health_tracker
+from cloud.app.agent_runtime.agent_registry import AgentRegistry
 from cloud.app.agent_runtime.bulkhead import Bulkhead
 from cloud.app.agent_runtime.circuit_breaker import CircuitBreaker
 from cloud.app.agent_runtime.content_filter import ContentBlocked, ContentFilter
@@ -86,6 +87,7 @@ class RuntimeCore:
         self._llm = RuntimeLLM(core=self)
         self._core_tools = RuntimeCoreTools(self)
         self._helper = CompositionHelper(agent_db, self)
+        AgentRegistry.load()
 
     def set_streamer(self, streamer: AgentStreamer):
         """设置事件流推送器。"""

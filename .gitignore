@@ -75,6 +75,7 @@ benchmarks/
 briefings/
 briefings/archive/
 docs/
+logs/
 vibecoding/
 start_*.sh
 test_*.sh
@@ -145,6 +146,7 @@ design.md
 ARCHITECTURE.md
 
 # backups and data
+backup/
 cloud/backups/
 cloud/scripts/
 data/

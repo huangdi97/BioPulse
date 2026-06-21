@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FuturesTimeoutError
 from datetime import datetime
 
+from cloud.app.agent_runtime import metrics as agent_metrics
 from cloud.app.agent_runtime.agent_registry import AgentRegistry
 from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
 from cloud.app.agent_runtime.completion_verifier import CompletionVerifier
@@ -267,25 +268,52 @@ class ExecutionEngine:
         return self._host._tool_exec._handle_max_iterations(c, max_iter)
 
     def execute(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
+        start_ts = time.time()
+        degradation_log = None
         try:
-            return self._execute_impl(goal, agent_key, context)
+            result = self._execute_impl(goal, agent_key, context)
+            duration = time.time() - start_ts
+            status = "success" if result.status == "completed" else result.status
+            agent_metrics.agent_requests_total.labels(agent_name=agent_key, status=status).inc()
+            agent_metrics.agent_llm_duration.labels(agent_name=agent_key, model="all").observe(duration)
+            return result
         except AllModelsFailedError as exc:
             logger.error("LLM degraded for %s: %s", agent_key, exc)
-            result, handled = self._failover_handler.handle_failover(agent_key, goal, context, exc, "LLM failure")
-            if handled:
-                return result
+            degradation_log = {
+                "agent_key": agent_key,
+                "reason": f"LLM failure: {exc}",
+                "level": "L2",
+                "timestamp": time.time(),
+            }
+            agent = AgentRegistry.get(agent_key)
+            fallback_l2 = agent.identity.fallback_l2 if agent else None
+            if fallback_l2:
+                logger.info("L2 fallback for %s: %s", agent_key, fallback_l2)
+                self._log_degradation(agent_key, "all_llm_providers_failed", "L2")
+                return RuntimeResult(
+                    status="degraded_l2",
+                    result=fallback_l2,
+                    iterations=0,
+                    tool_calls=0,
+                    logs=[{"type": "degradation", "agent": agent_key, "from": "L1", "to": "L2", "fallback": fallback_l2}],
+                    metadata={"degradation": degradation_log},
+                )
+            logger.info("L3 silent skip for %s: no fallback_l2 configured", agent_key)
+            self._log_degradation(agent_key, "all_llm_providers_failed", "L3")
             return RuntimeResult(
-                status="degraded",
-                result=f"{agent_key} temporarily unavailable",
+                status="skipped",
+                result=f"{agent_key} temporarily unavailable (L3 skip)",
                 iterations=0,
                 tool_calls=0,
-                logs=[],
+                logs=[{"type": "degradation", "agent": agent_key, "from": "L1", "to": "L3"}],
+                metadata={"degradation": degradation_log},
             )
         except (KeyError, TypeError, ValueError, ConnectionError, TimeoutError) as exc:
             logger.error("Tool degraded for %s: %s", agent_key, exc)
             result, handled = self._failover_handler.handle_failover(agent_key, goal, context, exc, "tool call failure")
             if handled:
                 return result
+            self._log_degradation(agent_key, f"tool_failure: {exc}", "L2")
             return RuntimeResult(
                 status="degraded",
                 result=f"Tool {agent_key} unavailable",
@@ -298,6 +326,7 @@ class ExecutionEngine:
             result, handled = self._failover_handler.handle_failover(agent_key, goal, context, exc, "unexpected error")
             if handled:
                 return result
+            self._log_degradation(agent_key, f"unexpected: {exc}", "L3")
             return RuntimeResult(
                 status="error",
                 result=f"Execution failed: {exc}",
@@ -305,3 +334,8 @@ class ExecutionEngine:
                 tool_calls=0,
                 logs=[],
             )
+
+    @staticmethod
+    def _log_degradation(agent_key: str, reason: str, level: str) -> None:
+        logger.warning("Degradation: agent=%s reason=%s level=%s", agent_key, reason, level)
+        agent_metrics.agent_degradation_total.labels(agent_key=agent_key, level=level).inc()

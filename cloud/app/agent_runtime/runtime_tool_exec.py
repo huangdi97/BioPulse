@@ -15,7 +15,7 @@ class ToolExecutor:
     def __init__(self, host):
         self._host = host
 
-    def execute_with_timeout(self, tool_name: str, params: dict, timeout: int | None = None) -> dict:
+    def execute_with_timeout(self, tool_name: str, params: dict, timeout: int | None = None, caller_agent_id: str | None = None) -> dict:
         timeout = timeout or settings.tool_timeout_seconds
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(
@@ -25,6 +25,7 @@ class ToolExecutor:
                 self._host._auth_header,
                 caller_permission="write",
                 trace_id=self._host._trace_id,
+                caller_agent_id=caller_agent_id,
             )
             try:
                 result = future.result(timeout=timeout)
@@ -90,6 +91,18 @@ class ToolExecutor:
         return True
 
     def _handle_completion(self, c, step, decision, ai_resp, duration_ms):
+        agent_key = c.get("agent_key", "")
+        try:
+            import json
+
+            output = json.loads(decision.reasoning) if isinstance(decision.reasoning, str) else decision.reasoning
+            if isinstance(output, dict) and agent_key:
+                self._host._verifier.verify(output, agent_key)
+        except (json.JSONDecodeError, TypeError):
+            pass
+        except ValueError as e:
+            logger.warning("Output schema validation failed for %s: %s", agent_key, e)
+            return self._host._finish(c, "schema_blocked", f"Output blocked: {e}", step, step + 1, False, notify=True, delete_checkpoint=True)
         c["logs"].append(
             self._host._core_tools._build_step_log(
                 step,

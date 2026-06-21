@@ -18,6 +18,7 @@ class AgentHealthRecord:
 class HealthTracker:
     def __init__(self):
         self._records: dict[str, AgentHealthRecord] = {}
+        self._consecutive_failures: dict[str, int] = {}
         self._lock = Lock()
 
     def _get_or_create(self, agent_name: str) -> AgentHealthRecord:
@@ -34,10 +35,16 @@ class HealthTracker:
             if success:
                 record.last_success_at = now
                 record.success_count += 1
+                self._consecutive_failures[agent_name] = 0
             else:
                 record.fail_count += 1
                 if error:
                     record.last_error = error
+                consecutive = self._consecutive_failures.get(agent_name, 0) + 1
+                self._consecutive_failures[agent_name] = consecutive
+                if consecutive >= 3:
+                    record.status = "unhealthy"
+                    return
             self._update_status(record)
 
     @staticmethod
@@ -53,10 +60,20 @@ class HealthTracker:
         else:
             record.status = "healthy"
 
+    def is_unhealthy(self, agent_name: str) -> bool:
+        with self._lock:
+            record = self._get_or_create(agent_name)
+            return record.status == "unhealthy"
+
     def mark_stale(self, agent_name: str):
         with self._lock:
             record = self._get_or_create(agent_name)
             record.status = "stale"
+
+    def mark_unhealthy(self, agent_name: str):
+        with self._lock:
+            record = self._get_or_create(agent_name)
+            record.status = "unhealthy"
 
     def get_health(self, agent_name: str) -> dict:
         with self._lock:
@@ -70,6 +87,7 @@ class HealthTracker:
                 "success_count": record.success_count,
                 "fail_count": record.fail_count,
                 "last_error": record.last_error,
+                "consecutive_failures": self._consecutive_failures.get(agent_name, 0),
             }
 
     def get_all_health(self) -> list[dict]:
@@ -82,11 +100,13 @@ class HealthTracker:
             healthy = sum(1 for r in self._records.values() if r.status == "healthy")
             degraded = sum(1 for r in self._records.values() if r.status == "degraded")
             stale = sum(1 for r in self._records.values() if r.status == "stale")
+            unhealthy = sum(1 for r in self._records.values() if r.status == "unhealthy")
             return {
                 "total_agents": total,
                 "healthy": healthy,
                 "degraded": degraded,
                 "stale": stale,
+                "unhealthy": unhealthy,
             }
 
 

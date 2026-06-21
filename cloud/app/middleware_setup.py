@@ -3,6 +3,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
+from cloud.app.middleware.audit_middleware import audit_log_middleware
 from cloud.app.middleware.logging_middleware import logging_middleware
 from shared.app_settings import settings
 from shared.exception_handlers import register_exception_handlers
@@ -21,6 +22,7 @@ def register_middleware(app: FastAPI) -> None:
         return await call_next(request)
 
     app.middleware("http")(logging_middleware)
+    app.middleware("http")(audit_log_middleware)
     register_exception_handlers(app)
 
     _cors_origins = settings.cors_origins

@@ -20,4 +20,4 @@ safety_profile:
   max_permission: write
   bulkhead_max_concurrent: 3
   rate_limit_per_minute: 15
-  
+fallback_l2: "基于历史训练数据的统计摘要生成建议"

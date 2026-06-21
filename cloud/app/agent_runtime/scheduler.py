@@ -1,13 +1,31 @@
 """Agent 调度器，定时轮询任务队列并触发 Agent 执行。"""
 
+import logging
+import re
 import threading
 import time
 from datetime import datetime, timedelta
 
-from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
+from cloud.app.agent_runtime.agent_registry import AgentRegistry
 from cloud.app.agent_runtime.models import RuntimeResult
 from cloud.app.agent_runtime.queue_manager import AgentQueueManager
 from cloud.app.agent_runtime.runtime_core import RuntimeCore
+
+logger = logging.getLogger(__name__)
+
+
+def _cron_to_interval(cron_expr: str) -> int | None:
+    """Convert a cron expression to interval in seconds.
+    Only supports "0 */N * * *" (every N hours) and "*/N * * * *" (every N minutes).
+    """
+    cron_expr = cron_expr.strip()
+    m = re.match(r"^0\s+\*/(\d+)\s+\*\s+\*\s+\*$", cron_expr)
+    if m:
+        return int(m.group(1)) * 3600
+    m = re.match(r"^\*/(\d+)\s+\*\s+\*\s+\*\s+\*$", cron_expr)
+    if m:
+        return int(m.group(1)) * 60
+    return None
 
 
 class AgentScheduler:
@@ -26,9 +44,14 @@ class AgentScheduler:
         self._running = True
         self._thread = threading.Thread(target=self._run_loop, daemon=True)
         self._thread.start()
-        for key, spec in AGENT_SPECS.items():
-            if spec.get("trigger_cron"):
-                self.schedule_agent(key, 3600, f"执行 {spec['role_desc']}")
+        for agent in AgentRegistry.list():
+            cron = agent.identity.trigger_cron
+            if cron:
+                interval = _cron_to_interval(cron)
+                if interval:
+                    self.schedule_agent(agent.identity.key, interval, f"执行 {agent.identity.role}")
+                else:
+                    self.schedule_agent(agent.identity.key, 3600, f"执行 {agent.identity.role}")
 
     def stop(self):
         """stop."""
@@ -49,9 +72,17 @@ class AgentScheduler:
             try:
                 task = self._queue.dequeue()
                 if task is not None:
+                    from cloud.app.agent_runtime.agent_health import get_health_tracker
+
+                    agent_key = task["agent_key"]
+                    if get_health_tracker().is_unhealthy(agent_key):
+                        logger.warning("Skipping unhealthy agent: %s", agent_key)
+                        self._queue.fail(task["id"], "agent unhealthy")
+                        time.sleep(30)
+                        continue
                     auth_header = ""
-                    runtime = self._runtime_factory() if self._runtime_factory else RuntimeCore(self._db, self._db, auth_header, task["agent_key"])
-                    result = runtime.execute(task["goal"], task["agent_key"])
+                    runtime = self._runtime_factory() if self._runtime_factory else RuntimeCore(self._db, self._db, auth_header, agent_key)
+                    result = runtime.execute(task["goal"], agent_key)
                     if result.status == "completed":
                         self._queue.complete(task["id"], result.result)
                     else:
