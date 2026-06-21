@@ -25,7 +25,7 @@ def _run_agent_task(task: dict) -> dict:
         conn = _sqlite3.connect(_DB_PATH)
         conn.row_factory = _sqlite3.Row
         try:
-            runtime = RuntimeCore(conn, conn, "")
+            runtime = RuntimeCore(conn, conn, "", agent_key)
             result = runtime.execute(goal, agent_key, task.get("context"))
             return result.model_dump()
         finally:

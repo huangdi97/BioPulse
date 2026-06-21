@@ -40,8 +40,19 @@ class Memory:
             return float(row["value"])
         return row["value"]
 
-    def set(self, agent_key: str, key: str, value: Any, user_id: int = 0, importance: float = 0.5) -> None:
-        """设置 Agent 短期记忆值。importance（0-1）用于后续淘汰策略。"""
+    def set(self, agent_key: str, key: str, value: Any, user_id: int = 0, importance: float = 0.5, caller_agent_key: str | None = None) -> None:
+        """设置 Agent 短期记忆值。importance（0-1）用于后续淘汰策略。
+
+        当传入 caller_agent_key 时，会校验 agent_key namespace 是否匹配该 Agent 身份。
+        """
+        if caller_agent_key is not None:
+            from shared.agent_identity import get_identity
+
+            identity = get_identity(caller_agent_key)
+            allowed = identity.get("memory_namespace", caller_agent_key)
+            if not agent_key.startswith(allowed):
+                raise PermissionError(f"Agent {caller_agent_key} (namespace={allowed}) 无权写入 namespace={agent_key}")
+
         # 去重：内容相同则跳过
         existing = self.get(agent_key, key, user_id)
         if existing is not None and existing == value:
@@ -85,7 +96,7 @@ class Memory:
             rows = self._agent_db.execute(
                 "SELECT key, value, value_type, user_id, MAX(updated_at) as max_ts "
                 "FROM agent_brains WHERE agent_key=? GROUP BY key, value, value_type, user_id HAVING COUNT(*) > 1",
-                (agent_key,)
+                (agent_key,),
             ).fetchall()
         else:
             rows = self._agent_db.execute(
@@ -95,14 +106,12 @@ class Memory:
         for row in rows:
             if agent_key:
                 cur = self._agent_db.execute(
-                    "DELETE FROM agent_brains WHERE agent_key=? AND key=? AND value=? AND value_type=? "
-                    "AND user_id=? AND updated_at < ?",
+                    "DELETE FROM agent_brains WHERE agent_key=? AND key=? AND value=? AND value_type=? AND user_id=? AND updated_at < ?",
                     (agent_key, row["key"], row["value"], row["value_type"], row["user_id"], row["max_ts"]),
                 )
             else:
                 cur = self._agent_db.execute(
-                    "DELETE FROM agent_brains WHERE key=? AND value=? AND value_type=? "
-                    "AND user_id=? AND updated_at < ?",
+                    "DELETE FROM agent_brains WHERE key=? AND value=? AND value_type=? AND user_id=? AND updated_at < ?",
                     (row["key"], row["value"], row["value_type"], row["user_id"], row["max_ts"]),
                 )
             deleted += cur.rowcount
@@ -150,6 +159,7 @@ class Memory:
 
 # --- 记忆压缩 & 淘汰 ---
 
+
 def compress_messages(messages: list[dict], max_tokens: int = 4000) -> list[dict]:
     """压缩消息列表。"""
     if not messages:
@@ -174,10 +184,10 @@ def compress_messages(messages: list[dict], max_tokens: int = 4000) -> list[dict
 def evict_old_entries(db, agent_key: str | None = None, ttl_hours: int = 168) -> int:
     """删除超过 ttl_hours 的记忆条目。"""
     import time
+
     cutoff = time.time() - ttl_hours * 3600
     if agent_key:
-        cur = db.execute("DELETE FROM agent_brains WHERE agent_key=? AND updated_at < ?",
-                         (agent_key, cutoff))
+        cur = db.execute("DELETE FROM agent_brains WHERE agent_key=? AND updated_at < ?", (agent_key, cutoff))
     else:
         cur = db.execute("DELETE FROM agent_brains WHERE updated_at < ?", (cutoff,))
     db.commit()
@@ -187,8 +197,7 @@ def evict_old_entries(db, agent_key: str | None = None, ttl_hours: int = 168) ->
 def evict_low_importance(db, threshold: float = 0.2, agent_key: str | None = None) -> int:
     """删除重要性低于 threshold 的记忆条目。"""
     if agent_key:
-        cur = db.execute("DELETE FROM agent_brains WHERE agent_key=? AND importance < ?",
-                         (agent_key, threshold))
+        cur = db.execute("DELETE FROM agent_brains WHERE agent_key=? AND importance < ?", (agent_key, threshold))
     else:
         cur = db.execute("DELETE FROM agent_brains WHERE importance < ?", (threshold,))
     db.commit()

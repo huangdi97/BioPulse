@@ -83,7 +83,7 @@ class ExecutionEngine:
         ).fetchone()
         return (app["tool"], json.loads(app["params"]) if app["params"] else {}) if app else (None, None)
 
-    def _new_context(self, goal, agent_key, context, spec):
+    def _new_context(self, goal, agent_key, context, spec, user_context=None):
         hot_reloader = getattr(self, "_prompt_hot_reloader", None)
         if hot_reloader:
             hot_spec = hot_reloader.get_spec(agent_key)
@@ -112,9 +112,18 @@ class ExecutionEngine:
                 plan_lines.append(f"当前进度：第 0 步 / 共 {len(plan.steps)} 步")
                 plan_lines.append(f"完成条件：{json.dumps(plan.completion_conditions, ensure_ascii=False)}")
                 plan_section = "\n".join(plan_lines) + "\n\n"
+            user_section = ""
+            if user_context:
+                user_section = (
+                    f"用户信息：\n"
+                    f"  user_id: {user_context.get('user_id', 'unknown')}\n"
+                    f"  role: {user_context.get('role', 'unknown')}\n"
+                    f"  permission_level: {user_context.get('permission_level', 'unknown')}\n\n"
+                )
             prompt = (
                 f"你是一个{spec['role_desc']}\n\n"
                 f"{plan_section}"
+                f"{user_section}"
                 f"可用工具（JSON格式）：{json.dumps(self._host._tool_registry.list_tools(), ensure_ascii=False)}\n\n"
                 f"当前上下文：{json.dumps(context or {}, ensure_ascii=False)}\n\n"
                 '请回复JSON格式：{"action": "call_tool"|"complete"|"error", "tool": "tool_name", "params": {...}, "reasoning": "..."}'
@@ -137,7 +146,7 @@ class ExecutionEngine:
             "_plan_step_index": 0 if plan_available else -1,
         }
 
-    def _execute_impl(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
+    def _execute_impl(self, goal: str, agent_key: str, context: dict | None = None, user_context: dict | None = None) -> RuntimeResult:
         agent = AgentRegistry.get(agent_key)
         if agent is not None:
             spec = _identity_to_spec(agent)
@@ -145,7 +154,7 @@ class ExecutionEngine:
             spec = AGENT_SPECS.get(agent_key)
         if spec is None:
             return RuntimeResult(status="error", result=f"unknown agent_key: {agent_key}", iterations=0, tool_calls=0, logs=[])
-        c, max_iter = self._new_context(goal, agent_key, context, spec), min(spec["max_iterations"], 15)
+        c, max_iter = self._new_context(goal, agent_key, context, spec, user_context), min(spec["max_iterations"], 15)
         start_time = time.time()
         llm_call_count = 0
         for step in range(c["start_step"], max_iter):

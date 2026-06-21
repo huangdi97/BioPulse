@@ -6,8 +6,17 @@ import sqlite3
 logger = logging.getLogger(__name__)
 
 
+class BudgetExhaustedError(Exception):
+    """预算耗尽时抛出的异常。"""
+
+
 class CostGovernor:
-    """LLM 调用成本控制器，累计 token 消耗并在超预算时阻止调用。"""
+    """LLM 调用成本控制器，累计 token 消耗并在超预算时阻止调用。
+
+    支持用户上下文感知的预算控制：
+    - 预算剩余 < 20% 时输出日志告警
+    - 预算耗尽时拒绝新请求（抛出 BudgetExhaustedError）
+    """
 
     MAX_COST_PER_TASK = 0.50
     PRICING = {
@@ -26,6 +35,18 @@ class CostGovernor:
         self._step_costs: list[dict] = []
         self._budget_alerts: dict[str, dict] = {}
         self._agent_costs: dict[str, float] = {}
+        self._user_context: dict | None = None
+        self._alerted_low_budget = False
+
+    def set_user_context(self, user_context: dict | None) -> None:
+        """设置当前请求的用户上下文，影响预算决策。"""
+        self._user_context = user_context
+        permission_level = (user_context or {}).get("permission_level", "").lower()
+        if permission_level in ("admin", "manager", "superuser"):
+            self._max_cost = max(self._max_cost, 2.0)
+        elif permission_level in ("user", "viewer", ""):
+            self._max_cost = min(self._max_cost, 0.50)
+        logger.info("CostGovernor: user_context applied, max_cost=%.4f, role=%s", self._max_cost, (user_context or {}).get("role", "unknown"))
 
     @staticmethod
     def estimate_cost(tokens_input: int, tokens_output: int, model_tier: str) -> float:
@@ -34,9 +55,43 @@ class CostGovernor:
         return (tokens_input * pricing["input_per_million"] + tokens_output * pricing["output_per_million"]) / 1e6
 
     def check(self, model: str, input_tokens: int, output_tokens: int, model_tier: str = "cloud_normal") -> bool:
-        """检查当前调用是否在预算范围内。"""
+        """检查当前调用是否在预算范围内。若预算耗尽则触发告警并拒绝。"""
+        budget_remaining = self._max_cost - self._total_cost
+        if budget_remaining <= 0:
+            self._fire_exhausted_alert()
+            return False
+        budget_pct = (budget_remaining / self._max_cost) * 100 if self._max_cost > 0 else 0
+        if budget_pct < 20 and not self._alerted_low_budget:
+            self._alerted_low_budget = True
+            self._fire_low_budget_alert(budget_pct, budget_remaining)
         estimated_cost = self.estimate_cost(input_tokens, output_tokens, model_tier)
         return (self._total_cost + estimated_cost) <= self._max_cost
+
+    def _fire_low_budget_alert(self, budget_pct: float, budget_remaining: float) -> None:
+        """预算低于20%时触发告警。"""
+        user_id = (self._user_context or {}).get("user_id", "unknown")
+        msg = f"CostGovernor: 预算不足 (remaining={budget_pct:.1f}%, ${budget_remaining:.4f}, user={user_id}) — 请及时充值"
+        logger.warning(msg)
+        try:
+            from cloud.app.agent_runtime.notifier import Notifier
+
+            notifier = Notifier()
+            notifier.send(msg, priority="high")
+        except Exception:
+            logger.exception("CostGovernor: 发送低预算通知失败")
+
+    def _fire_exhausted_alert(self) -> None:
+        """预算耗尽时触发告警。"""
+        user_id = (self._user_context or {}).get("user_id", "unknown")
+        msg = f"CostGovernor: 预算已耗尽 (total_cost=${self._total_cost:.4f}, max_cost=${self._max_cost:.4f}, user={user_id}) — 新请求被拒绝"
+        logger.error(msg)
+        try:
+            from cloud.app.agent_runtime.notifier import Notifier
+
+            notifier = Notifier()
+            notifier.send(msg, priority="critical")
+        except Exception:
+            logger.exception("CostGovernor: 发送预算耗尽通知失败")
 
     def record(self, model: str, input_tokens: int, output_tokens: int, model_tier: str = "cloud_normal", step: int | None = None) -> float:
         """记录一次 LLM 调用的 token 消耗与成本。"""
@@ -83,10 +138,10 @@ class CostGovernor:
         return self.record(model, input_tokens, output_tokens, model_tier, step)
 
     def is_over_budget(self) -> bool:
-        """检查是否已超出预算。"""
+        """检查是否已超出预算。超出时触发告警。"""
         over = self._total_cost > self._max_cost
         if over:
-            logger.warning("CostGovernor: budget exceeded, total_cost=%.4f, max_cost=%.4f", self._total_cost, self._max_cost)
+            self._fire_exhausted_alert()
         return over
 
     def reset(self):
@@ -96,6 +151,8 @@ class CostGovernor:
         self._total_output_tokens = 0
         self._call_count = 0
         self._step_costs = []
+        self._alerted_low_budget = False
+        self._user_context = None
 
     def restore_usage(self, usage: dict | None) -> None:
         """从外部数据恢复成本使用状态。"""

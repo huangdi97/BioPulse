@@ -84,10 +84,21 @@ jobs:
 
   deploy:
     needs: lint-and-test
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: SCP code to deploy server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USERNAME }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          source: "."
+          target: "${{ secrets.DEPLOY_PATH }}"
+          strip_components: 0
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
@@ -96,6 +107,7 @@ jobs:
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
-            git pull
-            docker-compose build
-            docker-compose up -d
+            sudo systemctl restart biopulse-cloud
+            sleep 5
+            curl -sf http://localhost:8000/health || exit 1
+            echo "Health check passed"

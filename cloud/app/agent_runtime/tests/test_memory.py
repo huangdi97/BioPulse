@@ -1,8 +1,17 @@
 """Tests for Memory (AgentBrain)."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from cloud.app.agent_runtime.memory import Memory
+
+
+@pytest.fixture
+def mock_identity():
+    with patch("shared.agent_identity.get_identity") as mock:
+        mock.return_value = {"memory_namespace": "agent_1"}
+        yield mock
 
 
 def _make_memory():
@@ -17,14 +26,14 @@ def test_memory_init():
     assert mem._agent_db is not None
 
 
-def test_memory_set_and_get_str():
+def test_memory_set_and_get_str(mock_identity):
     """test memory set and get str."""
     mem, db = _make_memory()
     cursor = MagicMock()
-    cursor.fetchone.return_value = {"value": "hello", "value_type": "str"}
+    cursor.fetchone.side_effect = [None, {"value": "hello", "value_type": "str"}]
     db.execute.return_value = cursor
 
-    mem.set("agent_1", "greeting", "hello")
+    mem.set("agent_1", "greeting", "hello", caller_agent_key="agent_1")
     db.execute.assert_called()
     db.commit.assert_called_once()
 
@@ -43,38 +52,38 @@ def test_memory_get_empty():
     assert result is None
 
 
-def test_memory_set_and_get_int():
+def test_memory_set_and_get_int(mock_identity):
     """test memory set and get int."""
     mem, db = _make_memory()
     cursor = MagicMock()
-    cursor.fetchone.return_value = {"value": "42", "value_type": "int"}
+    cursor.fetchone.side_effect = [None, {"value": "42", "value_type": "int"}]
     db.execute.return_value = cursor
 
-    mem.set("agent_1", "count", 42)
+    mem.set("agent_1", "count", 42, caller_agent_key="agent_1")
     result = mem.get("agent_1", "count")
     assert result == 42
 
 
-def test_memory_set_and_get_float():
+def test_memory_set_and_get_float(mock_identity):
     """test memory set and get float."""
     mem, db = _make_memory()
     cursor = MagicMock()
-    cursor.fetchone.return_value = {"value": "3.14", "value_type": "float"}
+    cursor.fetchone.side_effect = [None, {"value": "3.14", "value_type": "float"}]
     db.execute.return_value = cursor
 
-    mem.set("agent_1", "pi", 3.14)
+    mem.set("agent_1", "pi", 3.14, caller_agent_key="agent_1")
     result = mem.get("agent_1", "pi")
     assert result == 3.14
 
 
-def test_memory_set_and_get_json():
+def test_memory_set_and_get_json(mock_identity):
     """test memory set and get json."""
     mem, db = _make_memory()
     cursor = MagicMock()
-    cursor.fetchone.return_value = {"value": '{"a":1}', "value_type": "json"}
+    cursor.fetchone.side_effect = [None, {"value": '{"a":1}', "value_type": "json"}]
     db.execute.return_value = cursor
 
-    mem.set("agent_1", "data", {"a": 1})
+    mem.set("agent_1", "data", {"a": 1}, caller_agent_key="agent_1")
     result = mem.get("agent_1", "data")
     assert result == {"a": 1}
 
@@ -85,3 +94,25 @@ def test_memory_delete():
     mem.delete("agent_1", "greeting")
     db.execute.assert_called_once()
     db.commit.assert_called_once()
+
+
+def test_memory_set_namespace_mismatch():
+    """test namespace validation rejects wrong namespace."""
+    mem, db = _make_memory()
+    with patch("shared.agent_identity.get_identity") as mock:
+        mock.return_value = {"memory_namespace": "agent_1"}
+        with pytest.raises(PermissionError, match="无权写入"):
+            mem.set("agent_2", "key", "value", caller_agent_key="agent_1")
+
+
+def test_memory_set_namespace_match_with_prefix():
+    """test namespace validation allows prefix match (e.g. 'agent_1/' namespace)."""
+    mem, db = _make_memory()
+    cursor = MagicMock()
+    cursor.fetchone.return_value = None
+    db.execute.return_value = cursor
+
+    with patch("shared.agent_identity.get_identity") as mock:
+        mock.return_value = {"memory_namespace": "agent_1"}
+        mem.set("agent_1/foo", "key", "value", caller_agent_key="agent_1")
+        db.commit.assert_called_once()

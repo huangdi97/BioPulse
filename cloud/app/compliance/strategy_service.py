@@ -22,7 +22,7 @@ def _run_compliance_trigger(task: str, context: dict) -> None:
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     try:
-        runtime = RuntimeCore(conn, conn, "")
+        runtime = RuntimeCore(conn, conn, "", "compliance_monitor")
         compliance_monitor_trigger(runtime, task, context)
     finally:
         conn.close()

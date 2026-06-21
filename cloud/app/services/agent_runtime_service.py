@@ -68,7 +68,7 @@ class AgentRuntimeService:
         """执行指定 Agent 完成目标，返回执行结果。"""
         conn = self._connect()
         try:
-            runtime = RuntimeCore(conn, conn, auth_header)
+            runtime = RuntimeCore(conn, conn, auth_header, agent_key)
             result = runtime.execute(goal, agent_key, context)
             return result.model_dump()
         finally:
@@ -84,7 +84,7 @@ class AgentRuntimeService:
         goal = goal or spec["role_desc"]
         conn = self._connect()
         try:
-            runtime = RuntimeCore(conn, conn, auth_header)
+            runtime = RuntimeCore(conn, conn, auth_header, agent_key)
             result = runtime.execute(goal, agent_key)
             return result.model_dump()
         finally:
@@ -94,7 +94,7 @@ class AgentRuntimeService:
         """恢复上一个未完成的 Agent 执行任务。"""
         conn = self._connect()
         try:
-            runtime = RuntimeCore(conn, conn, auth_header)
+            runtime = RuntimeCore(conn, conn, auth_header, "")
             result = runtime.resume("", "")
             return result.model_dump()
         finally:
@@ -104,7 +104,7 @@ class AgentRuntimeService:
         """回滚指定执行到指定步骤的历史状态。"""
         conn = self._connect()
         try:
-            runtime = RuntimeCore(conn, conn, auth_header)
+            runtime = RuntimeCore(conn, conn, auth_header, "")
             return runtime.rollback(trace_id, step)
         finally:
             conn.close()

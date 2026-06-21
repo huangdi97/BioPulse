@@ -41,7 +41,7 @@ class AgentScheduler:
 
     def trigger_now(self, agent_key: str, goal: str, auth_header: str) -> RuntimeResult:
         """trigger now."""
-        runtime = self._runtime_factory() if self._runtime_factory else RuntimeCore(self._db, self._db, auth_header)
+        runtime = self._runtime_factory() if self._runtime_factory else RuntimeCore(self._db, self._db, auth_header, agent_key)
         return runtime.execute(goal, agent_key)
 
     def _run_loop(self):
@@ -50,7 +50,7 @@ class AgentScheduler:
                 task = self._queue.dequeue()
                 if task is not None:
                     auth_header = ""
-                    runtime = self._runtime_factory() if self._runtime_factory else RuntimeCore(self._db, self._db, auth_header)
+                    runtime = self._runtime_factory() if self._runtime_factory else RuntimeCore(self._db, self._db, auth_header, task["agent_key"])
                     result = runtime.execute(task["goal"], task["agent_key"])
                     if result.status == "completed":
                         self._queue.complete(task["id"], result.result)

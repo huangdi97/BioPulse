@@ -46,7 +46,7 @@ def _trigger_async(agent_key: str, goal: str, context: dict | None = None):
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
         try:
-            runtime = RuntimeCore(conn, conn, "")
+            runtime = RuntimeCore(conn, conn, "", agent_key)
             result = runtime.execute(goal, agent_key, context or {})
             logger.info("EDAC agent=%s status=%s", agent_key, result.status)
         except Exception:  # noqa: BLE001  # agent 执行可能抛出任意异常

@@ -1,6 +1,9 @@
 """RuntimeCore shared utility methods."""
 
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class RuntimeCoreTools:
@@ -32,6 +35,8 @@ class RuntimeCoreTools:
 
     def _check_budget(self, messages=None) -> bool:
         has_budget = messages is None or self._core._cost_governor.check("deepseek-chat", self._core._estimate_token_count(messages), 2048)
+        if not has_budget:
+            logger.warning("Budget check failed — request denied")
         return has_budget and not self._core._cost_governor.is_over_budget()
 
     def _accumulate_cost(self, ai_resp: dict, step: int) -> None:

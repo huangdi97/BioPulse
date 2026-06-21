@@ -114,7 +114,7 @@ class TraceService:
                 return None
             from cloud.app.agent_runtime.runtime_core import RuntimeCore
 
-            runtime = RuntimeCore(conn, conn, auth_header)
+            runtime = RuntimeCore(conn, conn, auth_header, agent_key)
             result = runtime.execute(goal, agent_key, state.get("context", {}))
             return result.model_dump()
         finally:

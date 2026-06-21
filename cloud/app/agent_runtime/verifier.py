@@ -7,6 +7,8 @@ from cloud.app.agent_runtime.guard import GuardLayer1
 from cloud.app.agent_runtime.models import CheckResult, VerificationResult
 from cloud.app.agent_runtime.planner import Plan, PlanStep
 from cloud.app.agent_runtime.safety_guard import RuleEngineLLM, SafetyGuard
+from cloud.app.agent_runtime.schema_validator import OutputSchemaValidator
+from shared.agent_identity import get_identity
 from shared.config import settings as config_settings
 
 logger = logging.getLogger(__name__)
@@ -20,8 +22,9 @@ class Verifier:
         self._layer1 = GuardLayer1()
         self._guard = SafetyGuard()
         self._rule_engine_llm = RuleEngineLLM(llm_url=llm_url, guard=self._guard)
+        self._schema_validator = OutputSchemaValidator()
 
-    def verify(self, result: dict) -> bool:
+    def verify(self, result: dict, agent_key: str = "") -> bool:
         """验证工具执行结果。"""
         if result is None:
             raise ValueError("tool result is None")
@@ -29,9 +32,21 @@ class Verifier:
             return True
         if not result.get("success", False):
             raise ValueError(result.get("error") or "tool result failed verification")
+
+        if agent_key:
+            try:
+                identity = get_identity(agent_key)
+                output_schema = identity.get("output_schema")
+                if output_schema:
+                    passed, errors = self._schema_validator._validate_value(result, output_schema, [], "$")
+                    if not passed:
+                        raise ValueError(f"output schema validation failed: {'; '.join(errors)}")
+            except FileNotFoundError:
+                pass
+
         return True
 
-    def verify_step(self, step: PlanStep, result: dict) -> VerificationResult:
+    def verify_step(self, step: PlanStep, result: dict, agent_key: str = "") -> VerificationResult:
         """验证单个步骤的执行结果。"""
         checks: list[CheckResult] = []
         checks.append(self._layer1_assertions(step, result))
@@ -57,9 +72,27 @@ class Verifier:
             checks.append(llm_check)
         else:
             checks.append(CheckResult(name="llm_verification", passed=True, detail="Skipped — lower layers passed"))
+        schema_check = self._check_output_schema(agent_key, result)
+        checks.append(schema_check)
         passed = all(c.passed for c in checks)
         confidence = sum(1.0 for c in checks if c.passed) / max(len(checks), 1)
         return VerificationResult(passed=passed, checks=checks, confidence=confidence)
+
+    def _check_output_schema(self, agent_key: str, result: dict) -> CheckResult:
+        if not agent_key:
+            return CheckResult(name="output_schema", passed=True, detail="No agent_key provided, skipped")
+        try:
+            identity = get_identity(agent_key)
+            output_schema = identity.get("output_schema")
+            if not output_schema:
+                return CheckResult(name="output_schema", passed=True, detail="No output_schema defined")
+            errors: list[str] = []
+            self._schema_validator._validate_value(result, output_schema, errors, "$")
+            if errors:
+                return CheckResult(name="output_schema", passed=False, detail=f"Schema validation failed: {'; '.join(errors)}")
+            return CheckResult(name="output_schema", passed=True, detail="Output schema validation passed")
+        except FileNotFoundError:
+            return CheckResult(name="output_schema", passed=True, detail=f"Identity not found for '{agent_key}', skipped")
 
     def verify_completion(self, completion_conditions: list[str], context: dict) -> tuple[bool, str]:
         conditions_text = " | ".join(completion_conditions)

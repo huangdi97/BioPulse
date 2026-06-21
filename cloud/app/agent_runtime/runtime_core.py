@@ -7,6 +7,7 @@ import time
 import uuid
 from datetime import datetime
 
+from cloud.app.agent_runtime.agent_health import get_health_tracker
 from cloud.app.agent_runtime.bulkhead import Bulkhead
 from cloud.app.agent_runtime.circuit_breaker import CircuitBreaker
 from cloud.app.agent_runtime.content_filter import ContentBlocked, ContentFilter
@@ -33,6 +34,7 @@ from cloud.app.agent_runtime.tool_bridge import ToolBridge
 from cloud.app.agent_runtime.tracer import AgentTracer
 from cloud.app.agent_runtime.vector_memory import VectorMemory
 from cloud.app.agent_runtime.verifier import Verifier
+from shared.agent_identity import get_identity
 
 logger = logging.getLogger(__name__)
 
@@ -51,8 +53,9 @@ def _get_global_semaphore() -> threading.Semaphore:
 
 
 class RuntimeCore:
-    def __init__(self, agent_db, business_db, auth_header: str, notifier: Notifier | None = None):
-        self._agent_db, self._db, self._auth_header, self._notifier = agent_db, business_db, auth_header, notifier
+    def __init__(self, agent_db, business_db, auth_header: str, agent_key: str = "", notifier: Notifier | None = None):
+        self._agent_db, self._db, self._auth_header, self._agent_key, self._notifier = agent_db, business_db, auth_header, agent_key, notifier
+        self._agent_identity = get_identity(agent_key) if agent_key else {}
         self._tool_registry = ToolBridge()
         self._tool_registry.register_default_tools()
         self._brain = Memory(agent_db)
@@ -88,8 +91,11 @@ class RuntimeCore:
         """设置事件流推送器。"""
         self._streamer = streamer
 
-    def execute(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
-        """执行 Agent 任务，包含全局并发限流与舱壁隔离。"""
+    def execute(self, goal: str, agent_key: str, context: dict | None = None, user_context: dict | None = None) -> RuntimeResult:
+        """执行 Agent 任务，包含全局并发限流与舱壁隔离。
+
+        user_context: dict含 user_id/role/permission_level，注入到 System Prompt 并影响 CostGovernor。
+        """
         sem = _get_global_semaphore()
         acquired = sem.acquire(blocking=True, timeout=120.0)
         if not acquired:
@@ -110,13 +116,13 @@ class RuntimeCore:
                     logs=[],
                 )
             try:
-                return self._execute_with_bulkhead(goal, agent_key, context)
+                return self._execute_with_bulkhead(goal, agent_key, context, user_context)
             finally:
                 self._bulkhead.release(agent_key)
         finally:
             sem.release()
 
-    def _execute_with_bulkhead(self, goal: str, agent_key: str, context: dict | None = None) -> RuntimeResult:
+    def _execute_with_bulkhead(self, goal: str, agent_key: str, context: dict | None = None, user_context: dict | None = None) -> RuntimeResult:
         trace_id = self._tracer.start_trace(agent_key, self._auth_header or "anonymous", {"goal": goal, "context": context})
         self._trace_id = trace_id
         agent_active_count.labels(agent_name=agent_key).inc()
@@ -140,11 +146,15 @@ class RuntimeCore:
                 return result
             user_key = f"user_agent:{self._auth_header or 'anonymous'}"
             self._rate_limiter.check_or_raise(user_key)
+            if user_context:
+                self._cost_governor.set_user_context(user_context)
+                context = dict(context or {})
+                context["_user"] = user_context
             memories = self._vector_memory.search(agent_key, goal, top_k=3)
             if memories:
                 context = dict(context or {})
                 context["_vector_memories"] = [{"key": m["key"], "content": m["content"], "score": m["score"]} for m in memories]
-            result = self._engine._execute_impl(goal, agent_key, context)
+            result = self._engine._execute_impl(goal, agent_key, context, user_context)
             if result.status == "success" and result.result:
                 try:
                     self._content_filter.filter_output(result.result)
@@ -165,6 +175,9 @@ class RuntimeCore:
             self._tracer.end_trace(result.status, result.model_dump())
             agent_requests_total.labels(agent_name=agent_key, status=result.status).inc()
             agent_active_count.labels(agent_name=agent_key).dec()
+            health_tracker = get_health_tracker()
+            is_success = result.status in ("success", "completed")
+            health_tracker.record_run(agent_key, is_success, result.result if not is_success else "")
             if self._streamer:
                 self._streamer.stream(trace_id, "agent.end", {"status": result.status, "result": result.result})
             return result
