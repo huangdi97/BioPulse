@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { User, Building2, Phone, Mail } from 'lucide-react'
 import { SearchBar } from '@/components/SearchBar'
 import { Skeleton } from '@/components/Skeleton'
+import AgentInsightBar from '@/components/AgentInsightBar'
 
 export default function ContactList() {
   const [contacts, setContacts] = useState<Contact[]>([])
@@ -46,6 +47,7 @@ export default function ContactList() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="opp_contacts" />
       <h2 className="text-lg font-semibold">联系人管理</h2>
       <SearchBar placeholder="搜索姓名、医院、科室或角色..." value={search} onChange={setSearch} />
       {filtered.map((c) => (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import StatCard from '@/components/StatCard'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { CalendarCheck, DollarSign, TrendingUp, Star } from 'lucide-react'
 import { fetchEmployeePerformance } from '@/api/adminEmployee'
 
@@ -22,6 +23,7 @@ export default function MyPerformance() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="employee_performance" />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={<CalendarCheck className="h-5 w-5 text-blue-600" />}

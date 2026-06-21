@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import AgentInsightBar from "../../components/AgentInsightBar";
 import { RemediationColumn } from "../../components/RemediationColumn";
 
 const API_BASE = "/api/v1/remediation";
@@ -51,6 +52,7 @@ export default function RemediationBoard() {
 
   return (
     <div className="p-6">
+      <AgentInsightBar pageId="manager_remediation" />
       <div className="mb-6">
         <h1 className="text-xl font-bold text-gray-900">整改看板</h1>
         <p className="text-sm text-gray-500 mt-1">红灯事件→整改工单全生命周期管理</p>

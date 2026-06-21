@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:biopulse_app/models/compliance_result.dart';
 import 'package:biopulse_app/services/api_client.dart';
 import 'package:biopulse_app/widgets/agent_summary_card.dart';
+import 'package:biopulse_app/widgets/agent_insight_bar.dart';
 
 class ComplianceScreen extends StatefulWidget {
   const ComplianceScreen({super.key});
@@ -139,6 +140,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const AgentInsightBar(pageId: 'mobile_compliance'),
           const AgentSummaryCard(
             title: '合规状态',
             agentKey: 'compliance_monitor',

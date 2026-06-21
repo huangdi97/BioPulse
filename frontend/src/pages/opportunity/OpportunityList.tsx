@@ -7,6 +7,7 @@ import { SearchBar } from '@/components/SearchBar'
 import { FilterDropdown } from '@/components/FilterDropdown'
 import { Skeleton } from '@/components/Skeleton'
 import { Button } from '@/components/ui/button'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { exportToCSV, exportToJSON } from '@/utils/export'
 
 const STAGE_LABELS: Record<OppRecord['stage'], string> = {
@@ -104,6 +105,7 @@ export default function OpportunityList() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="opp_list" />
       <div className="flex items-center gap-2">
         <h2 className="text-lg font-semibold">商机列表</h2>
         <div className="flex-1" />

@@ -6,6 +6,7 @@ import { User, Building2, MapPin } from 'lucide-react'
 import { SearchBar } from '@/components/SearchBar'
 import { FilterDropdown } from '@/components/FilterDropdown'
 import { Skeleton } from '@/components/Skeleton'
+import AgentInsightBar from '@/components/AgentInsightBar'
 
 const PRIORITY_MAP: Record<string, { label: string; color: string }> = {
   high: { label: '高', color: 'bg-red-50 text-red-700' },
@@ -57,6 +58,7 @@ export default function HcpList() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="assistant_hcp_list" />
       <h2 className="text-lg font-semibold">HCP 列表</h2>
       <SearchBar placeholder="搜索姓名、医院或科室..." value={search} onChange={setSearch} />
       <FilterDropdown label="优先级" value={priority} options={PRIORITY_OPTIONS} onChange={setPriority} />

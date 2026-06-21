@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { fetchAdmissions, createAdmission, updateAdmissionStatus } from '@/api/admission'
 import { mockAdmissions } from '@/mock/admission'
 import { Plus, Loader2, ChevronRight } from 'lucide-react'
@@ -96,6 +97,7 @@ export default function AdmissionTracker() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="manager_admission" />
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">入院进度看板</h1>
         <Button size="sm" onClick={() => setShowForm(true)}>

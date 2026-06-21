@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { ArrowLeft, Users } from 'lucide-react'
 import { fetchDashboard, createTask } from '@/api/inspection'
 import InspectionTaskModal from '@/components/InspectionTaskModal'
@@ -32,6 +33,7 @@ export default function InspectionAssign() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="manager_assign" />
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" onClick={() => navigate('/manager/inspection')}>
           <ArrowLeft className="h-4 w-4 mr-1" /> 返回

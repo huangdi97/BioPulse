@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -24,6 +25,7 @@ export default function ComplianceOverview() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="president_compliance" />
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">合规趋势</CardTitle>

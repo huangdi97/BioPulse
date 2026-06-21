@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchFunnel, type FunnelStage } from '@/api/sales-assistant-api'
 import { Card, CardContent } from '@/components/ui/card'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { Filter } from 'lucide-react'
 
 const STAGE_COLORS = [
@@ -27,6 +28,7 @@ export default function FunnelView() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="sa_funnel" />
       <h2 className="text-lg font-semibold flex items-center gap-2"><Filter className="h-5 w-5 text-amber-600" />销售漏斗</h2>
       <Card>
         <CardContent className="pt-4">

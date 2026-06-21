@@ -7,6 +7,7 @@ import 'package:biopulse_app/services/database_service.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:dio/dio.dart';
+import 'package:biopulse_app/widgets/agent_insight_bar.dart';
 
 class VisitFormScreen extends StatefulWidget {
   final Visit? visit;
@@ -297,6 +298,7 @@ class _VisitFormScreenState extends State<VisitFormScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            const AgentInsightBar(pageId: 'mobile_visit_form'),
             const Text('选择HCP', style: TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             InkWell(

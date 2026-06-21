@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { fetchCoachStats } from '@/api/coach'
 import StatCard from '@/components/StatCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { Play, CheckCircle2, Star, TrendingUp, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/Skeleton'
@@ -43,6 +44,7 @@ export default function StatsDashboard() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="coach_stats" />
       <div className="flex items-center gap-2">
         <h2 className="text-lg font-semibold">数据统计</h2>
         <div className="flex-1" />

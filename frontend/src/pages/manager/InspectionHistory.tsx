@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { ChevronDown, ChevronUp, FileText } from 'lucide-react'
 import { fetchHistory, fetchAuditTrail } from '@/api/inspection'
 import type { InspectionTask, AuditTrailItem } from '@/types/inspection'
@@ -39,6 +40,7 @@ export default function InspectionHistory() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="manager_history" />
       <div>
         <h2 className="text-lg font-semibold">飞检历史记录</h2>
         <p className="text-sm text-muted-foreground">历史检查记录与CAPA审计轨迹</p>

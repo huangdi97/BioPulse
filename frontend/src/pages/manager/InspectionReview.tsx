@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { ArrowLeft, CheckCircle, XCircle, FileText } from 'lucide-react'
 import InspectionScoreModal from '@/components/InspectionScoreModal'
 import { fetchHistory, confirmTask } from '@/api/inspection'
@@ -41,6 +42,7 @@ export default function InspectionReview() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="manager_review" />
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" onClick={() => navigate('/manager/inspection')}>
           <ArrowLeft className="h-4 w-4 mr-1" /> 返回

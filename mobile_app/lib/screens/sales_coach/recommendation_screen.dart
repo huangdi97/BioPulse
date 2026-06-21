@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:biopulse_app/services/api_client.dart';
+import 'package:biopulse_app/widgets/agent_insight_bar.dart';
 
 class Recommendation {
   final String id;
@@ -75,21 +76,25 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('推荐内容')),
-      body: _data.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.lightbulb_outline, size: 64, color: Colors.grey[400]),
-                  const SizedBox(height: 16),
-                  Text('暂无推荐', style: TextStyle(color: Colors.grey[600])),
-                ],
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: _data.length,
-              itemBuilder: (ctx, i) {
+      body: Column(
+        children: [
+          const AgentInsightBar(pageId: 'mobile_coach_rec'),
+          Expanded(
+            child: _data.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.lightbulb_outline, size: 64, color: Colors.grey[400]),
+                        const SizedBox(height: 16),
+                        Text('暂无推荐', style: TextStyle(color: Colors.grey[600])),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: _data.length,
+                    itemBuilder: (ctx, i) {
                 final r = _data[i];
                 return Card(
                   child: Padding(
@@ -150,6 +155,9 @@ class _RecommendationScreenState extends State<RecommendationScreen> {
                 );
               },
             ),
+          ),
+        ],
+      ),
     );
   }
 }

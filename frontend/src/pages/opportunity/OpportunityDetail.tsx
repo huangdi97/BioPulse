@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { fetchOpportunityDetail, type OppRecord } from '@/api/opportunity-api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { ArrowLeft, Building2, User, Calendar, Target, BarChart3 } from 'lucide-react'
 
 const STAGE_LABELS: Record<OppRecord['stage'], string> = {
@@ -38,6 +39,7 @@ export default function OpportunityDetail() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="opp_detail" />
       <button onClick={() => navigate('/opportunity/opportunities')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-4 w-4" />返回列表
       </button>

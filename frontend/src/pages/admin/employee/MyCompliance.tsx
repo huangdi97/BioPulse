@@ -7,6 +7,7 @@ import {
 } from '@/mock/adminEmployee'
 import { fetchEmployeeCompliance } from '@/api/adminEmployee'
 import type { ComplianceItem } from '@/api/adminEmployee'
+import AgentInsightBar from '@/components/AgentInsightBar'
 
 export default function MyCompliance() {
   const [records, setRecords] = useState<ComplianceItem[]>([])
@@ -16,7 +17,9 @@ export default function MyCompliance() {
   }, [])
 
   return (
-    <Card>
+    <>
+      <AgentInsightBar pageId="employee_compliance" />
+      <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base">合规记录</CardTitle>
       </CardHeader>
@@ -39,5 +42,6 @@ export default function MyCompliance() {
         </div>
       </CardContent>
     </Card>
+    </>
   )
 }

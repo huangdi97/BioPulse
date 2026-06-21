@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { mockTeamRanking } from '@/mock/manager'
 import type { TeamMember } from '@/types'
@@ -77,6 +78,7 @@ export default function ManagerVisits() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="manager_visits" />
       <div className="flex gap-2 flex-wrap">
         <FilterDropdown label="代表" value={rep} options={REP_OPTIONS} onChange={setRep} />
         <FilterDropdown label="时间范围" value={timeRange} options={TIME_OPTIONS} onChange={setTimeRange} />

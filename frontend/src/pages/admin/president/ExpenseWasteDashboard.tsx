@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { fetchExpenseWaste } from '@/api/adminPresident'
 
 export default function ExpenseWasteDashboard() {
@@ -18,6 +19,7 @@ export default function ExpenseWasteDashboard() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="president_expense" />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">浪费总金额</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">¥{summary.totalWaste.toLocaleString()}</p></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">违规案例数</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">{summary.caseCount}</p></CardContent></Card>

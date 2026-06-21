@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:biopulse_app/services/api_client.dart';
+import 'package:biopulse_app/widgets/agent_insight_bar.dart';
 
 class TrainingRecord {
   final String id;
@@ -99,6 +100,7 @@ class _TrainingListScreenState extends State<TrainingListScreen>
       appBar: AppBar(title: const Text('销售教练')),
       body: Column(
         children: [
+          const AgentInsightBar(pageId: 'mobile_coach_train'),
           TabBar(
             controller: _tabController,
             labelColor: theme.colorScheme.primary,

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchKnowledge, type KnowledgeItem } from '@/api/assistant-api'
 import { Card, CardContent } from '@/components/ui/card'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { BookOpen, Clock } from 'lucide-react'
 
 export default function KnowledgeView() {
@@ -21,6 +22,7 @@ export default function KnowledgeView() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="assistant_knowledge" />
       <h2 className="text-lg font-semibold">知识库</h2>
       {items.map((item) => (
         <Card key={item.id}>

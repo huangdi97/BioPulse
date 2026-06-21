@@ -8,6 +8,7 @@ import {
 } from '@/mock/adminEmployee'
 import { fetchEmployeeTasks } from '@/api/adminEmployee'
 import type { TaskItem } from '@/api/adminEmployee'
+import AgentInsightBar from '@/components/AgentInsightBar'
 
 export default function MyTasks() {
   const [tasks, setTasks] = useState<TaskItem[]>([])
@@ -17,7 +18,9 @@ export default function MyTasks() {
   }, [])
 
   return (
-    <Card>
+    <>
+      <AgentInsightBar pageId="employee_tasks" />
+      <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base">任务列表</CardTitle>
       </CardHeader>
@@ -42,5 +45,6 @@ export default function MyTasks() {
         </div>
       </CardContent>
     </Card>
+    </>
   )
 }

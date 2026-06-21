@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import StatCard from '@/components/StatCard'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { AlertTriangle, CheckCircle, Clock, ShieldCheck } from 'lucide-react'
 import { fetchDashboard } from '@/api/inspection'
 import type { InspectionDashboardData } from '@/types/inspection'
@@ -20,6 +21,7 @@ export default function InspectionDashboard() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="manager_inspection" />
       <div>
         <h2 className="text-lg font-semibold">飞检准备度</h2>
         <p className="text-sm text-muted-foreground">飞行检查准备情况总览与风险评分</p>

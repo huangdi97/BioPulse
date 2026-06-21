@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
@@ -19,7 +20,9 @@ export default function TrendReport() {
   if (!data) return <div className="p-4 text-muted-foreground">加载中...</div>
 
   return (
-    <Card>
+    <>
+      <AgentInsightBar pageId="president_trends" />
+      <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base">月度业绩趋势</CardTitle>
       </CardHeader>
@@ -37,5 +40,6 @@ export default function TrendReport() {
         </ResponsiveContainer>
       </CardContent>
     </Card>
+    </>
   )
 }

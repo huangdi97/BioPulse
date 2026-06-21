@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchVisits, type VisitRecord } from '@/api/assistant-api'
 import { Card, CardContent } from '@/components/ui/card'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { Calendar, User } from 'lucide-react'
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
@@ -27,6 +28,7 @@ export default function VisitList() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="assistant_visits" />
       <h2 className="text-lg font-semibold">拜访记录</h2>
       <div className="space-y-2">
         {visits.map((v) => {

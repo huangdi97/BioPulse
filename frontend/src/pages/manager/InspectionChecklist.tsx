@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { CheckCircle, XCircle, Clock, Plus } from 'lucide-react'
 import { fetchChecklist, createTask } from '@/api/inspection'
 import InspectionTaskModal from '@/components/InspectionTaskModal'
@@ -38,6 +39,7 @@ export default function InspectionChecklist() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="manager_checklist" />
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">飞检检查清单</h2>

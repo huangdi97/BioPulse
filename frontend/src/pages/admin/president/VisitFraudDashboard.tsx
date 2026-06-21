@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { fetchVisitFraud } from '@/api/adminPresident'
 
 export default function VisitFraudDashboard() {
@@ -18,6 +19,7 @@ export default function VisitFraudDashboard() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="president_fraud" />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">疑似造假数</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">{summary.totalFraud}</p></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">涉事代表数</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">{summary.caseCount}</p></CardContent></Card>

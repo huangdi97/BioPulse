@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { Filter, Calendar, User, Building2 } from 'lucide-react'
 import { mockOpportunities } from '@/mock/manager'
 import type { Opportunity, OpportunityStage } from '@/types'
@@ -42,6 +43,7 @@ export default function ManagerOpportunities() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="manager_opportunities" />
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">

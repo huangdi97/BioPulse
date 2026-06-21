@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { fetchAssistantTasks, type AssistantTask } from '@/api/assistant-api'
 import { Card, CardContent } from '@/components/ui/card'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { Calendar, Check } from 'lucide-react'
 import { FilterDropdown } from '@/components/FilterDropdown'
 import { Skeleton } from '@/components/Skeleton'
@@ -53,6 +54,7 @@ export default function TaskList() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="assistant_tasks" />
       <h2 className="text-lg font-semibold">任务列表</h2>
       <div className="flex gap-2 flex-wrap">
         <FilterDropdown label="状态" value={status} options={STATUS_OPTIONS} onChange={setStatus} />

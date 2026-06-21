@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { fetchRectification } from '@/api/adminPresident'
 
 const statusLabels: Record<string, string> = { closed: '已闭环', in_progress: '整改中', overdue: '已逾期' }
@@ -21,6 +22,7 @@ export default function RectificationDashboard() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="president_rectification" />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">问题总数</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">{summary.totalIssues}</p></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">已闭环</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold text-green-600">{summary.closed}</p></CardContent></Card>

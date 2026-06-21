@@ -106,7 +106,7 @@ class _ManagementDashboardScreenState extends State<ManagementDashboardScreen> w
           const SizedBox(height: DesignTokens.spaceMd),
           const _StatsRow(),
           const SizedBox(height: DesignTokens.spaceMd),
-          const AgentInsightBar(pageId: 'management_dashboard'),
+          const AgentInsightBar(pageId: 'mobile_mgmt_dash'),
           const SizedBox(height: DesignTokens.spaceMd),
           _AiCapabilitySection(),
           const SizedBox(height: DesignTokens.spaceLg),

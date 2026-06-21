@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:biopulse_app/services/api_client.dart';
+import 'package:biopulse_app/widgets/agent_insight_bar.dart';
 class Opportunity {
   final String id;
   final String name;
@@ -90,6 +91,7 @@ class _OpportunityListScreenState extends State<OpportunityListScreen>
     return Scaffold(
       body: Column(
         children: [
+          const AgentInsightBar(pageId: 'mobile_opp_list'),
           TabBar(
             controller: _tabController,
             labelColor: theme.colorScheme.primary,

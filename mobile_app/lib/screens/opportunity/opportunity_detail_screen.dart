@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:biopulse_app/services/api_client.dart';
+import 'package:biopulse_app/widgets/agent_insight_bar.dart';
 
 
 
@@ -46,6 +47,7 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const AgentInsightBar(pageId: 'mobile_opp_detail'),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),

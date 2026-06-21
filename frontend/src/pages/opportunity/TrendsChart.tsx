@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchTrends, type TrendData } from '@/api/opportunity-api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { TrendingUp } from 'lucide-react'
 
 export default function TrendsChart() {
@@ -25,6 +26,7 @@ export default function TrendsChart() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="opp_trends" />
       <h2 className="text-lg font-semibold flex items-center gap-2"><TrendingUp className="h-5 w-5 text-purple-600" />趋势分析</h2>
       <Card>
         <CardHeader><CardTitle className="text-base">商机营收趋势</CardTitle></CardHeader>

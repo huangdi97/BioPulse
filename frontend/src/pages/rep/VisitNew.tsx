@@ -8,6 +8,7 @@ import ViolationDialog from '@/components/ViolationDialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/contexts/ToastContext'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import type { ScanResult } from '@/types'
 import {
   ArrowLeft,
@@ -269,6 +270,7 @@ export default function VisitNew() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="rep_visit_new" />
       <ComplianceScanner content={content} onResult={handleScanResult} />
 
       <ViolationDialog

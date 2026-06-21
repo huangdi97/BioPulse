@@ -5,6 +5,7 @@ import { Calendar, Clock } from 'lucide-react'
 import { SearchBar } from '@/components/SearchBar'
 import { FilterDropdown } from '@/components/FilterDropdown'
 import { Skeleton } from '@/components/Skeleton'
+import AgentInsightBar from '@/components/AgentInsightBar'
 
 const STATUS_MAP: Record<Bidding['status'], { label: string; color: string }> = {
   preparing: { label: '准备中', color: 'bg-blue-50 text-blue-700' },
@@ -57,6 +58,7 @@ export default function BiddingList() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="opp_bidding" />
       <h2 className="text-lg font-semibold">投标管理</h2>
       <SearchBar placeholder="搜索投标名称或截止日期..." value={search} onChange={setSearch} />
       <FilterDropdown label="状态" value={status} options={STATUS_OPTIONS} onChange={setStatus} />

@@ -67,7 +67,6 @@ export default function AiSuggestionCard({
             暂无建议
           </p>
         ) : (
-        ) : (
           suggestions.map((suggestion) => {
             const config = typeConfig[suggestion.type] || typeConfig.insight
             const Icon = config.icon

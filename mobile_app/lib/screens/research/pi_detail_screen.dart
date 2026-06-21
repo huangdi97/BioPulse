@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:biopulse_app/models/pi_profile.dart';
 import 'package:biopulse_app/screens/research/product_matching_screen.dart';
+import 'package:biopulse_app/widgets/agent_insight_bar.dart';
 
 class PIDetailScreen extends StatelessWidget {
   final PIProfile profile;
@@ -24,6 +25,7 @@ class PIDetailScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const AgentInsightBar(pageId: 'mobile_pi_detail'),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { ArrowLeft, CheckCircle, XCircle, ShieldCheck } from 'lucide-react'
 import { fetchComplianceRecordDetail, fetchAuditChain, scanContent } from '@/api/compliance'
 import type { ComplianceRecord, AuditEntry, Violation } from '@/types'
@@ -88,6 +89,7 @@ export default function ComplianceDetail() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="manager_compliance_detail" />
       <button
         type="button"
         onClick={() => navigate('/manager/compliance/records')}

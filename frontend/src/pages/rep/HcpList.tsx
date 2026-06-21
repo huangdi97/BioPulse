@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { SearchBar } from '@/components/SearchBar'
 import { FilterDropdown } from '@/components/FilterDropdown'
 import { Skeleton } from '@/components/Skeleton'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { MapPin, Building2, Star, User } from 'lucide-react'
 
 const DEPT_OPTIONS = [
@@ -93,6 +94,7 @@ export default function HcpList() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="rep_hcp_list" />
       <SearchBar placeholder="搜索姓名或医院..." value={search} onChange={setSearch} />
       <div className="flex gap-2 flex-wrap">
         <FilterDropdown label="科室" value={dept} options={DEPT_OPTIONS} onChange={setDept} />

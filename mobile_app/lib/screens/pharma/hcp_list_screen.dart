@@ -8,6 +8,7 @@ import 'package:biopulse_app/services/database_service.dart';
 import 'package:biopulse_app/services/sync_service.dart';
 import 'package:biopulse_app/services/api_client.dart';
 import 'package:biopulse_app/screens/pharma/hcp_detail_screen.dart';
+import 'package:biopulse_app/widgets/agent_insight_bar.dart';
 
 class HcpListScreen extends StatefulWidget {
   const HcpListScreen({super.key});
@@ -166,6 +167,7 @@ class _HcpListScreenState extends State<HcpListScreen> {
     return Scaffold(
       body: Column(
         children: [
+          const AgentInsightBar(pageId: 'mobile_hcp_list'),
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
             child: TextField(

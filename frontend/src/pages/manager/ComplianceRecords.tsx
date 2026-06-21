@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { Search, AlertTriangle } from 'lucide-react'
 import { fetchComplianceRecords } from '@/api/compliance'
 import type { ComplianceRecord } from '@/types'
@@ -57,6 +58,7 @@ export default function ComplianceRecords() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="manager_compliance_records" />
       <div className="flex gap-3 flex-wrap items-center">
         <div className="relative flex-1 min-w-[180px] max-w-xs">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

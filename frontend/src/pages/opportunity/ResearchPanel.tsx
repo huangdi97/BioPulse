@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { Search, TrendingUp, BarChart3, Lightbulb } from 'lucide-react'
 
 export default function ResearchPanel() {
@@ -11,6 +12,7 @@ export default function ResearchPanel() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="opp_research" />
       <h2 className="text-lg font-semibold">研究分析面板</h2>
 
       <Card>

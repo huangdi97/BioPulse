@@ -4,6 +4,7 @@ import 'package:biopulse_app/models/pi_profile.dart';
 import 'package:biopulse_app/services/database_service.dart';
 import 'package:biopulse_app/services/api_client.dart';
 import 'package:biopulse_app/screens/research/pi_detail_screen.dart';
+import 'package:biopulse_app/widgets/agent_insight_bar.dart';
 
 class PISearchScreen extends StatefulWidget {
   const PISearchScreen({super.key});
@@ -77,6 +78,7 @@ class _PISearchScreenState extends State<PISearchScreen> {
     return Scaffold(
       body: Column(
         children: [
+          const AgentInsightBar(pageId: 'mobile_pi_search'),
           Padding(
             padding: const EdgeInsets.all(16),
             child: TextField(

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { fetchPendingApprovals, reviewQuotation } from '@/api/approval'
 import { mockApprovals } from '@/mock/approval'
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react'
@@ -57,6 +58,7 @@ export default function ApprovalPanel() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="manager_approval" />
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">报价审批</h1>
         <Badge className={STATUS_COLOR.pending_approval}>{records.length} 条待审批</Badge>

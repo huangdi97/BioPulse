@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { fetchManagementNeglect } from '@/api/adminPresident'
 
 export default function ManagementNeglectDashboard() {
@@ -18,6 +19,7 @@ export default function ManagementNeglectDashboard() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="president_neglect" />
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">未处理红灯</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">{summary.unresolvedReds}</p></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">平均响应天数</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">{summary.avgResponseDays}天</p></CardContent></Card>

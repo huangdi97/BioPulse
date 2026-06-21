@@ -4,6 +4,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 import { fetchEmployeeTrend } from '@/api/adminEmployee'
+import AgentInsightBar from '@/components/AgentInsightBar'
 
 export default function MyTrend() {
   const [data, setData] = useState<Array<{ month: string; visits: number; revenue: number; score: number }>>([])
@@ -13,7 +14,9 @@ export default function MyTrend() {
   }, [])
 
   return (
-    <Card>
+    <>
+      <AgentInsightBar pageId="employee_trends" />
+      <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base">个人趋势</CardTitle>
       </CardHeader>
@@ -33,5 +36,6 @@ export default function MyTrend() {
         </ResponsiveContainer>
       </CardContent>
     </Card>
+    </>
   )
 }

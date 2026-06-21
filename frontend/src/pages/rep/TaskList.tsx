@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { fetchTasks, completeTask } from '@/api/tasks'
 import type { Task } from '@/types'
 import { Skeleton } from '@/components/Skeleton'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { Check, CheckCircle2, X } from 'lucide-react'
 
 type TabKey = 'all' | 'pending' | 'completed'
@@ -47,6 +48,7 @@ export default function TaskList() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="rep_tasks" />
       <div className="flex rounded-lg bg-muted p-1">
         {tabs.map((tab) => (
           <button

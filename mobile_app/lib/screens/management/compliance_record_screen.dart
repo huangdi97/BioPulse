@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:biopulse_app/theme/design_tokens.dart';
+import 'package:biopulse_app/widgets/agent_insight_bar.dart';
 
 enum _ComplianceFilter { all, pass, warn, violation }
 
@@ -44,6 +45,7 @@ class _ComplianceRecordScreenState extends State<ComplianceRecordScreen> {
       appBar: AppBar(title: const Text('合规记录')),
       body: Column(
         children: [
+          const AgentInsightBar(pageId: 'mobile_mgmt_compliance'),
           _FilterBar(
             selected: _filter,
             onChanged: (f) => setState(() => _filter = f),

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import client from '@/api/client'
 
 interface BiddingItem {
@@ -59,6 +60,7 @@ export default function BiddingMonitor() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="market_bidding" />
       <h2 className="text-lg font-semibold">招标价格监控</h2>
 
       <div className="flex flex-wrap gap-3 items-center">

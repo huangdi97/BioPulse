@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useToast } from '@/contexts/ToastContext'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import client from '@/api/client'
 import type { DraftItem, DraftListResponse } from '@/api/visits'
 import { FileText, CheckCircle2, Clock, ArrowLeft, Save } from 'lucide-react'
@@ -72,6 +73,7 @@ export default function VisitDrafts() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="rep_visit_drafts" />
       <button
         onClick={() => navigate('/rep/visits/new')}
         className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"

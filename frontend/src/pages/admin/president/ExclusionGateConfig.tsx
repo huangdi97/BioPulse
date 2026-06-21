@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { fetchExclusionGates } from '@/api/adminPresident'
 
 export default function ExclusionGateConfig() {
@@ -21,6 +22,7 @@ export default function ExclusionGateConfig() {
 
   return (
     <div className="space-y-4">
+      <AgentInsightBar pageId="president_exclusion" />
       <Card>
         <CardHeader><CardTitle className="text-base">排除闸配置</CardTitle></CardHeader>
         <CardContent>

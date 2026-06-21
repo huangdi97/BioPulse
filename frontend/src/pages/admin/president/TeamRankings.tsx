@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import AgentInsightBar from '@/components/AgentInsightBar'
 import { fetchPresidentRankings, type TeamRank } from '@/api/adminPresident'
 
 export default function TeamRankings() {
@@ -14,7 +15,9 @@ export default function TeamRankings() {
   if (!rankings) return <div className="p-4 text-muted-foreground">加载中...</div>
 
   return (
-    <Card>
+    <>
+      <AgentInsightBar pageId="president_rankings" />
+      <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base">团队排名</CardTitle>
       </CardHeader>
@@ -56,5 +59,6 @@ export default function TeamRankings() {
         </div>
       </CardContent>
     </Card>
+    </>
   )
 }
