@@ -4,15 +4,16 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 
+from cloud.app.services.remediation_scoring import ScoreService
 from cloud.app.services.remediation_service import RemediationService
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/remediation", tags=["remediation"])
 
-# 使用 SQLite 文件存储整改工单
 _REMEDIATION_DB = "data/remediation.db"
 _service = RemediationService(_REMEDIATION_DB)
+_score_service = ScoreService(_service)
 
 
 @router.get("/orders")
@@ -70,6 +71,15 @@ def update_order(order_id: str, notes: str | None = None, assigned_to: str | Non
 def transition_order(order_id: str, target_status: str, operator: str = "system"):
     """状态转换。"""
     result = _service.transition(order_id, target_status, operator)
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result)
+    return result
+
+
+@router.post("/orders/{order_id}/score")
+def score_order(order_id: str, score: int, notes: str = "", evidence_checked: bool = False):
+    """复查评分。分数1-4返回需要审阅的对象，5通过归档。"""
+    result = _score_service.score_order(order_id, score, notes, evidence_checked)
     if "error" in result:
         raise HTTPException(status_code=400, detail=result)
     return result

@@ -30,7 +30,7 @@ _VALID_TRANSITIONS: dict[OrderStatus, list[OrderStatus]] = {
     OrderStatus.analyzing: [OrderStatus.assigned],
     OrderStatus.assigned: [OrderStatus.remediating],
     OrderStatus.remediating: [OrderStatus.reviewing],
-    OrderStatus.reviewing: [OrderStatus.scored],
+    OrderStatus.reviewing: [OrderStatus.scored, OrderStatus.remediating],
     OrderStatus.scored: [OrderStatus.closed, OrderStatus.remediating],  # 不通过退回
     OrderStatus.closed: [OrderStatus.archived],
     OrderStatus.archived: [],
