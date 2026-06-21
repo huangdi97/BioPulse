@@ -34,6 +34,7 @@ const InspectionHistory = lazy(() => import('./pages/manager/InspectionHistory')
 const InspectionAssign = lazy(() => import('./pages/manager/InspectionAssign'))
 const InspectionReview = lazy(() => import('./pages/manager/InspectionReview'))
 const RemediationBoard = lazy(() => import('./pages/manager/RemediationBoard'))
+const CognitionBoard = lazy(() => import('./pages/manager/CognitionBoard'))
 const ApprovalPanel = lazy(() => import('./pages/manager/ApprovalPanel'))
 const AdmissionTracker = lazy(() => import('./pages/manager/AdmissionTracker'))
 const Settings = lazy(() => import('./pages/manager/Settings'))
@@ -127,6 +128,7 @@ export default function App() {
                 <Route path="inspection/assign" element={<InspectionAssign />} />
                 <Route path="inspection/review" element={<InspectionReview />} />
                 <Route path="remediation" element={<RemediationBoard />} />
+                <Route path="cognition" element={<CognitionBoard />} />
                 <Route path="approval" element={<ApprovalPanel />} />
                 <Route path="admission" element={<AdmissionTracker />} />
                 <Route path="settings" element={<Settings />} />
