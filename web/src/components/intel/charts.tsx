@@ -54,9 +54,9 @@ function MiniBarChart({ data, height = 80 }: { data: { label: string; positive: 
         const hNeg = (d.negative / max) * (h - padB)
         return (
           <g key={i}>
-            <rect x={xPos} y={h - padB - hPos} width={barW} height={hPos} fill="#10b981" rx={1} />
-            <rect x={xNeu} y={h - padB - hNeu} width={barW} height={hNeu} fill="#6b7280" rx={1} />
-            <rect x={xNeg} y={h - padB - hNeg} width={barW} height={hNeg} fill="#ef4444" rx={1} />
+            <rect x={xPos} y={h - padB - hPos} width={barW} height={hPos} fill="var(--clr-mode-pass)" rx={1} />
+            <rect x={xNeu} y={h - padB - hNeu} width={barW} height={hNeu} fill="var(--clr-gray-50)" rx={1} />
+            <rect x={xNeg} y={h - padB - hNeg} width={barW} height={hNeg} fill="var(--clr-error)" rx={1} />
           </g>
         )
       })}

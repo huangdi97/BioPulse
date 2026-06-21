@@ -54,9 +54,9 @@ export default function TrendChart({ data }: Props) {
             yAxisId="left"
             type="monotone"
             dataKey="count"
-            stroke="#0f62fe"
+            stroke="var(--clr-brand)"
             strokeWidth={2}
-            dot={{ r: 3, fill: "#0f62fe" }}
+            dot={{ r: 3, fill: "var(--clr-brand)" }}
             activeDot={{ r: 5 }}
             name="拜访数"
           />
@@ -64,9 +64,9 @@ export default function TrendChart({ data }: Props) {
             yAxisId="right"
             type="monotone"
             dataKey="passRate"
-            stroke="#24a148"
+            stroke="var(--clr-success)"
             strokeWidth={2}
-            dot={{ r: 3, fill: "#24a148" }}
+            dot={{ r: 3, fill: "var(--clr-success)" }}
             activeDot={{ r: 5 }}
             name="合规率"
           />

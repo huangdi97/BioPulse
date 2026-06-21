@@ -22,7 +22,7 @@ export default function IntelPage() {
             key={t}
             onClick={() => setTab(i)}
             className={`px-4 py-1.5 text-sm rounded-md transition-colors ${
-              i === tab ? 'bg-white shadow-sm font-medium' : ''
+              i === tab ? 'bg-[var(--clr-white)] shadow-sm font-medium' : ''
             }`}
             style={{color: i === tab ? 'var(--clr-text-primary)' : 'var(--clr-text-secondary)'}}
           >

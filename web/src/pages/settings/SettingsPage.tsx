@@ -73,8 +73,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex gap-6 max-w-4xl">
-      <nav className="w-44 shrink-0 space-y-1">
+    <div className="flex flex-col md:flex-row gap-6 max-w-4xl">
+      <nav className="hidden md:block w-44 shrink-0 space-y-1">
         {SIDEBAR_ITEMS.map(item => (
           <button
             key={item.id}
@@ -90,6 +90,22 @@ export default function SettingsPage() {
           </button>
         ))}
       </nav>
+      <div className="flex md:hidden gap-1 p-1 rounded-lg flex-wrap" style={{ backgroundColor: 'var(--clr-gray-10)' }}>
+        {SIDEBAR_ITEMS.map(item => (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            className={cn(
+              "px-3 py-1.5 rounded-md text-xs transition-colors",
+              activeTab === item.id
+                ? "bg-[var(--clr-white)] shadow-sm font-medium text-[var(--clr-brand)]"
+                : "text-[var(--clr-text-secondary)]"
+            )}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
 
       <div className="flex-1 min-w-0">
         {activeTab === "profile" && (

@@ -79,7 +79,7 @@ export default function ConferencePage() {
             key={key}
             onClick={() => setView(key)}
             className={`px-4 py-1.5 text-sm rounded-md transition-colors ${
-              view === key ? 'bg-white shadow-sm font-medium' : ''
+              view === key ? 'bg-[var(--clr-white)] shadow-sm font-medium' : ''
             }`}
             style={{ color: view === key ? 'var(--clr-text-primary)' : 'var(--clr-text-secondary)' }}
           >
@@ -104,7 +104,7 @@ export default function ConferencePage() {
                 <select
                   value={form.type}
                   onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
-                  className="h-9 rounded-md border px-3 text-sm bg-white w-full"
+                  className="h-9 rounded-md border px-3 text-sm bg-[var(--clr-white)] w-full"
                   style={{ borderColor: 'var(--clr-border-default)', color: 'var(--clr-text-primary)' }}
                 >
                   {MEETING_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -211,7 +211,7 @@ export default function ConferencePage() {
               {analyticsData && (
                 <>
                   {analyticsData.data_trace && (
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div className="p-3 rounded text-center" style={{ backgroundColor: 'var(--clr-gray-10)' }}>
                         <div className="text-2xl font-bold" style={{ color: 'var(--clr-brand)' }}>{analyticsData.data_trace.checkin_rate}%</div>
                         <div className="text-xs mt-1" style={{ color: 'var(--clr-text-secondary)' }}>签到率</div>

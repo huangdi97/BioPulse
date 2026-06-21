@@ -8,9 +8,9 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default: "bg-[var(--clr-brand-light)] text-[var(--clr-brand)]",
-        success: "bg-emerald-50 text-emerald-700",
-        warning: "bg-amber-50 text-amber-700",
-        error: "bg-red-50 text-red-700",
+        success: "bg-[var(--clr-success)]/15 text-[var(--clr-success)]",
+        warning: "bg-[var(--clr-warning)]/15 text-[var(--clr-warning)]",
+        error: "bg-[var(--clr-error)]/15 text-[var(--clr-error)]",
         neutral: "bg-[var(--clr-gray-10)] text-[var(--clr-gray-70)]",
       },
     },

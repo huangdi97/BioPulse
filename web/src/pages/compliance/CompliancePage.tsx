@@ -169,9 +169,9 @@ export default function CompliancePage() {
                 fontSize: 12,
               }}
             />
-            <Bar dataKey="high" stackId="a" fill="#da1e28" name="高严重度" radius={[0, 0, 0, 0]} />
-            <Bar dataKey="medium" stackId="a" fill="#f1c21b" name="中严重度" />
-            <Bar dataKey="low" stackId="a" fill="#8d8d8d" name="低严重度" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="high" stackId="a" fill="var(--clr-error)" name="高严重度" radius={[0, 0, 0, 0]} />
+            <Bar dataKey="medium" stackId="a" fill="var(--clr-warning)" name="中严重度" />
+            <Bar dataKey="low" stackId="a" fill="var(--clr-text-placeholder)" name="低严重度" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

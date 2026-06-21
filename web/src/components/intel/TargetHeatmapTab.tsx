@@ -7,7 +7,7 @@ import { getIntelTargets, getIntelTargetCategories } from "../../api/client"
 import PipelineAssociation from "./PipelineAssociation"
 import type { Target } from "../../types/intel"
 
-const CHART_COLORS = ['#0f62fe', '#8b5cf6', '#f59e0b', '#10b981', '#da1e28', '#24a148', '#f1c21b', '#525252', '#002d9c', '#6f6f6f']
+const CHART_COLORS = ['var(--clr-brand)', 'var(--clr-mode-research)', 'var(--clr-mode-warn)', 'var(--clr-mode-pass)', 'var(--clr-error)', 'var(--clr-success)', 'var(--clr-warning)', 'var(--clr-gray-70)', 'var(--clr-brand-active)', 'var(--clr-gray-60)']
 
 export default function TargetHeatmapTab() {
   const [categoryFilter, setCategoryFilter] = useState('全部')
@@ -64,8 +64,7 @@ getIntelTargetCategories().then(data => {
         <select
           value={categoryFilter}
           onChange={e => setCategoryFilter(e.target.value)}
-          className="h-9 rounded-md border px-3 text-sm bg-white"
-          style={{borderColor: 'var(--clr-border-default)', color: 'var(--clr-text-primary)'}}
+          className="h-9 rounded-md border px-3 text-sm" style={{backgroundColor: 'var(--clr-surface-card)', borderColor: 'var(--clr-border-default)', color: 'var(--clr-text-primary)'}}
         >
           {targetCategories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
@@ -106,7 +105,7 @@ getIntelTargetCategories().then(data => {
                 <XAxis dataKey="month" tick={{fontSize: 11, fill: 'var(--clr-text-secondary)'}} />
                 <YAxis tick={{fontSize: 11, fill: 'var(--clr-text-secondary)'}} />
                 <Tooltip contentStyle={{background: 'var(--clr-white)', border: '1px solid var(--clr-gray-20)', borderRadius: 6, fontSize: 12}} />
-                <Line type="monotone" dataKey="count" stroke="#0f62fe" strokeWidth={2} dot={{r: 3}} name="论文数" />
+                <Line type="monotone" dataKey="count" stroke="var(--clr-brand)" strokeWidth={2} dot={{r: 3}} name="论文数" />
               </LineChart>
             </ResponsiveContainer>
             <div className="flex gap-4 text-xs" style={{color: 'var(--clr-text-secondary)'}}>
@@ -118,7 +117,8 @@ getIntelTargetCategories().then(data => {
           </CardContent>
         </Card>
       ) : (
-        <div className="rounded-lg overflow-hidden border" style={{borderColor: 'var(--clr-border-default)'}}>
+        <>
+          <div className="rounded-lg overflow-hidden border hidden md:block" style={{borderColor: 'var(--clr-border-default)'}}>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b" style={{borderColor: 'var(--clr-gray-20)'}}>
@@ -158,6 +158,29 @@ getIntelTargetCategories().then(data => {
             </tbody>
           </table>
         </div>
+        <div className="block md:hidden space-y-2">
+          {targets.map(t => (
+            <div
+              key={t.id}
+              className="p-3 rounded-lg border cursor-pointer transition-colors hover:bg-[var(--clr-surface-hover)]"
+              style={{borderColor: 'var(--clr-border-default)', backgroundColor: 'var(--clr-surface-card)'}}
+              onClick={() => setSelectedTarget(t)}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-medium" style={{color: 'var(--clr-text-primary)'}}>{t.name}</span>
+                <span className="text-xs" style={{color: 'var(--clr-text-secondary)'}}>{t.category}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-xs" style={{color: 'var(--clr-text-secondary)'}}>
+                <span>论文: <strong style={{color: 'var(--clr-text-primary)'}}>{t.paper_count.toLocaleString()}</strong></span>
+                <span>临床: <strong style={{color: 'var(--clr-text-primary)'}}>{t.trial_count.toLocaleString()}</strong></span>
+                <span style={{color: t.growth >= 0 ? 'var(--clr-success)' : 'var(--clr-error)'}}>
+                  增长: {t.growth > 0 ? '+' : ''}{t.growth}%
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+        </>
       )}
     </div>
   )

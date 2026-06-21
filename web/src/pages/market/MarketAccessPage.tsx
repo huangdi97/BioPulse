@@ -26,7 +26,7 @@ export default function MarketAccessPage() {
         <div className="p-3 border-b" style={{borderColor: 'var(--clr-border-default)'}}>
           <h3 className="text-sm font-semibold" style={{color: 'var(--clr-text-primary)'}}>最近招标动态</h3>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto hidden md:block">
           <table className="w-full text-sm">
             <thead>
               <tr style={{color: 'var(--clr-text-secondary)'}}>
@@ -54,6 +54,26 @@ export default function MarketAccessPage() {
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="block md:hidden space-y-2 p-3">
+          {[
+            { region: '广东', product: '阿托伐他汀', type: '集采', status: '报价中', date: '2026-06-15' },
+            { region: '江苏', product: '氯吡格雷', type: '挂网', status: '已公示', date: '2026-06-12' },
+            { region: '上海', product: '奥美拉唑', type: '议价', status: '待确认', date: '2026-06-10' },
+            { region: '北京', product: '瑞舒伐他汀', type: '集采', status: '报价中', date: '2026-06-08' },
+          ].map((row, i) => (
+            <div key={i} className="p-3 rounded-lg" style={{backgroundColor: 'var(--clr-surface-card)'}}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-medium" style={{color: 'var(--clr-text-primary)'}}>{row.product}</span>
+                <span className="px-2 py-0.5 rounded text-xs" style={{backgroundColor: 'var(--clr-brand-light)', color: 'var(--clr-brand)'}}>{row.status}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-1 text-xs" style={{color: 'var(--clr-text-secondary)'}}>
+                <span>省份: {row.region}</span>
+                <span>类型: {row.type}</span>
+                <span>日期: {row.date}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

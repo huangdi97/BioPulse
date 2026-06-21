@@ -11,11 +11,11 @@ const PHASE_LABELS: Record<string, string> = {
 }
 
 const PHASE_COLORS: Record<string, string> = {
-  Phase1: "#3B82F6",
-  Phase2: "#F59E0B",
-  Phase3: "#F97316",
-  NDA: "#22C55E",
-  Approved: "#10B981",
+  Phase1: "var(--clr-brand)",
+  Phase2: "var(--clr-mode-warn)",
+  Phase3: "var(--clr-mode-warn)",
+  NDA: "var(--clr-mode-pass)",
+  Approved: "var(--clr-success)",
 }
 
 const PHASE_ORDER = ["Phase1", "Phase2", "Phase3", "NDA", "Approved"]
@@ -83,7 +83,7 @@ export default function PipelineAssociation({ targetId, targetName }: Props) {
               <select
                 value={phaseFilter}
                 onChange={e => setPhaseFilter(e.target.value)}
-                className="h-8 rounded-md border px-2 text-xs bg-white"
+                className="h-8 rounded-md border px-2 text-xs bg-[var(--clr-white)]"
                 style={{ borderColor: "var(--clr-border-default)", color: "var(--clr-text-primary)" }}
               >
                 {phases.map(p => (
@@ -108,7 +108,7 @@ export default function PipelineAssociation({ targetId, targetName }: Props) {
                   >
                     <div
                       className="w-1 h-8 rounded-full shrink-0"
-                      style={{ backgroundColor: p.color_code || PHASE_COLORS[p.phase] || "#94A3B8" }}
+                      style={{ backgroundColor: p.color_code || PHASE_COLORS[p.phase] || "var(--clr-gray-50)" }}
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -116,8 +116,8 @@ export default function PipelineAssociation({ targetId, targetName }: Props) {
                           {p.product_name}
                         </span>
                         <span
-                          className="text-[10px] font-medium px-1.5 py-0.5 rounded-full text-white shrink-0"
-                          style={{ backgroundColor: p.color_code || PHASE_COLORS[p.phase] || "#94A3B8" }}
+                          className="text-[10px] font-medium px-1.5 py-0.5 rounded-full text-[var(--clr-text-inverse)] shrink-0"
+                          style={{ backgroundColor: p.color_code || PHASE_COLORS[p.phase] || "var(--clr-gray-50)" }}
                         >
                           {PHASE_LABELS[p.phase] || p.phase}
                         </span>

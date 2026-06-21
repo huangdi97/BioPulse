@@ -61,7 +61,7 @@ export default function TrainingRecordTable({ records }: Props) {
         ))}
       </div>
 
-      <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--clr-border-default)]">
+      <div className="overflow-x-auto rounded-[var(--radius-lg)] border border-[var(--clr-border-default)] hidden md:block">
         <table className="w-full text-sm" style={{ color: 'var(--clr-text-primary)' }}>
           <thead>
             <tr style={{ backgroundColor: 'var(--clr-gray-10)' }}>
@@ -91,6 +91,22 @@ export default function TrainingRecordTable({ records }: Props) {
             ))}
           </tbody>
         </table>
+      </div>
+      <div className="block md:hidden space-y-3">
+        {filtered.map(r => (
+          <div key={r.id} className="p-3 rounded-[var(--radius-lg)] border border-[var(--clr-border-default)]" style={{ backgroundColor: 'var(--clr-surface-card)' }}>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium" style={{ color: 'var(--clr-text-primary)' }}>{r.scenario_name}</span>
+              <Badge variant={scoreBadge(r.score)}>{r.score}</Badge>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs" style={{ color: 'var(--clr-text-secondary)' }}>
+              <span>日期: {r.date}</span>
+              <span>时长: {r.duration}min</span>
+              {r.weakness && <span className="col-span-2">薄弱: {r.weakness}</span>}
+              {r.strength && <span className="col-span-2">亮点: {r.strength}</span>}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

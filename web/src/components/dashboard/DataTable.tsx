@@ -53,7 +53,7 @@ export default function DataTable({ columns, data, className }: Props) {
         className
       )}
     >
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto hidden md:block">
         <table className="w-full text-sm">
           <thead>
             {table.getHeaderGroups().map((hg) => (
@@ -90,6 +90,25 @@ export default function DataTable({ columns, data, className }: Props) {
             ))}
           </tbody>
         </table>
+      </div>
+      <div className="block md:hidden divide-y" style={{ borderColor: "var(--clr-gray-20)" }}>
+        {table.getRowModel().rows.map((row) => (
+          <div key={row.id} className="p-3 space-y-1.5">
+            {row.getVisibleCells().map((cell, idx) => (
+              <div key={cell.id} className="flex justify-between items-center text-sm">
+                <span className="text-xs font-medium" style={{ color: "var(--clr-text-secondary)" }}>
+                  {columns[idx]?.header}
+                </span>
+                <span style={{ color: "var(--clr-text-primary)" }}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </span>
+              </div>
+            ))}
+          </div>
+        ))}
+        {table.getRowModel().rows.length === 0 && (
+          <p className="p-4 text-sm text-center" style={{ color: "var(--clr-text-secondary)" }}>暂无数据</p>
+        )}
       </div>
     </div>
   )

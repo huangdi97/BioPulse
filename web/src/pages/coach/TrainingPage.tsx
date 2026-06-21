@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react"
+import { ChevronDown } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card"
 import { Input } from "../../components/ui/Input"
 import { Button } from "../../components/ui/Button"
@@ -170,6 +171,7 @@ export default function TrainingPage() {
   const { user } = useAuth()
   const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [showScore, setShowScore] = useState(false)
 
   // Real backend data
   const [modules, setModules] = useState<any[]>([])
@@ -294,7 +296,17 @@ export default function TrainingPage() {
             <ChatPanel scenario={selectedScenario} messages={messages} onSend={handleSend} />
           </div>
           <div className="space-y-4">
-            <ScoreSidebar scores={scores} />
+            <button
+              className="flex md:hidden items-center justify-between w-full p-3 rounded-lg border text-sm"
+              style={{ borderColor: 'var(--clr-border-default)', color: 'var(--clr-text-primary)' }}
+              onClick={() => setShowScore(!showScore)}
+            >
+              实时评分
+              <ChevronDown className={cn("w-4 h-4 transition-transform", showScore && "rotate-180")} />
+            </button>
+            <div className={cn(showScore ? "block" : "hidden", "md:block")}>
+              <ScoreSidebar scores={scores} />
+            </div>
           </div>
         </div>
       )}

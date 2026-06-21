@@ -36,7 +36,7 @@ function ProductOverview() {
           <CardContent className="p-4 space-y-2">
             <div className="flex items-start justify-between">
               <h4 className="text-sm font-medium" style={{ color: 'var(--clr-text-primary)' }}>{p.name}</h4>
-              <Badge style={{ backgroundColor: STATUS_COLOR[p.status] || 'var(--clr-gray-30)', color: '#fff' }}>
+              <Badge style={{ backgroundColor: STATUS_COLOR[p.status] || 'var(--clr-gray-30)', color: 'var(--clr-white)' }}>
                 {STATUS_LABEL[p.status] || p.status}
               </Badge>
             </div>
@@ -85,8 +85,8 @@ function SentimentPanel() {
     <div className="space-y-4">
       <div className="flex gap-2">
         <input
-          className="h-9 rounded-md border px-3 text-sm flex-1 bg-white"
-          style={{ borderColor: 'var(--clr-border-default)', color: 'var(--clr-text-primary)' }}
+          className="h-9 rounded-md border px-3 text-sm flex-1"
+          style={{ backgroundColor: 'var(--clr-surface-card)', borderColor: 'var(--clr-border-default)', color: 'var(--clr-text-primary)' }}
           value={keyword}
           onChange={e => setKeyword(e.target.value)}
           placeholder="输入关键词"
@@ -102,15 +102,15 @@ function SentimentPanel() {
               <h4 className="text-sm font-semibold mb-3" style={{ color: 'var(--clr-text-primary)' }}>情绪概览</h4>
               <div className="flex gap-4 text-sm mb-3">
                 <span>总提及: <strong>{summary.mentions}</strong></span>
-                <span style={{ color: '#10b981' }}>正面: <strong>{summary.positive}</strong></span>
-                <span style={{ color: '#6b7280' }}>中性: <strong>{summary.neutral}</strong></span>
-                <span style={{ color: '#ef4444' }}>负面: <strong>{summary.negative}</strong></span>
+                <span style={{ color: 'var(--clr-success)' }}>正面: <strong>{summary.positive}</strong></span>
+                <span style={{ color: 'var(--clr-text-secondary)' }}>中性: <strong>{summary.neutral}</strong></span>
+                <span style={{ color: 'var(--clr-error)' }}>负面: <strong>{summary.negative}</strong></span>
                 <span>情绪分: <strong>{summary.sentiment_score}</strong></span>
               </div>
               <div className="flex gap-1 h-4 rounded overflow-hidden">
-                <div className="h-full bg-green-500" style={{ width: `${(summary.positive / summary.mentions) * 100}%` }} />
-                <div className="h-full bg-gray-400" style={{ width: `${(summary.neutral / summary.mentions) * 100}%` }} />
-                <div className="h-full bg-red-500" style={{ width: `${(summary.negative / summary.mentions) * 100}%` }} />
+                <div className="h-full" style={{ width: `${(summary.positive / summary.mentions) * 100}%`, backgroundColor: 'var(--clr-success)' }} />
+                <div className="h-full" style={{ width: `${(summary.neutral / summary.mentions) * 100}%`, backgroundColor: 'var(--clr-text-placeholder)' }} />
+                <div className="h-full" style={{ width: `${(summary.negative / summary.mentions) * 100}%`, backgroundColor: 'var(--clr-error)' }} />
               </div>
             </CardContent>
           </Card>
@@ -119,9 +119,9 @@ function SentimentPanel() {
               <h4 className="text-sm font-semibold mb-3" style={{ color: 'var(--clr-text-primary)' }}>情绪趋势 (30天)</h4>
               <MiniBarChart data={trend.map(d => ({ label: d.date, positive: d.positive, negative: d.negative, neutral: d.neutral }))} height={100} />
               <div className="flex justify-center gap-4 mt-2 text-xs" style={{ color: 'var(--clr-text-secondary)' }}>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-green-500 inline-block" /> 正面</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-gray-400 inline-block" /> 中性</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-red-500 inline-block" /> 负面</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded inline-block" style={{ backgroundColor: 'var(--clr-success)' }} /> 正面</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded inline-block" style={{ backgroundColor: 'var(--clr-text-placeholder)' }} /> 中性</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded inline-block" style={{ backgroundColor: 'var(--clr-error)' }} /> 负面</span>
               </div>
             </CardContent>
           </Card>
@@ -151,7 +151,7 @@ function VolumePanel() {
       <Card>
         <CardContent className="p-4">
           <h4 className="text-sm font-semibold mb-3" style={{ color: 'var(--clr-text-primary)' }}>声量趋势 (近7天 · {data.platform})</h4>
-          <MiniLineChart data={series.map(s => ({ label: s.date.slice(5), value: s.mentions }))} color="#0f62fe" height={80} />
+          <MiniLineChart data={series.map(s => ({ label: s.date.slice(5), value: s.mentions }))} color="var(--clr-brand)" height={80} />
           <div className="grid grid-cols-7 gap-1 mt-2">
             {series.map(s => (
               <div key={s.date} className="text-center">
@@ -187,7 +187,7 @@ function PriceAnomalyPanel() {
         <select
           value={productId}
           onChange={e => setProductId(e.target.value)}
-          className="h-9 rounded-md border px-3 text-sm bg-white"
+          className="h-9 rounded-md border px-3 text-sm bg-[var(--clr-white)]"
           style={{ borderColor: 'var(--clr-border-default)', color: 'var(--clr-text-primary)' }}
         >
           <option value="prod-001">瑞舒伐他汀钙片</option>
@@ -208,30 +208,48 @@ function PriceAnomalyPanel() {
             {anomalies.length === 0 ? (
               <p className="text-sm" style={{ color: 'var(--clr-text-secondary)' }}>暂未检测到价格异常</p>
             ) : (
-              <div className="rounded-lg overflow-hidden border" style={{ borderColor: 'var(--clr-border-default)' }}>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b" style={{ borderColor: 'var(--clr-gray-20)' }}>
-                      <th className="px-3 py-2 text-left text-xs font-semibold" style={{ color: 'var(--clr-text-secondary)' }}>日期</th>
-                      <th className="px-3 py-2 text-left text-xs font-semibold" style={{ color: 'var(--clr-text-secondary)' }}>省份</th>
-                      <th className="px-3 py-2 text-right text-xs font-semibold" style={{ color: 'var(--clr-text-secondary)' }}>价格</th>
-                      <th className="px-3 py-2 text-right text-xs font-semibold" style={{ color: 'var(--clr-text-secondary)' }}>偏差</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {anomalies.map((a, i) => (
-                      <tr key={i} className="border-b last:border-0" style={{ borderColor: 'var(--clr-gray-20)' }}>
-                        <td className="px-3 py-2" style={{ color: 'var(--clr-text-primary)' }}>{a.date}</td>
-                        <td className="px-3 py-2" style={{ color: 'var(--clr-text-secondary)' }}>{a.province}</td>
-                        <td className="px-3 py-2 text-right font-medium" style={{ color: 'var(--clr-text-primary)' }}>{a.price}</td>
-                        <td className="px-3 py-2 text-right" style={{ color: a.delta_pct < 0 ? 'var(--clr-error)' : 'var(--clr-success)' }}>
-                          {a.delta_pct > 0 ? '+' : ''}{a.delta_pct}%
-                        </td>
+              <>
+                <div className="rounded-lg overflow-hidden border hidden md:block" style={{ borderColor: 'var(--clr-border-default)' }}>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b" style={{ borderColor: 'var(--clr-gray-20)' }}>
+                        <th className="px-3 py-2 text-left text-xs font-semibold" style={{ color: 'var(--clr-text-secondary)' }}>日期</th>
+                        <th className="px-3 py-2 text-left text-xs font-semibold" style={{ color: 'var(--clr-text-secondary)' }}>省份</th>
+                        <th className="px-3 py-2 text-right text-xs font-semibold" style={{ color: 'var(--clr-text-secondary)' }}>价格</th>
+                        <th className="px-3 py-2 text-right text-xs font-semibold" style={{ color: 'var(--clr-text-secondary)' }}>偏差</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {anomalies.map((a, i) => (
+                        <tr key={i} className="border-b last:border-0" style={{ borderColor: 'var(--clr-gray-20)' }}>
+                          <td className="px-3 py-2" style={{ color: 'var(--clr-text-primary)' }}>{a.date}</td>
+                          <td className="px-3 py-2" style={{ color: 'var(--clr-text-secondary)' }}>{a.province}</td>
+                          <td className="px-3 py-2 text-right font-medium" style={{ color: 'var(--clr-text-primary)' }}>{a.price}</td>
+                          <td className="px-3 py-2 text-right" style={{ color: a.delta_pct < 0 ? 'var(--clr-error)' : 'var(--clr-success)' }}>
+                            {a.delta_pct > 0 ? '+' : ''}{a.delta_pct}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="block md:hidden space-y-2">
+                  {anomalies.map((a, i) => (
+                    <div key={i} className="p-3 rounded-lg border" style={{ borderColor: 'var(--clr-border-default)' }}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium" style={{ color: 'var(--clr-text-primary)' }}>{a.province}</span>
+                        <span className="text-sm font-medium" style={{ color: 'var(--clr-text-primary)' }}>{a.price}</span>
+                      </div>
+                      <div className="flex justify-between text-xs" style={{ color: 'var(--clr-text-secondary)' }}>
+                        <span>{a.date}</span>
+                        <span style={{ color: a.delta_pct < 0 ? 'var(--clr-error)' : 'var(--clr-success)' }}>
+                          {a.delta_pct > 0 ? '+' : ''}{a.delta_pct}%
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -281,7 +299,7 @@ function ComparePanel() {
         <Card>
           <CardContent className="p-4 space-y-4">
             <h4 className="text-sm font-semibold" style={{ color: 'var(--clr-text-primary)' }}>产品对比</h4>
-            <div className="rounded-lg overflow-hidden border" style={{ borderColor: 'var(--clr-border-default)' }}>
+            <div className="rounded-lg overflow-hidden border hidden md:block" style={{ borderColor: 'var(--clr-border-default)' }}>
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b" style={{ borderColor: 'var(--clr-gray-20)' }}>
@@ -317,6 +335,20 @@ function ComparePanel() {
                 </tbody>
               </table>
             </div>
+            <div className="block md:hidden space-y-2">
+              {items.map(i => (
+                <div key={i.product_id} className="p-3 rounded-lg border" style={{ borderColor: 'var(--clr-border-default)' }}>
+                  <h5 className="text-sm font-medium mb-2" style={{ color: 'var(--clr-text-primary)' }}>{i.product_name}</h5>
+                  <div className="grid grid-cols-2 gap-2 text-xs" style={{ color: 'var(--clr-text-secondary)' }}>
+                    <span>价格指数: <strong style={{ color: leaders.price === i.product_id ? 'var(--clr-brand)' : 'var(--clr-text-primary)' }}>{i.price_index}</strong></span>
+                    <span>情绪指数: <strong style={{ color: leaders.sentiment === i.product_id ? 'var(--clr-brand)' : 'var(--clr-text-primary)' }}>{i.sentiment_index}</strong></span>
+                    <span>准入指数: <strong style={{ color: leaders.access === i.product_id ? 'var(--clr-brand)' : 'var(--clr-text-primary)' }}>{i.access_index}</strong></span>
+                    <span>覆盖省份: <strong style={{ color: 'var(--clr-text-primary)' }}>{i.coverage_count}</strong></span>
+                    <span>风险等级: <strong style={{ color: 'var(--clr-text-primary)' }}>{STATUS_LABEL[i.risk_level] || i.risk_level}</strong></span>
+                  </div>
+                </div>
+              ))}
+            </div>
             {data?.leaders && (
               <div className="text-xs space-y-1" style={{ color: 'var(--clr-text-secondary)' }}>
                 <p>🏆 最低价: {items.find(i => i.product_id === leaders.price)?.product_name}</p>
@@ -344,7 +376,7 @@ export default function CompetitorIntelTab() {
             key={t}
             onClick={() => setSubTab(i)}
             className={`px-3 py-1 text-xs rounded-md transition-colors ${
-              i === subTab ? 'bg-white shadow-sm font-medium' : ''
+              i === subTab ? 'bg-[var(--clr-white)] shadow-sm font-medium' : ''
             }`}
             style={{ color: i === subTab ? 'var(--clr-text-primary)' : 'var(--clr-text-secondary)' }}
           >

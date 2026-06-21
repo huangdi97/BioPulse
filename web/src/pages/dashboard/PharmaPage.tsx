@@ -81,7 +81,7 @@ export default function PharmaPage() {
   return (
     <div className="space-y-5">
       {apiError && (
-        <div className="rounded-lg px-4 py-3 text-sm font-medium" style={{ backgroundColor: "#fef2f2", color: "var(--clr-error)", border: "1px solid var(--clr-error)" }}>
+        <div className="rounded-lg px-4 py-3 text-sm font-medium" style={{ backgroundColor: "var(--clr-surface-card-alt)", color: "var(--clr-error)", border: "1px solid var(--clr-error)" }}>
           数据加载失败，请刷新重试
         </div>
       )}

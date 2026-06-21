@@ -17,14 +17,19 @@ export default function AgentInsightBar({ pageId }: AgentInsightBarProps) {
   const [loading, setLoading] = useState(true)
   const [insights, setInsights] = useState<AgentInsight[]>([])
   const [dismissed, setDismissed] = useState(false)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setDismissed(false)
+    setError(false)
 
     fetch(`/api/v1/agent/insights?page=${pageId}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error("fetch failed")
+        return res.json()
+      })
       .then((data: AgentInsightResponse) => {
         if (!cancelled) {
           setInsights(data.insights)
@@ -33,6 +38,7 @@ export default function AgentInsightBar({ pageId }: AgentInsightBarProps) {
       })
       .catch(() => {
         if (!cancelled) {
+          setError(true)
           setInsights([])
           setLoading(false)
         }
@@ -48,7 +54,7 @@ export default function AgentInsightBar({ pageId }: AgentInsightBarProps) {
     return (
       <div className="h-12 animate-pulse rounded-md bg-[var(--clr-gray-20)]" />
     )
-  if (insights.length === 0) return null
+  if (error || insights.length === 0) return null
 
   return (
     <div className="border-l-4 border-[var(--clr-brand)] bg-[var(--clr-brand-light)] rounded-r-md p-3 flex items-start gap-3 relative">

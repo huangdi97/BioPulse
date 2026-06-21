@@ -36,7 +36,7 @@ const pipelineData = [
   },
 ]
 
-const matchPieColors = ["#0f62fe", "#8b5cf6", "#f59e0b", "#24a148"]
+const matchPieColors = ["var(--clr-brand)", "var(--clr-mode-research)", "var(--clr-mode-warn)", "var(--clr-success)"]
 
 export default function ResearchPage() {
   const [mode, setMode] = useState(0)
