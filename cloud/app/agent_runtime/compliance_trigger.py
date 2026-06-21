@@ -1,9 +1,10 @@
-"""Compliance Monitor L4 trigger — thin wrapper around the generic trigger."""
+"""Compliance Monitor L4 trigger — 三角勾稽交叉验证，异常时触发红灯事件。"""
 
 import logging
 
 from cloud.app.agent_runtime.runtime_core import RuntimeCore
 from cloud.app.agent_runtime.trigger import run_agent_trigger
+from cloud.app.models.red_flag_event import RedFlagEvent, RedFlagSeverity
 
 logger = logging.getLogger(__name__)
 
@@ -11,10 +12,30 @@ AGENT_KEY = "compliance_monitor"
 GOAL = "合规检查"
 
 
+def _infer_severity(triangulation_result: dict) -> RedFlagSeverity:
+    """根据三角勾稽结果推断严重级别。"""
+    severity_map = {
+        "窜货": RedFlagSeverity.critical,
+        "造假": RedFlagSeverity.critical,
+        "严重违规": RedFlagSeverity.critical,
+        "费用浪费": RedFlagSeverity.high,
+        "拜访造假": RedFlagSeverity.high,
+        "虚假活动": RedFlagSeverity.high,
+        "管理失职": RedFlagSeverity.medium,
+        "规则僵化": RedFlagSeverity.low,
+    }
+    pattern = triangulation_result.get("detected_pattern", "")
+    for key, sev in severity_map.items():
+        if key in pattern:
+            return sev
+    return RedFlagSeverity.medium
+
+
 def build_compliance_plan(task: str, context: dict | None = None) -> list[dict]:
     """构建合规调查计划。
 
-    Steps: check expenses → check visits → trace distribution → cross-validate → conclude.
+    Steps 1-4: 数据收集与交叉验证
+    Step 5: 输出结构化 RedFlagEvent（如有异常）
     """
     ctx = context or {}
     return [
@@ -50,7 +71,7 @@ def build_compliance_plan(task: str, context: dict | None = None) -> list[dict]:
         {
             "step": 5,
             "action": "complete",
-            "description": "输出合规判定结论",
+            "description": "输出合规判定结论，如有异常生成红灯事件",
             "params": {},
         },
     ]
@@ -61,6 +82,34 @@ def compliance_monitor_trigger(
     task: str,
     context: dict | None = None,
 ) -> dict:
-    """compliance monitor trigger."""
+    """Compliance monitor trigger. 执行合规调查计划，输出 RedFlagEvent（如有异常）。"""
     plan = build_compliance_plan(task, context)
-    return run_agent_trigger(runtime, AGENT_KEY, task, context, {"_plan": plan})
+    result = run_agent_trigger(runtime, AGENT_KEY, task, context, {"_plan": plan})
+
+    # 如果执行成功且有步骤输出，检查是否需要生成红灯事件
+    if result.get("status") in ("completed", "success"):
+        step_results = result.get("metadata", {}).get("step_results", {})
+        triangulation = step_results.get("step_4", {})
+        anomaly_detected = triangulation.get("anomaly_detected", False)
+
+        if anomaly_detected:
+            event = RedFlagEvent.create(
+                severity=_infer_severity(triangulation),
+                rep_id=(context or {}).get("rep_id", ""),
+                region=(context or {}).get("region", ""),
+                description=triangulation.get("summary", "合规异常"),
+                evidence_chain=[
+                    step_results.get("step_1", {}).get("result", ""),
+                    step_results.get("step_2", {}).get("result", ""),
+                    step_results.get("step_3", {}).get("result", ""),
+                ],
+            )
+            result["red_flag"] = event.to_dict()
+            logger.info(
+                "红灯事件触发: id=%s severity=%s rep=%s",
+                event.red_flag_id,
+                event.severity,
+                event.rep_id,
+            )
+
+    return result
