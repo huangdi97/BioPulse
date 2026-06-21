@@ -1,5 +1,6 @@
 """窜货检测服务 — 检测产品流向与授权区域的一致性，接入三角稽核引擎。"""
 
+import json
 import sqlite3
 from dataclasses import asdict
 from datetime import datetime, timedelta
@@ -7,12 +8,24 @@ from typing import Any
 
 from cloud.app.compliance.triangulation import TriangulationEngine
 
+_NOTIFIER = None
+
+
+def _get_notifier():
+    global _NOTIFIER
+    if _NOTIFIER is None:
+        from cloud.app.agent_runtime.notifier import Notifier
+
+        _NOTIFIER = Notifier()
+    return _NOTIFIER
+
 
 class DiversionDetectionService:
     """窜货检测服务 — 检测产品流向与授权区域的一致性，记录窜货日志。"""
 
-    def __init__(self, db: sqlite3.Connection):
+    def __init__(self, db: sqlite3.Connection, notifier=None):
         self.db = db
+        self.notifier = notifier
         self._ensure_tables()
 
     def _ensure_tables(self):
@@ -22,7 +35,10 @@ class DiversionDetectionService:
             "product TEXT, region TEXT, authorized_region TEXT, "
             "quantity INTEGER, dealer_id TEXT, rep_id TEXT, "
             "is_diversion INTEGER, severity TEXT, "
-            "reason TEXT, created_at TEXT"
+            "reason TEXT, created_at TEXT, "
+            "triangulation_score REAL, "
+            "triangulation_level TEXT, "
+            "triangulation_findings TEXT"
             ")"
         )
         self.db.execute("CREATE TABLE IF NOT EXISTS product_authorized_regions (product TEXT PRIMARY KEY, authorized_region TEXT NOT NULL)")
@@ -61,10 +77,38 @@ class DiversionDetectionService:
         if not authorized_region:
             reason = f"产品 {product} 无授权区域配置，跳过窜货检测"
 
+        triangulation_score = None
+        triangulation_level = None
+        triangulation_findings = None
+
+        if is_diversion:
+            try:
+                tri_result = self.run_triangulation_check(distribution_data)
+                triangulation_score = tri_result.get("triangulation_score")
+                triangulation_level = tri_result.get("triangulation_level")
+                findings = tri_result.get("findings", [])
+                if findings:
+                    triangulation_findings = json.dumps(findings, ensure_ascii=False)
+                    max_finding_score = max(f.get("score", 0) for f in findings)
+                    if max_finding_score >= 0.9 and severity:
+                        severity = "high"
+                        reason += f"；三角稽核确认高风险（评分 {max_finding_score}）"
+                    elif max_finding_score >= 0.5 and severity and severity != "high":
+                        severity = "medium"
+                        reason += f"；三角稽核提示异常（评分 {max_finding_score}）"
+                if triangulation_level == "high" and severity:
+                    severity = "high"
+            except Exception:
+                pass
+
+        if is_diversion and severity == "high":
+            self._send_red_light_notification(product, region, authorized_region, quantity, rep_id, reason)
+
         self.db.execute(
             "INSERT INTO diversion_log (product, region, authorized_region, "
-            "quantity, dealer_id, rep_id, is_diversion, severity, reason, created_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "quantity, dealer_id, rep_id, is_diversion, severity, reason, created_at, "
+            "triangulation_score, triangulation_level, triangulation_findings) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 product,
                 region,
@@ -76,6 +120,9 @@ class DiversionDetectionService:
                 severity,
                 reason,
                 datetime.now().isoformat(),
+                triangulation_score,
+                triangulation_level,
+                triangulation_findings,
             ),
         )
         self.db.commit()
@@ -84,7 +131,22 @@ class DiversionDetectionService:
             "is_diversion": is_diversion,
             "reason": reason,
             "severity": severity,
+            "triangulation_score": triangulation_score,
+            "triangulation_level": triangulation_level,
         }
+
+    def _send_red_light_notification(self, product: str, region: str, authorized_region: str, quantity: int, rep_id: str, reason: str):
+        notifier = self.notifier or _get_notifier()
+        message = (
+            f"[红灯] 窜货检测异常 — 产品：{product}，"
+            f"实际区域：{region}，授权区域：{authorized_region}，"
+            f"数量：{quantity}，代表：{rep_id}，原因：{reason}"
+        )
+        notifier.send(message, priority="high", channels=["in_app"])
+        try:
+            notifier.send(message, priority="high", channels=["webhook"])
+        except Exception:
+            pass
 
     def run_triangulation_check(self, distribution_data: dict[str, Any]) -> dict[str, Any]:
         """将窜货数据送入三角稽核引擎进行深度交叉验证。
@@ -102,8 +164,8 @@ class DiversionDetectionService:
             ],
         )
         return {
-            "triangulation_score": result.score,
-            "triangulation_level": result.level,
+            "triangulation_score": result.confidence_score,
+            "triangulation_level": result.suspicion_level,
             "findings": [asdict(f) for f in result.findings],
         }
 
@@ -113,4 +175,5 @@ class DiversionDetectionService:
             "SELECT * FROM diversion_log WHERE rep_id = ? AND created_at >= ? ORDER BY created_at DESC",
             (rep_id, cutoff),
         ).fetchall()
-        return [dict(row) for row in rows]
+        cols = [d[0] for d in self.db.execute("SELECT * FROM diversion_log LIMIT 0").description]
+        return [dict(zip(cols, row)) for row in rows]

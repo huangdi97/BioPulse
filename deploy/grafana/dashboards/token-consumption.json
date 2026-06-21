@@ -1,0 +1,28 @@
+{
+  "title": "Token 消耗趋势",
+  "uid": "token-consumption",
+  "panels": [
+    {
+      "title": "Token 消耗 (按 agent_name)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "sum(rate(llm_token_usage_total[5m])) by (agent_name)", "legendFormat": "{{agent_name}}"}
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "short"}
+      }
+    },
+    {
+      "title": "成本估算 (USD)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "sum(rate(llm_token_usage_total[5m])) by (agent_name) * 0.002 / 1000", "legendFormat": "{{agent_name}}"}
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "USD"}
+      }
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "title": "HTTP 请求概览",
+  "uid": "http-overview",
+  "panels": [
+    {
+      "title": "HTTP 请求总数 (速率)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "sum(rate(http_requests_total[5m]))", "legendFormat": "总请求/s"}
+      ]
+    },
+    {
+      "title": "请求延迟 P50/P95/P99",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P50"},
+        {"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P95"},
+        {"expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "P99"}
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "s", "custom": {"lineInterpolation": "smooth"}}
+      }
+    },
+    {
+      "title": "错误率 (5xx+4xx / 总请求)",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        {"expr": "sum(rate(http_requests_total{status=~\"4..|5..\"}[5m])) / sum(rate(http_requests_total[5m]))", "legendFormat": "错误率"}
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "percentunit"}
+      }
+    }
+  ]
+}

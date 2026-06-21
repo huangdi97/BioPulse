@@ -18,6 +18,7 @@ from cloud.app.compliance.condition_evaluator import (
     _match_frequency_count,
     _match_value_threshold,
 )
+from cloud.app.compliance.exclusion_gate import evaluate_rule
 from cloud.rules.loader import load_pharma_l2_rules, load_pharma_rules, load_research_l2_rules
 
 logger = logging.getLogger(__name__)
@@ -121,8 +122,8 @@ class EnforcerEngine:
             Violation when the rule matches, otherwise None.
         """
         value = data.get(rule.detection_field)
-        exclude = rule.exclude_when
-        if exclude and exclude.get("operator") == "eq" and data.get(exclude.get("field")) == exclude.get("value"):
+        excluded, _ = evaluate_rule({"detection": {"exclude_when": rule.exclude_when}, "code": rule.code, "name": rule.name}, data)
+        if excluded:
             return None
         if rule.detection_type == "keyword_match" and value and any(keyword in str(value) for keyword in rule.keywords):
             return self._l1_violation(rule)
