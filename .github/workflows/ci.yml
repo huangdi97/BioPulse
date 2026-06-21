@@ -7,107 +7,36 @@ on:
     branches: [master]
 
 jobs:
-  lint-and-test:
+  mobile-apk:
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: hermes
-          POSTGRES_PASSWORD: hermes
-          POSTGRES_DB: cloud_db
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 15432:5432
-
-    env:
-      DATABASE_URL: postgresql://hermes:hermes@localhost:15432/
-
+    defaults:
+      run:
+        working-directory: mobile_app
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+      - uses: subosito/flutter-action@v2
         with:
-          python-version: "3.12"
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Lint with ruff
-        run: |
-          python -m ruff check --fix .
-          python -m ruff check . --output-format=github
-
-      - name: Create test databases
-        run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
-          # 1. 建一个跟用户名同名的默认库（空URL路径默认连它）
-          psql "${DATABASE_URL}cloud_db" -c "CREATE DATABASE hermes;" 2>&1 || true
-          # 2. 创建所有子项目数据库
-          for db in assistant_db opportunity_db sales_assistant_db sales_coach_db management_db pharma_intel_db; do
-            psql "${DATABASE_URL}cloud_db" -c "CREATE DATABASE ${db};" 2>&1 || true
-          done
-
-      - name: 'Initialize PG tables for all subprojects'
-        run: 'python .github/scripts/init_pg_tables.py'
-
-      - name: Run Python tests
-        run: python -m pytest -v --tb=long 2>&1 | tee /tmp/pytest_output.txt; exit ${PIPESTATUS[0]}
-
-      - name: Upload pytest output
-        if: always()
-        uses: actions/upload-artifact@v4
+          channel: stable
+      - run: flutter pub get
+      - run: flutter build apk --debug
+      - uses: actions/upload-artifact@v4
         with:
-          name: pytest-output
-          path: /tmp/pytest_output.txt
+          name: mobile-apk-debug
+          path: mobile_app/build/app/outputs/flutter-apk/*.apk
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: npm ci
-
-      - name: TypeScript check
-        working-directory: frontend
-        run: npx tsc --noEmit
-
-  deploy:
-    needs: lint-and-test
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-    runs-on: ubuntu-latest
+  mobile-exe:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: mobile_app
     steps:
       - uses: actions/checkout@v4
-
-      - name: SCP code to deploy server
-        uses: appleboy/scp-action@v0.1.7
+      - uses: subosito/flutter-action@v2
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USERNAME }}
-          key: ${{ secrets.DEPLOY_KEY }}
-          source: "."
-          target: "${{ secrets.DEPLOY_PATH }}"
-          strip_components: 0
-
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
+          channel: stable
+      - run: flutter pub get
+      - run: flutter build windows --debug
+      - uses: actions/upload-artifact@v4
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USERNAME }}
-          key: ${{ secrets.DEPLOY_KEY }}
-          script: |
-            cd ${{ secrets.DEPLOY_PATH }}
-            sudo systemctl restart biopulse-cloud
-            sleep 5
-            curl -sf http://localhost:8000/health || exit 1
-            echo "Health check passed"
+          name: mobile-exe-debug
+          path: mobile_app/build/windows/x64/runner/Release/
