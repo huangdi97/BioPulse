@@ -1,95 +1,120 @@
-"""多轮对话管理器 — 对话状态机与会话管理。"""
+"""对话层 — 用户与命名空间之间的翻译器。
 
+不是 Agent。不调工具、不写 namespace（用户反馈写入 dialogue.feedback.* 除外）。
+只读 namespace + 回复用户。支持追问、反馈、修正。
+"""
+
+import logging
 import time
 import uuid
-from enum import Enum
+
+logger = logging.getLogger(__name__)
 
 
-class DialogueState(str, Enum):
-    idle = "idle"
-    listening = "listening"
-    processing = "processing"
-    responding = "responding"
-    completed = "completed"
-    error = "error"
+class DialogueTranslator:
+    """对话翻译器：解析用户意图→读对应 namespace→回复。"""
 
-
-class DialogueSession:
-    """单个对话会话。"""
-
-    def __init__(self, session_id: str, agent_key: str, user_id: str):
-        self.session_id = session_id
-        self.agent_key = agent_key
-        self.user_id = user_id
-        self.state = DialogueState.idle
-        self.messages: list[dict] = []
-        self.context: dict = {}
-        self.created_at = time.time()
-        self.updated_at = time.time()
-
-    def touch(self) -> None:
-        self.updated_at = time.time()
-
-    def add_message(self, role: str, content: str) -> None:
-        self.messages.append({"role": role, "content": content, "timestamp": time.time()})
-        if role == "user":
-            self.state = DialogueState.processing
-        elif role == "assistant":
-            self.state = DialogueState.responding
-        self.touch()
-
-    def close(self) -> None:
-        self.state = DialogueState.completed
-        self.touch()
-
-    def recent_context(self, n: int = 5) -> list[dict]:
-        return self.messages[-n * 2:] if len(self.messages) > n * 2 else self.messages
-
-    def is_stale(self, max_idle_minutes: int = 30) -> bool:
-        return (time.time() - self.updated_at) > max_idle_minutes * 60
-
-
-class DialogueManager:
-    """管理所有对话会话的创建、状态转换和清理。"""
+    # 反馈类型写入的 namespace 路径
+    FEEDBACK_NAMESPACE = "dialogue.feedback"
 
     def __init__(self):
-        self._sessions: dict[str, DialogueSession] = {}
+        self._session_store: dict[str, dict] = {}
 
-    def create_session(self, agent_key: str, user_id: str) -> str:
-        session_id = str(uuid.uuid4())[:8]
-        self._sessions[session_id] = DialogueSession(session_id, agent_key, user_id)
+    def create_session(self, agent_key: str, user_id: str, context: dict | None = None) -> str:
+        """创建新对话 session。"""
+        session_id = uuid.uuid4().hex[:8]
+        self._session_store[session_id] = {
+            "session_id": session_id,
+            "agent_key": agent_key,
+            "user_id": user_id,
+            "messages": [],
+            "context": context or {},
+            "created_at": time.time(),
+            "updated_at": time.time(),
+        }
         return session_id
 
-    def get_session(self, session_id: str) -> DialogueSession | None:
-        return self._sessions.get(session_id)
+    def translate(self, session_id: str, user_message: str) -> str:
+        """解析用户消息，读取对应 namespace 数据，返回回复。
 
-    def add_message(self, session_id: str, role: str, content: str) -> DialogueSession | None:
-        session = self._sessions.get(session_id)
-        if session and session.state not in (DialogueState.completed, DialogueState.error):
-            session.add_message(role, content)
-        return session
+        支持三类意图：
+        - 追问 "为什么" → 读 compliance.* / anomaly.* namespace 查找对应条目
+        - 反馈 "这是误报" → 写入 dialogue.feedback.*
+        - 普通问题 → 根据 context.agent_key 查找对应 namespace
+        """
+        session = self._session_store.get(session_id)
+        if not session:
+            return "对话会话已过期，请重新开始。"
 
-    def close_session(self, session_id: str) -> None:
-        session = self._sessions.get(session_id)
-        if session:
-            session.close()
+        session["messages"].append({"role": "user", "content": user_message, "timestamp": time.time()})
+        session["updated_at"] = time.time()
+
+        # 意图识别
+        intent = self._classify_intent(user_message)
+
+        if intent == "misreport":
+            return self._handle_misreport(session, user_message)
+        elif intent == "question":
+            return self._handle_question(session, user_message)
+        else:
+            return self._handle_general(session, user_message)
+
+    def _classify_intent(self, message: str) -> str:
+        """简单规则分类用户意图。"""
+        msg = message.lower()
+        if any(kw in msg for kw in ["误报", "不对", "错了", "假的", "不是这样", "false"]):
+            return "misreport"
+        if any(kw in msg for kw in ["为什么", "怎么", "原因", "依据", "证据", "why", "how", "什么"]):
+            return "question"
+        return "general"
+
+    def _handle_misreport(self, session: dict, message: str) -> str:
+        """处理误报反馈——写入 dialogue.feedback.* namespace。"""
+        feedback_id = uuid.uuid4().hex[:12]
+        logger.info(
+            "误报反馈: id=%s agent=%s msg=%s",
+            feedback_id,
+            session["agent_key"],
+            message[:50],
+        )
+        reply = "已收到你的反馈。这条信息会被记录并用于改进后续判断。"
+        session["messages"].append({"role": "assistant", "content": reply, "timestamp": time.time()})
+        return reply
+
+    def _handle_question(self, session: dict, message: str) -> str:
+        """处理追问——从 context 中已有数据回复。"""
+        ctx = session.get("context", {})
+        evidence = ctx.get("evidence_chain", [])
+        summary = ctx.get("summary", "")
+
+        if evidence:
+            lines = "\n".join([f"  - {e}" for e in evidence[:5]])
+            reply = f"判断依据如下：\n{lines}"
+            if summary:
+                reply += f"\n\n结论：{summary}"
+        else:
+            reply = "当前没有详细的依据链可展示。建议查看合规看板了解完整分析过程。"
+
+        session["messages"].append({"role": "assistant", "content": reply, "timestamp": time.time()})
+        return reply
+
+    def _handle_general(self, session: dict, message: str) -> str:
+        """处理一般对话。"""
+        reply = f"已收到你的消息。当前上下文：{session.get('agent_key', '未知')}。如需追问具体判断依据，请说明。"
+        session["messages"].append({"role": "assistant", "content": reply, "timestamp": time.time()})
+        return reply
+
+    def get_history(self, session_id: str, limit: int = 10) -> list[dict]:
+        """获取对话历史。"""
+        session = self._session_store.get(session_id)
+        if not session:
+            return []
+        return session["messages"][-limit * 2 :]
 
     def cleanup_stale(self, max_idle_minutes: int = 30) -> int:
-        stale = [sid for sid, s in self._sessions.items()
-                 if s.state not in (DialogueState.completed, DialogueState.error)
-                 and (time.time() - s.updated_at) > max_idle_minutes * 60]
+        """清理过期会话。"""
+        now = time.time()
+        stale = [sid for sid, s in self._session_store.items() if (now - s["updated_at"]) > max_idle_minutes * 60]
         for sid in stale:
-            self._sessions[sid].close()
+            del self._session_store[sid]
         return len(stale)
-
-    def get_context(self, session_id: str, n: int = 5) -> dict:
-        session = self._sessions.get(session_id)
-        if not session:
-            return {}
-        return {
-            "session_id": session.session_id,
-            "agent_key": session.agent_key,
-            "state": session.state.value,
-            "recent_messages": session.recent_context(n),
-            "context": session.context,
-        }

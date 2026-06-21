@@ -67,10 +67,10 @@ export default function AiSuggestionCard({
             暂无建议
           </p>
         ) : (
-          displayed.map((suggestion) => {
-            const config = typeConfig[suggestion.type]
+        ) : (
+          suggestions.map((suggestion) => {
+            const config = typeConfig[suggestion.type] || typeConfig.insight
             const Icon = config.icon
-
             return (
               <div
                 key={suggestion.id}
@@ -101,6 +101,11 @@ export default function AiSuggestionCard({
           })
         )}
       </CardContent>
+      <div className="px-6 pb-4">
+        <button className="text-xs text-blue-500 hover:text-blue-700">
+          追问
+        </button>
+      </div>
     </Card>
   )
 }
