@@ -5,6 +5,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import AgentInsightBar from '@/components/AgentInsightBar'
+import WorldModelMiniView from '@/components/WorldModelMiniView'
 
 interface MonthlySummary {
   summary: string
@@ -145,6 +146,16 @@ export default function PresidentDashboard() {
           ) : (
             <p className="text-sm text-muted-foreground text-center py-8">暂无月报摘要</p>
           )}
+        </CardContent>
+      </Card>
+
+      {/* 世界模型认知摘要 */}
+      <Card className="mt-4">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">认知发现</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <WorldModelMiniView />
         </CardContent>
       </Card>
     </div>
