@@ -49,6 +49,63 @@ class RouteOptimizer(BaseService):
                     strictly_better += 1
         return at_least_as_good and strictly_better > 0
 
+    def _apply_constraints(self, strategies: list, constraints: dict, objectives: dict) -> list | None:
+        if not constraints:
+            return None
+        filtered = list(strategies)
+        for obj_name, cfg in objectives.items():
+            constrain_key = f"min_{obj_name}"
+            if constrain_key in constraints:
+                threshold = constraints[constrain_key]
+                if cfg["direction"] == "maximize":
+                    filtered = [s for s in filtered if s.get(obj_name, 0) >= threshold]
+                else:
+                    filtered = [s for s in filtered if s.get(obj_name, float("inf")) <= threshold]
+            constrain_key = f"max_{obj_name}"
+            if constrain_key in constraints:
+                threshold = constraints[constrain_key]
+                if cfg["direction"] == "maximize":
+                    filtered = [s for s in filtered if s.get(obj_name, float("inf")) <= threshold]
+                else:
+                    filtered = [s for s in filtered if s.get(obj_name, 0) >= threshold]
+        return filtered if filtered else []
+
+    def _compute_non_dominated_front(self, strategies: list, objectives: dict) -> tuple:
+        non_dominated_solutions = []
+        pareto_front = []
+        for i, s in enumerate(strategies):
+            dominated_by = []
+            dominates_others = []
+            for j, other in enumerate(strategies):
+                if i == j:
+                    continue
+                if self._dominates(other, s, objectives):
+                    dominated_by.append(j)
+                if self._dominates(s, other, objectives):
+                    dominates_others.append(j)
+            is_dominated = len(dominated_by) > 0
+            record = {
+                **s,
+                "dominated": is_dominated,
+                "dominated_by_count": len(dominated_by),
+                "dominates_count": len(dominates_others),
+            }
+            non_dominated_solutions.append(record)
+            if not is_dominated:
+                pareto_front.append(record)
+        return non_dominated_solutions, pareto_front
+
+    def _rank_pareto_front(self, pareto_front: list, objectives: dict) -> list:
+        for p in pareto_front:
+            weighted_score = 0.0
+            for name, cfg in objectives.items():
+                raw = p.get(name, 0)
+                w = cfg["weight"]
+                weighted_score += w * raw if cfg["direction"] == "maximize" else w * (-raw)
+            p["weighted_score"] = round(weighted_score, 4)
+        pareto_front.sort(key=lambda x: (-x["weighted_score"], x["priority"]))
+        return pareto_front
+
     def pareto_route(self, task_type: str, task_content: str, constraints: dict = None) -> dict:
         """基于帕累托最优的多目标路由选择。
 
@@ -99,69 +156,23 @@ class RouteOptimizer(BaseService):
                 "objectives": objectives,
             }
 
-        # apply constraints filter
         if constraints:
-            filtered = list(strategies)
-            for obj_name, cfg in objectives.items():
-                constrain_key = f"min_{obj_name}"
-                if constrain_key in constraints:
-                    threshold = constraints[constrain_key]
-                    if cfg["direction"] == "maximize":
-                        filtered = [s for s in filtered if s.get(obj_name, 0) >= threshold]
-                    else:
-                        filtered = [s for s in filtered if s.get(obj_name, float("inf")) <= threshold]
-                constrain_key = f"max_{obj_name}"
-                if constrain_key in constraints:
-                    threshold = constraints[constrain_key]
-                    if cfg["direction"] == "maximize":
-                        filtered = [s for s in filtered if s.get(obj_name, float("inf")) <= threshold]
-                    else:
-                        filtered = [s for s in filtered if s.get(obj_name, 0) >= threshold]
-            if not filtered:
-                return {
-                    "pareto_front": [],
-                    "non_dominated_solutions": [],
-                    "total_strategies": len(strategies),
-                    "pareto_count": 0,
-                    "filtered": True,
-                    "objectives": objectives,
-                }
-            strategies = filtered
+            filtered = self._apply_constraints(strategies, constraints, objectives)
+            if filtered is not None:
+                if not filtered:
+                    return {
+                        "pareto_front": [],
+                        "non_dominated_solutions": [],
+                        "total_strategies": len(strategies),
+                        "pareto_count": 0,
+                        "filtered": True,
+                        "objectives": objectives,
+                    }
+                strategies = filtered
 
-        # generate non-dominated set (pareto front) with domination tracking
-        non_dominated_solutions = []
-        pareto_front = []
-        for i, s in enumerate(strategies):
-            dominated_by = []
-            dominates_others = []
-            for j, other in enumerate(strategies):
-                if i == j:
-                    continue
-                if self._dominates(other, s, objectives):
-                    dominated_by.append(j)
-                if self._dominates(s, other, objectives):
-                    dominates_others.append(j)
-            is_dominated = len(dominated_by) > 0
-            record = {
-                **s,
-                "dominated": is_dominated,
-                "dominated_by_count": len(dominated_by),
-                "dominates_count": len(dominates_others),
-            }
-            non_dominated_solutions.append(record)
-            if not is_dominated:
-                pareto_front.append(record)
+        non_dominated_solutions, pareto_front = self._compute_non_dominated_front(strategies, objectives)
 
-        # rank within pareto front by weighted score (higher = better)
-        for p in pareto_front:
-            weighted_score = 0.0
-            for name, cfg in objectives.items():
-                raw = p.get(name, 0)
-                w = cfg["weight"]
-                weighted_score += w * raw if cfg["direction"] == "maximize" else w * (-raw)
-            p["weighted_score"] = round(weighted_score, 4)
-
-        pareto_front.sort(key=lambda x: (-x["weighted_score"], x["priority"]))
+        pareto_front = self._rank_pareto_front(pareto_front, objectives)
 
         return {
             "pareto_front": pareto_front,

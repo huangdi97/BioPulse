@@ -13,6 +13,75 @@ from cloud.app.services.world_tree_service import WorldTreeService
 logger = logging.getLogger(__name__)
 
 
+def _parse_area_string(val: str, ks: set) -> None:
+    try:
+        parsed = json.loads(val)
+        if isinstance(parsed, dict):
+            ks.update(parsed.keys())
+        elif isinstance(parsed, list):
+            ks.update(str(v) for v in parsed)
+    except (json.JSONDecodeError, TypeError) as e:
+        logger.warning("sage_linking: failed to parse area field %s", e)
+
+
+def _collect_episodic_by_session(ep_res: dict, ep_ids: set, by_session: dict) -> None:
+    for it in ep_res.get("items", []):
+        if it["id"] in ep_ids:
+            sid = it.get("related_entity_id") or it.get("involved_agents", "")
+            if sid:
+                by_session.setdefault(sid, []).append(it["id"])
+
+
+def _record_episodic_candidates(by_session: dict, result: dict) -> None:
+    for sid, mids in by_session.items():
+        if len(mids) > 1:
+            result["episodic_to_semantic_candidates"] += 1
+            result["details"]["episodic_to_semantic"].append(
+                {"session_id": sid, "count": len(mids)},
+            )
+
+
+def _record_matched_areas(a: dict, b_item: dict, common: list, paired: set, result: dict, bms: BrainMemoryService) -> None:
+    lower_common = {c.lower() for c in common}
+    has_proc = any(p.get("title", "").lower() in lower_common for p in bms.procedural_recall("").get("items", []))
+    if not has_proc:
+        result["semantic_to_procedural_candidates"] += 1
+        result["details"]["semantic_to_procedural"].append(
+            {"memory_ids": [a["id"], b_item["id"]], "common_areas": common},
+        )
+        paired.update([a["id"], b_item["id"]])
+
+
+def _execute_world_tree_link(wts, nodes, title, sem, result) -> None:
+    wts.link_memory(nodes[title], sem["id"])
+    result["world_tree_links_created"] += 1
+    result["details"]["world_tree_links"].append(
+        {"node_id": nodes[title], "memory_id": sem["id"]},
+    )
+
+
+def _handle_world_tree_link_error(result) -> None:
+    logger.exception("链接异常3")
+    result["pending_manual"] += 1
+
+
+def _link_semantic_to_world_tree(sem, title, nodes, wts, result) -> None:
+    try:
+        _execute_world_tree_link(wts, nodes, title, sem, result)
+    except Exception:  # noqa: BLE001  # 链接操作多步可能失败
+        _handle_world_tree_link_error(result)
+
+
+def _process_semantic_pairs(sem_items: list, paired: set, result: dict, bms: BrainMemoryService) -> None:
+    for i, a in enumerate(sem_items):
+        for b_item in sem_items[i + 1 :]:
+            if a["id"] in paired or b_item["id"] in paired:
+                continue
+            common = _extract_common_area(a, b_item)
+            if common:
+                _record_matched_areas(a, b_item, common, paired, result, bms)
+
+
 def _extract_common_area(a: dict, b: dict) -> list:
     keys_a, keys_b = set(), set()
     for field in ("area_weights", "active_areas"):
@@ -21,14 +90,7 @@ def _extract_common_area(a: dict, b: dict) -> list:
             if isinstance(val, dict):
                 ks.update(val.keys())
             elif isinstance(val, str):
-                try:
-                    parsed = json.loads(val)
-                    if isinstance(parsed, dict):
-                        ks.update(parsed.keys())
-                    elif isinstance(parsed, list):
-                        ks.update(str(v) for v in parsed)
-                except (json.JSONDecodeError, TypeError) as e:
-                    logger.warning("sage_linking: failed to parse area field %s", e)
+                _parse_area_string(val, ks)
             elif isinstance(val, (list, tuple)):
                 ks.update(str(v) for v in val)
     return sorted(keys_a & keys_b)
@@ -60,37 +122,15 @@ class SageLinkingService:
             if ep_ids:
                 ep_res = bms.episodic_list(page=1, page_size=1000)
                 by_session = {}
-                for it in ep_res.get("items", []):
-                    if it["id"] in ep_ids:
-                        sid = it.get("related_entity_id") or it.get("involved_agents", "")
-                        if sid:
-                            by_session.setdefault(sid, []).append(it["id"])
-                for sid, mids in by_session.items():
-                    if len(mids) > 1:
-                        result["episodic_to_semantic_candidates"] += 1
-                        result["details"]["episodic_to_semantic"].append(
-                            {"session_id": sid, "count": len(mids)},
-                        )
+                _collect_episodic_by_session(ep_res, ep_ids, by_session)
+                _record_episodic_candidates(by_session, result)
         except Exception:  # noqa: BLE001  # 链接操作多步可能失败
             logger.exception("链接异常")
 
         try:
             sem_items = bms.semantic_search("", limit=1000).get("items", [])
             paired = set()
-            for i, a in enumerate(sem_items):
-                for b_item in sem_items[i + 1 :]:
-                    if a["id"] in paired or b_item["id"] in paired:
-                        continue
-                    common = _extract_common_area(a, b_item)
-                    if common:
-                        lower_common = {c.lower() for c in common}
-                        has_proc = any(p.get("title", "").lower() in lower_common for p in bms.procedural_recall("").get("items", []))
-                        if not has_proc:
-                            result["semantic_to_procedural_candidates"] += 1
-                            result["details"]["semantic_to_procedural"].append(
-                                {"memory_ids": [a["id"], b_item["id"]], "common_areas": common},
-                            )
-                            paired.update([a["id"], b_item["id"]])
+            _process_semantic_pairs(sem_items, paired, result, bms)
         except Exception:  # noqa: BLE001  # 链接操作多步可能失败
             logger.exception("链接异常2")
 
@@ -102,15 +142,7 @@ class SageLinkingService:
             for sem in sem_for_link:
                 title = (sem.get("title") or "").lower()
                 if title in nodes:
-                    try:
-                        wts.link_memory(nodes[title], sem["id"])
-                        result["world_tree_links_created"] += 1
-                        result["details"]["world_tree_links"].append(
-                            {"node_id": nodes[title], "memory_id": sem["id"]},
-                        )
-                    except Exception:  # noqa: BLE001  # 链接操作多步可能失败
-                        logger.exception("链接异常3")
-                        result["pending_manual"] += 1
+                    _link_semantic_to_world_tree(sem, title, nodes, wts, result)
         except Exception:  # noqa: BLE001  # 链接操作多步可能失败
             logger.exception("链接异常4")
 

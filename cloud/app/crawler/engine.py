@@ -115,6 +115,24 @@ class Crawler:
 
     # -- HTTP fetch helpers ----------------------------------------------------
 
+    def _http_get_with_client(
+        self, client: httpx.Client, url: str, proxy: str | None, attempt: int, attempts: int
+    ) -> tuple[str, dict[str, Any]] | None:
+        response = client.get(url)
+        if self._check_response_blocked(response, proxy):
+            if attempt < attempts:
+                time.sleep(self.proxy_pool.jitter(0.5))
+                return None
+        response.raise_for_status()
+        return self._build_response_result(response, attempt, proxy)
+
+    def _http_handle_error(self, exc: Exception, proxy: str | None, attempt: int, attempts: int) -> bool:
+        self._check_error_rotate(exc, proxy)
+        if attempt < attempts:
+            time.sleep(self.proxy_pool.jitter(0.5))
+            return True
+        return False
+
     def _fetch_http(self, url: str, headers: dict[str, str] | None = None) -> tuple[str, dict[str, Any]]:
         """Synchronous HTTP GET with proxy rotation and retry logic."""
         last_error: Exception | None = None
@@ -123,21 +141,34 @@ class Crawler:
             kwargs, proxy = self._prepare_request(headers)
             try:
                 with httpx.Client(timeout=self.timeout, **kwargs) as client:
-                    response = client.get(url)
-                    if self._check_response_blocked(response, proxy):
-                        if attempt < attempts:
-                            time.sleep(self.proxy_pool.jitter(0.5))
-                            continue
-                    response.raise_for_status()
-                    return self._build_response_result(response, attempt, proxy)
+                    _result = self._http_get_with_client(client, url, proxy, attempt, attempts)
+                    if _result is None:
+                        continue
+                    return _result
             except Exception as exc:
                 last_error = exc
-                self._check_error_rotate(exc, proxy)
-                if attempt < attempts:
-                    time.sleep(self.proxy_pool.jitter(0.5))
+                if self._http_handle_error(exc, proxy, attempt, attempts):
                     continue
                 raise
         raise RuntimeError(f"Failed to crawl {url}") from last_error
+
+    async def _async_http_get_with_client(
+        self, client: httpx.AsyncClient, url: str, proxy: str | None, attempt: int, attempts: int
+    ) -> tuple[str, dict[str, Any]] | None:
+        response = await client.get(url)
+        if self._check_response_blocked(response, proxy):
+            if attempt < attempts:
+                await asyncio.sleep(self.proxy_pool.jitter(0.5))
+                return None
+        response.raise_for_status()
+        return self._build_response_result(response, attempt, proxy)
+
+    async def _async_http_handle_error(self, exc: Exception, proxy: str | None, attempt: int, attempts: int) -> bool:
+        self._check_error_rotate(exc, proxy)
+        if attempt < attempts:
+            await asyncio.sleep(self.proxy_pool.jitter(0.5))
+            return True
+        return False
 
     async def _async_fetch_http(self, url: str, headers: dict[str, str] | None = None) -> tuple[str, dict[str, Any]]:
         """Asynchronous HTTP GET with proxy rotation and retry logic."""
@@ -147,18 +178,13 @@ class Crawler:
             kwargs, proxy = self._prepare_request(headers)
             try:
                 async with httpx.AsyncClient(timeout=self.timeout, **kwargs) as client:
-                    response = await client.get(url)
-                    if self._check_response_blocked(response, proxy):
-                        if attempt < attempts:
-                            await asyncio.sleep(self.proxy_pool.jitter(0.5))
-                            continue
-                    response.raise_for_status()
-                    return self._build_response_result(response, attempt, proxy)
+                    _result = await self._async_http_get_with_client(client, url, proxy, attempt, attempts)
+                    if _result is None:
+                        continue
+                    return _result
             except Exception as exc:
                 last_error = exc
-                self._check_error_rotate(exc, proxy)
-                if attempt < attempts:
-                    await asyncio.sleep(self.proxy_pool.jitter(0.5))
+                if await self._async_http_handle_error(exc, proxy, attempt, attempts):
                     continue
                 raise
         raise RuntimeError(f"Failed to crawl {url}") from last_error

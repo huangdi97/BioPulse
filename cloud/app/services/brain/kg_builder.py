@@ -10,6 +10,23 @@ from cloud.app.repositories import (
 )
 
 
+def _process_relation_batch(rels: list, visited_relations: set, visited_entities: set, rel_dict: dict, ent_dict: dict, entities_repo) -> set:
+    next_frontier: set = set()
+    for r in rels:
+        rid = r["id"]
+        if rid not in visited_relations:
+            visited_relations.add(rid)
+            rel_dict[str(rid)] = r
+        for side in (r["source_entity_id"], r["target_entity_id"]):
+            if side not in visited_entities:
+                visited_entities.add(side)
+                next_frontier.add(side)
+                er = entities_repo.get_by_entity_id(side)
+                if er and er.get("status") == "active":
+                    ent_dict[side] = er
+    return next_frontier
+
+
 def bfs_expand(
     entities_repo: KgEntitiesRepository,
     relations_repo: KgRelationsRepository,
@@ -47,18 +64,8 @@ def bfs_expand(
         for bs in range(0, len(f_list), 500):
             batch = f_list[bs : bs + 500]
             rels = relations_repo.list_by_entity_ids_batch(batch)
-            for r in rels:
-                rid = r["id"]
-                if rid not in visited_relations:
-                    visited_relations.add(rid)
-                    rel_dict[str(rid)] = r
-                for side in (r["source_entity_id"], r["target_entity_id"]):
-                    if side not in visited_entities:
-                        visited_entities.add(side)
-                        next_frontier.add(side)
-                        er = entities_repo.get_by_entity_id(side)
-                        if er and er.get("status") == "active":
-                            ent_dict[side] = er
+            nf = _process_relation_batch(rels, visited_relations, visited_entities, rel_dict, ent_dict, entities_repo)
+            next_frontier.update(nf)
         frontier = next_frontier
     return ent_dict, rel_dict
 

@@ -18,6 +18,46 @@ logger = logging.getLogger(__name__)
 class TrainingScriptsService(BaseService):
     """培训脚本服务，管理培训脚本的提取、查询与 ROI 分析。"""
 
+    def _build_script_steps(self, total: int, involved_agents_raw: str) -> list:
+        steps = []
+        if total > 0:
+            for i in range(1, total + 1):
+                steps.append({"step": i, "action": f"步骤{i}：执行协作任务"})
+            try:
+                involved = json.loads(involved_agents_raw or "[]")
+                if involved:
+                    for idx, agent in enumerate(involved):
+                        if idx < len(steps):
+                            steps[idx]["agent"] = agent
+            except (json.JSONDecodeError, TypeError):
+                logger.warning("Failed to parse collaboration involved_agents", exc_info=True)
+        return steps
+
+    def _create_and_append_script(self, row, steps: list, score_val: float, user_id: int, now: str, scripts_repo, created: list):
+        involved_agents = row["involved_agents"] or "[]"
+        try:
+            target_roles = json.dumps(list(set(json.loads(involved_agents))), ensure_ascii=False)
+        except (json.JSONDecodeError, TypeError):
+            target_roles = "[]"
+        script_data = {
+            "script_id": f"ts:extract:{uuid.uuid4().hex[:8]}",
+            "script_name": f"协作剧本-{row['source_agent_role']}",
+            "source_agent_role": row["source_agent_role"],
+            "source_collaboration_id": row["session_id"],
+            "description": (row["result_summary"] or "")[:200],
+            "steps": json.dumps(steps, ensure_ascii=False),
+            "difficulty": "mid",
+            "target_roles": target_roles,
+            "score": score_val,
+            "created_by": user_id,
+            "created_at": now,
+            "updated_at": now,
+        }
+        existing = self.db.execute("SELECT id FROM training_scripts WHERE script_id=?", (script_data["script_id"],)).fetchone()
+        if not existing:
+            scripts_repo.create(script_data)
+            created.append({"script_id": script_data["script_id"], "script_name": script_data["script_name"], "score": score_val})
+
     def extract_scripts(self, source_agent_role: str, min_score: float, user_id: int) -> dict:
         """从完成的协作会话中提取培训脚本。
 
@@ -45,56 +85,12 @@ class TrainingScriptsService(BaseService):
         created = []
 
         for row in rows:
-            steps = []
             total = row["total_steps"] or 0
             score_val = round(min((row["completed_steps"] or 0) / max(total, 1), 1.0), 2)
             if score_val < min_score:
                 continue
-            if total > 0:
-                for i in range(1, total + 1):
-                    steps.append({"step": i, "action": f"步骤{i}：执行协作任务"})
-                try:
-                    involved = json.loads(row["involved_agents"] or "[]")
-                    if involved:
-                        for idx, agent in enumerate(involved):
-                            if idx < len(steps):
-                                steps[idx]["agent"] = agent
-                except (json.JSONDecodeError, TypeError):
-                    logger.warning("Failed to parse collaboration involved_agents", exc_info=True)
-
-            script_id = f"ts:extract:{uuid.uuid4().hex[:8]}"
-            script_name = f"协作剧本-{row['source_agent_role']}"
-            description = (row["result_summary"] or "")[:200]
-            involved_agents = row["involved_agents"] or "[]"
-            try:
-                target_roles = json.dumps(list(set(json.loads(involved_agents))), ensure_ascii=False)
-            except (json.JSONDecodeError, TypeError):
-                target_roles = "[]"
-
-            script_data = {
-                "script_id": script_id,
-                "script_name": script_name,
-                "source_agent_role": row["source_agent_role"],
-                "source_collaboration_id": row["session_id"],
-                "description": description,
-                "steps": json.dumps(steps, ensure_ascii=False),
-                "difficulty": "mid",
-                "target_roles": target_roles,
-                "score": score_val,
-                "created_by": user_id,
-                "created_at": now,
-                "updated_at": now,
-            }
-            existing = self.db.execute("SELECT id FROM training_scripts WHERE script_id=?", (script_id,)).fetchone()
-            if not existing:
-                scripts_repo.create(script_data)
-                created.append(
-                    {
-                        "script_id": script_id,
-                        "script_name": script_name,
-                        "score": score_val,
-                    }
-                )
+            steps = self._build_script_steps(total, row["involved_agents"] or "[]")
+            self._create_and_append_script(row, steps, score_val, user_id, now, scripts_repo, created)
 
         return {"created_count": len(created), "scripts": created}
 

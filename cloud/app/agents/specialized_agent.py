@@ -91,7 +91,15 @@ class SpecializedAgent(BaseAgent):
                 parts.append("记忆上下文:")
                 for entry in recent:
                     parts.append(f"  - {entry.get('key', '')}: {entry.get('value', '')}")
-        # 注入跨Agent共享记忆
+        self._inject_cross_memories(context, parts)
+        if context.session_id:
+            parts.append(f"会话: {context.session_id}")
+        if context.user_id:
+            parts.append(f"用户: {context.user_id}")
+        return "\n".join(parts)
+
+    def _inject_cross_memories(self, context: AgentContext, parts: list) -> None:
+        """注入跨Agent共享记忆"""
         if context.memory is not None:
             try:
                 cross_memories = getattr(context.memory, "search_across_namespaces", None)
@@ -104,8 +112,3 @@ class SpecializedAgent(BaseAgent):
                             parts.append(f"  [{source}] {r.get('key', '')}: {r.get('content', '')[:200]}")
             except Exception:
                 pass
-        if context.session_id:
-            parts.append(f"会话: {context.session_id}")
-        if context.user_id:
-            parts.append(f"用户: {context.user_id}")
-        return "\n".join(parts)

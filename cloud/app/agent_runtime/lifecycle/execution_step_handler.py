@@ -61,6 +61,37 @@ class StepHandler:
             self._host._tool_exec._append_invalid_step(c, step, f"invalid action: {decision.action}", duration_ms, ai_resp, tool_name, tool_params)
             return None
 
+    def _handle_reflection_result(self, c, step, tool_name, tool_params, decision, tool_result) -> bool:
+        """Handle reflection verification. Returns True if caller should short-circuit (return None)."""
+        if c.get("_reflection_step") != step or c.get("_reflection_tool") != tool_name:
+            c["_reflection_retries"] = 0
+            c["_reflection_step"] = step
+            c["_reflection_tool"] = tool_name
+        _plan_step = PlanStep(
+            step_id=f"exec_step_{step}",
+            description=getattr(decision, "reasoning", "") or "",
+            tool=tool_name,
+            params_template=tool_params or {},
+        )
+        _v_result = self._host._verifier.verify_step(_plan_step, tool_result)
+        if not _v_result.passed:
+            c["_reflection_retries"] = c.get("_reflection_retries", 0) + 1
+            _failed = [chk for chk in _v_result.checks if not chk.passed]
+            _fail_detail = "; ".join(f"{chk.name}: {chk.detail}" for chk in _failed)
+            logger.warning("Reflection failed for step %s tool %s: %s", step, tool_name, _fail_detail)
+            c["logs"].append({"step": step, "type": "reflection_failure", "detail": _fail_detail, "retries": c["_reflection_retries"]})
+            if c["_reflection_retries"] < 3:
+                c["messages"].append({"role": "user", "content": f"反思反馈：上一步结果未通过验证。\n问题：{_fail_detail}\n请修正后重试。"})
+                return True
+            c["messages"].append(
+                {"role": "user", "content": f"反思反馈：上一步结果未通过验证（已达最大重试次数）。\n问题：{_fail_detail}\n请谨慎继续。"}
+            )
+        else:
+            _llm_ok = [chk for chk in _v_result.checks if chk.name == "llm_verification" and chk.passed and "Skipped" not in chk.detail]
+            if _llm_ok:
+                c["messages"].append({"role": "user", "content": f"上一步结果已通过验证：{_llm_ok[0].detail}"})
+        return False
+
     def _process_tool_call(self, c, step, tool_name, tool_params, decision, ai_resp, duration_ms, spec):
         tool_params = self._host._tool_exec._reflect_before_tool(
             step, c["goal"], c["agent_key"], c["context"], c["messages"], decision, ai_resp, duration_ms, c["logs"]
@@ -81,40 +112,8 @@ class StepHandler:
                     caller_agent_id=c.get("agent_key"),
                 )
                 t_elapsed = int((time.time() - t_start) * 1000)
-            if c.get("_reflection_step") != step or c.get("_reflection_tool") != tool_name:
-                c["_reflection_retries"] = 0
-                c["_reflection_step"] = step
-                c["_reflection_tool"] = tool_name
-            _plan_step = PlanStep(
-                step_id=f"exec_step_{step}",
-                description=getattr(decision, "reasoning", "") or "",
-                tool=tool_name,
-                params_template=tool_params or {},
-            )
-            _v_result = self._host._verifier.verify_step(_plan_step, tool_result)
-            if not _v_result.passed:
-                c["_reflection_retries"] = c.get("_reflection_retries", 0) + 1
-                _failed = [chk for chk in _v_result.checks if not chk.passed]
-                _fail_detail = "; ".join(f"{chk.name}: {chk.detail}" for chk in _failed)
-                logger.warning("Reflection failed for step %s tool %s: %s", step, tool_name, _fail_detail)
-                c["logs"].append(
-                    {
-                        "step": step,
-                        "type": "reflection_failure",
-                        "detail": _fail_detail,
-                        "retries": c["_reflection_retries"],
-                    }
-                )
-                if c["_reflection_retries"] < 3:
-                    c["messages"].append({"role": "user", "content": f"反思反馈：上一步结果未通过验证。\n问题：{_fail_detail}\n请修正后重试。"})
-                    return None
-                c["messages"].append(
-                    {"role": "user", "content": f"反思反馈：上一步结果未通过验证（已达最大重试次数）。\n问题：{_fail_detail}\n请谨慎继续。"}
-                )
-            else:
-                _llm_ok = [chk for chk in _v_result.checks if chk.name == "llm_verification" and chk.passed and "Skipped" not in chk.detail]
-                if _llm_ok:
-                    c["messages"].append({"role": "user", "content": f"上一步结果已通过验证：{_llm_ok[0].detail}"})
+            if self._handle_reflection_result(c, step, tool_name, tool_params, decision, tool_result):
+                return None
             self._host._verifier.verify(tool_result)
             if streamer and trace_id:
                 preview = str(tool_result.get("data", ""))[:200]
