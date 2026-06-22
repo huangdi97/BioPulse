@@ -87,26 +87,8 @@ class SentimentAnalyzer:
                 "negative": distribution.get("negative", 0),
             },
             "sentiment_ratio": self._ratio(distribution, total_mentions),
-            "trend": [
-                {
-                    "date": day,
-                    "mentions": counts.get("mentions", 0),
-                    "positive": counts.get("positive", 0),
-                    "neutral": counts.get("neutral", 0),
-                    "negative": counts.get("negative", 0),
-                }
-                for day, counts in sorted(by_date.items())
-            ],
-            "volume_comparison": [
-                {
-                    "platform": name,
-                    "mentions": sum(counts.values()),
-                    "positive": counts.get("positive", 0),
-                    "neutral": counts.get("neutral", 0),
-                    "negative": counts.get("negative", 0),
-                }
-                for name, counts in sorted(by_platform.items(), key=lambda item: sum(item[1].values()), reverse=True)
-            ],
+            "trend": self._build_trend_list(by_date),
+            "volume_comparison": self._build_volume_comparison(by_platform),
             "top_mentions": enriched[-5:],
         }
 
@@ -133,36 +115,39 @@ class SentimentAnalyzer:
                 sentiment = self._classify(mention)
                 enriched.append({**mention, "sentiment": sentiment})
 
-            distribution = Counter(item["sentiment"] for item in enriched)
             by_date: dict[str, Counter] = defaultdict(Counter)
             for item in enriched:
                 by_date[item["publish_date"]]["mentions"] += 1
                 by_date[item["publish_date"]][item["sentiment"]] += 1
 
-            total_mentions = len(enriched)
-            result["platforms"].append(
-                {
-                    "platform": platform,
-                    "mentions": total_mentions,
-                    "sentiment_distribution": {
-                        "positive": distribution.get("positive", 0),
-                        "neutral": distribution.get("neutral", 0),
-                        "negative": distribution.get("negative", 0),
-                    },
-                    "trend": [
-                        {
-                            "date": day,
-                            "mentions": counts.get("mentions", 0),
-                            "positive": counts.get("positive", 0),
-                            "neutral": counts.get("neutral", 0),
-                            "negative": counts.get("negative", 0),
-                        }
-                        for day, counts in sorted(by_date.items())
-                    ],
-                }
-            )
+            result["platforms"].append(self._build_platform_result(platform, mentions))
+
         result["total_mentions"] = sum(item["mentions"] for item in result["platforms"])
         return result
+
+    def _build_platform_result(self, platform, mentions):
+        enriched = []
+        for mention in mentions:
+            sentiment = self._classify(mention)
+            enriched.append({**mention, "sentiment": sentiment})
+
+        distribution = Counter(item["sentiment"] for item in enriched)
+        by_date = defaultdict(Counter)
+        for item in enriched:
+            by_date[item["publish_date"]]["mentions"] += 1
+            by_date[item["publish_date"]][item["sentiment"]] += 1
+
+        total_mentions = len(enriched)
+        return {
+            "platform": platform,
+            "mentions": total_mentions,
+            "sentiment_distribution": {
+                "positive": distribution.get("positive", 0),
+                "neutral": distribution.get("neutral", 0),
+                "negative": distribution.get("negative", 0),
+            },
+            "trend": self._build_trend_list(by_date),
+        }
 
     # -- internal helpers ------------------------------------------------------
 
@@ -201,6 +186,32 @@ class SentimentAnalyzer:
             "neutral": round(distribution.get("neutral", 0) / total, 4),
             "negative": round(distribution.get("negative", 0) / total, 4),
         }
+
+    @staticmethod
+    def _build_trend_list(by_date):
+        return [
+            {
+                "date": day,
+                "mentions": counts.get("mentions", 0),
+                "positive": counts.get("positive", 0),
+                "neutral": counts.get("neutral", 0),
+                "negative": counts.get("negative", 0),
+            }
+            for day, counts in sorted(by_date.items())
+        ]
+
+    @staticmethod
+    def _build_volume_comparison(by_platform):
+        return [
+            {
+                "platform": name,
+                "mentions": sum(counts.values()),
+                "positive": counts.get("positive", 0),
+                "neutral": counts.get("neutral", 0),
+                "negative": counts.get("negative", 0),
+            }
+            for name, counts in sorted(by_platform.items(), key=lambda item: sum(item[1].values()), reverse=True)
+        ]
 
 
 def analyze(keyword: str, platform: str | None = None, days: int = 7) -> dict[str, Any]:

@@ -35,15 +35,19 @@ class SignalCollector:
         results = []
         for handler in self._handlers.get(event_type, []):
             try:
-                if hasattr(handler, "__call__"):
-                    result = handler(payload)
-                    if hasattr(result, "__await__"):
-                        result = await result
-                    results.append(result)
+                result = await self._invoke_handler(handler, payload)
+                results.append(result)
             except Exception:
                 logger.warning("Signal collector异常", exc_info=True)
                 results.append(None)
         return results
+
+    @staticmethod
+    async def _invoke_handler(handler, payload):
+        result = handler(payload)
+        if hasattr(result, "__await__"):
+            result = await result
+        return result
 
     def collect_and_push(self, event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
         """Synchronously process a signal and return lead data."""

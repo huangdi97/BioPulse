@@ -72,22 +72,25 @@ class AgentScheduler:
             try:
                 task = self._queue.dequeue()
                 if task is not None:
-                    from cloud.app.agent_runtime.core.agent_health import get_health_tracker
-
-                    agent_key = task["agent_key"]
-                    if get_health_tracker().is_unhealthy(agent_key):
-                        logger.warning("Skipping unhealthy agent: %s", agent_key)
-                        self._queue.fail(task["id"], "agent unhealthy")
-                        time.sleep(30)
-                        continue
-                    auth_header = ""
-                    runtime = self._runtime_factory() if self._runtime_factory else RuntimeCore(self._db, self._db, auth_header, agent_key)
-                    result = runtime.execute(task["goal"], agent_key)
-                    if result.status == "completed":
-                        self._queue.complete(task["id"], result.result)
-                    else:
-                        self._queue.fail(task["id"], result.result)
+                    self._process_task(task)
             except (KeyError, TypeError, ValueError) as e:
                 if task:
                     self._queue.fail(task["id"], str(e))
             time.sleep(30)
+
+    def _process_task(self, task):
+        from cloud.app.agent_runtime.core.agent_health import get_health_tracker
+
+        agent_key = task["agent_key"]
+        if get_health_tracker().is_unhealthy(agent_key):
+            logger.warning("Skipping unhealthy agent: %s", agent_key)
+            self._queue.fail(task["id"], "agent unhealthy")
+            time.sleep(30)
+            return
+        auth_header = ""
+        runtime = self._runtime_factory() if self._runtime_factory else RuntimeCore(self._db, self._db, auth_header, agent_key)
+        result = runtime.execute(task["goal"], agent_key)
+        if result.status == "completed":
+            self._queue.complete(task["id"], result.result)
+        else:
+            self._queue.fail(task["id"], result.result)

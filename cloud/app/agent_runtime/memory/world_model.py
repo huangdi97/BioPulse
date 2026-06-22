@@ -171,16 +171,18 @@ class WorldModelLoop:
         for item in items:
             if not isinstance(item, dict):
                 continue
-            results.append(
-                {
-                    "pattern": item.get("pattern", "未知模式"),
-                    "description": item.get("description", ""),
-                    "confidence": float(item.get("confidence", 0.5)),
-                    "source_namespaces": item.get("source_namespaces", domains),
-                    "agent_keys": item.get("agent_keys", []),
-                }
-            )
+            results.append(WorldModelLoop._build_pattern_entry(item, domains))
         return results
+
+    @staticmethod
+    def _build_pattern_entry(item, domains):
+        return {
+            "pattern": item.get("pattern", "未知模式"),
+            "description": item.get("description", ""),
+            "confidence": float(item.get("confidence", 0.5)),
+            "source_namespaces": item.get("source_namespaces", domains),
+            "agent_keys": item.get("agent_keys", []),
+        }
 
     @staticmethod
     def _write_cognition(ss, cognition: dict) -> None:
@@ -210,18 +212,24 @@ class WorldModelLoop:
         removed = 0
         for entry in entries:
             if entry.confidence < 0.4 and entry.timestamp:
-                try:
-                    ts = datetime.fromisoformat(entry.timestamp).timestamp()
-                    if now - ts > self.COGNITION_TTL_DAYS * 86400:
-                        try:
-                            ss._entries.remove(entry)
-                            removed += 1
-                        except ValueError:
-                            pass
-                except (ValueError, TypeError):
-                    pass
+                if self._prune_expired_entry(entry, now):
+                    removed += 1
         if removed:
             logger.info("WorldModel cleanup: removed %d expired cognitions", removed)
+
+    def _prune_expired_entry(self, entry, now):
+        try:
+            ts = datetime.fromisoformat(entry.timestamp).timestamp()
+            if now - ts > self.COGNITION_TTL_DAYS * 86400:
+                try:
+                    ss = get_shared_state()
+                    ss._entries.remove(entry)
+                    return True
+                except ValueError:
+                    pass
+        except (ValueError, TypeError):
+            pass
+        return False
 
 
 _global_world_model: WorldModelLoop | None = None

@@ -143,18 +143,21 @@ class Memory:
         if self._vector_memory:
             try:
                 vec_results = self._vector_memory.search(agent_key, query, top_k=limit)
-                for r in vec_results:
-                    key = r.get("key", "")
-                    if key not in seen:
-                        seen.add(key)
-                        r["_source"] = "vector"
-                        r["_score"] = r.get("score", 0.0)
-                        results.append(r)
+                self._dedup_vector_results(vec_results, seen, results)
             except Exception:
                 pass
 
         results.sort(key=lambda x: x.get("_score", 0), reverse=True)
         return results[:limit]
+
+    def _dedup_vector_results(self, vec_results, seen, results):
+        for r in vec_results:
+            key = r.get("key", "")
+            if key not in seen:
+                seen.add(key)
+                r["_source"] = "vector"
+                r["_score"] = r.get("score", 0.0)
+                results.append(r)
 
 
 # --- 记忆压缩 & 淘汰 ---

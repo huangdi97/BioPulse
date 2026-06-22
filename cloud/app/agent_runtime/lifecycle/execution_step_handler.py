@@ -48,15 +48,7 @@ class StepHandler:
                     return result
                 return None
             if decision.action == "call_tool" and tool_name:
-                if c.get("_plan") and c["_plan"].steps:
-                    _plan = c["_plan"]
-                    _plan_idx = c.get("_plan_step_index", 0)
-                    if _plan_idx < len(_plan.steps):
-                        _expected = _plan.steps[_plan_idx].tool
-                        if tool_name != _expected:
-                            logger.warning("plan deviation: expected %s, got %s for step %d", _expected, tool_name, step)
-                            c["_plan_deviation_count"] = c.get("_plan_deviation_count", 0) + 1
-                            c["_plan_step_index"] = _plan_idx + 1
+                self._check_plan_deviation(c, tool_name)
                 return self._process_tool_call(c, step, tool_name, tool_params, decision, ai_resp, duration_ms, spec)
             self._host._tool_exec._append_invalid_step(c, step, f"invalid action: {decision.action}", duration_ms, ai_resp, tool_name, tool_params)
             return None
@@ -91,6 +83,17 @@ class StepHandler:
             if _llm_ok:
                 c["messages"].append({"role": "user", "content": f"上一步结果已通过验证：{_llm_ok[0].detail}"})
         return False
+
+    def _check_plan_deviation(self, c, tool_name):
+        if c.get("_plan") and c["_plan"].steps:
+            _plan = c["_plan"]
+            _plan_idx = c.get("_plan_step_index", 0)
+            if _plan_idx < len(_plan.steps):
+                _expected = _plan.steps[_plan_idx].tool
+                if tool_name != _expected:
+                    logger.warning("plan deviation: expected %s, got %s for step %d", _expected, tool_name, c.get("_last_step", 0))
+                    c["_plan_deviation_count"] = c.get("_plan_deviation_count", 0) + 1
+                    c["_plan_step_index"] = _plan_idx + 1
 
     def _process_tool_call(self, c, step, tool_name, tool_params, decision, ai_resp, duration_ms, spec):
         tool_params = self._host._tool_exec._reflect_before_tool(

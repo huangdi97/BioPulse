@@ -38,13 +38,16 @@ class Verifier:
                 identity = get_identity(agent_key)
                 output_schema = identity.get("output_schema")
                 if output_schema:
-                    passed, errors = self._schema_validator._validate_value(result, output_schema, [], "$")
-                    if not passed:
-                        raise ValueError(f"output schema validation failed: {'; '.join(errors)}")
+                    self._validate_output_schema(result, output_schema)
             except FileNotFoundError:
                 pass
 
         return True
+
+    def _validate_output_schema(self, result, output_schema):
+        passed, errors = self._schema_validator._validate_value(result, output_schema, [], "$")
+        if not passed:
+            raise ValueError(f"output schema validation failed: {'; '.join(errors)}")
 
     def verify_step(self, step: PlanStep, result: dict, agent_key: str = "") -> VerificationResult:
         """验证单个步骤的执行结果。"""
@@ -52,17 +55,7 @@ class Verifier:
         checks.append(self._layer1_assertions(step, result))
         layer1_result = self._layer1.predict(step.description)
         if not layer1_result["safe"]:
-            return VerificationResult(
-                passed=False,
-                checks=[
-                    CheckResult(
-                        name="layer1_filter",
-                        passed=False,
-                        detail=f"Layer1 blocked: {layer1_result['risk_type']} (conf={layer1_result['confidence']})",
-                    )
-                ],
-                confidence=0.0,
-            )
+            return self._build_layer1_blocked_result(layer1_result)
         checks.append(CheckResult(name="layer1_filter", passed=True, detail=f"Layer1 passed (conf={layer1_result['confidence']})"))
         static_rule_checks = [self._guard.check_params(step.tool, step.params_template), self._guard.predict_side_effect(step.tool, result)]
         checks.extend(static_rule_checks)
@@ -137,6 +130,20 @@ class Verifier:
         except (KeyError, ValueError, json.JSONDecodeError) as e:
             logger.error("Global verification failed: %s", e)
             return False
+
+    @staticmethod
+    def _build_layer1_blocked_result(layer1_result):
+        return VerificationResult(
+            passed=False,
+            checks=[
+                CheckResult(
+                    name="layer1_filter",
+                    passed=False,
+                    detail=f"Layer1 blocked: {layer1_result['risk_type']} (conf={layer1_result['confidence']})",
+                )
+            ],
+            confidence=0.0,
+        )
 
     @staticmethod
     def _layer1_assertions(step: PlanStep, result: dict) -> CheckResult:

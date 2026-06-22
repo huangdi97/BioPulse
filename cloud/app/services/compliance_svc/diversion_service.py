@@ -89,13 +89,7 @@ class DiversionDetectionService:
                 findings = tri_result.get("findings", [])
                 if findings:
                     holographic_findings = json.dumps(findings, ensure_ascii=False)
-                    max_finding_score = max(f.get("score", 0) for f in findings)
-                    if max_finding_score >= 0.9 and severity:
-                        severity = "high"
-                        reason += f"；全息稽核确认高风险（评分 {max_finding_score}）"
-                    elif max_finding_score >= 0.5 and severity and severity != "high":
-                        severity = "medium"
-                        reason += f"；全息稽核提示异常（评分 {max_finding_score}）"
+                    severity, reason = self._assess_holographic_severity(findings, severity, reason)
                 if holographic_level == "high" and severity:
                     severity = "high"
             except Exception:
@@ -147,6 +141,16 @@ class DiversionDetectionService:
             notifier.send(message, priority="high", channels=["webhook"])
         except Exception:
             pass
+
+    def _assess_holographic_severity(self, findings, severity, reason):
+        max_finding_score = max(f.get("score", 0) for f in findings)
+        if max_finding_score >= 0.9 and severity:
+            severity = "high"
+            reason += f"；全息稽核确认高风险（评分 {max_finding_score}）"
+        elif max_finding_score >= 0.5 and severity and severity != "high":
+            severity = "medium"
+            reason += f"；全息稽核提示异常（评分 {max_finding_score}）"
+        return severity, reason
 
     def run_holographic_audit_check(self, distribution_data: dict[str, Any]) -> dict[str, Any]:
         """将窜货数据送入全息稽核引擎进行深度交叉验证。

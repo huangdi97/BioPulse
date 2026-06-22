@@ -56,6 +56,36 @@ class AnalysisAgent(BaseAgent):
         self._narrator = narrator or Narrator()
         self._causal_service = causal_service or CausalService()
 
+    @staticmethod
+    def _build_fallback_result():
+        return {
+            "root_cause": "无法解析分析目标",
+            "confidence": 0.0,
+            "related_patterns": [],
+            "severity": "unknown",
+            "suggested_actions": ["请提供有效的异常事件数据"],
+        }
+
+    @staticmethod
+    def _build_analysis_output(result):
+        return {
+            "root_cause": result.root_cause,
+            "confidence": result.confidence,
+            "related_patterns": [
+                {
+                    "pattern_id": p.pattern_id,
+                    "anomaly_id": p.anomaly_id,
+                    "similarity": p.similarity,
+                    "matched_dimensions": p.matched_dimensions,
+                    "escalation": p.escalation,
+                    "summary": p.summary,
+                }
+                for p in result.related_patterns
+            ],
+            "severity": result.severity,
+            "suggested_actions": result.suggested_actions,
+        }
+
     async def execute(self, context: AgentContext) -> AgentResponse:
         """执行异常根因分析，返回结构化 AnalysisResult 嵌入 AgentResponse。
 
@@ -68,18 +98,7 @@ class AnalysisAgent(BaseAgent):
 
         anomaly_event = self._parse_anomaly_event(context)
         if not anomaly_event:
-            return AgentResponse(
-                reply=json.dumps(
-                    {
-                        "root_cause": "无法解析分析目标",
-                        "confidence": 0.0,
-                        "related_patterns": [],
-                        "severity": "unknown",
-                        "suggested_actions": ["请提供有效的异常事件数据"],
-                    },
-                    ensure_ascii=False,
-                ),
-            )
+            return AgentResponse(reply=json.dumps(self._build_fallback_result(), ensure_ascii=False))
 
         related_patterns = self._run_pattern_discovery(anomaly_event)
         hypotheses = self._run_hypothesis_generation(anomaly_event)
@@ -94,26 +113,7 @@ class AnalysisAgent(BaseAgent):
             suggested_actions=self._build_suggested_actions(narrative, causal_result),
         )
         return AgentResponse(
-            reply=json.dumps(
-                {
-                    "root_cause": result.root_cause,
-                    "confidence": result.confidence,
-                    "related_patterns": [
-                        {
-                            "pattern_id": p.pattern_id,
-                            "anomaly_id": p.anomaly_id,
-                            "similarity": p.similarity,
-                            "matched_dimensions": p.matched_dimensions,
-                            "escalation": p.escalation,
-                            "summary": p.summary,
-                        }
-                        for p in result.related_patterns
-                    ],
-                    "severity": result.severity,
-                    "suggested_actions": result.suggested_actions,
-                },
-                ensure_ascii=False,
-            ),
+            reply=json.dumps(self._build_analysis_output(result), ensure_ascii=False),
             actions=[
                 {
                     "agent": agent_name,

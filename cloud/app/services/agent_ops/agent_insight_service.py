@@ -41,20 +41,24 @@ class AgentInsightService:
     async def get_insights(self, page_id: str, user_id: str) -> list:
         agent_keys = self.PAGE_AGENT_MAPPING.get(page_id)
         if agent_keys is None:
-            for prefix, key in self.FALLBACK_RULES:
-                if page_id.startswith(prefix):
-                    agent_keys = [key]
-                    break
-            else:
-                agent_keys = []
+            agent_keys = self._lookup_fallback_agent_keys(page_id)
         results = []
         for key in agent_keys:
             agent = AgentRegistry.get(key)
             if agent:
-                try:
-                    result = await agent.insights_for(page_id, user_id)
-                    if result:
-                        results.extend(result)
-                except Exception:  # noqa: BLE001  # agent func 可能抛出任意异常
-                    continue
+                await self._collect_agent_insights(agent, page_id, user_id, results)
         return results
+
+    def _lookup_fallback_agent_keys(self, page_id):
+        for prefix, key in self.FALLBACK_RULES:
+            if page_id.startswith(prefix):
+                return [key]
+        return []
+
+    async def _collect_agent_insights(self, agent, page_id, user_id, results):
+        try:
+            result = await agent.insights_for(page_id, user_id)
+            if result:
+                results.extend(result)
+        except Exception:
+            pass

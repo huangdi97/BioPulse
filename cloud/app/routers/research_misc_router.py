@@ -151,7 +151,19 @@ class ResearchVisitCheckRequest(BaseModel):
     visit_data: dict
 
 
-@enforcer_router.post("/enforce", tags=["Research Enforcer"])
+def _serialize_violations(violations):
+    return [
+        {
+            "rule_code": v.rule_code,
+            "rule_name": v.rule_name,
+            "severity": v.severity,
+            "action": v.action,
+            "detail": v.detail,
+        }
+        for v in violations
+    ]
+
+
 def enforce_research_visit(
     body: ResearchVisitCheckRequest,
     current_user: dict = Depends(get_current_user),
@@ -162,16 +174,7 @@ def enforce_research_visit(
         violations = enforcer.check_research_visit(body.visit_data)
         return success(
             data={
-                "violations": [
-                    {
-                        "rule_code": v.rule_code,
-                        "rule_name": v.rule_name,
-                        "severity": v.severity,
-                        "action": v.action,
-                        "detail": v.detail,
-                    }
-                    for v in violations
-                ],
+                "violations": _serialize_violations(violations),
                 "passed": len(violations) == 0,
             }
         )
