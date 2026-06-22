@@ -1,6 +1,37 @@
-# BioPulse
+# BioPulse — 生命科学行业 Agent-native 工作台
 
-> 生命科学行业全场景 AI 工作台 — 医药代表拜访管理、商机挖掘、销售助理、销售教练
+> 不是"加了 AI 的 CRM"。是 Agent 替代表干活、替经理看数据、替总裁做推演。
+
+## 什么让 BioPulse 不同
+
+| 传统 CRM | BioPulse |
+|---|---|
+| 人填表、人查数据 | Agent 自动填表、主动推异常 |
+| 看报表猜趋势 | 推演器给因果链 + 预测区间 + 平行对比 |
+| 合规靠抽查 | 三角稽核 7×24 无人值守 |
+| 问 IT 要数据 | 直接问 Agent，"上周生物线商机转化怎么样" |
+
+## 核心能力
+
+- **7 个专业 Agent** — 合规监控、异常分析、销售建议、销售教练、情报、知识、MDT
+- **推演器** — 因果链 + 置信度 + 回溯验证 + 平行对比
+- **代表工作台** — 拜访排序、HCP画像、竞品推送、语音填表、费用预审、拜访理由
+- **多端覆盖** — 管理端(React)、移动端(Flutter Android/iOS)、Web端、微信小程序
+- **Triple-Engine 合规** — 拜访×费用×流向交叉稽核 + 飞检 + 窜货检测
+- **生产就绪** — Prometheus+Grafana、Nginx+TLS、每日备份、CI/CD
+
+## 架构
+
+```
+Cloud(8000) ── Agent Runtime(L4循环) ── 7 Agent ── 多端
+    │                                              ├── 管理端 (React)
+    │                                              ├── 移动端 (Flutter)
+    │                                              ├── Web端 (React)
+    │                                              └── 微信小程序
+    │
+    ├── 合规引擎     ├── 推演器         ├── 记忆系统
+    ├── MCP 工具总线  ├── 因果推断       └── 事件总线
+```
 
 ## Quick Start（5 分钟）
 
@@ -18,56 +49,34 @@ pip install -r cloud/requirements.txt
 # 3. 配置环境变量
 cp .env.example .env   # 填入 DEEPSEEK_API_KEY 等必要配置
 
-# 4. 初始化数据库并启动
+# 4. 初始化数据库并启动 Cloud
 python -c "from cloud.app.database import init_db; init_db()"
 uvicorn cloud.app.main:app --reload --port 8000
 
 # 5. 查看 Agent 运行（新终端）
-curl http://localhost:8000/agent-gateway/execute -H "Content-Type: application/json" -d '{"agent_key":"analyst","goal":"分析最近的拜访数据"}' | python -m json.tool
+curl http://localhost:8000/agent-gateway/execute \
+  -H "Content-Type: application/json" \
+  -d '{"agent_key":"analyst","goal":"分析最近的拜访数据"}' | python -m json.tool
+
+# 6. 启动管理端（新终端）
+cd frontend && npm install && npm run dev
+
+# 7. 启动 Flutter 移动端（新终端）
+cd mobile_app && flutter run
 ```
 
 > 使用 Docker 一键部署见 `docker-compose up -d`。
 
-## 技术栈
+## 开发
 
-| **后端** — Python 3.12 / FastAPI / SQLite / LangGraph / 自研 Agent Harness  |
-| **前端** — React 18 / Vite 6 / TypeScript / Tailwind CSS / IBM Carbon  |
-| **移动端** — Flutter / Dart / Provider / SQLite (offline-first)  |
-| **AI** — DeepSeek / 多 Agent 运行时 / MCP 工具总线 / MDT 多专家会诊
-
-## 架构
-
-```
-BioPulse（Cloud）  ────  多端（Assistant / Opportunity / Sales-Assistant / Sales-Coach）
-                        ├── 扩展服务（Management / Pharma-Intel / MarketAccess / ClinicalOps / PatientEngage）
-                        └── 移动端（Flutter App）
-```
-
-- **BioPulse 厚、多端专**：Cloud 承载全量业务引擎，各端专注场景交互（[完整架构](ARCHITECTURE.md)）
-- **独立部署**：各端独立仓库、独立数据库、独立发布
-- **故障隔离**：一个端不影响其他，Cloud 停机时各端照常运行（JWT 本地解码）
-- **离线优先**：移动端本地 SQLite + 定时同步
-
-> 🆕 开发指南见 [CONTRIBUTING.md](CONTRIBUTING.md) | 架构详情见 [ARCHITECTURE.md](ARCHITECTURE.md)
-
-## 快速启动
-
-```bash
-# 安装依赖
-pip install -r requirements.txt
-
-# 启动 Cloud（核心服务）
-uvicorn cloud.app.main:app --port 8000
-
-# 启动各端（独立终端）
-uvicorn assistant.app.main:app --port 8003
-uvicorn opportunity.app.main:app --port 8002
-uvicorn sales_assistant.app.main:app --port 8004
-uvicorn sales_coach.app.main:app --port 8001
-
-# 启动 Flutter 移动端
-cd mobile_app && flutter run
-```
+| 层 | 技术 |
+|---|---|
+| 后端 | Python 3.12 / FastAPI / SQLite / LangGraph / Agent Harness |
+| 前端 (管理端/Web端) | React 18 / Vite 6 / TypeScript / Tailwind CSS |
+| 移动端 | Flutter / Dart / Provider / SQLite (offline-first) |
+| AI | DeepSeek / 多 Agent 运行时 / MCP 工具总线 / MDT 多专家会诊 |
+| 监控 | Prometheus + Grafana |
+| CI/CD | GitHub Actions |
 
 ## 项目结构
 
@@ -76,6 +85,7 @@ one-cloud-four-ends/
 ├── cloud/                 # Cloud 核心服务（290+ 文件 / 280 路由）
 │   └── app/
 │       ├── agent_runtime/ # Agent 运行时引擎（17 文件）
+│       ├── inference/     # 推演器（因果/假设/验证/模式发现）
 │       ├── services/      # 95 个业务服务
 │       ├── repositories/  # 21 个数据仓库
 │       └── seeds/         # 30 个种子数据脚本
@@ -87,23 +97,11 @@ one-cloud-four-ends/
 ├── management/            # 管理端（12 文件）
 ├── mobile_app/            # Flutter 移动端
 ├── web/                   # React Web 端
-├── frontend/              # React SPA（临时方案）
-└── shared/                # 共享模块（auth/compliance/base）
+├── frontend/              # React SPA（管理端）
+├── shared/                # 共享模块（auth/compliance/base）
+├── design-tokens/         # 统一设计系统 Token
+└── docs/                  # 设计文档与指南
 ```
-
-## 核心功能
-
-| 模块 | 功能 |
-|------|------|
-| **AI Agent** | 自主 Agent 运行时（LLM 思考→工具调用→反思循环），支持检查点/审批/断路器/工作队列 |
-| **合规引擎** | 全消息类型合规检测 + 决策链 SHA256 审计 |
-| **记忆系统** | 类脑六机制记忆（门控/巩固/效用/WorldDB/SAGE/编排器） |
-| **因果推断** | 归因评分 + 决策 OSA |
-| **MCP 工具总线** | 280 端点统一工具注册与调用 |
-| **MDT 会诊** | 多角色 LLM 辩论 → 共识生成 |
-| **数字人陪练** | Provider 架构（InternalLLM/WaveCloud/MoShang） |
-| **Bidding Agent** | 招标扫描 + AI 决策支持 |
-| **离线同步** | 离线优先架构，断网可用，上线自动同步 |
 
 ## 测试
 
@@ -111,6 +109,6 @@ one-cloud-four-ends/
 python3 -m pytest cloud/app/tests/ -v
 ```
 
-## 许可证
+## License
 
 MIT

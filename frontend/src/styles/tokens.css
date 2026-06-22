@@ -37,6 +37,7 @@
     --color-surface-card: 0 0% 100%;
     --color-surface-card-alt: 0 0% 96%;
     --color-surface-hover: 0 0% 91%;
+    --color-surface-overlay: 0 0% 9% / 0.5;
     --color-surface-page: 0 0% 100%;
     --color-surface-selected: 213 100% 96%;
     --color-text-disabled: 0 0% 55%;
@@ -116,6 +117,7 @@
     --color-surface-card: 0 0% 15%;
     --color-surface-card-alt: 0 0% 32%;
     --color-surface-hover: 0 0% 32%;
+    --color-surface-overlay: 0 0% 0% / 0.6;
     --color-surface-page: 0 0% 9%;
     --color-surface-selected: 0 0% 44%;
     --color-text-disabled: 0 0% 44%;
