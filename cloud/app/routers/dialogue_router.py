@@ -10,8 +10,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from starlette.responses import StreamingResponse
 
-from cloud.app.agent_runtime.dialogue_manager import DialogueTranslator
-from cloud.app.agent_runtime.shared_state import SharedStateEntry, get_shared_state
+from cloud.app.services.dialogue_service import DialogueTranslator, SharedStateEntry, get_shared_state
 
 logger = logging.getLogger(__name__)
 
@@ -95,13 +94,13 @@ def _sse_response(events: list[dict]) -> StreamingResponse:
 
 
 def _sse_stream_dialogue(session_id: str, body: DialogueRequest) -> StreamingResponse:
-    from cloud.app.agent_runtime.runtime_core import RuntimeCore
+    from cloud.app.services.dialogue_service import RuntimeCore
 
     async def _generate():
         yield f"event: dialogue.start\ndata: {json.dumps({'session_id': session_id, 'message': body.message}, ensure_ascii=False)}\n\n"
         try:
             runtime = RuntimeCore(None, None, "", body.agent_key or "knowledge_worker")
-            from cloud.app.agent_runtime.streamer import AgentStreamer
+            from cloud.app.services.dialogue_service import AgentStreamer
 
             streamer = AgentStreamer()
             runtime.set_streamer(streamer)

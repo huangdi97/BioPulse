@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Query
 
-from cloud.app.agent_runtime.agent_health import get_health_tracker
+from cloud.app.services.agent_health_service import get_health_tracker
 from shared.base import success
 
 router = APIRouter(prefix="/agent", tags=["Agent Health"])

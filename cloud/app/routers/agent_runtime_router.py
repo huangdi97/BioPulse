@@ -3,8 +3,7 @@
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
-from cloud.app.agent_runtime.tool_bridge import ToolBridge
-from cloud.app.services.agent_runtime_service import AgentRuntimeService
+from cloud.app.services.agent_runtime_service import AgentRuntimeService, ToolBridge
 from shared.auth_scope import require_scope
 from shared.base import success
 
