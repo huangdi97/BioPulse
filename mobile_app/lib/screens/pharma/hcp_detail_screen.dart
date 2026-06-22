@@ -245,7 +245,8 @@ class _HcpDetailScreenState extends State<HcpDetailScreen> {
           ],
         ],
       ),
-    ],
+    ),
+  ],
   ),
 );
   }
