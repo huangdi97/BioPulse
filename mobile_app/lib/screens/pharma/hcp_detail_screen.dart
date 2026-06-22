@@ -245,9 +245,7 @@ class _HcpDetailScreenState extends State<HcpDetailScreen> {
           ],
         ],
       ),
-    ],
-  ),
-);
+    );
   }
 
   Widget _infoRow(IconData icon, String label, String value) {

@@ -171,7 +171,6 @@ class DatabaseService {
         )
       ''');
     }
-    }
   }
 
   Database get db {
