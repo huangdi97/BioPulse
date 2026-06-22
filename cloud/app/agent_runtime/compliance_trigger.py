@@ -59,7 +59,7 @@ def build_compliance_plan(task: str, context: dict | None = None) -> list[dict]:
         },
         {
             "step": 4,
-            "action": "triangulation_check",
+            "action": "holographic_audit_check",
             "description": "全息校验交叉验证",
             "params": {
                 "rep_id": ctx.get("rep_id"),

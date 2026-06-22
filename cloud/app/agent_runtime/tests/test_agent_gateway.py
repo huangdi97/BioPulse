@@ -13,7 +13,7 @@ class TestGatewayRoutes:
         required = [
             "verify_expense",
             "verify_visit",
-            "triangulation_check",
+            "holographic_audit_check",
             "write_audit_log",
             "trigger_red_light",
         ]

@@ -24,7 +24,7 @@ GATEWAY_ROUTES: dict[str, str] = {
     "verify_expense": "POST /cloud/compliance/expense/check",
     "verify_visit": "POST /cloud/compliance/visit/check",
     "trace_distribution": "POST /cloud/compliance/distribution/trace",
-    "triangulation_check": "POST /cloud/compliance/triangulation/check",
+    "holographic_audit_check": "POST /cloud/compliance/holographic/check",
     "write_audit_log": "POST /cloud/compliance/audit/log",
     "query_visit_history": "POST /cloud/visit/history/query",
     "query_hcp_profile": "POST /cloud/hcp/profile/query",

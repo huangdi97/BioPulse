@@ -6,7 +6,7 @@ goal: 确保所有销售行为符合医药合规规则
 allowed_tools:
   - compliance_check
   - regulation_lookup
-  - triangulation_check
+  - holographic_audit_check
   - query_visit_history
   - write_audit_log
 memory_namespace: compliance

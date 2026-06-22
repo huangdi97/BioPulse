@@ -53,7 +53,7 @@
     "risk_level": "medium",
     "recommendation": "允许"
   },
-  "triangulation_check": {
+  "holographic_audit_check": {
     "known_effects": ["触发全息校验交叉验证", "可能产生红灯事件"],
     "affected_modules": ["compliance", "triangulation", "event_bus"],
     "risk_level": "high",

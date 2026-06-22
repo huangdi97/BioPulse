@@ -115,7 +115,7 @@ DEFAULT_TOOLS = [
         allowed_agents=["compliance_monitor"],
     ),
     ToolDef(
-        name="triangulation_check",
+        name="holographic_audit_check",
         description="执行费用、拜访、流向全息校验交叉验证",
         params={},
         permission_level="read",

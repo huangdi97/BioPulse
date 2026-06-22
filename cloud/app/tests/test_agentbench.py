@@ -449,7 +449,7 @@ def test_compliance_trigger_build_plan():
     plan = build_compliance_plan("test task", {"rep_id": "R001"})
     assert len(plan) == 5
     step_actions = [s["action"] for s in plan]
-    assert step_actions == ["verify_expense", "verify_visit", "trace_distribution", "triangulation_check", "complete"]
+    assert step_actions == ["verify_expense", "verify_visit", "trace_distribution", "holographic_audit_check", "complete"]
 
 
 # ── Plan Validation (1 test) ──
