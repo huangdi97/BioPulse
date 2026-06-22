@@ -116,7 +116,7 @@ DEFAULT_TOOLS = [
     ),
     ToolDef(
         name="triangulation_check",
-        description="执行费用、拜访、流向三角勾稽交叉验证",
+        description="执行费用、拜访、流向全息校验交叉验证",
         params={},
         permission_level="read",
         allowed_agents=["compliance_monitor", "anomaly_analysis"],

@@ -61,9 +61,9 @@ AGENT_SPECS = {
     },
     "compliance_monitor": {
         "role_desc": (
-            "你是一个合规监控Agent，负责费用、拜访、流向三角勾稽交叉验证，通过L4循环执行。"
+            "你是一个合规监控Agent，负责费用、拜访、流向全息校验交叉验证，通过L4循环执行。"
             "你会用 verify_expense、verify_visit、trace_distribution 收集证据，"
-            "调用 triangulation_check 进行跨维度判定，必要时 trigger_red_light，"
+            "调用 holographic_audit_check 进行跨维度判定，必要时 trigger_red_light，"
             "并用 write_audit_log 写入审计链。"
             "所有步骤通过planner生成计划→executor执行→verifier校验→analyzer+reflector容错。"
         ),
@@ -71,7 +71,7 @@ AGENT_SPECS = {
             "verify_expense",
             "verify_visit",
             "trace_distribution",
-            "triangulation_check",
+            "holographic_audit_check",
             "trigger_red_light",
             "write_audit_log",
         ],
@@ -85,7 +85,7 @@ AGENT_SPECS = {
             {"step": 1, "tool": "verify_expense", "description": "核查费用"},
             {"step": 2, "tool": "verify_visit", "description": "核查拜访"},
             {"step": 3, "tool": "trace_distribution", "description": "追踪流向"},
-            {"step": 4, "tool": "triangulation_check", "description": "三角勾稽交叉验证"},
+            {"step": 4, "tool": "holographic_audit_check", "description": "全息校验交叉验证"},
             {"step": 5, "tool": "complete", "description": "输出结论"},
         ],
         "output_schema": {

@@ -8,8 +8,8 @@ from typing import Any, Optional
 
 from cloud.app.agent_runtime.models import AgentIdentity
 from cloud.app.agents.base_agent import AgentContext, AgentResponse, BaseAgent
+from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 from cloud.app.compliance.red_light import RedLightManager
-from cloud.app.compliance.triangulation import TriangulationEngine
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class ComplianceAgent(BaseAgent):
         self,
         identity: AgentIdentity,
         compliance_service: Any,
-        triangulation_engine: TriangulationEngine,
+        triangulation_engine: HolographicAuditEngine,
         red_light: Optional[RedLightManager] = None,
     ) -> None:
         self._identity = identity
@@ -64,7 +64,7 @@ class ComplianceAgent(BaseAgent):
                 distribution_data=distribution_data,
             )
         except Exception:
-            logger.exception("TriangulationEngine.check 失败，entity_id=%s", entity_id)
+            logger.exception("HolographicAuditEngine.check 失败，entity_id=%s", entity_id)
             return AgentResponse(
                 reply=f"[{agent_name}] 三角验证引擎异常，请稍后重试。",
             )

@@ -8,8 +8,8 @@ def test_cloud_schema_imports():
 
 
 def test_cloud_compliance_engine_imports_and_instantiates():
-    from cloud.app.compliance import TriangulationEngine
+    from cloud.app.compliance import HolographicAuditEngine
 
-    engine = TriangulationEngine()
+    engine = HolographicAuditEngine()
 
-    assert isinstance(engine, TriangulationEngine)
+    assert isinstance(engine, HolographicAuditEngine)

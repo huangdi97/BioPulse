@@ -59,7 +59,7 @@ async def trace_distribution():
 
 
 @router.post("/compliance/triangulation/check")
-async def triangulation_check():
+async def holographic_audit_check():
     return _ok(
         {
             "rep_id": 1,

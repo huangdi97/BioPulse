@@ -1,4 +1,4 @@
-"""窜货检测服务 — 检测产品流向与授权区域的一致性，接入三角稽核引擎。"""
+"""窜货检测服务 — 检测产品流向与授权区域的一致性，接入全息稽核引擎。"""
 
 import json
 import sqlite3
@@ -6,7 +6,7 @@ from dataclasses import asdict
 from datetime import datetime, timedelta
 from typing import Any
 
-from cloud.app.compliance.triangulation import TriangulationEngine
+from cloud.app.compliance.triangulation import HolographicAuditEngine
 
 _NOTIFIER = None
 
@@ -36,9 +36,9 @@ class DiversionDetectionService:
             "quantity INTEGER, dealer_id TEXT, rep_id TEXT, "
             "is_diversion INTEGER, severity TEXT, "
             "reason TEXT, created_at TEXT, "
-            "triangulation_score REAL, "
-            "triangulation_level TEXT, "
-            "triangulation_findings TEXT"
+            "holographic_score REAL, "
+            "holographic_level TEXT, "
+            "holographic_findings TEXT"
             ")"
         )
         self.db.execute("CREATE TABLE IF NOT EXISTS product_authorized_regions (product TEXT PRIMARY KEY, authorized_region TEXT NOT NULL)")
@@ -77,26 +77,26 @@ class DiversionDetectionService:
         if not authorized_region:
             reason = f"产品 {product} 无授权区域配置，跳过窜货检测"
 
-        triangulation_score = None
-        triangulation_level = None
-        triangulation_findings = None
+        holographic_score = None
+        holographic_level = None
+        holographic_findings = None
 
         if is_diversion:
             try:
-                tri_result = self.run_triangulation_check(distribution_data)
-                triangulation_score = tri_result.get("triangulation_score")
-                triangulation_level = tri_result.get("triangulation_level")
+                tri_result = self.run_holographic_audit_check(distribution_data)
+                holographic_score = tri_result.get("holographic_score")
+                holographic_level = tri_result.get("holographic_level")
                 findings = tri_result.get("findings", [])
                 if findings:
-                    triangulation_findings = json.dumps(findings, ensure_ascii=False)
+                    holographic_findings = json.dumps(findings, ensure_ascii=False)
                     max_finding_score = max(f.get("score", 0) for f in findings)
                     if max_finding_score >= 0.9 and severity:
                         severity = "high"
-                        reason += f"；三角稽核确认高风险（评分 {max_finding_score}）"
+                        reason += f"；全息稽核确认高风险（评分 {max_finding_score}）"
                     elif max_finding_score >= 0.5 and severity and severity != "high":
                         severity = "medium"
-                        reason += f"；三角稽核提示异常（评分 {max_finding_score}）"
-                if triangulation_level == "high" and severity:
+                        reason += f"；全息稽核提示异常（评分 {max_finding_score}）"
+                if holographic_level == "high" and severity:
                     severity = "high"
             except Exception:
                 pass
@@ -107,7 +107,7 @@ class DiversionDetectionService:
         self.db.execute(
             "INSERT INTO diversion_log (product, region, authorized_region, "
             "quantity, dealer_id, rep_id, is_diversion, severity, reason, created_at, "
-            "triangulation_score, triangulation_level, triangulation_findings) "
+            "holographic_score, holographic_level, holographic_findings) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 product,
@@ -120,9 +120,9 @@ class DiversionDetectionService:
                 severity,
                 reason,
                 datetime.now().isoformat(),
-                triangulation_score,
-                triangulation_level,
-                triangulation_findings,
+                holographic_score,
+                holographic_level,
+                holographic_findings,
             ),
         )
         self.db.commit()
@@ -131,8 +131,8 @@ class DiversionDetectionService:
             "is_diversion": is_diversion,
             "reason": reason,
             "severity": severity,
-            "triangulation_score": triangulation_score,
-            "triangulation_level": triangulation_level,
+            "holographic_score": holographic_score,
+            "holographic_level": holographic_level,
         }
 
     def _send_red_light_notification(self, product: str, region: str, authorized_region: str, quantity: int, rep_id: str, reason: str):
@@ -148,13 +148,13 @@ class DiversionDetectionService:
         except Exception:
             pass
 
-    def run_triangulation_check(self, distribution_data: dict[str, Any]) -> dict[str, Any]:
-        """将窜货数据送入三角稽核引擎进行深度交叉验证。
+    def run_holographic_audit_check(self, distribution_data: dict[str, Any]) -> dict[str, Any]:
+        """将窜货数据送入全息稽核引擎进行深度交叉验证。
 
-        调用 TriangulationEngine.check() 对 distribution_data 做多维度分析，
+        调用 HolographicAuditEngine.check() 对 distribution_data 做多维度分析，
         返回引擎的置信度评分与异常发现。
         """
-        engine = TriangulationEngine(db=self.db)
+        engine = HolographicAuditEngine(db=self.db)
         result = engine.check(
             expense_data=None,
             visit_data=None,
@@ -164,8 +164,8 @@ class DiversionDetectionService:
             ],
         )
         return {
-            "triangulation_score": result.confidence_score,
-            "triangulation_level": result.suspicion_level,
+            "holographic_score": result.confidence_score,
+            "holographic_level": result.suspicion_level,
             "findings": [asdict(f) for f in result.findings],
         }
 

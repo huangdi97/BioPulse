@@ -54,7 +54,7 @@
     "recommendation": "允许"
   },
   "triangulation_check": {
-    "known_effects": ["触发三角勾稽交叉验证", "可能产生红灯事件"],
+    "known_effects": ["触发全息校验交叉验证", "可能产生红灯事件"],
     "affected_modules": ["compliance", "triangulation", "event_bus"],
     "risk_level": "high",
     "recommendation": "需确认"

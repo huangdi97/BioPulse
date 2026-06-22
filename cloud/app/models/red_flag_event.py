@@ -22,7 +22,7 @@ class RedFlagStatus(str, Enum):
 
 @dataclass
 class RedFlagEvent:
-    """合规红灯事件，由三角勾稽引擎在发现异常时触发。"""
+    """合规红灯事件，由全息校验引擎在发现异常时触发。"""
 
     red_flag_id: str
     severity: RedFlagSeverity

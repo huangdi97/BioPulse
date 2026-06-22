@@ -31,7 +31,7 @@ def check_distribution(
     return success(data=service.check_distribution(body.model_dump()))
 
 
-@router.post("/run-batch", summary="批量检测窜货", description="批量检测多笔产品流向，每笔均经三角稽核引擎验证")
+@router.post("/run-batch", summary="批量检测窜货", description="批量检测多笔产品流向，每笔均经全息稽核引擎验证")
 def run_batch(
     body: BatchCheckRequest,
     db=Depends(get_db),
@@ -40,7 +40,7 @@ def run_batch(
     results = []
     for dist in body.distributions:
         check_result = service.check_distribution(dist.model_dump())
-        triangulation = service.run_triangulation_check(dist.model_dump())
+        triangulation = service.run_holographic_audit_check(dist.model_dump())
         results.append(
             {
                 "product": dist.product,

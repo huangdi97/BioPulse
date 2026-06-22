@@ -1,6 +1,6 @@
 """Tests for compliance triangulation detection patterns."""
 
-from cloud.app.compliance.triangulation import TriangulationEngine
+from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 
 
 def _patterns(result):
@@ -8,7 +8,7 @@ def _patterns(result):
 
 
 def test_expense_waste_detects_rising_expense_with_falling_activity():
-    result = TriangulationEngine().check(
+    result = HolographicAuditEngine().check(
         {"expense_trend": "up", "amount": 12000},
         {"visit_trend": "down", "visit_count": 8},
         {"distribution_trend": "down", "sellout": 40},
@@ -19,7 +19,7 @@ def test_expense_waste_detects_rising_expense_with_falling_activity():
 
 
 def test_expense_waste_ignores_aligned_business_growth():
-    result = TriangulationEngine().check(
+    result = HolographicAuditEngine().check(
         {"expense_trend": "up", "amount": 12000},
         {"visit_trend": "up", "visit_count": 30},
         {"distribution_trend": "up", "sellout": 140},
@@ -29,7 +29,7 @@ def test_expense_waste_ignores_aligned_business_growth():
 
 
 def test_visit_fraud_detects_visits_without_flow_growth():
-    result = TriangulationEngine().check(
+    result = HolographicAuditEngine().check(
         {"expense_trend": "flat"},
         {"visit_trend": "up", "visit_count": 25},
         {"distribution_trend": "flat", "sellout": 100},
@@ -40,7 +40,7 @@ def test_visit_fraud_detects_visits_without_flow_growth():
 
 
 def test_visit_fraud_ignores_visits_with_matching_flow_growth():
-    result = TriangulationEngine().check(
+    result = HolographicAuditEngine().check(
         {"expense_trend": "flat"},
         {"visit_trend": "up", "visit_count": 25},
         {"distribution_trend": "up", "sellout": 180},
@@ -50,7 +50,7 @@ def test_visit_fraud_ignores_visits_with_matching_flow_growth():
 
 
 def test_channel_stuffing_detects_region_mismatch():
-    result = TriangulationEngine().check(
+    result = HolographicAuditEngine().check(
         {"expense_trend": "flat"},
         {"visit_trend": "flat", "region_id": "north"},
         {"distribution_trend": "flat", "actual_region": "south", "authorized_region": "north"},
@@ -61,7 +61,7 @@ def test_channel_stuffing_detects_region_mismatch():
 
 
 def test_channel_stuffing_ignores_authorized_region_match():
-    result = TriangulationEngine().check(
+    result = HolographicAuditEngine().check(
         {"expense_trend": "flat"},
         {"visit_trend": "flat", "region_id": "north"},
         {"distribution_trend": "flat", "actual_region": "north", "authorized_region": "north"},
@@ -71,7 +71,7 @@ def test_channel_stuffing_ignores_authorized_region_match():
 
 
 def test_management_neglect_detects_unhandled_red_lights():
-    result = TriangulationEngine().check(
+    result = HolographicAuditEngine().check(
         {"red_light_count": 2, "unresolved_red_lights": 1, "manager_action_count": 0},
         {"visit_trend": "flat"},
         {"distribution_trend": "flat"},
@@ -82,7 +82,7 @@ def test_management_neglect_detects_unhandled_red_lights():
 
 
 def test_management_neglect_ignores_handled_red_lights():
-    result = TriangulationEngine().check(
+    result = HolographicAuditEngine().check(
         {"red_light_count": 2, "unresolved_red_lights": 1, "manager_action_count": 1},
         {"visit_trend": "flat"},
         {"distribution_trend": "flat"},
@@ -92,7 +92,7 @@ def test_management_neglect_ignores_handled_red_lights():
 
 
 def test_fake_activity_detects_expense_and_visit_growth_with_falling_flow():
-    result = TriangulationEngine().check(
+    result = HolographicAuditEngine().check(
         {"expense_trend": "up", "amount": 18000},
         {"visit_trend": "up", "visit_count": 32},
         {"distribution_trend": "down", "sellout": 55},
@@ -103,7 +103,7 @@ def test_fake_activity_detects_expense_and_visit_growth_with_falling_flow():
 
 
 def test_fake_activity_ignores_expense_and_visit_growth_with_flow_growth():
-    result = TriangulationEngine().check(
+    result = HolographicAuditEngine().check(
         {"expense_trend": "up", "amount": 18000},
         {"visit_trend": "up", "visit_count": 32},
         {"distribution_trend": "up", "sellout": 155},
@@ -113,7 +113,7 @@ def test_fake_activity_ignores_expense_and_visit_growth_with_flow_growth():
 
 
 def test_channel_stuffing_batch_detects_cross_region_distribution():
-    result = TriangulationEngine().check(
+    result = HolographicAuditEngine().check(
         {"expense_trend": "flat"},
         {"visit_trend": "flat"},
         [
@@ -128,7 +128,7 @@ def test_channel_stuffing_batch_detects_cross_region_distribution():
 
 
 def test_channel_stuffing_batch_ignores_authorized_region():
-    result = TriangulationEngine().check(
+    result = HolographicAuditEngine().check(
         {"expense_trend": "flat"},
         {"visit_trend": "flat"},
         [
@@ -142,7 +142,7 @@ def test_channel_stuffing_batch_ignores_authorized_region():
 
 
 def test_fake_distribution_detects_sellin_growth_with_sellout_decline():
-    result = TriangulationEngine().check(
+    result = HolographicAuditEngine().check(
         {"expense_trend": "flat"},
         {"visit_trend": "flat"},
         {"distribution_trend": "flat"},
@@ -155,7 +155,7 @@ def test_fake_distribution_detects_sellin_growth_with_sellout_decline():
 
 
 def test_fake_distribution_ignores_sellin_and_sellout_sync_growth():
-    result = TriangulationEngine().check(
+    result = HolographicAuditEngine().check(
         {"expense_trend": "flat"},
         {"visit_trend": "flat"},
         {"distribution_trend": "flat"},
@@ -167,7 +167,7 @@ def test_fake_distribution_ignores_sellin_and_sellout_sync_growth():
 
 
 def test_channel_stuffing_and_expense_waste_merge_decisions():
-    result = TriangulationEngine().check(
+    result = HolographicAuditEngine().check(
         {"expense_trend": "up", "amount": 12000},
         {"visit_trend": "down", "visit_count": 8},
         [
@@ -183,7 +183,7 @@ def test_channel_stuffing_and_expense_waste_merge_decisions():
 
 
 def test_confidence_boundary_at_thresholds():
-    engine = TriangulationEngine()
+    engine = HolographicAuditEngine()
 
     result_below = engine.check(
         {"expense_trend": "flat", "previous_expense": 100, "current_expense": 105},

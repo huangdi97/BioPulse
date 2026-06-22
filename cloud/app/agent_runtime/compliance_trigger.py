@@ -1,4 +1,4 @@
-"""Compliance Monitor L4 trigger — 三角勾稽交叉验证，异常时触发红灯事件。"""
+"""Compliance Monitor L4 trigger — 全息校验交叉验证，异常时触发红灯事件。"""
 
 import logging
 
@@ -13,7 +13,7 @@ GOAL = "合规检查"
 
 
 def _infer_severity(triangulation_result: dict) -> RedFlagSeverity:
-    """根据三角勾稽结果推断严重级别。"""
+    """根据全息校验结果推断严重级别。"""
     severity_map = {
         "窜货": RedFlagSeverity.critical,
         "造假": RedFlagSeverity.critical,
@@ -60,7 +60,7 @@ def build_compliance_plan(task: str, context: dict | None = None) -> list[dict]:
         {
             "step": 4,
             "action": "triangulation_check",
-            "description": "三角勾稽交叉验证",
+            "description": "全息校验交叉验证",
             "params": {
                 "rep_id": ctx.get("rep_id"),
                 "expense_data": ctx.get("expense_data"),

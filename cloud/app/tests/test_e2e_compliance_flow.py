@@ -1,8 +1,8 @@
 """End-to-end compliance flow using in-memory mock data."""
 
 from cloud.app.analysis import HypothesisVerifier, Narrator
+from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 from cloud.app.compliance.red_light import RedLightManager
-from cloud.app.compliance.triangulation import TriangulationEngine
 
 
 def test_expense_submission_to_red_light_and_root_cause_analysis():
@@ -16,7 +16,7 @@ def test_expense_submission_to_red_light_and_root_cause_analysis():
     visit_snapshot = {"agent_id": "rep-e2e-001", "visit_trend": "down", "visit_count": 6}
     flow_snapshot = {"agent_id": "rep-e2e-001", "distribution_trend": "down", "sellout": 35}
 
-    triangulation = TriangulationEngine().check(expense_submission, visit_snapshot, flow_snapshot)
+    triangulation = HolographicAuditEngine().check(expense_submission, visit_snapshot, flow_snapshot)
 
     assert triangulation.decision == "trigger_red_light"
     assert any(finding.pattern == "expense_waste" for finding in triangulation.findings)

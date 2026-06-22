@@ -139,9 +139,9 @@ def test_compliance_l4_normal_flow():
 
 def test_compliance_l4_red_light_trigger():
     """Compliance L4 red light trigger: triangulation with score >= 0.8 triggers red_light."""
-    from cloud.app.compliance.triangulation import TriangulationEngine
+    from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 
-    engine = TriangulationEngine()
+    engine = HolographicAuditEngine()
     result = engine.check(
         expense_data=[{"expense": 1000, "trend": "up"}],
         visit_data=[{"visit_count": 50, "trend": "up"}],
@@ -154,9 +154,9 @@ def test_compliance_l4_red_light_trigger():
 
 def test_compliance_l4_degrade_fallback():
     """Compliance L4: when triangulation fails, fallback to individual checks and degrade gracefully."""
-    from cloud.app.compliance.triangulation import TriangulationEngine
+    from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 
-    engine = TriangulationEngine()
+    engine = HolographicAuditEngine()
     result = engine.check(
         expense_data=None,
         visit_data=[{"visit_count": 10, "trend": "flat"}],
@@ -187,9 +187,9 @@ def test_compliance_l4_tool_failure():
 
 def test_triangulation_expense_anomaly():
     """Expense anomaly: expense up + visit down + flow down → expense_waste."""
-    from cloud.app.compliance.triangulation import TriangulationEngine
+    from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 
-    engine = TriangulationEngine()
+    engine = HolographicAuditEngine()
     result = engine.check(
         expense_data=[{"expense": 500, "trend": "up"}],
         visit_data=[{"visit_count": 5, "trend": "down"}],
@@ -201,9 +201,9 @@ def test_triangulation_expense_anomaly():
 
 def test_triangulation_visit_anomaly():
     """Visit anomaly: visits up but flow flat → visit_fraud."""
-    from cloud.app.compliance.triangulation import TriangulationEngine
+    from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 
-    engine = TriangulationEngine()
+    engine = HolographicAuditEngine()
     result = engine.check(
         expense_data=[],
         visit_data=[{"visit_count": 30, "trend": "up", "count": 25}],
@@ -215,9 +215,9 @@ def test_triangulation_visit_anomaly():
 
 def test_triangulation_channel_stuffing():
     """Channel stuffing: cross-region distribution mismatch."""
-    from cloud.app.compliance.triangulation import TriangulationEngine
+    from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 
-    engine = TriangulationEngine()
+    engine = HolographicAuditEngine()
     result = engine.check(
         expense_data=[],
         visit_data=[],
@@ -229,9 +229,9 @@ def test_triangulation_channel_stuffing():
 
 def test_triangulation_fake_activity():
     """Fake activity: expense and visits up but flow down."""
-    from cloud.app.compliance.triangulation import TriangulationEngine
+    from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 
-    engine = TriangulationEngine()
+    engine = HolographicAuditEngine()
     result = engine.check(
         expense_data=[{"expense": 800, "trend": "up"}],
         visit_data=[{"visit_count": 40, "trend": "up"}],
@@ -243,9 +243,9 @@ def test_triangulation_fake_activity():
 
 def test_triangulation_multi_evidence_backtrack():
     """Multi-evidence backtrack: verify correlated records are returned."""
-    from cloud.app.compliance.triangulation import TriangulationEngine
+    from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 
-    engine = TriangulationEngine()
+    engine = HolographicAuditEngine()
     result = engine.check(
         expense_data=[{"expense": 300, "trend": "up", "rep_id": "R001"}],
         visit_data=[{"visit_count": 20, "trend": "up", "rep_id": "R001"}],
