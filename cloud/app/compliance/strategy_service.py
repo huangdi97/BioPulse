@@ -15,8 +15,8 @@ from .rules import EnforcerEngine
 def _run_compliance_trigger(task: str, context: dict) -> None:
     import sqlite3
 
-    from cloud.app.agent_runtime.compliance_trigger import compliance_monitor_trigger
-    from cloud.app.agent_runtime.runtime_core import RuntimeCore
+    from cloud.app.agent_runtime.core.compliance_trigger import compliance_monitor_trigger
+    from cloud.app.agent_runtime.core.runtime_core import RuntimeCore
     from cloud.app.database import DB_PATH
 
     conn = sqlite3.connect(DB_PATH)

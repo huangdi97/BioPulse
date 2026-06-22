@@ -11,7 +11,7 @@ from pathlib import Path
 
 import yaml
 
-from cloud.app.agent_runtime.models import AgentIdentity
+from cloud.app.agent_runtime.core.models import AgentIdentity
 
 logger = logging.getLogger(__name__)
 

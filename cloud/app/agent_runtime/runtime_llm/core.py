@@ -4,8 +4,8 @@ import logging
 import time
 from functools import partial
 
-from cloud.app.agent_runtime.circuit_breaker import CircuitBreaker
-from cloud.app.agent_runtime.retry import async_retry_with_backoff, retry_with_backoff
+from cloud.app.agent_runtime.lifecycle.circuit_breaker import CircuitBreaker
+from cloud.app.agent_runtime.lifecycle.retry import async_retry_with_backoff, retry_with_backoff
 from cloud.app.agent_runtime.runtime_llm.call_orchestration import process_ai_response
 from cloud.app.agent_runtime.runtime_llm.config import (
     AllModelsFailedError,

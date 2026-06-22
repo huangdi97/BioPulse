@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from cloud.app.agent_runtime.rate_limiter import RateLimiter, RateLimitExceeded
+from cloud.app.agent_runtime.safety.rate_limiter import RateLimiter, RateLimitExceeded
 
 
 def test_rate_limiter_allows_within_limit():

@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from cloud.app.agent_runtime.models import CheckResult
-from cloud.app.agent_runtime.verifier import Verifier
+from cloud.app.agent_runtime.core.models import CheckResult
+from cloud.app.agent_runtime.safety.verifier import Verifier
 
 
 def test_verify_passes():

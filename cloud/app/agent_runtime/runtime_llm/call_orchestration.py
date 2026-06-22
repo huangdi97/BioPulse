@@ -3,7 +3,7 @@
 import json
 from datetime import datetime
 
-from cloud.app.agent_runtime.metrics import agent_llm_duration, agent_tokens_total
+from cloud.app.agent_runtime.tools.metrics import agent_llm_duration, agent_tokens_total
 
 
 def process_ai_response(result, messages, step, duration_s, tracer, trace_id, trace_data):

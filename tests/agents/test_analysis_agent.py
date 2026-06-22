@@ -6,10 +6,10 @@ from unittest.mock import patch
 
 import pytest
 
-from cloud.app.agent_runtime.analysis_agent import AnalysisAgent
 from cloud.app.agent_runtime.analyzer.hypothesis import HypothesisEngine
 from cloud.app.agent_runtime.analyzer.models import Hypothesis, RootCauseNarrative, VerificationPlan, VerificationResult
-from cloud.app.agent_runtime.cost_governor import CostGovernor
+from cloud.app.agent_runtime.core.analysis_agent import AnalysisAgent
+from cloud.app.agent_runtime.safety.cost_governor import CostGovernor
 
 
 @pytest.fixture

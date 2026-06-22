@@ -1,4 +1,4 @@
-from cloud.app.agent_runtime.metrics import agent_active_count, agent_requests_total, get_metrics
+from cloud.app.agent_runtime.tools.metrics import agent_active_count, agent_requests_total, get_metrics
 
 
 def test_metrics_label_names():

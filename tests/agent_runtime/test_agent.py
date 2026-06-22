@@ -1,6 +1,6 @@
 """Tests for agent module — validates module imports correctly."""
 
-from cloud.app.agent_runtime.agent import Agent
+from cloud.app.agent_runtime.core.agent import Agent
 
 
 def test_agent_imports():

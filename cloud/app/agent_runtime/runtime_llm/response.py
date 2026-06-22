@@ -1,6 +1,6 @@
 """LLM response parsing and annotation."""
 
-from cloud.app.agent_runtime.cost_governor import CostGovernor
+from cloud.app.agent_runtime.safety.cost_governor import CostGovernor
 
 
 def usage_from_route_result(result: dict) -> dict:

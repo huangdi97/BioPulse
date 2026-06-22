@@ -7,7 +7,7 @@ from typing import Any
 
 import yaml
 
-from cloud.app.agent_runtime.runtime_core import RuntimeCore
+from cloud.app.agent_runtime.core.runtime_core import RuntimeCore
 from cloud.app.database import DB_PATH
 
 logger = logging.getLogger(__name__)

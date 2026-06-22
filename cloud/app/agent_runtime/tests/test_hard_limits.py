@@ -3,7 +3,7 @@
 import time
 from unittest.mock import MagicMock, patch
 
-from cloud.app.agent_runtime.execution_loop import ExecutionEngine
+from cloud.app.agent_runtime.lifecycle.execution_loop import ExecutionEngine
 
 
 def _make_host():

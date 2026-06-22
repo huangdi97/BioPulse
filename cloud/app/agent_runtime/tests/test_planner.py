@@ -1,4 +1,4 @@
-from cloud.app.agent_runtime.planner import Plan, PlanGenerator, PlanStep
+from cloud.app.agent_runtime.core.planner import Plan, PlanGenerator, PlanStep
 
 
 def test_validate_plan_valid():

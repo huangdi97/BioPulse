@@ -3,8 +3,8 @@ import sqlite3
 
 import pytest
 
-from cloud.app.agent_runtime.cost_governor import CostGovernor
 from cloud.app.agent_runtime.runtime_llm import RuntimeLLM
+from cloud.app.agent_runtime.safety.cost_governor import CostGovernor
 
 
 def _connect(db_path):

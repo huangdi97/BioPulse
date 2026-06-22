@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cloud.app.agent_runtime.safety_guard import DistilBertClassifier, SafetyGuard
+from cloud.app.agent_runtime.safety.safety_guard import DistilBertClassifier, SafetyGuard
 
 
 def _install_torch_stub() -> None:

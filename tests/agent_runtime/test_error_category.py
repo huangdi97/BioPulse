@@ -1,6 +1,6 @@
 """Tests for runtime_core — error_category categorization."""
 
-from cloud.app.agent_runtime.runtime_core import RuntimeCore
+from cloud.app.agent_runtime.core.runtime_core import RuntimeCore
 
 
 def test_categorize_error_timeout():

@@ -6,7 +6,7 @@ import logging
 import re
 from typing import Any, Optional
 
-from cloud.app.agent_runtime.models import AgentIdentity
+from cloud.app.agent_runtime.core.models import AgentIdentity
 from cloud.app.agents.base_agent import AgentContext, AgentResponse, BaseAgent
 from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 from cloud.app.compliance.red_light import RedLightManager

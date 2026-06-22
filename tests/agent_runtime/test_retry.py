@@ -1,6 +1,6 @@
 """Tests for retry module."""
 
-from cloud.app.agent_runtime.retry import retry_with_backoff
+from cloud.app.agent_runtime.lifecycle.retry import retry_with_backoff
 
 
 def test_retry_success_first_try():

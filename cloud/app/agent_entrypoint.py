@@ -7,8 +7,8 @@ import uvicorn
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
-from cloud.app.agent_runtime.runtime_core import RuntimeCore
+from cloud.app.agent_runtime.core.agent_specs import AGENT_SPECS
+from cloud.app.agent_runtime.core.runtime_core import RuntimeCore
 from cloud.app.database import DB_PATH
 
 logger = logging.getLogger(__name__)

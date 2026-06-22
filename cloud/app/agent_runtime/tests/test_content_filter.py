@@ -1,6 +1,6 @@
 """Tests for ContentFilter."""
 
-from cloud.app.agent_runtime.content_filter import (
+from cloud.app.agent_runtime.safety.content_filter import (
     ContentBlocked,
     ContentFilter,
     check_injection,

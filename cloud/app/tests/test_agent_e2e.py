@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from cloud.app.agent_runtime.agent import Agent
-from cloud.app.agent_runtime.agent_registry import AgentRegistry
-from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
+from cloud.app.agent_runtime.core.agent import Agent
+from cloud.app.agent_runtime.core.agent_registry import AgentRegistry
+from cloud.app.agent_runtime.core.agent_specs import AGENT_SPECS
 
 AGENTS_DIR = Path("agents")
 

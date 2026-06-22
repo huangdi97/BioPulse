@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cloud.app.agent_runtime.runtime_core import _get_global_semaphore
+from cloud.app.agent_runtime.core.runtime_core import _get_global_semaphore
 
 
 class TestAgentConcurrency:

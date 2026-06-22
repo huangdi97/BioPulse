@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from cloud.app.agent_runtime.models import AgentIdentity
+from cloud.app.agent_runtime.core.models import AgentIdentity
 from cloud.app.agents.edac_agent_trigger import EdacAgentTrigger
 
 

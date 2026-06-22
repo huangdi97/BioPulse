@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cloud.app.agent_runtime.memory import Memory
+from cloud.app.agent_runtime.memory.memory import Memory
 
 
 @pytest.fixture

@@ -2,7 +2,7 @@
 
 import pytest
 
-from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
+from cloud.app.agent_runtime.core.agent_specs import AGENT_SPECS
 
 REGISTERED_AGENTS = {
     "Compliance Agent": "compliance_monitor",

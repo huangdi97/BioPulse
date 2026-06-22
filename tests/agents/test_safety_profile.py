@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import mock_open, patch
 
-from cloud.app.agent_runtime.models import (
+from cloud.app.agent_runtime.core.models import (
     AgentIdentity,
     ModelPreference,
     SafetyProfile,

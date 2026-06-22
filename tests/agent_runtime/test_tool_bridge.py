@@ -1,7 +1,7 @@
 """Tests for tool_bridge module."""
 
-from cloud.app.agent_runtime.models import ToolDef
-from cloud.app.agent_runtime.tool_bridge import ToolBridge, ToolResult
+from cloud.app.agent_runtime.core.models import ToolDef
+from cloud.app.agent_runtime.tools.tool_bridge import ToolBridge, ToolResult
 
 
 def test_empty_on_init():

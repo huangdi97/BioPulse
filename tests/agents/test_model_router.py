@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from cloud.app.agent_runtime.models import AgentIdentity, AgentTier, ModelPreference
+from cloud.app.agent_runtime.core.models import AgentIdentity, AgentTier, ModelPreference
 from cloud.app.agents.model_router import ModelRouter, RouteResult
 
 

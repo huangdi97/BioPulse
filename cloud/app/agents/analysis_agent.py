@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
-from cloud.app.agent_runtime.models import AgentIdentity
+from cloud.app.agent_runtime.core.models import AgentIdentity
 from cloud.app.agents.base_agent import AgentContext, AgentResponse, BaseAgent
 from cloud.app.analysis import (
     Hypothesis,

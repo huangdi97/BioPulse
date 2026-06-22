@@ -1,4 +1,4 @@
-from cloud.app.agent_runtime.agent_registry import AgentRegistry
+from cloud.app.agent_runtime.core.agent_registry import AgentRegistry
 
 
 class AgentInsightService:

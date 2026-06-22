@@ -1,8 +1,8 @@
 from unittest.mock import MagicMock
 
-from cloud.app.agent_runtime.execution_loop import ExecutionEngine
-from cloud.app.agent_runtime.models import CheckResult, VerificationResult
-from cloud.app.agent_runtime.planner import Plan, PlanStep
+from cloud.app.agent_runtime.core.models import CheckResult, VerificationResult
+from cloud.app.agent_runtime.core.planner import Plan, PlanStep
+from cloud.app.agent_runtime.lifecycle.execution_loop import ExecutionEngine
 
 
 def _make_engine(host=None):

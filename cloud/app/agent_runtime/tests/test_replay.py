@@ -1,6 +1,6 @@
 """Tests for TrajectoryRecorder replay."""
 
-from cloud.app.agent_runtime.trajectory_recorder import TrajectoryRecorder
+from cloud.app.agent_runtime.memory.trajectory_recorder import TrajectoryRecorder
 
 
 def test_replay_known_trajectory(tmp_path):

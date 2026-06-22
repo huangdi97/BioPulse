@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock
 
-from cloud.app.agent_runtime.models import RuntimeResult
-from cloud.app.agent_runtime.trigger import run_agent_trigger
+from cloud.app.agent_runtime.core.models import RuntimeResult
+from cloud.app.agent_runtime.core.trigger import run_agent_trigger
 
 
 def _mock_runtime() -> MagicMock:

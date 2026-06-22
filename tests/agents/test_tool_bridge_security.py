@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from cloud.app.agent_runtime.models import ToolDef
-from cloud.app.agent_runtime.tool_bridge import ToolBridge, ToolResult
+from cloud.app.agent_runtime.core.models import ToolDef
+from cloud.app.agent_runtime.tools.tool_bridge import ToolBridge, ToolResult
 
 
 class TestToolBridgeExecuteAllowedAgents:

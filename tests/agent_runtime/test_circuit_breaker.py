@@ -1,6 +1,6 @@
 import pytest
 
-from cloud.app.agent_runtime.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError, CircuitState
+from cloud.app.agent_runtime.lifecycle.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError, CircuitState
 
 
 def test_initial_state():

@@ -38,13 +38,13 @@ def register_startup_events(app: FastAPI) -> None:
         init_agent_db()
         init_db()
         init_research()
-        from cloud.app.agent_runtime.agent_registry import AgentRegistry
+        from cloud.app.agent_runtime.core.agent_registry import AgentRegistry
 
         AgentRegistry.load()
 
-        from cloud.app.agent_runtime.namespace_event_bus import get_namespace_event_bus
-        from cloud.app.agent_runtime.shared_state import get_shared_state
-        from cloud.app.agent_runtime.world_model import get_world_model
+        from cloud.app.agent_runtime.comm.namespace_event_bus import get_namespace_event_bus
+        from cloud.app.agent_runtime.core.shared_state import get_shared_state
+        from cloud.app.agent_runtime.memory.world_model import get_world_model
 
         get_namespace_event_bus().start(get_shared_state())
         get_world_model().start()

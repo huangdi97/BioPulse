@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 
 import pytest
 
-from cloud.app.agent_runtime.models import AgentIdentity, AgentTier, ModelPreference
+from cloud.app.agent_runtime.core.models import AgentIdentity, AgentTier, ModelPreference
 from cloud.app.agents.base_agent import AgentContext, AgentResponse, BaseAgent
 from cloud.app.agents.specialized_agent import SpecializedAgent
 

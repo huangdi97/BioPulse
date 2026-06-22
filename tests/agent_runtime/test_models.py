@@ -1,4 +1,4 @@
-from cloud.app.agent_runtime.models import ToolDef
+from cloud.app.agent_runtime.core.models import ToolDef
 
 
 def test_tool_def_defaults():

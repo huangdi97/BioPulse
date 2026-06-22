@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from cloud.app.agent_runtime.safety_guard import SafetyGuard
+from cloud.app.agent_runtime.safety.safety_guard import SafetyGuard
 
 
 class TestSafetyGuardPredictSideEffectLLM:

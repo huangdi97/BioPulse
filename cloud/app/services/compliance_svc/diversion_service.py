@@ -14,7 +14,7 @@ _NOTIFIER = None
 def _get_notifier():
     global _NOTIFIER
     if _NOTIFIER is None:
-        from cloud.app.agent_runtime.notifier import Notifier
+        from cloud.app.agent_runtime.comm.notifier import Notifier
 
         _NOTIFIER = Notifier()
     return _NOTIFIER

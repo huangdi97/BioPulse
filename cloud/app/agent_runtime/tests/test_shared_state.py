@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from cloud.app.agent_runtime.shared_state import SharedState, SharedStateEntry, _validate_namespace
+from cloud.app.agent_runtime.core.shared_state import SharedState, SharedStateEntry, _validate_namespace
 
 
 def _make_entry(**overrides) -> SharedStateEntry:

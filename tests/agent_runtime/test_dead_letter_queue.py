@@ -1,6 +1,6 @@
 """Tests for dead_letter_queue — replay_all, replay_by_error_type, get_stats."""
 
-from cloud.app.agent_runtime.dead_letter_queue import DeadLetterEntry, DeadLetterQueue
+from cloud.app.agent_runtime.lifecycle.dead_letter_queue import DeadLetterEntry, DeadLetterQueue
 
 
 def test_dead_letter_entry_with_error_category():

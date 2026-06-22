@@ -9,10 +9,10 @@ from unittest.mock import MagicMock, PropertyMock
 
 import pytest
 
-from cloud.app.agent_runtime.analysis_agent import AnalysisAgent
-from cloud.app.agent_runtime.compliance_trigger import compliance_monitor_trigger
-from cloud.app.agent_runtime.cost_governor import CostGovernor
-from cloud.app.agent_runtime.models import RuntimeResult
+from cloud.app.agent_runtime.core.analysis_agent import AnalysisAgent
+from cloud.app.agent_runtime.core.compliance_trigger import compliance_monitor_trigger
+from cloud.app.agent_runtime.core.models import RuntimeResult
+from cloud.app.agent_runtime.safety.cost_governor import CostGovernor
 
 
 @pytest.fixture

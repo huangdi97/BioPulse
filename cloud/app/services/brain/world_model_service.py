@@ -47,7 +47,7 @@ class WorldModelService:
 
     def full_scan(self) -> list[CognitionEntry]:
         """全量扫描——触发世界模型后台循环全量扫描。"""
-        from cloud.app.agent_runtime.world_model import get_world_model
+        from cloud.app.agent_runtime.memory.world_model import get_world_model
 
         get_world_model()._full_scan()
         now = datetime.now(timezone.utc).isoformat()
@@ -60,7 +60,7 @@ class WorldModelService:
         """增量扫描——namespace变更后触发。"""
         if not changed_namespaces:
             return []
-        from cloud.app.agent_runtime.world_model import get_world_model
+        from cloud.app.agent_runtime.memory.world_model import get_world_model
 
         get_world_model()._incremental_scan(changed_namespaces)
         return self.get_cognitions(min_confidence=0.0)
@@ -72,7 +72,7 @@ class WorldModelService:
         limit: int = 20,
     ) -> list[CognitionEntry]:
         """获取认知列表，支持过滤。从 SharedState 的 shared.cognition namespace 读取。"""
-        from cloud.app.agent_runtime.shared_state import get_shared_state
+        from cloud.app.agent_runtime.core.shared_state import get_shared_state
 
         ss = get_shared_state()
         entries = ss.read("shared.cognition", min_confidence=min_confidence)

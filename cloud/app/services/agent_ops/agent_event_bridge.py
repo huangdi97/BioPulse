@@ -7,8 +7,8 @@ import threading
 
 import yaml
 
-from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
-from cloud.app.agent_runtime.runtime_core import RuntimeCore
+from cloud.app.agent_runtime.core.agent_specs import AGENT_SPECS
+from cloud.app.agent_runtime.core.runtime_core import RuntimeCore
 from cloud.app.database import DB_PATH
 
 _SUBSCRIPTIONS: dict[str, list[tuple[str, str | None]]] = {}

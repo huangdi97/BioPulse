@@ -6,7 +6,7 @@ import os
 
 import httpx
 
-from cloud.app.agent_runtime.secret_manager import SecretManager
+from cloud.app.agent_runtime.core.secret_manager import SecretManager
 from shared.ai_gateway import LLM_INFERENCE_TIMEOUT
 from shared.config import settings as config_settings
 

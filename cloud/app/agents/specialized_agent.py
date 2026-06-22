@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from cloud.app.agent_runtime.models import AgentIdentity
+from cloud.app.agent_runtime.core.models import AgentIdentity
 from cloud.app.agents.base_agent import AgentContext, AgentResponse, BaseAgent
 
 logger = logging.getLogger(__name__)

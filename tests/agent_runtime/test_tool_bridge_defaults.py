@@ -1,6 +1,6 @@
 """Tests for tool_bridge_defaults module."""
 
-from cloud.app.agent_runtime.tool_bridge_defaults import BRAIN_TOOLS, DEFAULT_TOOLS
+from cloud.app.agent_runtime.tools.tool_bridge_defaults import BRAIN_TOOLS, DEFAULT_TOOLS
 
 
 def test_default_tools_count():

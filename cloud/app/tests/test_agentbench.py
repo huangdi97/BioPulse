@@ -5,15 +5,15 @@ from unittest import mock
 
 import pytest
 
-from cloud.app.agent_runtime.agent_specs import AGENT_SPECS
 from cloud.app.agent_runtime.analyzer import Hypothesis
 from cloud.app.agent_runtime.analyzer.hypothesis import HypothesisEngine
-from cloud.app.agent_runtime.content_filter import ContentFilter
-from cloud.app.agent_runtime.cost_governor import CostGovernor
-from cloud.app.agent_runtime.loop_detector import LoopDetector
-from cloud.app.agent_runtime.planner import Plan, PlanGenerator, PlanStep
-from cloud.app.agent_runtime.safety_guard import SafetyGuard
-from cloud.app.agent_runtime.verifier import Verifier
+from cloud.app.agent_runtime.core.agent_specs import AGENT_SPECS
+from cloud.app.agent_runtime.core.loop_detector import LoopDetector
+from cloud.app.agent_runtime.core.planner import Plan, PlanGenerator, PlanStep
+from cloud.app.agent_runtime.safety.content_filter import ContentFilter
+from cloud.app.agent_runtime.safety.cost_governor import CostGovernor
+from cloud.app.agent_runtime.safety.safety_guard import SafetyGuard
+from cloud.app.agent_runtime.safety.verifier import Verifier
 from cloud.app.compliance.engine import ComplianceEnforcer
 
 GOLDEN_DIR = Path(__file__).parent / "golden"
@@ -291,7 +291,7 @@ def test_safetyguard_layer3_side_effect():
 
 def test_edac_publish_subscribe():
     """EDAC: publish event and verify subscriber receives it."""
-    from cloud.app.agent_runtime.agent_protocol import AgentMessage, AgentMessageBus
+    from cloud.app.agent_runtime.comm.agent_protocol import AgentMessage, AgentMessageBus
 
     bus = AgentMessageBus()
     received = []
@@ -308,7 +308,7 @@ def test_edac_publish_subscribe():
 
 def test_edac_broadcast_multi_agent():
     """EDAC: broadcast event to multiple agents via individual sends."""
-    from cloud.app.agent_runtime.agent_protocol import AgentMessage, AgentMessageBus
+    from cloud.app.agent_runtime.comm.agent_protocol import AgentMessage, AgentMessageBus
 
     bus = AgentMessageBus()
     received_a, received_b = [], []
@@ -366,7 +366,7 @@ def test_cost_governor_budget_exceeded():
 
 def test_loop_detector_simple():
     """LoopDetector: detect simple repeated pattern."""
-    from cloud.app.agent_runtime.models import AgentDecision
+    from cloud.app.agent_runtime.core.models import AgentDecision
 
     detector = LoopDetector()
     for _ in range(3):
@@ -377,7 +377,7 @@ def test_loop_detector_simple():
 
 def test_loop_detector_self_circuit_breaker():
     """LoopDetector: 3 self-loops trigger circuit breaker."""
-    from cloud.app.agent_runtime.models import AgentDecision
+    from cloud.app.agent_runtime.core.models import AgentDecision
 
     detector = LoopDetector()
     for _ in range(6):
@@ -444,7 +444,7 @@ def test_analyzer_full_hypothesis_loop(mock_call_llm):
 
 def test_compliance_trigger_build_plan():
     """Compliance trigger: build_compliance_plan generates 5-step structured plan."""
-    from cloud.app.agent_runtime.compliance_trigger import build_compliance_plan
+    from cloud.app.agent_runtime.core.compliance_trigger import build_compliance_plan
 
     plan = build_compliance_plan("test task", {"rep_id": "R001"})
     assert len(plan) == 5

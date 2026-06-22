@@ -1,7 +1,6 @@
 """Tests for CircuitBreaker."""
 
-
-from cloud.app.agent_runtime.circuit_breaker import (
+from cloud.app.agent_runtime.lifecycle.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerOpenError,
     CircuitState,
@@ -49,6 +48,7 @@ def test_half_open_recovers():
 
     # wait for recovery_timeout to elapse
     import time
+
     time.sleep(0.15)
 
     result = cb.call(lambda: "recovered")
@@ -73,6 +73,7 @@ def test_half_open_fails_again():
 
     # wait for recovery_timeout to elapse → transitions to HALF_OPEN
     import time
+
     time.sleep(0.15)
 
     # call fails again while in HALF_OPEN
@@ -128,6 +129,7 @@ def test_circuit_breaker_half_open():
 
     # wait for recovery_timeout to elapse → auto-transitions to HALF_OPEN on next call
     import time
+
     time.sleep(0.15)
 
     # call at t > recovery_timeout → should transition to HALF_OPEN then fail
@@ -177,6 +179,6 @@ def test_circuit_breaker_consecutive_failures():
         except ValueError:
             pass
         if i < 3:
-            assert cb.state == CircuitState.CLOSED, f"failed at call {i+1}"
+            assert cb.state == CircuitState.CLOSED, f"failed at call {i + 1}"
         else:
             assert cb.state == CircuitState.OPEN, "should be open after 4th failure"
