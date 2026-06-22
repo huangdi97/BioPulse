@@ -1,4 +1,4 @@
-"""Triangulation trend analysis — token matching, period extraction & trend comparison."""
+"""Holographic audit trend analysis — token matching, period extraction & trend comparison."""
 
 from typing import Any, Optional
 

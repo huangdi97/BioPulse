@@ -1,4 +1,4 @@
-"""E2E tests: diversion detection → triangulation engine → red-light notification."""
+"""E2E tests: diversion detection → holographic audit engine → red-light notification."""
 
 import sqlite3
 from unittest.mock import MagicMock
@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from cloud.app.services.diversion_service import DiversionDetectionService
 
 
-class TestDiversionTriangulationE2E:
+class TestDiversionHolographicE2E:
     def test_diversion_triggers_triangulation_and_red_light(self):
         db = sqlite3.connect(":memory:")
         mock_notifier = MagicMock()
@@ -25,8 +25,8 @@ class TestDiversionTriangulationE2E:
 
         assert result["is_diversion"] is True
         assert result["severity"] == "high"
-        assert result["triangulation_score"] is not None
-        assert result["triangulation_level"] is not None
+        assert result["holographic_score"] is not None
+        assert result["holographic_level"] is not None
 
         mock_notifier.send.assert_called()
         call_args = mock_notifier.send.call_args_list
@@ -36,7 +36,7 @@ class TestDiversionTriangulationE2E:
         records = svc.get_diversion_records("rep-001", days=30)
         assert len(records) >= 1
         assert records[0]["is_diversion"] == 1
-        assert records[0]["triangulation_score"] is not None
+        assert records[0]["holographic_score"] is not None
         db.close()
 
     def test_diversion_low_quantity_triangulation_escalates(self):
@@ -57,8 +57,8 @@ class TestDiversionTriangulationE2E:
 
         assert result["is_diversion"] is True
         assert result["severity"] == "high"
-        assert result["triangulation_score"] is not None
-        assert result["triangulation_level"] is not None
+        assert result["holographic_score"] is not None
+        assert result["holographic_level"] is not None
 
         mock_notifier.send.assert_called()
         db.close()
@@ -78,7 +78,7 @@ class TestDiversionTriangulationE2E:
         )
 
         assert result["is_diversion"] is False
-        assert result["triangulation_score"] is None
+        assert result["holographic_score"] is None
         db.close()
 
     def test_diversion_log_persistence_with_triangulation(self):
@@ -102,7 +102,7 @@ class TestDiversionTriangulationE2E:
         row = dict(zip(cols, rows[0]))
         assert row["is_diversion"] == 1
         assert row["severity"] == "high"
-        assert row["triangulation_score"] is not None
-        assert row["triangulation_level"] is not None
-        assert row["triangulation_findings"] is not None
+        assert row["holographic_score"] is not None
+        assert row["holographic_level"] is not None
+        assert row["holographic_findings"] is not None
         db.close()

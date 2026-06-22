@@ -1,4 +1,4 @@
-"""Triangulation detection patterns — entry point re-exporting all public symbols."""
+"""Holographic audit detection patterns — entry point re-exporting all public symbols."""
 
 from typing import Any
 
@@ -20,7 +20,7 @@ def _records(value: dict[str, Any] | list[dict[str, Any]] | None) -> list[dict[s
         return [value]
     if isinstance(value, list):
         return [item for item in value if isinstance(item, dict)]
-    raise AppException(ErrorCode.VALIDATION_ERROR, "Triangulation data must be a dict, list, or None")
+    raise AppException(ErrorCode.VALIDATION_ERROR, "Holographic audit data must be a dict, list, or None")
 
 
 def _row_to_dict(row: Any) -> dict[str, Any]:

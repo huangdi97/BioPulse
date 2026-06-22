@@ -1,4 +1,4 @@
-"""Triangulation data types — finding, result & serialisation."""
+"""Holographic audit data types — finding, result & serialisation."""
 
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ class HolographicFinding:
 
 @dataclass
 class HolographicResult:
-    """Triangulation check result across all detection patterns."""
+    """Holographic audit check result across all detection patterns."""
 
     passed: bool
     confidence_score: float

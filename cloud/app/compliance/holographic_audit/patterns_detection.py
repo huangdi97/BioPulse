@@ -1,4 +1,4 @@
-"""Triangulation detection patterns — region analysis, channel stuffing, fake distribution & finding builder."""
+"""Holographic audit detection patterns — region analysis, channel stuffing, fake distribution & finding builder."""
 
 from typing import Any
 

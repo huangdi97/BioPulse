@@ -1,4 +1,4 @@
-"""Triangulation anomaly detection pattern functions."""
+"""Holographic audit anomaly detection pattern functions."""
 
 from __future__ import annotations
 

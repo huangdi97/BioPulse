@@ -40,7 +40,7 @@ def red_light_event() -> dict:
         "dealer_id": "dealer_005",
         "level": "red",
         "rule_code": "R12",
-        "rule_name": "费用-拜访-流向三角勾稽不通过",
+        "rule_name": "费用-拜访-流向全息校验不通过",
         "evidence": {
             "expense_visit_mismatch": True,
             "visit_count": 12,
@@ -58,7 +58,7 @@ class TestComplianceToAnalysisToSuggestion:
         chain: list[str] = []
 
         # Step 1: Compliance Monitor triggers and produces red-light event
-        compliance_result = compliance_monitor_trigger(mock_runtime, "费用-拜访-流向三角勾稽检查", red_light_event)
+        compliance_result = compliance_monitor_trigger(mock_runtime, "费用-拜访-流向全息校验检查", red_light_event)
         assert compliance_result["status"] == "success"
         chain.append("compliance")
         assert mock_runtime.execute.called
@@ -144,7 +144,7 @@ class TestComplianceToAnalysisToSuggestion:
 
     def test_full_chain_integration(self, mock_runtime: MagicMock, red_light_event: dict) -> None:
         chain_result = {
-            "compliance": compliance_monitor_trigger(mock_runtime, "三角勾稽检查", red_light_event),
+            "compliance": compliance_monitor_trigger(mock_runtime, "全息校验检查", red_light_event),
             "analysis": AnalysisAgent().execute(red_light_event),
         }
         assert chain_result["compliance"]["status"] == "success"

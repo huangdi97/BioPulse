@@ -19,7 +19,7 @@ __all__ = ["ComplianceAgent"]
 class ComplianceAgent(BaseAgent):
     """规则引擎驱动的合规审核 Agent。
 
-    解析 context.message 提取 visit_id / expense_id，调用三角验证引擎
+    解析 context.message 提取 visit_id / expense_id，调用全息校验引擎
     进行数据交叉核验，触发红/绿灯决策并记录审计日志。
     """
 
@@ -66,7 +66,7 @@ class ComplianceAgent(BaseAgent):
         except Exception:
             logger.exception("HolographicAuditEngine.check 失败，entity_id=%s", entity_id)
             return AgentResponse(
-                reply=f"[{agent_name}] 三角验证引擎异常，请稍后重试。",
+                reply=f"[{agent_name}] 全息校验引擎异常，请稍后重试。",
             )
 
         decisions = []
@@ -94,7 +94,7 @@ class ComplianceAgent(BaseAgent):
             entity_type=entity_type,
             entity_id=entity_id,
             action="compliance_check",
-            detail=f"三角验证 {'通过' if result.passed else '异常'}，决策={result.decision}",
+            detail=f"全息校验 {'通过' if result.passed else '异常'}，决策={result.decision}",
         )
 
         reply_parts = [

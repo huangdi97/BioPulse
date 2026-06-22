@@ -1,4 +1,4 @@
-"""Triangulation anomaly detection engine — check() entry point."""
+"""Holographic audit anomaly detection engine — check() entry point."""
 
 from __future__ import annotations
 

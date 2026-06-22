@@ -181,7 +181,7 @@ def test_compliance_l4_tool_failure():
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# ── Triangulation Cross-Validation (5 tests) ──
+# ── Holographic Audit Cross-Validation (5 tests) ──
 # ══════════════════════════════════════════════════════════════════════════════
 
 
