@@ -1,0 +1,30 @@
+chains:
+  - name: "异常→根因→建议→教练"
+    trigger_event: "compliance.anomaly_detected"
+    steps:
+      - agent: "anomaly_analysis"
+        action: "run_root_cause"
+        timeout: 60
+      - agent: "sales_suggestion"
+        action: "generate_action_plan"
+        wait_for: "anomaly_analysis"
+      - agent: "sales_coach_analyst"
+        action: "create_training_scenario"
+        condition: "root_cause.type == 'compliance_violation'"
+
+  - name: "商机流失→情报→策略调整"
+    trigger_event: "opportunity.loss_detected"
+    steps:
+      - agent: "opportunity_scanner"
+        action: "scan_competitor_activity"
+      - agent: "sales_suggestion"
+        action: "adjust_strategy"
+
+  - name: "拜访完成→建议→知识沉淀"
+    trigger_event: "visit.completed"
+    steps:
+      - agent: "sales_suggestion"
+        action: "generate_action_plan"
+      - agent: "knowledge_worker"
+        action: "extract_insights"
+        wait_for: "sales_suggestion"
