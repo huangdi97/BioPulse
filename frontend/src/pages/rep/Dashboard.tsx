@@ -3,14 +3,15 @@ import { useNavigate } from 'react-router-dom'
 import { fetchDashboardSummary } from '@/api/dashboard'
 import { fetchTasks, completeTask } from '@/api/tasks'
 import { fetchSuggestions } from '@/api/recommends'
-import type { DashboardSummary, Task, AiSuggestion } from '@/types'
+import { fetchTodayRecommendations } from '@/api/rep-dashboard'
+import type { DashboardSummary, Task, AiSuggestion, TodayRecommendation } from '@/types'
 import StatCard from '@/components/StatCard'
 import AiSuggestionCard from '@/components/AiSuggestionCard'
 import AiCapabilityCard from '@/components/ai/AiCapabilityCard'
 import AgentSummaryCard from '../../components/AgentSummaryCard'
 import AgentInsightBar from '../../components/AgentInsightBar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ClipboardList, CalendarCheck, AlertTriangle, Check, Mic, Bell, Zap } from 'lucide-react'
+import { ClipboardList, CalendarCheck, AlertTriangle, Check, Mic, Bell, Zap, Target, DollarSign, UserCheck } from 'lucide-react'
 
 export default function RepDashboard() {
   const navigate = useNavigate()
@@ -21,16 +22,18 @@ export default function RepDashboard() {
   })
   const [tasks, setTasks] = useState<Task[]>([])
   const [suggestions, setSuggestions] = useState<AiSuggestion[]>([])
+  const [recommendations, setRecommendations] = useState<TodayRecommendation | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
-    Promise.all([fetchDashboardSummary(), fetchTasks(), fetchSuggestions()]).then(
-      ([summaryData, tasksData, suggestionsData]) => {
+    Promise.all([fetchDashboardSummary(), fetchTasks(), fetchSuggestions(), fetchTodayRecommendations()]).then(
+      ([summaryData, tasksData, suggestionsData, recsData]) => {
         if (cancelled) return
         setSummary(summaryData)
         setTasks(tasksData)
         setSuggestions(suggestionsData)
+        setRecommendations(recsData)
         setLoading(false)
       }
     )
@@ -97,6 +100,67 @@ export default function RepDashboard() {
       </div>
 
       <AgentInsightBar pageId="rep_dashboard" />
+
+      {recommendations && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Target className="h-4 w-4 text-primary" />
+              今日推荐
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {recommendations.recommendations.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-2">优先行动</p>
+                <div className="space-y-2">
+                  {recommendations.recommendations.slice(0, 3).map((rec) => (
+                    <div key={rec.id} className="flex items-start gap-3 p-2 rounded-lg border bg-card">
+                      <div className="mt-0.5">
+                        {rec.type === 'competitor_alert' ? (
+                          <DollarSign className="h-4 w-4 text-orange-500" />
+                        ) : (
+                          <UserCheck className="h-4 w-4 text-blue-500" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{rec.title}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{rec.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {recommendations.visit_reasons.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-2">拜访理由</p>
+                <div className="flex flex-wrap gap-2">
+                  {recommendations.visit_reasons.map((vr, i) => (
+                    <span key={i} className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                      <UserCheck className="h-3 w-3" />
+                      {vr.hcp_name}: {vr.reason}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {recommendations.expense_alerts.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-2">费用提醒</p>
+                <div className="space-y-1">
+                  {recommendations.expense_alerts.map((ea, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <DollarSign className={`h-3 w-3 ${ea.severity === 'high' ? 'text-red-500' : 'text-amber-500'}`} />
+                      <span>{ea.alert}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

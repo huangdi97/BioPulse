@@ -28,3 +28,16 @@ chains:
       - agent: "knowledge_worker"
         action: "extract_insights"
         wait_for: "sales_suggestion"
+
+  - name: "竞品动态→情报推送→策略建议"
+    trigger_event: "competitor.activity_detected"
+    steps:
+      - agent: "competitor_intel"
+        action: "analyze_competitor_movement"
+        timeout: 90
+      - agent: "sales_suggestion"
+        action: "generate_action_plan"
+        wait_for: "competitor_intel"
+      - agent: "notification_dispatcher"
+        action: "push_to_rep_dashboard"
+        wait_for: "sales_suggestion"

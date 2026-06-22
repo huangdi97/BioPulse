@@ -159,3 +159,28 @@ export interface AdmissionRecord {
   rep_name: string
   created_at: string
 }
+
+export interface RecommendationItem {
+  id: number
+  title: string
+  content: string
+  type: 'follow_up' | 'competitor_alert' | 'compliance_tip'
+}
+
+export interface VisitReasonItem {
+  hcp_name: string
+  reason: string
+  material: string
+}
+
+export interface ExpenseAlertItem {
+  expense_id: number
+  alert: string
+  severity: 'low' | 'medium' | 'high'
+}
+
+export interface TodayRecommendation {
+  recommendations: RecommendationItem[]
+  visit_reasons: VisitReasonItem[]
+  expense_alerts: ExpenseAlertItem[]
+}
