@@ -7,7 +7,7 @@ from cloud.app.services.diversion_service import DiversionDetectionService
 
 
 class TestDiversionHolographicE2E:
-    def test_diversion_triggers_triangulation_and_red_light(self):
+    def test_diversion_triggers_holographic_and_red_light(self):
         db = sqlite3.connect(":memory:")
         mock_notifier = MagicMock()
         svc = DiversionDetectionService(db, notifier=mock_notifier)
@@ -39,7 +39,7 @@ class TestDiversionHolographicE2E:
         assert records[0]["holographic_score"] is not None
         db.close()
 
-    def test_diversion_low_quantity_triangulation_escalates(self):
+    def test_diversion_low_quantity_holographic_escalates(self):
         db = sqlite3.connect(":memory:")
         mock_notifier = MagicMock()
         svc = DiversionDetectionService(db, notifier=mock_notifier)
@@ -81,7 +81,7 @@ class TestDiversionHolographicE2E:
         assert result["holographic_score"] is None
         db.close()
 
-    def test_diversion_log_persistence_with_triangulation(self):
+    def test_diversion_log_persistence_with_holographic(self):
         db = sqlite3.connect(":memory:")
         svc = DiversionDetectionService(db)
 

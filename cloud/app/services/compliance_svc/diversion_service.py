@@ -6,7 +6,7 @@ from dataclasses import asdict
 from datetime import datetime, timedelta
 from typing import Any
 
-from cloud.app.compliance.triangulation import HolographicAuditEngine
+from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 
 _NOTIFIER = None
 

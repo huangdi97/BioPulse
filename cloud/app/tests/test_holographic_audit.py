@@ -1,4 +1,4 @@
-"""Tests for compliance triangulation detection patterns."""
+"""Tests for compliance holographic audit detection patterns."""
 
 from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 

@@ -138,7 +138,7 @@ def test_compliance_l4_normal_flow():
 
 
 def test_compliance_l4_red_light_trigger():
-    """Compliance L4 red light trigger: triangulation with score >= 0.8 triggers red_light."""
+    """Compliance L4 red light trigger: holographic audit with score >= 0.8 triggers red_light."""
     from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 
     engine = HolographicAuditEngine()
@@ -153,7 +153,7 @@ def test_compliance_l4_red_light_trigger():
 
 
 def test_compliance_l4_degrade_fallback():
-    """Compliance L4: when triangulation fails, fallback to individual checks and degrade gracefully."""
+    """Compliance L4: when holographic audit fails, fallback to individual checks and degrade gracefully."""
     from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 
     engine = HolographicAuditEngine()
@@ -185,7 +185,7 @@ def test_compliance_l4_tool_failure():
 # ══════════════════════════════════════════════════════════════════════════════
 
 
-def test_triangulation_expense_anomaly():
+def test_holographic_expense_anomaly():
     """Expense anomaly: expense up + visit down + flow down → expense_waste."""
     from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 
@@ -199,7 +199,7 @@ def test_triangulation_expense_anomaly():
     assert "expense_waste" in findings
 
 
-def test_triangulation_visit_anomaly():
+def test_holographic_visit_anomaly():
     """Visit anomaly: visits up but flow flat → visit_fraud."""
     from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 
@@ -213,7 +213,7 @@ def test_triangulation_visit_anomaly():
     assert "visit_fraud" in findings
 
 
-def test_triangulation_channel_stuffing():
+def test_holographic_channel_stuffing():
     """Channel stuffing: cross-region distribution mismatch."""
     from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 
@@ -227,7 +227,7 @@ def test_triangulation_channel_stuffing():
     assert "channel_stuffing" in findings
 
 
-def test_triangulation_fake_activity():
+def test_holographic_fake_activity():
     """Fake activity: expense and visits up but flow down."""
     from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 
@@ -241,7 +241,7 @@ def test_triangulation_fake_activity():
     assert "fake_activity" in findings
 
 
-def test_triangulation_multi_evidence_backtrack():
+def test_holographic_multi_evidence_backtrack():
     """Multi-evidence backtrack: verify correlated records are returned."""
     from cloud.app.compliance.holographic_audit import HolographicAuditEngine
 

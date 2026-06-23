@@ -16,16 +16,16 @@ def test_expense_submission_to_red_light_and_root_cause_analysis():
     visit_snapshot = {"agent_id": "rep-e2e-001", "visit_trend": "down", "visit_count": 6}
     flow_snapshot = {"agent_id": "rep-e2e-001", "distribution_trend": "down", "sellout": 35}
 
-    triangulation = HolographicAuditEngine().check(expense_submission, visit_snapshot, flow_snapshot)
+    holographic_result = HolographicAuditEngine().check(expense_submission, visit_snapshot, flow_snapshot)
 
-    assert triangulation.decision == "trigger_red_light"
-    assert any(finding.pattern == "expense_waste" for finding in triangulation.findings)
+    assert holographic_result.decision == "trigger_red_light"
+    assert any(finding.pattern == "expense_waste" for finding in holographic_result.findings)
 
     red_light = RedLightManager().trigger(
         expense_submission["agent_id"],
         "L2",
         {
-            "findings": [finding.to_dict() for finding in triangulation.findings],
+            "findings": [finding.to_dict() for finding in holographic_result.findings],
             "expense_visit_mismatch": True,
             "invoice_mismatch": True,
             "expense": "费用金额与拜访、流向无法互相印证",

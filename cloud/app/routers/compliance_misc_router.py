@@ -232,13 +232,13 @@ def run_batch(
     results = []
     for dist in body.distributions:
         check_result = service.check_distribution(dist.model_dump())
-        triangulation = service.run_holographic_audit_check(dist.model_dump())
+        holographic_result = service.run_holographic_audit_check(dist.model_dump())
         results.append(
             {
                 "product": dist.product,
                 "region": dist.region,
                 "check": check_result,
-                "triangulation": triangulation,
+                "holographic_result": holographic_result,
             }
         )
     return success(data=results)

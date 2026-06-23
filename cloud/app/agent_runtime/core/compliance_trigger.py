@@ -12,7 +12,7 @@ AGENT_KEY = "compliance_monitor"
 GOAL = "合规检查"
 
 
-def _infer_severity(triangulation_result: dict) -> RedFlagSeverity:
+def _infer_severity(holographic_result: dict) -> RedFlagSeverity:
     """根据全息校验结果推断严重级别。"""
     severity_map = {
         "窜货": RedFlagSeverity.critical,
@@ -24,7 +24,7 @@ def _infer_severity(triangulation_result: dict) -> RedFlagSeverity:
         "管理失职": RedFlagSeverity.medium,
         "规则僵化": RedFlagSeverity.low,
     }
-    pattern = triangulation_result.get("detected_pattern", "")
+    pattern = holographic_result.get("detected_pattern", "")
     for key, sev in severity_map.items():
         if key in pattern:
             return sev
@@ -89,15 +89,15 @@ def compliance_monitor_trigger(
     # 如果执行成功且有步骤输出，检查是否需要生成红灯事件
     if result.get("status") in ("completed", "success"):
         step_results = result.get("metadata", {}).get("step_results", {})
-        triangulation = step_results.get("step_4", {})
-        anomaly_detected = triangulation.get("anomaly_detected", False)
+        holographic_result = step_results.get("step_4", {})
+        anomaly_detected = holographic_result.get("anomaly_detected", False)
 
         if anomaly_detected:
             event = RedFlagEvent.create(
-                severity=_infer_severity(triangulation),
+                severity=_infer_severity(holographic_result),
                 rep_id=(context or {}).get("rep_id", ""),
                 region=(context or {}).get("region", ""),
-                description=triangulation.get("summary", "合规异常"),
+                description=holographic_result.get("summary", "合规异常"),
                 evidence_chain=[
                     step_results.get("step_1", {}).get("result", ""),
                     step_results.get("step_2", {}).get("result", ""),
