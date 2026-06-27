@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 
 import pytest
-
-from cloud.app.config.provider_config import ProviderSettings
 from cloud.app.services.extraction_schema import ExtractionSchema
 from cloud.app.services.llm_extraction_service import (
     LLMExtractionError,
@@ -15,6 +13,8 @@ from cloud.app.services.llm_extraction_service import (
 )
 from cloud.app.services.llm_service import LlmService
 from cloud.app.services.memory_service import MemoryService
+
+from cloud.app.config.provider_config import ProviderSettings
 
 
 class FakeLLM:

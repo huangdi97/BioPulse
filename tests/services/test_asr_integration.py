@@ -6,8 +6,6 @@ import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
-from cloud.app.database import DB_PATH
 from cloud.app.services.visit_extraction_service import (
     DEFAULT_CONFIDENCE_THRESHOLD,
     confirm_draft,
@@ -17,6 +15,8 @@ from cloud.app.services.visit_extraction_service import (
     get_user_drafts,
     save_draft,
 )
+
+from cloud.app.database import DB_PATH
 
 
 @pytest.fixture(autouse=True)
