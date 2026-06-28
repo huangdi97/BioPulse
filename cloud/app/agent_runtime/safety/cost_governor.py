@@ -6,6 +6,7 @@ import os
 import sqlite3
 import urllib.error
 import urllib.request
+from collections import defaultdict
 from datetime import date
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,8 @@ class CostGovernor:
         self._agent_costs: dict[str, float] = {}
         self._user_context: dict | None = None
         self._alerted_low_budget = False
+        self._daily_usage: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+        self._daily_reset_date: str = ""
 
     def set_user_context(self, user_context: dict | None) -> None:
         """设置当前请求的用户上下文，影响预算决策。"""
@@ -258,6 +261,35 @@ class CostGovernor:
         self._total_cost += cost
         self._check_budget_alerts(agent_name, cost)
         return cost
+
+    def track_usage(self, agent_name: str, input_tokens: int, output_tokens: int, model: str = "", model_tier: str = "cloud_normal") -> float:
+        """记录实际 token 消耗，按天聚合。"""
+        cost = self.estimate_cost(input_tokens, output_tokens, model_tier)
+        today = str(date.today())
+        if self._daily_reset_date != today:
+            self._daily_usage.clear()
+            self._daily_reset_date = today
+        self._daily_usage[agent_name]["cost"] += cost
+        self._daily_usage[agent_name]["input_tokens"] += input_tokens
+        self._daily_usage[agent_name]["output_tokens"] += output_tokens
+        self._daily_usage[agent_name]["call_count"] += 1
+        self._daily_usage["_total"]["cost"] += cost
+        self.record(model or self._model, input_tokens, output_tokens, model_tier)
+        return cost
+
+    def get_daily_usage(self, tenant_id: str = "") -> dict:
+        """获取当天所有 Agent 的消耗汇总。"""
+        return dict(self._daily_usage)
+
+    def check_budget(self, tenant_id: str = "") -> bool:
+        """检查是否超预算，超预算则告警。"""
+        total = self._daily_usage.get("_total", {}).get("cost", 0.0)
+        if total > self._max_cost:
+            msg = f"CostGovernor: 超预算 (daily=${total:.4f}, max=${self._max_cost:.4f}, tenant={tenant_id})"
+            logger.error(msg)
+            self._fire_exhausted_alert()
+            return False
+        return True
 
     def get_cost_by_agent(self, agent_name: str, period_hours: int = 24) -> float:
         """获取指定 Agent 在指定周期内的成本。"""

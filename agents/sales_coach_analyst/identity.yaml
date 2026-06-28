@@ -21,3 +21,22 @@ safety_profile:
   bulkhead_max_concurrent: 3
   rate_limit_per_minute: 15
 fallback_l2: "基于历史训练数据的统计摘要生成建议"
+output_schema:
+  type: object
+  properties:
+    coaching_topic:
+      type: string
+    rep_id:
+      type: string
+    score:
+      type: number
+      minimum: 0
+      maximum: 100
+    recommendations:
+      type: array
+      items:
+        type: string
+  required:
+    - coaching_topic
+    - rep_id
+    - score

@@ -137,3 +137,12 @@ class SharedState:
                 cb(entry)
             except Exception:
                 logger.exception("Subscriber callback failed")
+
+    def list_all_namespaces(self) -> dict[str, list]:
+        with self._lock:
+            result: dict[str, list] = {}
+            for e in self._entries:
+                if e.namespace.startswith("shared."):
+                    continue
+                result.setdefault(e.namespace, []).append(e.value)
+            return result

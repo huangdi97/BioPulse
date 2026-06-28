@@ -25,6 +25,12 @@ from cloud.app.agent_runtime.lifecycle.tracer import AgentTracer
 from cloud.app.agent_runtime.memory.memory import Memory
 from cloud.app.agent_runtime.memory.state_snapshot import StateSnapshot
 from cloud.app.agent_runtime.memory.vector_memory import VectorMemory
+from cloud.app.agent_runtime.metrics.agent_metrics import (
+    agent_call_duration_seconds,
+    agent_calls_total,
+    agent_token_consumed_total,
+    agent_tool_calls_total,
+)
 from cloud.app.agent_runtime.reflection.reflector import Reflector
 from cloud.app.agent_runtime.runtime_llm import RuntimeLLM
 from cloud.app.agent_runtime.safety.bulkhead import Bulkhead
@@ -128,6 +134,7 @@ class RuntimeCore:
         trace_id = self._tracer.start_trace(agent_key, self._auth_header or "anonymous", {"goal": goal, "context": context})
         self._trace_id = trace_id
         agent_active_count.labels(agent_name=agent_key).inc()
+        _start_time = time.monotonic()
         if self._streamer:
             self._streamer.stream(trace_id, "agent.start", {"agent_name": agent_key, "goal": goal, "context": context})
         try:
@@ -182,11 +189,26 @@ class RuntimeCore:
             health_tracker.record_run(agent_key, is_success, result.result if not is_success else "")
             if self._streamer:
                 self._streamer.stream(trace_id, "agent.end", {"status": result.status, "result": result.result})
+            _duration = time.monotonic() - _start_time
+            agent_call_duration_seconds.labels(agent_key=agent_key).observe(_duration)
+            agent_calls_total.labels(agent_key=agent_key, status=result.status).inc()
+            _cost = result.metadata.get("cost", {})
+            _tokens = _cost.get("total_tokens", 0) if isinstance(_cost, dict) else 0
+            _model = (context or {}).get("model", "unknown")
+            if _tokens:
+                agent_token_consumed_total.labels(agent_key=agent_key, model=_model).inc(_tokens)
+            for log_entry in result.logs:
+                _tool = log_entry.get("tool")
+                if _tool:
+                    agent_tool_calls_total.labels(agent_key=agent_key, tool_name=_tool).inc()
             return result
         except Exception:  # agent 完整生命周期，保持宽捕获
             logger.exception("Runtime core异常")
             self._save_snapshot(agent_key, -1, [], [], context or {}, "failed")
             self._tracer.end_trace("error", {"error": "unhandled exception"})
+            _duration = time.monotonic() - _start_time
+            agent_call_duration_seconds.labels(agent_key=agent_key).observe(_duration)
+            agent_calls_total.labels(agent_key=agent_key, status="error").inc()
             if self._streamer:
                 self._streamer.stream(trace_id, "agent.error", {"error": "unhandled exception"})
             raise

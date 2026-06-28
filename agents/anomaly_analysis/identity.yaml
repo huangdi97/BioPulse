@@ -22,3 +22,21 @@ safety_profile:
   bulkhead_max_concurrent: 2
   rate_limit_per_minute: 10
 fallback_l2: "基于RuleEngine做基础规则匹配分析"
+output_schema:
+  type: object
+  properties:
+    anomaly_detected:
+      type: boolean
+    pattern:
+      type: string
+    severity:
+      type: string
+      enum: [low, medium, high, critical]
+    related_namespaces:
+      type: array
+      items:
+        type: string
+  required:
+    - anomaly_detected
+    - pattern
+    - severity

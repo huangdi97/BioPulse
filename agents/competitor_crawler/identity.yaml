@@ -21,3 +21,22 @@ safety_profile:
   bulkhead_max_concurrent: 2
   rate_limit_per_minute: 10
 fallback_l2: "返回上次缓存的竞品数据并标记数据时效"
+output_schema:
+  type: object
+  properties:
+    drug_name:
+      type: string
+    company:
+      type: string
+    update_type:
+      type: string
+      enum: [new_approval, pipeline_change, pricing_update, trial_result, other]
+    urgency:
+      type: string
+      enum: [low, medium, high]
+    source_url:
+      type: string
+  required:
+    - drug_name
+    - company
+    - update_type

@@ -22,3 +22,21 @@ safety_profile:
   bulkhead_max_concurrent: 3
   rate_limit_per_minute: 20
 fallback_l2: "读取上次商机扫描结果返回"
+output_schema:
+  type: object
+  properties:
+    opportunity_score:
+      type: number
+      minimum: 0
+      maximum: 100
+    hcp_name:
+      type: string
+    potential_value:
+      type: number
+    confidence:
+      type: string
+      enum: [low, medium, high]
+  required:
+    - opportunity_score
+    - hcp_name
+    - potential_value

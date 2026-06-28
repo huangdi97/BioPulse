@@ -22,3 +22,28 @@ safety_profile:
   bulkhead_max_concurrent: 2
   rate_limit_per_minute: 10
 fallback_l2: "记录合规异常到审计日志并发出预警通知"
+output_schema:
+  type: object
+  properties:
+    status:
+      type: string
+      enum: [compliant, violation, pending_review]
+    risk_level:
+      type: string
+      enum: [low, medium, high, critical]
+    violations:
+      type: array
+      items:
+        type: object
+        properties:
+          rule_id:
+            type: string
+          description:
+            type: string
+    evidence:
+      type: array
+      items:
+        type: string
+  required:
+    - status
+    - risk_level

@@ -94,21 +94,10 @@ class WorldModelLoop:
 
     @staticmethod
     def _collect_all_namespaces(ss) -> dict:
-        """Read all namespaces from SharedState (last 24h)."""
-        all_entries = []
         try:
-            all_entries = ss._entries
+            return ss.list_all_namespaces()
         except AttributeError:
             return {}
-        snapshot = {}
-        for entry in all_entries:
-            ns = entry.namespace
-            if ns.startswith("shared."):
-                continue
-            if ns not in snapshot:
-                snapshot[ns] = []
-            snapshot[ns].append(entry.value)
-        return snapshot
 
     def _llm_reason(self, snapshot: dict, incremental: bool = False) -> list[dict]:
         """LLM 推理：找跨域模式、关联、趋势。"""

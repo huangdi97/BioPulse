@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import re
 import urllib.request
 
 from cloud.app.agent_runtime.core.models import CheckResult
@@ -195,6 +196,57 @@ class SafetyGuard:
         except Exception:  # 多种失败模式，保持宽捕获
             logger.warning("L3 LLM side-effect prediction failed, using static fallback", exc_info=True)
             return cls.predict_side_effect(tool, params)
+
+    @staticmethod
+    def guard_output(text: str) -> tuple[bool, str]:
+        return OutputGuard.guard_output(text)
+
+    @staticmethod
+    def guard_tool_params(tool_name: str, params: dict) -> tuple[bool, str]:
+        return ToolParamGuard.guard_tool_params(tool_name, params)
+
+
+class OutputGuard:
+    PII_PATTERNS = {
+        "chinese_id": re.compile(r"\b\d{6}(?:19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[\dXx]\b"),
+        "phone": re.compile(r"\b1[3-9]\d{9}\b"),
+        "bank_card": re.compile(r"\b\d{16,19}\b"),
+    }
+
+    SENSITIVE_PATTERNS = {
+        "internal_ip": re.compile(r"\b(10(?:\.\d{1,3}){3}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}|192\.168(?:\.\d{1,3}){2})\b"),
+        "api_key": re.compile(r"(?i)(?:api[_-]?key|secret|token|password)\s*[:=]\s*\S+"),
+        "private_key": re.compile(r"-----BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY-----"),
+    }
+
+    @classmethod
+    def guard_output(cls, text: str) -> tuple[bool, str]:
+        cleaned = text
+        for name, pattern in cls.PII_PATTERNS.items():
+            if pattern.search(cleaned):
+                cleaned = pattern.sub(f"[REDACTED_{name}]", cleaned)
+        for name, pattern in cls.SENSITIVE_PATTERNS.items():
+            if pattern.search(cleaned):
+                cleaned = pattern.sub(f"[REDACTED_{name}]", cleaned)
+        return cleaned == text, cleaned
+
+
+class ToolParamGuard:
+    ALLOWED_REGIONS = {"华东", "华南", "华北", "华中", "西南", "西北", "东北", "华东区", "华南区", "华北区"}
+    DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+    @classmethod
+    def guard_tool_params(cls, tool_name: str, params: dict) -> tuple[bool, str]:
+        for key, value in params.items():
+            if isinstance(value, str) and len(value) >= 2000:
+                return False, f"Param '{key}' exceeds 2000 char limit ({len(value)})"
+            if key in ("region", "area") and isinstance(value, str):
+                if value not in cls.ALLOWED_REGIONS:
+                    return False, f"Region '{value}' not in whitelist"
+            if key in ("date", "start_date", "end_date") and isinstance(value, str):
+                if not cls.DATE_PATTERN.match(value):
+                    return False, f"Date '{value}' does not match YYYY-MM-DD format"
+        return True, "All params valid"
 
 
 class RuleEngineLLM:

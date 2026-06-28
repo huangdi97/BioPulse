@@ -1,27 +1,95 @@
 {
-  "title": "Agent 执行延迟",
+  "title": "Agent Runtime Overview",
   "uid": "agent-overview",
+  "version": 1,
   "panels": [
     {
-      "title": "Agent 执行延迟分布 (P50/P95/P99)",
+      "title": "Agent Calls",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(agent_calls_total)",
+          "legendFormat": "Total Calls"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 8}
+    },
+    {
+      "title": "Call Success Rate",
+      "type": "stat",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(agent_calls_total{status=~\"success|completed\"}) / sum(agent_calls_total) * 100",
+          "legendFormat": "Success Rate"
+        }
+      ],
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 8}
+    },
+    {
+      "title": "Call Duration (P50/P95)",
       "type": "timeseries",
       "datasource": "Prometheus",
       "targets": [
-        {"expr": "histogram_quantile(0.50, sum(rate(agent_execution_duration_seconds_bucket[5m])) by (le, agent_key))", "legendFormat": "P50 {{agent_key}}"},
-        {"expr": "histogram_quantile(0.95, sum(rate(agent_execution_duration_seconds_bucket[5m])) by (le, agent_key))", "legendFormat": "P95 {{agent_key}}"},
-        {"expr": "histogram_quantile(0.99, sum(rate(agent_execution_duration_seconds_bucket[5m])) by (le, agent_key))", "legendFormat": "P99 {{agent_key}}"}
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(agent_call_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "P50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(agent_call_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "P95"
+        }
       ],
-      "fieldConfig": {
-        "defaults": {"unit": "s", "custom": {"lineInterpolation": "smooth"}}
-      }
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8}
     },
     {
-      "title": "降级次数 (按 agent_key)",
-      "type": "bargauge",
+      "title": "Calls by Agent",
+      "type": "barchart",
       "datasource": "Prometheus",
       "targets": [
-        {"expr": "sum(increase(agent_degredation_total[24h])) by (agent_key)", "legendFormat": "{{agent_key}}"}
-      ]
+        {
+          "expr": "sum(agent_calls_total) by (agent_key)",
+          "legendFormat": "__auto"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8}
+    },
+    {
+      "title": "Token Consumption by Model",
+      "type": "timeseries",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(agent_token_consumed_total[5m])) by (model)",
+          "legendFormat": "{{model}}"
+        }
+      ],
+      "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8}
+    },
+    {
+      "title": "Tool Calls by Agent",
+      "type": "barchart",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(agent_tool_calls_total) by (agent_key)",
+          "legendFormat": "__auto"
+        }
+      ],
+      "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8}
+    },
+    {
+      "title": "Calls by Status",
+      "type": "piechart",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(agent_calls_total) by (status)",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8}
     }
   ]
 }

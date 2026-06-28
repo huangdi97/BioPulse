@@ -21,3 +21,21 @@ safety_profile:
   bulkhead_max_concurrent: 10
   rate_limit_per_minute: 100
 fallback_l2: "直接查询知识图谱返回原始结果"
+output_schema:
+  type: object
+  properties:
+    query_type:
+      type: string
+      enum: [hcp_profile, drug_info, competitive_intel, clinical_guideline, general_knowledge]
+    answer:
+      type: string
+    sources:
+      type: array
+      items:
+        type: string
+    confidence:
+      type: string
+      enum: [low, medium, high]
+  required:
+    - query_type
+    - answer
