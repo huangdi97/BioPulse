@@ -10,7 +10,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 from starlette.responses import StreamingResponse
 
-from cloud.app.services.dialogue_service import DialogueTranslator, SharedStateEntry, get_shared_state
+from cloud.app.services.rep_workbench.dialogue_service import DialogueTranslator, SharedStateEntry, get_shared_state
 
 logger = logging.getLogger(__name__)
 
@@ -94,27 +94,32 @@ def _sse_response(events: list[dict]) -> StreamingResponse:
 
 
 def _sse_stream_dialogue(session_id: str, body: DialogueRequest) -> StreamingResponse:
-    from cloud.app.services.dialogue_service import RuntimeCore
+    from cloud.app.agent_runtime.core.runtime_core import RuntimeCore
 
     async def _generate():
         yield f"event: dialogue.start\ndata: {json.dumps({'session_id': session_id, 'message': body.message}, ensure_ascii=False)}\n\n"
+        if not body or not body.message:
+            yield f"event: dialogue.error\ndata: {json.dumps({'error': '消息内容为空，无法执行'}, ensure_ascii=False)}\n\n"
+            yield "event: done\ndata: {}\n\n"
+            return
+        agent_key = body.agent_key or "knowledge_worker"
         try:
-            runtime = RuntimeCore(None, None, "", body.agent_key or "knowledge_worker")
-            from cloud.app.services.dialogue_service import AgentStreamer
+            runtime = RuntimeCore(None, None, "", agent_key)
+            from cloud.app.agent_runtime.comm.streamer import AgentStreamer
 
             streamer = AgentStreamer()
             runtime.set_streamer(streamer)
             trace_id = runtime._trace_id
-            result = runtime.execute(body.message, body.agent_key or "knowledge_worker")
+            result = runtime.execute(body.message, agent_key)
             async for chunk in streamer.get_stream(trace_id):
                 yield chunk
             yield f"event: dialogue.reply\ndata: {json.dumps({'reply': result.result, 'status': result.status}, ensure_ascii=False)}\n\n"
             get_shared_state().write(
                 SharedStateEntry(
-                    namespace=f"{body.agent_key or 'knowledge'}.result",
+                    namespace=f"{agent_key}.result",
                     key=f"dialogue_{uuid.uuid4().hex[:8]}",
                     value=result.result,
-                    agent_key=body.agent_key or "knowledge_worker",
+                    agent_key=agent_key,
                     confidence=1.0 if result.status == "success" else 0.5,
                     evidence=["dialogue_execution"],
                 ),
@@ -122,7 +127,8 @@ def _sse_stream_dialogue(session_id: str, body: DialogueRequest) -> StreamingRes
             )
         except Exception as e:
             logger.exception("Dialogue execution failed")
-            yield f"event: dialogue.error\ndata: {json.dumps({'error': str(e)}, ensure_ascii=False)}\n\n"
+            detail = f"{type(e).__name__}: {e}" if str(e) else type(e).__name__
+            yield f"event: dialogue.error\ndata: {json.dumps({'error': f'对话执行失败: {detail}'}, ensure_ascii=False)}\n\n"
         yield "event: done\ndata: {}\n\n"
 
     return StreamingResponse(_generate(), media_type="text/event-stream")

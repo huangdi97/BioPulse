@@ -8,6 +8,8 @@ import logging
 import time
 import uuid
 
+from cloud.app.agent_runtime.core.shared_state import get_shared_state
+
 logger = logging.getLogger(__name__)
 
 
@@ -82,7 +84,7 @@ class DialogueTranslator:
         return reply
 
     def _handle_question(self, session: dict, message: str) -> str:
-        """处理追问——从 context 中已有数据回复。"""
+        """处理追问——从 context 或 SharedState 中读取数据回复。"""
         ctx = session.get("context", {})
         evidence = ctx.get("evidence_chain", [])
         summary = ctx.get("summary", "")
@@ -93,7 +95,31 @@ class DialogueTranslator:
             if summary:
                 reply += f"\n\n结论：{summary}"
         else:
-            reply = "当前没有详细的依据链可展示。建议查看合规看板了解完整分析过程。"
+            agent_key = session.get("agent_key", "")
+            namespace = f"{agent_key}.result" if agent_key else ""
+            if namespace:
+                ss = get_shared_state()
+                entries = ss.read(namespace, min_confidence=0.3)
+                if entries:
+                    latest = max(entries, key=lambda e: e.timestamp or "")
+                    value = latest.value
+                    if isinstance(value, dict):
+                        parts = []
+                        for k in ["summary", "reason", "conclusion", "result", "analysis"]:
+                            if k in value:
+                                parts.append(f"  - {value[k]}")
+                        if parts:
+                            reply = "当前判断依据如下：\n" + "\n".join(parts[:5])
+                        else:
+                            reply = "当前判断依据如下：\n  " + str(value)[:300]
+                    elif isinstance(value, str):
+                        reply = f"当前判断依据如下：\n  {value[:300]}"
+                    else:
+                        reply = f"当前判断依据如下：\n  {str(value)[:300]}"
+                else:
+                    reply = "当前没有详细的判断依据可供展示。建议查看对应看板了解完整分析过程。"
+            else:
+                reply = "当前没有详细的判断依据可供展示。建议查看对应看板了解完整分析过程。"
 
         session["messages"].append({"role": "assistant", "content": reply, "timestamp": time.time()})
         return reply

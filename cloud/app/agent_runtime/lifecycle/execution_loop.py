@@ -8,7 +8,6 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FuturesTimeoutError
 from datetime import datetime
 
-from cloud.app.agent_runtime import metrics as agent_metrics
 from cloud.app.agent_runtime.comm.telemetry import trace_step
 from cloud.app.agent_runtime.core.agent_registry import AgentRegistry
 from cloud.app.agent_runtime.core.agent_specs import AGENT_SPECS
@@ -22,6 +21,7 @@ from cloud.app.agent_runtime.runtime_llm import AllModelsFailedError
 from cloud.app.agent_runtime.safety.completion_verifier import CompletionVerifier
 from cloud.app.agent_runtime.safety.pii_redactor import PIIRedactionFilter
 from cloud.app.agent_runtime.safety.schema_validator import OutputSchemaValidator
+from cloud.app.agent_runtime.tools import metrics as agent_metrics
 
 logger = logging.getLogger(__name__)
 logger.addFilter(PIIRedactionFilter())
