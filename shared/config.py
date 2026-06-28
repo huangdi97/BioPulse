@@ -1,4 +1,4 @@
-"""Config module."""
+"""Config module — loads .env based on ENV environment variable."""
 
 import logging
 import os
@@ -6,6 +6,20 @@ import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger(__name__)
+
+
+def _resolve_env_file() -> str:
+    env = os.environ.get("ENV", "development").lower()
+    if env == "production":
+        candidates = [".env.prod", "config/.env.prod", ".env"]
+    else:
+        candidates = [".env.dev", "config/.env.dev", ".env"]
+    for path in candidates:
+        if os.path.isfile(path):
+            logger.info("Config: loading %s (ENV=%s)", path, env)
+            return path
+    logger.warning("Config: no env file found for ENV=%s, falling back to .env", env)
+    return ".env"
 
 
 class Config(BaseSettings):
@@ -18,7 +32,7 @@ class Config(BaseSettings):
     opportunity_database_url: str = "sqlite:///./data/opportunity.db"
     sales_assistant_database_url: str = "sqlite:///./data/sales_assistant.db"
     sales_coach_database_url: str = "sqlite:///./data/sales_coach.db"
-    db_pool_size: int = 5
+    db_pool_size: int = 10
     db_max_overflow: int = 20
 
     host: str = "0.0.0.0"
@@ -82,7 +96,7 @@ class Config(BaseSettings):
         "load": {"direction": "minimize", "weight": 0.5},
     }
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(env_file=_resolve_env_file(), env_file_encoding="utf-8", extra="ignore")
 
 
 Settings = Config

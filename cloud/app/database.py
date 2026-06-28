@@ -54,11 +54,14 @@ def _get_engine():
     if _engine is None and (DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://")):
         from sqlalchemy import create_engine
 
+        pool_size = int(os.environ.get("DB_POOL_SIZE", "10"))
+        max_overflow = int(os.environ.get("DB_MAX_OVERFLOW", "20"))
         _engine = create_engine(
             DATABASE_URL,
-            pool_size=10,
-            max_overflow=20,
+            pool_size=pool_size,
+            max_overflow=max_overflow,
             pool_timeout=30,
+            pool_recycle=3600,
             pool_pre_ping=True,
         )
     return _engine

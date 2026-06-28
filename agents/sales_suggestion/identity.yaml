@@ -18,8 +18,12 @@ model_preference:
 cost_budget: 0.10
 trigger_mode: event
 event_subscriptions:
-  - visit.completed
-  - hcp.profile_updated
+  - visit\.completed
+  - hcp\.profile_updated
+  - cross_validation\.sales_suggestion
+cross_validation_subscriptions:
+  - namespace: cross_validation.sales_suggestion
+    source_agents: [anomaly_analysis]
 safety_profile:
   max_permission: read
   bulkhead_max_concurrent: 5

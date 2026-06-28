@@ -4,6 +4,8 @@ import logging
 from datetime import datetime
 from typing import Callable
 
+from cloud.app.agent_runtime.safety.defense_pipeline import is_quarantined
+
 logger = logging.getLogger(__name__)
 
 
@@ -61,13 +63,18 @@ class AgentMessage:
 
 
 class AgentMessageBus:
-    """基于 EventBus 的消息总线。"""
+    """基于 EventBus 的消息总线，含 L0 隔离检查。"""
 
     def __init__(self):
         self._handlers: dict[str, list[Callable]] = {}
 
     def send(self, message: AgentMessage):
-        """send."""
+        if is_quarantined(message.source):
+            logger.warning("Blocked send from quarantined agent: %s", message.source)
+            return
+        if is_quarantined(message.target):
+            logger.warning("Blocked send to quarantined agent: %s", message.target)
+            return
         logger.info(
             "AgentMessageBus send: %s -> %s type=%s trace=%s",
             message.source,

@@ -7,6 +7,8 @@ import time
 import uuid
 from datetime import datetime
 
+from cloud.app.middleware.json_formatter import request_id_var
+
 logger = logging.getLogger(__name__)
 
 
@@ -22,6 +24,7 @@ class AgentTracer:
         self._agent_name: str = ""
         self._user_id: str = ""
         self._input_data: dict = {}
+        self._request_id: str = ""
 
     def start_trace(self, agent_name: str, user_id: str, input_data: dict) -> str:
         """start trace."""
@@ -33,7 +36,8 @@ class AgentTracer:
         self._input_data = input_data
         self._tool_calls = []
         self._llm_calls = []
-        logger.info("Trace started: %s agent=%s", trace_id, agent_name)
+        self._request_id = request_id_var.get() or ""
+        logger.info("Trace started: %s agent=%s request_id=%s", trace_id, agent_name, self._request_id)
         return trace_id
 
     def log_tool_call(self, tool_name: str, args: dict, result: str, duration_ms: int) -> None:

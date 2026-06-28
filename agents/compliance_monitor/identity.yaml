@@ -17,6 +17,29 @@ model_preference:
 cost_budget: 0.50
 trigger_mode: l4
 event_subscriptions: []
+cross_validation_subscriptions:
+  - namespace: cross_validation.compliance_monitor
+    source_agents: [anomaly_analysis]
+autonomous_actions:
+  discover:
+    source: holographic_audit_check
+    actions:
+      - list_red_light_cases
+  collect_evidence:
+    sources:
+      - query_visit_history
+      - query_hcp_profile
+      - query_expense_data
+    max_items: 20
+  classify:
+    levels: [low, medium, high, critical]
+    thresholds:
+      critical: 0.9
+      high: 0.7
+      medium: 0.4
+  notify:
+    channels: [in_app, approval_queue]
+    critical_requires_approval: true
 safety_profile:
   max_permission: write
   bulkhead_max_concurrent: 2

@@ -1,0 +1,39 @@
+groups:
+  - name: agent_alerts
+    interval: 30s
+    rules:
+      - alert: AgentConsecutiveFailures
+        expr: rate(agent_requests_total{status="failure"}[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Agent consecutive failures detected"
+          description: "Agent {{ $labels.agent_name }} has elevated failure rate over 5 minutes."
+
+      - alert: AgentDailyTokenBudgetExceeded
+        expr: agent_tokens_total > 1000000
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Agent daily token budget exceeded"
+          description: "Agent {{ $labels.agent_name }} has consumed {{ $value }} tokens, exceeding daily budget."
+
+      - alert: AgentHighLatency
+        expr: histogram_quantile(0.95, sum(rate(agent_call_duration_seconds_bucket[5m])) by (le, agent_key)) > 10
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Agent response latency P95 > 10s"
+          description: "Agent {{ $labels.agent_key }} P95 latency is {{ $value }}s, exceeding 10s threshold."
+
+      - alert: AgentStale
+        expr: time() - agent_last_call_timestamp > 1800
+        for: 0m
+        labels:
+          severity: info
+        annotations:
+          summary: "Agent appears stalled"
+          description: "Agent {{ $labels.agent_name }} has not been called in over 30 minutes."

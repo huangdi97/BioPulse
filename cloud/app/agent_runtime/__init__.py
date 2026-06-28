@@ -54,6 +54,8 @@ _EXPORTS = {
     "comm.streamer": ("AgentStreamer",),
     "tools.tool_bridge": ("ToolBridge", "ToolRegistry"),
     "memory.vector_memory": ("VectorMemory",),
+    "evolution.reflexion_loop": ("ReflexionLoop",),
+    "evolution.skill_library": ("SkillLibrary",),
     "safety.validator": ("AgentOutputValidator", "Validator"),
     "safety.verifier": ("RuleEngineLLM", "SafetyGuard", "Verifier"),
 }

@@ -14,7 +14,19 @@ try:
     HAS_CRYPTO = True
 except ImportError:
     HAS_CRYPTO = False
-    logger.warning("cryptography not installed, secrets will be stored in plaintext")
+    _RED = "\033[91m"
+    _BOLD = "\033[1m"
+    _RESET = "\033[0m"
+    print(
+        f"{_RED}{_BOLD}"
+        "╔══════════════════════════════════════════════════════════════╗\n"
+        "║  ⚠️  CRITICAL: cryptography library not installed!         ║\n"
+        "║  Secrets will be stored in PLAINTEXT!                      ║\n"
+        "║  Install: pip install cryptography                         ║\n"
+        "╚══════════════════════════════════════════════════════════════╝"
+        f"{_RESET}"
+    )
+    logger.critical("cryptography not installed — secrets stored in plaintext")
 
 
 def _get_storage_key() -> bytes:
@@ -22,6 +34,29 @@ def _get_storage_key() -> bytes:
     if key_hex:
         return bytes.fromhex(key_hex)
     return os.urandom(32)
+
+
+def _ensure_storage_key_in_production() -> None:
+    env = os.environ.get("ENV", "development").lower()
+    if env == "production":
+        key_hex = os.environ.get("SECRET_STORAGE_KEY", "")
+        if not key_hex:
+            _RED = "\033[91m"
+            _BOLD = "\033[1m"
+            _RESET = "\033[0m"
+            msg = (
+                f"{_RED}{_BOLD}"
+                "╔══════════════════════════════════════════════════════════════╗\n"
+                "║  FATAL: SECRET_STORAGE_KEY not set in production mode!      ║\n"
+                "║  Refusing to start — set SECRET_STORAGE_KEY env var.        ║\n"
+                "╚══════════════════════════════════════════════════════════════╝"
+                f"{_RESET}"
+            )
+            print(msg)
+            raise SystemExit(1)
+
+
+_ensure_storage_key_in_production()
 
 
 class SecretManager:
@@ -89,6 +124,12 @@ class SecretManager:
                 logger.warning("Secret manager解密异常，尝试直接解码", exc_info=True)
                 return blob.decode("utf-8")
         return blob.decode("utf-8")
+
+    def encrypt(self, plaintext: str) -> bytes:
+        return self._encrypt(plaintext)
+
+    def decrypt(self, blob: bytes) -> str:
+        return self._decrypt(blob)
 
     def set(self, key_name: str, value: str):
         """设置并加密存储密钥。"""

@@ -17,6 +17,23 @@ cost_budget: 0.20
 trigger_mode: cron
 event_subscriptions: []
 trigger_cron: "0 */6 * * *"
+autonomous_actions:
+  detect_stalled:
+    source: query_opportunity
+    days_threshold: 30
+    max_items: 20
+  fetch_competitor_intel:
+    source: competitor_crawler
+    fallback: query_visit_history
+  generate_suggestion:
+    strategies:
+      - price_adjustment
+      - visit_increase
+      - referral
+    max_suggestions: 5
+  notify:
+    channels: [in_app]
+    high_priority_days: 60
 safety_profile:
   max_permission: write
   bulkhead_max_concurrent: 3

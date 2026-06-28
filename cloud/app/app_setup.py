@@ -1,5 +1,6 @@
-"""FastAPI 路由注册与启动事件。"""
+"""FastAPI 路由注册与启动/关闭事件。"""
 
+import logging
 from importlib import import_module
 from pkgutil import iter_modules
 
@@ -12,6 +13,8 @@ from cloud.app.research_database import init_research_db as init_research
 from cloud.app.routers.cloud_opportunity_router import opportunity_v2_router
 from cloud.app.services.tenant_isolation_service import router as tenant_isolation_router
 from cloud.app.soap_route import router as soap_decision_router
+
+logger = logging.getLogger(__name__)
 
 ROUTER_MODULE_BLACKLIST: frozenset[str] = frozenset()
 MANUAL_ROUTERS = (opportunity_v2_router, soap_decision_router, tenant_isolation_router)
@@ -48,3 +51,33 @@ def register_startup_events(app: FastAPI) -> None:
 
         get_namespace_event_bus().start(get_shared_state())
         get_world_model().start()
+        logger.info("Startup complete")
+
+    @app.on_event("shutdown")
+    def shutdown():
+        logger.info("Shutdown: stopping new requests, waiting for in-flight tasks...")
+        from cloud.app.agent_runtime.task_queue import get_task_queue
+
+        get_task_queue().shutdown(timeout=30.0)
+
+        logger.info("Shutdown: stopping WorldModel loop...")
+        try:
+            from cloud.app.agent_runtime.memory.world_model import get_world_model
+
+            wm = get_world_model()
+            if hasattr(wm, "stop"):
+                wm.stop()
+        except Exception:
+            logger.exception("Shutdown: WorldModel stop failed")
+
+        logger.info("Shutdown: closing database connections...")
+        try:
+            from cloud.app.database import _get_engine
+
+            engine = _get_engine()
+            if engine:
+                engine.dispose()
+        except Exception:
+            logger.exception("Shutdown: engine dispose failed")
+
+        logger.info("Shutdown complete")

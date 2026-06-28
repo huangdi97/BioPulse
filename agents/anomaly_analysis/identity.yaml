@@ -16,7 +16,29 @@ model_preference:
 cost_budget: 0.50
 trigger_mode: l4
 event_subscriptions:
-  - compliance.violation
+  - compliance\.result
+  - cross_validation\.anomaly_analysis
+cross_validation_subscriptions:
+  - namespace: cross_validation.anomaly_analysis
+    source_agents: [compliance_monitor]
+autonomous_actions:
+  discover:
+    source: run_pattern_analysis
+    actions:
+      - list_anomalies
+      - list_patterns
+  generate_hypothesis:
+    engine: hypothesis_engine
+    max_hypotheses: 5
+  cross_verify:
+    namespaces:
+      - compliance.result
+      - visit.records
+      - opportunity.result
+    min_confidence: 0.3
+  notify:
+    confidence_threshold: 0.7
+    channels: [in_app]
 safety_profile:
   max_permission: read
   bulkhead_max_concurrent: 2

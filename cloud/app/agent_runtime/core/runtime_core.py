@@ -11,6 +11,7 @@ from cloud.app.agent_runtime.comm.notifier import Notifier
 from cloud.app.agent_runtime.comm.streamer import AgentStreamer
 from cloud.app.agent_runtime.core.agent_health import get_health_tracker
 from cloud.app.agent_runtime.core.agent_registry import AgentRegistry
+from cloud.app.agent_runtime.core.agent_state_machine import AgentStateMachine
 from cloud.app.agent_runtime.core.error_categories import categorize_error
 from cloud.app.agent_runtime.core.loop_detector import LoopDetector
 from cloud.app.agent_runtime.core.models import RuntimeResult
@@ -93,6 +94,7 @@ class RuntimeCore:
         self._llm = RuntimeLLM(core=self)
         self._core_tools = RuntimeCoreTools(self)
         self._helper = CompositionHelper(agent_db, self)
+        self._state_machine = AgentStateMachine()
         AgentRegistry.load()
 
     def set_streamer(self, streamer: AgentStreamer):
@@ -163,6 +165,7 @@ class RuntimeCore:
             if memories:
                 context = dict(context or {})
                 context["_vector_memories"] = [{"key": m["key"], "content": m["content"], "score": m["score"]} for m in memories]
+            self._state_machine.transition("PERCEIVING", agent_key=agent_key, context=context)
             result = self._engine._execute_impl(goal, agent_key, context, user_context)
             if result.status == "success" and result.result:
                 try:
@@ -178,6 +181,8 @@ class RuntimeCore:
                     )
                     self._tracer.end_trace("blocked", result.model_dump())
                     return result
+            if result.status == "success":
+                self._state_machine.transition("IDLE", agent_key=agent_key)
             error_category = categorize_error(result.status)
             if result.status != "success":
                 result.metadata["error_category"] = error_category
@@ -203,6 +208,7 @@ class RuntimeCore:
                     agent_tool_calls_total.labels(agent_key=agent_key, tool_name=_tool).inc()
             return result
         except Exception:  # agent 完整生命周期，保持宽捕获
+            self._state_machine.transition("ERROR", agent_key=agent_key)
             logger.exception("Runtime core异常")
             self._save_snapshot(agent_key, -1, [], [], context or {}, "failed")
             self._tracer.end_trace("error", {"error": "unhandled exception"})

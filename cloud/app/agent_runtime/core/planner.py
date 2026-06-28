@@ -2,9 +2,11 @@
 
 import json
 import logging
+import re
 
 from pydantic import BaseModel
 
+from cloud.app.agent_runtime.core.reasoning_chain import ReasoningChain
 from shared.config import settings as config_settings
 
 logger = logging.getLogger(__name__)
@@ -43,20 +45,47 @@ class Planner:
 
     def __init__(self, llm_url: str = config_settings.ai_chat_url):
         self._llm_url = llm_url
+        self._reasoning = ReasoningChain()
 
     def plan(self, goal: str, agent_key: str, context: dict | None = None) -> dict:
-        """plan."""
+        ctx = context or {}
+        if self._is_complex(goal) or ctx.get("complex"):
+            reason_steps = self._reasoning.chain_of_thought(goal, ctx)
+            return {
+                "step": -1,
+                "action": "plan",
+                "agent_key": agent_key,
+                "goal": goal,
+                "context": ctx,
+                "reasoning_chain": reason_steps,
+            }
         return {
             "step": -1,
             "action": "plan",
             "agent_key": agent_key,
             "goal": goal,
-            "context": context or {},
+            "context": ctx,
         }
 
-    def generate_plan(self, goal: str, tools: list[str], context: dict | None = None, execution_context: dict | None = None) -> Plan:
-        """Generate a structured Plan for the given goal using LLM."""
-        ctx = context or {}
+    def generate_plan(
+        self,
+        goal: str,
+        tools: list[str],
+        context: dict | None = None,
+        execution_context: dict | None = None,
+        complexity: bool | None = None,
+    ) -> Plan:
+        if complexity is None:
+            complexity = self._is_complex(goal)
+
+        if complexity:
+            reason_steps = self._reasoning.chain_of_thought(goal, context or {})
+            annotated_context = dict(context or {})
+            annotated_context["reasoning_chain"] = reason_steps
+            ctx = annotated_context
+        else:
+            ctx = context or {}
+
         prompt = self.PLAN_SCHEMA_HINT.format(tools=json.dumps(tools), context=json.dumps(ctx, ensure_ascii=False))
         messages = [{"role": "system", "content": prompt}, {"role": "user", "content": goal}]
 
@@ -109,6 +138,13 @@ class Planner:
         except (KeyError, TypeError, ValueError):
             logger.warning("Planner exception", exc_info=True)
             return ""
+
+    @staticmethod
+    def _is_complex(goal: str) -> bool:
+        if len(goal) > 100:
+            return True
+        sentences = [s.strip() for s in re.split(r"[.?!]\s+", goal) if s.strip()]
+        return len(sentences) > 1
 
     @staticmethod
     def _extract_json(raw: str) -> dict:

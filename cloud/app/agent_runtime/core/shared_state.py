@@ -1,6 +1,7 @@
 """SharedState 结构化数据模型 — 设计文档 §3.3"""
 
 import logging
+import os
 import re
 import threading
 import time
@@ -18,7 +19,13 @@ def get_shared_state() -> "SharedState":
     if _global_shared_state is None:
         with _global_ss_lock:
             if _global_shared_state is None:
-                _global_shared_state = SharedState()
+                redis_url = os.getenv("REDIS_URL", "")
+                backend = None
+                if redis_url:
+                    from cloud.app.agent_runtime.memory.redis_backend import RedisBackend
+
+                    backend = RedisBackend(redis_url)
+                _global_shared_state = SharedState(backend=backend)
     return _global_shared_state
 
 
@@ -44,12 +51,17 @@ def _validate_namespace(caller_agent_key: str, namespace: str) -> None:
 
 
 class SharedState:
-    def __init__(self):
+    def __init__(self, backend=None):
         self._lock = threading.Lock()
         self._entries: List[SharedStateEntry] = []
         self._watchers: dict[str, List[callable]] = {}
         self._subscribers: dict[str, List[callable]] = {}
         self._version_counter = 0
+        self._backend = backend
+
+    @property
+    def backend(self):
+        return self._backend
 
     def write(self, entry: SharedStateEntry, caller_agent_key: str | None = None) -> None:
         if caller_agent_key:

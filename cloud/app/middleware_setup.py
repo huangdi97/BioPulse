@@ -1,16 +1,30 @@
 """FastAPI 中间件配置。"""
 
+import os
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from cloud.app.middleware.audit_middleware import audit_log_middleware
 from cloud.app.middleware.logging_middleware import logging_middleware
-from shared.app_settings import settings
+from cloud.app.middleware.request_id import RequestIDMiddleware
 from shared.exception_handlers import register_exception_handlers
 from shared.rate_limiter import RateLimiterMiddleware
 
 
+def _resolve_cors_origins() -> list[str]:
+    env = os.environ.get("ENV", "development").lower()
+    cors_env = os.environ.get("CORS_ORIGINS", "")
+    if cors_env:
+        return [o.strip() for o in cors_env.split(",") if o.strip()]
+    if env == "production":
+        raise RuntimeError("CORS_ORIGINS must be explicitly set in production. Set CORS_ORIGINS to comma-separated allowed origins.")
+    return ["*"]
+
+
 def register_middleware(app: FastAPI) -> None:
+    app.add_middleware(RequestIDMiddleware)
+
     @app.middleware("http")
     async def api_path_rewrite(request: Request, call_next):
         path = request.scope["path"]
@@ -25,9 +39,7 @@ def register_middleware(app: FastAPI) -> None:
     app.middleware("http")(audit_log_middleware)
     register_exception_handlers(app)
 
-    _cors_origins = settings.cors_origins
-    if isinstance(_cors_origins, str):
-        _cors_origins = _cors_origins.split(",") if _cors_origins != "*" else ["*"]
+    _cors_origins = _resolve_cors_origins()
     app.add_middleware(
         CORSMiddleware,
         allow_origins=_cors_origins,

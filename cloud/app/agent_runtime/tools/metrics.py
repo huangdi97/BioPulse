@@ -36,6 +36,12 @@ agent_degradation_total = Counter(
     ["agent_key", "level"],
 )
 
+agent_last_call_timestamp = Gauge(
+    "agent_last_call_timestamp",
+    "最近一次 Agent 调用的 Unix 时间戳",
+    ["agent_name"],
+)
+
 
 def get_metrics() -> str:
     """get metrics."""
@@ -169,11 +175,13 @@ def get_cost_breakdown(period: str = "daily") -> dict:
 def record_success(agent_name: str) -> None:
     """记录一次成功的 Agent 调用。"""
     agent_requests_total.labels(agent_name=agent_name, status="success").inc()
+    agent_last_call_timestamp.labels(agent_name=agent_name).set_to_current_time()
 
 
 def record_failure(agent_name: str) -> None:
     """记录一次失败的 Agent 调用。"""
     agent_requests_total.labels(agent_name=agent_name, status="failure").inc()
+    agent_last_call_timestamp.labels(agent_name=agent_name).set_to_current_time()
 
 
 def get_success_rate(agent_name: str, hours: int = 24) -> float:
