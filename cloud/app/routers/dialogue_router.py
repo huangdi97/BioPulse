@@ -33,9 +33,36 @@ class DialogueResponse(BaseModel):
     source: str = "dialogue"
 
 
-@router.post("")
+@router.post("", response_model=DialogueResponse)
 async def dialogue(body: DialogueRequest):
-    """对话入口：用户发消息 → 解析意图 → 读 SharedState / 调 Agent → SSE 或 JSON 返回。"""
+    """对话入口：用户发消息 → 解析意图 → 读 SharedState / 调 Agent → SSE 或 JSON 返回。
+
+    请求示例:
+        {
+          "message": "最近有哪些合规风险？",
+          "session_id": null,
+          "user_id": "user_001",
+          "agent_key": "knowledge_worker",
+          "stream": false
+        }
+
+    非流式响应:
+        {
+          "session_id": "d6f8e2a1-b4c3-...",
+          "reply": "根据最新数据分析，本月主要合规风险包括...",
+          "source": "dialogue"
+        }
+
+    流式响应 (text/event-stream):
+        event: dialogue.start
+        data: {"session_id": "d6f8e2a1-...", "message": "最近有哪些合规风险？"}
+
+        event: dialogue.reply
+        data: {"reply": "根据最新数据分析...", "status": "success"}
+
+        event: done
+        data: {}
+    """
     ss = get_shared_state()
     session_id = body.session_id or _create_session(body)
 
@@ -136,14 +163,35 @@ def _sse_stream_dialogue(session_id: str, body: DialogueRequest) -> StreamingRes
 
 @router.post("/session")
 def create_session(agent_key: str, user_id: str, context: dict | None = None):
-    """创建新对话 session。"""
+    """创建新对话 session。
+
+    请求示例:
+        POST /api/v1/dialogue/session?agent_key=knowledge_worker&user_id=user_001
+
+    响应示例:
+        {"session_id": "d6f8e2a1-b4c3-4f7e-9a2d-1e5f8c0a3b7c"}
+    """
     session_id = _translator.create_session(agent_key, user_id, context)
     return {"session_id": session_id}
 
 
 @router.post("/send")
 def send_message(session_id: str, message: str):
-    """发送消息，返回翻译后的回复。"""
+    """发送消息，返回翻译后的回复。
+
+    请求示例:
+        {
+          "session_id": "d6f8e2a1-b4c3-...",
+          "message": "帮我查一下最近的合规风险"
+        }
+
+    响应示例:
+        {"reply": "根据最新数据分析，本月主要合规风险包括...", "source": "dialogue"}
+
+    Notes:
+        - 如果不指定 session_id，系统会自动创建新 session。
+        - 内部会优先检查 SharedState 缓存，命中则直接返回 "source": "cache"。
+    """
     cached = _try_read_cached(get_shared_state(), message, None)
     if cached:
         return {"reply": cached, "source": "cache"}
@@ -153,7 +201,19 @@ def send_message(session_id: str, message: str):
 
 @router.get("/history/{session_id}")
 def get_history(session_id: str, limit: int = 10):
-    """获取对话历史。"""
+    """获取对话历史。
+
+    请求示例:
+        GET /api/v1/dialogue/history/d6f8e2a1-...?limit=5
+
+    响应示例:
+        {
+          "history": [
+            {"role": "user", "content": "帮我查合规风险", "timestamp": "2026-06-29T10:00:00"},
+            {"role": "assistant", "content": "根据最新数据分析...", "timestamp": "2026-06-29T10:00:01"}
+          ]
+        }
+    """
     history = _translator.get_history(session_id, limit)
     return {"history": history}
 
@@ -165,7 +225,14 @@ def submit_feedback(
     content: str,
     session_id: str | None = None,
 ):
-    """提交用户反馈（误报/不够好等）并写入 SharedState。"""
+    """提交用户反馈（误报/不够好等）并写入 SharedState。
+
+    请求示例:
+        POST /api/v1/dialogue/feedback?feedback_type=false_positive&target_id=msg_001&content=这条判断不准确
+
+    响应示例:
+        {"status": "received", "message": "反馈已记录"}
+    """
     feedback_entry = SharedStateEntry(
         namespace="dialogue.feedback",
         key=uuid.uuid4().hex[:12],

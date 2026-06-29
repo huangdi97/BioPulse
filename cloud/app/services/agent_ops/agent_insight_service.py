@@ -6,6 +6,7 @@ class AgentInsightService:
 
     PAGE_AGENT_MAPPING = {
         "manager_dashboard": ["anomaly_analysis"],
+        "manager_explainability": ["compliance_monitor", "anomaly_analysis", "sales_suggestion", "knowledge_worker", "opportunity_scanner"],
         "rep_dashboard": ["sales_suggestion"],
         "compliance_overview": ["compliance_monitor"],
         "hcp_detail": ["knowledge_worker"],

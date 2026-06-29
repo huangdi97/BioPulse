@@ -8,6 +8,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from cloud.app.middleware.audit_middleware import audit_log_middleware
 from cloud.app.middleware.logging_middleware import logging_middleware
 from cloud.app.middleware.request_id import RequestIDMiddleware
+from cloud.app.services.platform_svc.tenant_isolation_service import (
+    CURRENT_TENANT,
+    TenantContextMiddleware,
+    TenantIsolationService,
+)
+from shared.config import is_multi_tenant
 from shared.exception_handlers import register_exception_handlers
 from shared.rate_limiter import RateLimiterMiddleware
 
@@ -24,6 +30,19 @@ def _resolve_cors_origins() -> list[str]:
 
 def register_middleware(app: FastAPI) -> None:
     app.add_middleware(RequestIDMiddleware)
+
+    if is_multi_tenant():
+        app.add_middleware(TenantContextMiddleware)
+    else:
+
+        @app.middleware("http")
+        async def single_tenant_middleware(request: Request, call_next):
+            token = CURRENT_TENANT.set(TenantIsolationService.DEFAULT_TENANT)
+            request.state.tenant_id = TenantIsolationService.DEFAULT_TENANT
+            try:
+                return await call_next(request)
+            finally:
+                CURRENT_TENANT.reset(token)
 
     @app.middleware("http")
     async def api_path_rewrite(request: Request, call_next):

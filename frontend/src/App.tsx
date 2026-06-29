@@ -39,6 +39,7 @@ const ApprovalPanel = lazy(() => import('./pages/manager/ApprovalPanel'))
 const AgentInferenceView = lazy(() => import('./pages/manager/AgentInferenceView'))
 const AdmissionTracker = lazy(() => import('./pages/manager/AdmissionTracker'))
 const Settings = lazy(() => import('./pages/manager/Settings'))
+const AgentExplainability = lazy(() => import('./pages/manager/AgentExplainability'))
 const PresidentSummary = lazy(() => import('./pages/admin/president/Summary'))
 const PresidentCompliance = lazy(() => import('./pages/admin/president/ComplianceOverview'))
 const PresidentRankings = lazy(() => import('./pages/admin/president/TeamRankings'))
@@ -59,6 +60,7 @@ const EmployeeCompliance = lazy(() => import('./pages/admin/employee/MyComplianc
 const EmployeePerformance = lazy(() => import('./pages/admin/employee/MyPerformance'))
 const EmployeeTrend = lazy(() => import('./pages/admin/employee/MyTrend'))
 const AgentTraceDashboard = lazy(() => import('./pages/admin/AgentTraceDashboard'))
+const CustomerSuccess = lazy(() => import('./pages/admin/CustomerSuccess'))
 const ScenarioList = lazy(() => import('./pages/coach/ScenarioList'))
 const SessionList = lazy(() => import('./pages/coach/SessionList'))
 const SessionDetail = lazy(() => import('./pages/coach/SessionDetail'))
@@ -132,6 +134,7 @@ export default function App() {
                 <Route path="cognition" element={<CognitionBoard />} />
                 <Route path="approval" element={<ApprovalPanel />} />
                 <Route path="inference" element={<AgentInferenceView />} />
+                <Route path="explainability" element={<AgentExplainability />} />
                 <Route path="admission" element={<AdmissionTracker />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
@@ -150,6 +153,7 @@ export default function App() {
                 <Route path="president/rectification" element={<RectificationDashboard />} />
                 <Route path="president/exclusion-gates" element={<ExclusionGateConfig />} />
                 <Route path="traces" element={<AgentTraceDashboard />} />
+                <Route path="customer-success" element={<CustomerSuccess />} />
               </Route>
               <Route element={<RoleRoute allowedRoles={['manager']} />}>
                 <Route path="manager/stats" element={<ManagerStats />} />

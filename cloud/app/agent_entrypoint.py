@@ -79,7 +79,7 @@ def execute(body: ExecuteRequest):
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     try:
-        runtime = RuntimeCore(conn, conn, "", AGENT_NAME)
+        runtime = RuntimeCore(conn, conn, AGENT_NAME, AGENT_NAME)
         result = runtime.execute(body.goal, AGENT_NAME, body.context)
         return result.model_dump()
     finally:

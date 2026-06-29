@@ -1,0 +1,34 @@
+{
+  "tenant_id": "default",
+  "name": "默认租户",
+  "enabled_agents": [
+    "compliance_monitor",
+    "competitor_crawler",
+    "anomaly_analysis",
+    "opportunity_scanner",
+    "sales_suggestion",
+    "sales_coach_analyst",
+    "knowledge_worker"
+  ],
+  "model_selection": {
+    "chat": "deepseek-v4-flash",
+    "reasoning": "deepseek-v4-flash",
+    "analysis": "deepseek-v4-flash",
+    "agent_tier": "cloud_agent"
+  },
+  "feature_modules": {
+    "dialogue": true,
+    "data_platform": true,
+    "audit": true,
+    "cost_tracking": true,
+    "hitl": false,
+    "canary_deployment": false,
+    "world_model": true,
+    "cross_validation": false
+  },
+  "rate_limits": {
+    "requests_per_minute": 60,
+    "tokens_per_day": 1000000,
+    "concurrent_agents": 5
+  }
+}

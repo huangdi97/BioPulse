@@ -17,6 +17,10 @@ class HCPMaster(BaseModel):
     unified_score: float = Field(..., ge=0, le=100)
     dedup_status: str
     source_systems: list[str] = Field(default_factory=list)
+    prescription_preference: dict = Field(default_factory=dict)
+    academic_influence: float = 0.0
+    visit_acceptance: float = 0.0
+    channel_preference: list[str] = Field(default_factory=list)
 
 
 class HCPDedupRule(BaseModel):
@@ -30,3 +34,21 @@ class MergeSuggestion(BaseModel):
     primary_id: str
     duplicate_ids: list[str] = Field(default_factory=list)
     match_score: float = Field(..., ge=0, le=1)
+
+
+class VisitStats(BaseModel):
+    total_visits: int = 0
+    last_visit_date: str | None = None
+    visit_frequency: str = "unknown"
+    avg_visit_duration_min: float = 0.0
+
+
+class HCPProfile(BaseModel):
+    master: HCPMaster
+    visit_stats: VisitStats
+
+
+class HCPImportResult(BaseModel):
+    imported: int = 0
+    skipped: int = 0
+    errors: list[str] = Field(default_factory=list)

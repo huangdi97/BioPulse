@@ -6,12 +6,105 @@
 """
 
 import logging
+import threading
 from datetime import datetime
+from typing import Any
 
 from cloud.app.agent_runtime.core.agent_registry import AgentRegistry
 from cloud.app.agent_runtime.core.shared_state import SharedStateEntry, get_shared_state
 
 logger = logging.getLogger(__name__)
+
+CASCADE_HEALTH_NAMESPACE = "cascade.health"
+CASCADE_UNRELIABLE_THRESHOLD = 0.3
+
+
+class CascadeMonitor:
+    """级联链路置信度监控 — 跟踪链上每步 confidence 并计算累积置信度。"""
+
+    def __init__(self):
+        self._ss = get_shared_state()
+        self._lock = threading.Lock()
+        self._chain_steps: dict[str, list[dict[str, Any]]] = {}
+
+    def record_step(self, entry: SharedStateEntry) -> None:
+        chain_id = self._resolve_chain_id(entry)
+        step_info = {
+            "namespace": entry.namespace,
+            "key": entry.key,
+            "confidence": entry.confidence,
+            "agent_key": entry.agent_key,
+            "timestamp": entry.timestamp or datetime.now().isoformat(),
+        }
+        with self._lock:
+            self._chain_steps.setdefault(chain_id, []).append(step_info)
+            steps = self._chain_steps[chain_id]
+            cumulative = 1.0
+            for s in steps:
+                cumulative *= s["confidence"]
+
+        self._write_health(chain_id, steps, cumulative)
+
+        if cumulative < CASCADE_UNRELIABLE_THRESHOLD:
+            self._raise_alert(chain_id, cumulative, steps)
+
+    def get_chain_health(self, chain_id: str) -> dict[str, Any] | None:
+        results = self._ss.read(CASCADE_HEALTH_NAMESPACE, key=chain_id)
+        if not results:
+            return None
+        return results[-1].value
+
+    def _resolve_chain_id(self, entry: SharedStateEntry) -> str:
+        if entry.namespace.startswith("compliance."):
+            return "compliance_anomaly_sales"
+        if entry.namespace.startswith("analysis."):
+            return "anomaly_sales"
+        if entry.namespace.startswith("cross_validation."):
+            return "cross_validation"
+        return f"chain_{entry.namespace.replace('.', '_')}"
+
+    def _write_health(self, chain_id: str, steps: list[dict], cumulative: float) -> None:
+        health_value = {
+            "chain_id": chain_id,
+            "step_count": len(steps),
+            "cumulative_confidence": round(cumulative, 4),
+            "steps": steps,
+            "healthy": cumulative >= CASCADE_UNRELIABLE_THRESHOLD,
+            "last_updated": datetime.now().isoformat(),
+        }
+        self._ss.write(
+            SharedStateEntry(
+                namespace=CASCADE_HEALTH_NAMESPACE,
+                key=chain_id,
+                value=health_value,
+                confidence=min(cumulative, 1.0),
+                agent_key="cascade_monitor",
+                evidence=[f"CascadeMonitor: chain={chain_id} cumulative={cumulative:.4f}"],
+            ),
+        )
+
+    def _raise_alert(self, chain_id: str, cumulative: float, steps: list[dict]) -> None:
+        alert_value = {
+            "alert_type": "cascade_unreliable",
+            "chain_id": chain_id,
+            "cumulative_confidence": round(cumulative, 4),
+            "threshold": CASCADE_UNRELIABLE_THRESHOLD,
+            "step_count": len(steps),
+            "last_step": steps[-1] if steps else None,
+            "timestamp": datetime.now().isoformat(),
+            "message": f"级联链路 {chain_id} 累积置信度 {cumulative:.4f} 低于阈值 {CASCADE_UNRELIABLE_THRESHOLD}，标记为 unreliable",
+        }
+        self._ss.write(
+            SharedStateEntry(
+                namespace="cascade.alert",
+                key=f"unreliable_{chain_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                value=alert_value,
+                confidence=cumulative,
+                agent_key="cascade_monitor",
+                evidence=[f"CascadeMonitor: ALERT chain={chain_id} cumulative={cumulative:.4f} < threshold"],
+            ),
+        )
+        logger.warning("CascadeMonitor ALERT: %s cumulative=%.4f", chain_id, cumulative)
 
 
 class CrossValidationChain:
@@ -37,6 +130,11 @@ class CrossValidationChain:
     def __init__(self, db=None):
         self._db = db
         self._ss = get_shared_state()
+        self._cascade_monitor = CascadeMonitor()
+
+    @property
+    def cascade_monitor(self) -> CascadeMonitor:
+        return self._cascade_monitor
 
     def evaluate_chain(self, entry: SharedStateEntry) -> list[dict]:
         """检查 entry 是否匹配某条链的 source_namespace，匹配则返回链式触发指令列表。
@@ -72,6 +170,8 @@ class CrossValidationChain:
         链式触发不直接调用 Agent，而是通过 SharedState 写入，
         再由 NamespaceEventBus 的 event_subscriptions 匹配触发目标 Agent。
         """
+        self._cascade_monitor.record_step(entry)
+
         triggers = self.evaluate_chain(entry)
         if not triggers:
             return

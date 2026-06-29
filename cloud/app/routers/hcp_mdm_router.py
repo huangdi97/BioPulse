@@ -1,9 +1,9 @@
 """HCP master data management APIs."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, UploadFile
 from pydantic import BaseModel, Field
 
-from cloud.app.services.hcp_mdm_service import dedup_check, get_unified_profile, merge_duplicates
+from cloud.app.services.hcp_mdm_service import dedup_check, get_hcp_profile, get_unified_profile, import_hcp_csv, merge_duplicates
 from shared.auth_scope import require_scope
 from shared.base import success
 
@@ -33,3 +33,14 @@ def merge(body: MergeRequest, _: dict = Depends(require_scope(["pharma", "resear
 @router.get("/duplicates", tags=["HCP主数据"])
 def duplicates(_: dict = Depends(require_scope(["pharma", "research"]))):
     return success(data=dedup_check())
+
+
+@router.post("/hcp/import", tags=["HCP主数据"])
+def hcp_import(file: UploadFile = File(...), _: dict = Depends(require_scope(["pharma", "research"]))):
+    csv_content = file.file.read().decode("utf-8-sig")
+    return success(data=import_hcp_csv(csv_content))
+
+
+@router.get("/hcp/{id}/profile", tags=["HCP主数据"])
+def hcp_profile(id: str, _: dict = Depends(require_scope(["pharma", "research"]))):
+    return success(data=get_hcp_profile(id))

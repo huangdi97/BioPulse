@@ -8,6 +8,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 logger = logging.getLogger(__name__)
 
 
+def get_biopulse_mode() -> str:
+    return os.environ.get("BIOPULSE_MODE", "single")
+
+
+def is_multi_tenant() -> bool:
+    return get_biopulse_mode().lower() == "multi"
+
+
 def _resolve_env_file() -> str:
     env = os.environ.get("ENV", "development").lower()
     if env == "production":

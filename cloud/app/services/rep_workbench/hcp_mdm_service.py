@@ -1,11 +1,25 @@
 """HCP master data management service."""
 
+import csv
+import io
 from difflib import SequenceMatcher
 from threading import Lock
 
-from cloud.app.schemas.hcp_mdm import HCPMaster, MergeSuggestion
+from cloud.app.schemas.hcp_mdm import HCPImportResult, HCPMaster, HCPProfile, MergeSuggestion, VisitStats
 
 _LOCK = Lock()
+
+_VISIT_HISTORY: dict[str, list[dict]] = {
+    "hcp-001": [
+        {"date": "2026-06-15", "duration_min": 25, "type": "face-to-face"},
+        {"date": "2026-06-10", "duration_min": 15, "type": "phone"},
+        {"date": "2026-05-28", "duration_min": 30, "type": "face-to-face"},
+    ],
+    "hcp-002": [
+        {"date": "2026-06-20", "duration_min": 20, "type": "face-to-face"},
+        {"date": "2026-06-05", "duration_min": 10, "type": "wechat"},
+    ],
+}
 
 _HCP_MASTERS: dict[str, HCPMaster] = {
     "hcp-001": HCPMaster(
@@ -22,6 +36,10 @@ _HCP_MASTERS: dict[str, HCPMaster] = {
         unified_score=86.5,
         dedup_status="unique",
         source_systems=["cloud", "assistant", "sales-assistant"],
+        prescription_preference={"brand_a": 0.7, "brand_b": 0.3},
+        academic_influence=88.5,
+        visit_acceptance=0.85,
+        channel_preference=["face-to-face", "wechat"],
     ),
     "hcp-001-a": HCPMaster(
         master_id="hcp-001-a",
@@ -37,6 +55,10 @@ _HCP_MASTERS: dict[str, HCPMaster] = {
         unified_score=84.0,
         dedup_status="candidate",
         source_systems=["crm"],
+        prescription_preference={"brand_a": 0.6, "brand_c": 0.4},
+        academic_influence=85.0,
+        visit_acceptance=0.7,
+        channel_preference=["face-to-face"],
     ),
     "hcp-002": HCPMaster(
         master_id="hcp-002",
@@ -52,6 +74,10 @@ _HCP_MASTERS: dict[str, HCPMaster] = {
         unified_score=79.2,
         dedup_status="unique",
         source_systems=["cloud", "assistant"],
+        prescription_preference={"brand_b": 0.8, "brand_d": 0.2},
+        academic_influence=75.0,
+        visit_acceptance=0.6,
+        channel_preference=["phone", "wechat"],
     ),
 }
 
@@ -113,7 +139,6 @@ def dedup_check() -> list[MergeSuggestion]:
 
 
 def merge_duplicates(primary_id: str, duplicate_ids: list[str]) -> HCPMaster:
-    """Merge duplicate HCP records into the primary profile."""
     with _LOCK:
         primary = _HCP_MASTERS[primary_id]
         aliases = set(primary.aliases)
@@ -143,3 +168,68 @@ def get_unified_profile(hcp_id: str) -> HCPMaster:
 def sync_to_end(hcp_id: str | None = None) -> dict[str, int | str]:
     profiles = [get_unified_profile(hcp_id)] if hcp_id else list(_HCP_MASTERS.values())
     return {"status": "synced", "profile_count": len(profiles), "target": "one-cloud-four-ends"}
+
+
+def get_hcp_profile(hcp_id: str) -> HCPProfile:
+    master = get_unified_profile(hcp_id)
+    visits = _VISIT_HISTORY.get(hcp_id, [])
+    total = len(visits)
+    durations = [v["duration_min"] for v in visits]
+    avg_duration = round(sum(durations) / len(durations), 1) if durations else 0.0
+    last_date = visits[-1]["date"] if visits else None
+    if total >= 6:
+        freq = "high"
+    elif total >= 2:
+        freq = "medium"
+    else:
+        freq = "low"
+    stats = VisitStats(
+        total_visits=total,
+        last_visit_date=last_date,
+        visit_frequency=freq,
+        avg_visit_duration_min=avg_duration,
+    )
+    return HCPProfile(master=master, visit_stats=stats)
+
+
+_NEXT_ID = 100
+
+
+def _next_id() -> str:
+    global _NEXT_ID
+    with _LOCK:
+        _NEXT_ID += 1
+        return f"hcp-import-{_NEXT_ID}"
+
+
+def import_hcp_csv(csv_content: str) -> HCPImportResult:
+    reader = csv.DictReader(io.StringIO(csv_content))
+    result = HCPImportResult()
+    for row in reader:
+        try:
+            master_id = row.get("master_id") or _next_id()
+            master = HCPMaster(
+                master_id=master_id,
+                primary_name=row["primary_name"],
+                aliases=[a.strip() for a in row.get("aliases", "").split(";") if a.strip()],
+                hospital=row["hospital"],
+                department=row.get("department", ""),
+                title=row.get("title", ""),
+                specialty=row.get("specialty", ""),
+                nmpa_id=row.get("nmpa_id") or None,
+                phone=row.get("phone") or None,
+                email=row.get("email") or None,
+                unified_score=float(row.get("unified_score", 0)),
+                dedup_status=row.get("dedup_status", "imported"),
+                source_systems=[s.strip() for s in row.get("source_systems", "cloud").split(";") if s.strip()],
+                academic_influence=float(row.get("academic_influence", 0)),
+                visit_acceptance=float(row.get("visit_acceptance", 0)),
+                channel_preference=[c.strip() for c in row.get("channel_preference", "").split(";") if c.strip()],
+            )
+            with _LOCK:
+                _HCP_MASTERS[master_id] = master
+            result.imported += 1
+        except Exception as exc:
+            result.errors.append(f"Row {result.imported + result.skipped + len(result.errors) + 1}: {exc}")
+            result.skipped += 1
+    return result

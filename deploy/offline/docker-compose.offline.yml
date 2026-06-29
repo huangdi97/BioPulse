@@ -1,0 +1,324 @@
+# BioPulse Offline All-in-One Deployment
+# No internet access required after initial setup.
+# All services run locally with no external API dependencies.
+
+version: "3.8"
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  # ============================================================
+  # Local LLM Inference (llama.cpp + GGUF model)
+  # ============================================================
+  llm:
+    image: ghcr.io/ggerganov/llama.cpp:server
+    container_name: biopulse-offline-llm
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./models:/models:ro
+    command:
+      - --model
+      - /models/qwen2.5-7b-instruct-q4_k_m.gguf
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+      - --n-gpu-layers
+      - "0"
+      - --ctx-size
+      - "4096"
+      - --threads
+      - "8"
+      - --mlock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped
+    networks:
+      - offline-net
+    logging: *default-logging
+
+  # ============================================================
+  # PostgreSQL 16 — Database Backend
+  # ============================================================
+  db:
+    image: postgres:16-alpine
+    container_name: biopulse-offline-db
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    environment:
+      POSTGRES_DB: biopulse
+      POSTGRES_USER: biopulse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-biopulse}
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U biopulse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - offline-net
+    logging: *default-logging
+
+  # ============================================================
+  # Redis 7 — Cache / Session Store
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    container_name: biopulse-offline-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - offline-net
+    logging: *default-logging
+
+  # ============================================================
+  # Cloud API (main gateway)
+  # ============================================================
+  cloud:
+    build:
+      context: ..
+      dockerfile: cloud/Dockerfile
+    container_name: biopulse-offline-cloud
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../data:/app/data
+      - ./config:/app/config:ro
+    environment:
+      - AI_ROUTING_MODE=local
+      - AI_LOCAL_ENDPOINT=http://biopulse-offline-llm:8080
+      - AI_LOCAL_MODEL=qwen2.5-7b-instruct-q4_k_m
+      - DATABASE_URL=postgresql://biopulse:${POSTGRES_PASSWORD:-biopulse}@db:5432/biopulse
+      - REDIS_URL=redis://biopulse-offline-redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      - LOG_LEVEL=INFO
+      - AUDIT_ENABLED=true
+      - AUDIT_DB_URL=postgresql://biopulse:${POSTGRES_PASSWORD:-biopulse}@db:5432/biopulse
+      - STORAGE_BACKEND=local
+      - OFFLINE_MODE=true
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      llm:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - offline-net
+    logging: *default-logging
+
+  # ============================================================
+  # Microservices
+  # ============================================================
+  sales-coach:
+    build:
+      context: ..
+      dockerfile: sales-coach/Dockerfile
+    container_name: biopulse-offline-sales-coach
+    ports:
+      - "8001:8001"
+    environment:
+      - DSN=sqlite:///data/sales_coach.db
+      - DB_PATH=/data/sales_coach.db
+      - OFFLINE_MODE=true
+    volumes:
+      - ../data:/data
+    networks:
+      - offline-net
+    logging: *default-logging
+
+  opportunity:
+    build:
+      context: ..
+      dockerfile: opportunity/Dockerfile
+    container_name: biopulse-offline-opportunity
+    ports:
+      - "8002:8002"
+    environment:
+      - DSN=sqlite:///data/opportunity.db
+      - OFFLINE_MODE=true
+    volumes:
+      - ../data:/data
+    networks:
+      - offline-net
+    logging: *default-logging
+
+  assistant:
+    build:
+      context: ..
+      dockerfile: assistant/Dockerfile
+    container_name: biopulse-offline-assistant
+    ports:
+      - "8003:8003"
+    environment:
+      - DSN=sqlite:///data/assistant.db
+      - OFFLINE_MODE=true
+    volumes:
+      - ../data:/data
+    networks:
+      - offline-net
+    logging: *default-logging
+
+  sales-assistant:
+    build:
+      context: ..
+      dockerfile: sales-assistant/Dockerfile
+    container_name: biopulse-offline-sales-assistant
+    ports:
+      - "8004:8004"
+    environment:
+      - DSN=sqlite:///data/sales_assistant.db
+      - OFFLINE_MODE=true
+    volumes:
+      - ../data:/data
+    networks:
+      - offline-net
+    logging: *default-logging
+
+  pharma-intel:
+    build:
+      context: ..
+      dockerfile: pharma_intel/Dockerfile
+    container_name: biopulse-offline-pharma-intel
+    ports:
+      - "8006:8006"
+    environment:
+      - DSN=sqlite:///data/pharma_intel.db
+      - OFFLINE_MODE=true
+    volumes:
+      - ../data:/data
+    networks:
+      - offline-net
+    logging: *default-logging
+
+  management:
+    build:
+      context: ..
+      dockerfile: management/Dockerfile
+    container_name: biopulse-offline-management
+    ports:
+      - "8012:8012"
+    environment:
+      - DSN=sqlite:///data/management.db
+      - OFFLINE_MODE=true
+    volumes:
+      - ../data:/data
+    networks:
+      - offline-net
+    logging: *default-logging
+
+  clinical-ops:
+    build:
+      context: ..
+      dockerfile: clinical-ops/Dockerfile
+    container_name: biopulse-offline-clinical-ops
+    ports:
+      - "8010:8010"
+    environment:
+      - DSN=sqlite:///data/clinical_ops.db
+      - OFFLINE_MODE=true
+    volumes:
+      - ../data:/data
+    networks:
+      - offline-net
+    logging: *default-logging
+
+  patient-engage:
+    build:
+      context: ..
+      dockerfile: patient-engage/Dockerfile
+    container_name: biopulse-offline-patient-engage
+    ports:
+      - "8011:8011"
+    environment:
+      - DSN=sqlite:///data/patient_engage.db
+      - OFFLINE_MODE=true
+    volumes:
+      - ../data:/data
+    networks:
+      - offline-net
+    logging: *default-logging
+
+  market-access:
+    build:
+      context: ..
+      dockerfile: market-access/Dockerfile
+    container_name: biopulse-offline-market-access
+    ports:
+      - "8007:8007"
+    environment:
+      - DSN=sqlite:///data/market_access.db
+      - OFFLINE_MODE=true
+    volumes:
+      - ../data:/data
+    networks:
+      - offline-net
+    logging: *default-logging
+
+  # ============================================================
+  # Agents (compliance + anomaly)
+  # ============================================================
+  agent-compliance-monitor:
+    build:
+      context: ..
+      dockerfile: cloud/Dockerfile
+    command: python -m cloud.app.agent_entrypoint
+    container_name: biopulse-offline-agent-compliance
+    ports:
+      - "8015:8015"
+    environment:
+      - AGENT_NAME=compliance_monitor
+      - AGENT_PORT=8015
+      - OFFLINE_MODE=true
+    volumes:
+      - ../data:/app/data
+    networks:
+      - offline-net
+    logging: *default-logging
+
+  agent-anomaly-analysis:
+    build:
+      context: ..
+      dockerfile: cloud/Dockerfile
+    command: python -m cloud.app.agent_entrypoint
+    container_name: biopulse-offline-agent-anomaly
+    ports:
+      - "8016:8016"
+    environment:
+      - AGENT_NAME=anomaly_analysis
+      - AGENT_PORT=8016
+      - OFFLINE_MODE=true
+    volumes:
+      - ../data:/app/data
+    networks:
+      - offline-net
+    logging: *default-logging
+
+networks:
+  offline-net:
+    driver: bridge
+
+volumes:
+  pgdata:
+  redis_data:

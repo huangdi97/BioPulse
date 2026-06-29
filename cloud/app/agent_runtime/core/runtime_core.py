@@ -161,6 +161,9 @@ class RuntimeCore:
                 self._cost_governor.set_user_context(user_context)
                 context = dict(context or {})
                 context["_user"] = user_context
+            task_type = (context or {}).get("task_type", "")
+            if task_type:
+                self._cost_governor.set_task_type(task_type)
             memories = self._vector_memory.search(agent_key, goal, top_k=3)
             if memories:
                 context = dict(context or {})

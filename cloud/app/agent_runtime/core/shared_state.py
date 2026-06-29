@@ -8,6 +8,9 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Generator, List
 
+from cloud.app.services.platform_svc.tenant_isolation_service import CURRENT_TENANT
+from shared.config import is_multi_tenant
+
 logger = logging.getLogger(__name__)
 
 _global_shared_state: "SharedState | None" = None
@@ -59,11 +62,22 @@ class SharedState:
         self._version_counter = 0
         self._backend = backend
 
+    def _ensure_tenant_prefix(self, namespace: str) -> str:
+        if is_multi_tenant():
+            tenant_id = CURRENT_TENANT.get() or "default"
+        else:
+            tenant_id = "default"
+        prefix = f"{tenant_id}."
+        if namespace.startswith(prefix):
+            return namespace
+        return f"{prefix}{namespace}"
+
     @property
     def backend(self):
         return self._backend
 
     def write(self, entry: SharedStateEntry, caller_agent_key: str | None = None) -> None:
+        entry.namespace = self._ensure_tenant_prefix(entry.namespace)
         if caller_agent_key:
             _validate_namespace(caller_agent_key, entry.namespace)
         if not entry.evidence:
@@ -87,6 +101,7 @@ class SharedState:
         key: str | None = None,
         min_confidence: float = 0.0,
     ) -> List[SharedStateEntry]:
+        namespace = self._ensure_tenant_prefix(namespace)
         results = []
         with self._lock:
             for e in self._entries:

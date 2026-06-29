@@ -34,6 +34,8 @@ class CostGovernor:
         "cloud_agent": {"input_per_million": 0.45, "output_per_million": 1.80},
     }
 
+    VALID_TASK_TYPES = ("compliance_check", "anomaly_detection", "opportunity_scan", "coaching", "knowledge_query")
+
     def __init__(self, max_cost: float = 0.50, model: str = "deepseek-chat"):
         self._max_cost = max_cost
         self._model = model
@@ -48,6 +50,12 @@ class CostGovernor:
         self._alerted_low_budget = False
         self._daily_usage: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
         self._daily_reset_date: str = ""
+        self._task_type: str = ""
+
+    def set_task_type(self, task_type: str) -> None:
+        if task_type and task_type not in self.VALID_TASK_TYPES:
+            logger.warning("CostGovernor: unknown task_type '%s', valid: %s", task_type, self.VALID_TASK_TYPES)
+        self._task_type = task_type if task_type in self.VALID_TASK_TYPES else ""
 
     def set_user_context(self, user_context: dict | None) -> None:
         """设置当前请求的用户上下文，影响预算决策。"""
@@ -197,19 +205,90 @@ class CostGovernor:
         self._call_count = int(usage.get("call_count", 0) or 0)
         self._step_costs = list(usage.get("step_costs", []) or [])
 
-    def record_call(self, agent_name: str, model: str, input_tokens: int, output_tokens: int, cost: float, trace_id: str = "", db=None):
+    def record_call(
+        self,
+        agent_name: str,
+        model: str,
+        input_tokens: int,
+        output_tokens: int,
+        cost: float,
+        trace_id: str = "",
+        db=None,
+        task_type: str = "",
+    ):
         """记录一次 LLM 调用到数据库。"""
         if db is None:
             return
         try:
             db.execute(
-                "INSERT INTO agent_cost_tracking (agent_name, model, model_tier, input_tokens, output_tokens, cost, trace_id) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                (agent_name, model, model, input_tokens, output_tokens, round(cost, 9), trace_id),
+                "INSERT INTO agent_cost_tracking (agent_name, model, model_tier, task_type, input_tokens, output_tokens, cost, trace_id) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (agent_name, model, model, task_type or self._task_type, input_tokens, output_tokens, round(cost, 9), trace_id),
             )
             db.commit()
         except sqlite3.Error:
             logger.exception("Failed to record cost tracking entry")
+
+    def track_task_cost(self, agent_key: str, task_type: str, tokens: int, cost: float, db=None):
+        """记录按业务任务类型归因的成本。"""
+        if db is None:
+            return
+        try:
+            db.execute(
+                "INSERT INTO agent_cost_tracking (agent_name, model, model_tier, task_type, input_tokens, output_tokens, cost) "
+                "VALUES (?, '', '', ?, 0, ?, ?)",
+                (agent_key, task_type, tokens, round(cost, 9)),
+            )
+            db.commit()
+        except sqlite3.Error:
+            logger.exception("Failed to record task cost")
+
+    def get_costs_by_task_type(self, db) -> list[dict]:
+        """按任务类型汇总成本。"""
+        rows = db.execute(
+            "SELECT task_type, SUM(cost) as total_cost, SUM(input_tokens + output_tokens) as total_tokens, "
+            "COUNT(*) as call_count "
+            "FROM agent_cost_tracking WHERE task_type != '' "
+            "GROUP BY task_type ORDER BY total_cost DESC"
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_costs_by_agent_and_task_type(self, db, agent_name: str = "") -> list[dict]:
+        """按 Agent + 任务类型汇总成本。"""
+        if agent_name:
+            rows = db.execute(
+                "SELECT agent_name, task_type, SUM(cost) as total_cost, SUM(input_tokens + output_tokens) as total_tokens, "
+                "COUNT(*) as call_count "
+                "FROM agent_cost_tracking WHERE agent_name=? AND task_type != '' "
+                "GROUP BY agent_name, task_type ORDER BY total_cost DESC",
+                (agent_name,),
+            ).fetchall()
+        else:
+            rows = db.execute(
+                "SELECT agent_name, task_type, SUM(cost) as total_cost, SUM(input_tokens + output_tokens) as total_tokens, "
+                "COUNT(*) as call_count "
+                "FROM agent_cost_tracking WHERE task_type != '' "
+                "GROUP BY agent_name, task_type ORDER BY total_cost DESC"
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_costs_by_time_range(self, db, start: str, end: str, agent_name: str = "", task_type: str = "") -> list[dict]:
+        """按时间范围查询成本，支持按 agent 和 task_type 筛选。"""
+        query = (
+            "SELECT agent_name, task_type, SUM(cost) as total_cost, SUM(input_tokens) as total_input, "
+            "SUM(output_tokens) as total_output, COUNT(*) as call_count "
+            "FROM agent_cost_tracking WHERE timestamp >= ? AND timestamp <= ?"
+        )
+        params: list[str] = [start, end]
+        if agent_name:
+            query += " AND agent_name=?"
+            params.append(agent_name)
+        if task_type:
+            query += " AND task_type=?"
+            params.append(task_type)
+        query += " GROUP BY agent_name, task_type ORDER BY total_cost DESC"
+        rows = db.execute(query, params).fetchall()
+        return [dict(r) for r in rows]
 
     def get_daily_costs(self, db, start: str, end: str) -> list[dict]:
         """获取每日成本汇总。"""

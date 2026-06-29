@@ -62,4 +62,5 @@ class RuntimeCoreTools:
                 cost=cost.get("cost", 0.0),
                 trace_id=getattr(self._core, "_trace_id", ""),
                 db=db,
+                task_type=self._core._cost_governor._task_type,
             )

@@ -1,6 +1,8 @@
 import os
 import sqlite3
-from typing import Generator
+from typing import Any, Generator
+
+from cloud.app.services.platform_svc.tenant_isolation_service import CURRENT_TENANT
 
 AGENT_DB_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
@@ -114,9 +116,11 @@ def init_agent_db() -> None:
         conn.execute(
             "CREATE TABLE IF NOT EXISTS agent_cost_tracking ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "tenant_id TEXT DEFAULT 'default', "
             "agent_name TEXT NOT NULL, "
             "model TEXT NOT NULL, "
             "model_tier TEXT DEFAULT 'cloud_normal', "
+            "task_type TEXT DEFAULT '', "
             "input_tokens INTEGER DEFAULT 0, "
             "output_tokens INTEGER DEFAULT 0, "
             "cost REAL DEFAULT 0.0, "
@@ -127,6 +131,7 @@ def init_agent_db() -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_cost_tracking_agent ON agent_cost_tracking(agent_name)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_cost_tracking_model ON agent_cost_tracking(model)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_cost_tracking_ts ON agent_cost_tracking(timestamp)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_cost_tracking_tenant ON agent_cost_tracking(tenant_id)")
         conn.execute(
             "CREATE TABLE IF NOT EXISTS prompt_versions ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -142,12 +147,80 @@ def init_agent_db() -> None:
         conn.commit()
 
 
+class TenantAwareConnection:
+    def __init__(self, conn: sqlite3.Connection, tenant_id: str) -> None:
+        self._conn = conn
+        self._tenant_id = tenant_id
+
+    @property
+    def row_factory(self) -> Any:
+        return self._conn.row_factory
+
+    @row_factory.setter
+    def row_factory(self, factory: Any) -> None:
+        self._conn.row_factory = factory
+
+    def execute(self, sql: str, parameters: Any = None) -> sqlite3.Cursor:
+        sql, parameters = self._rewrite(sql, parameters or ())
+        return self._conn.execute(sql, parameters)
+
+    def commit(self) -> None:
+        self._conn.commit()
+
+    def close(self) -> None:
+        self._conn.close()
+
+    def _rewrite(self, sql: str, parameters: Any) -> tuple[str, Any]:
+        tenant_id = self._tenant_id
+        stripped = sql.strip()
+        upper = stripped.upper()
+
+        if upper.startswith("INSERT"):
+            if "tenant_id" not in upper:
+                col_end = upper.find("VALUES")
+                cols = stripped[:col_end].rstrip()
+                vals = stripped[col_end:]
+                if cols.endswith(")"):
+                    cols = cols[:-1] + ", tenant_id)"
+                if vals.startswith("VALUES ("):
+                    vals = "VALUES (?, " + vals[8:]
+                elif vals.startswith("VALUES("):
+                    vals = "VALUES(?," + vals[7:]
+                sql = cols + " " + vals
+                parameters = list(parameters) + [tenant_id]
+        elif upper.startswith("SELECT") or upper.startswith("UPDATE") or upper.startswith("DELETE"):
+            if "WHERE" in upper:
+                for kw in ["GROUP BY", "ORDER BY", "LIMIT", "HAVING"]:
+                    idx = upper.find(kw)
+                    if idx != -1:
+                        sql = sql[:idx] + "AND tenant_id=? " + sql[idx:]
+                        break
+                else:
+                    sql += " AND tenant_id=?"
+            else:
+                for kw in ["GROUP BY", "ORDER BY", "LIMIT", "HAVING"]:
+                    idx = upper.find(kw)
+                    if idx != -1:
+                        sql = sql[:idx] + "WHERE tenant_id=? " + sql[idx:]
+                        break
+                else:
+                    sql += " WHERE tenant_id=?"
+            parameters = list(parameters) + [tenant_id]
+
+        return sql, parameters
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._conn, name)
+
+
 def get_agent_db() -> Generator[sqlite3.Connection, None, None]:
     os.makedirs(os.path.dirname(AGENT_DB_PATH), exist_ok=True)
     conn = sqlite3.connect(AGENT_DB_PATH)
-    conn.row_factory = sqlite3.Row
+    tenant_id = CURRENT_TENANT.get() or "default"
+    wrapper = TenantAwareConnection(conn, tenant_id)
+    wrapper.row_factory = sqlite3.Row
     try:
-        yield conn
+        yield wrapper
     finally:
         conn.close()
 

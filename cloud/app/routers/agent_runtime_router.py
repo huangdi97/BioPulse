@@ -3,7 +3,9 @@
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
 
-from cloud.app.services.agent_runtime_service import AgentRuntimeService, ToolBridge
+from cloud.app.agent_database import get_agent_db
+from cloud.app.agent_runtime.audit.agent_audit import AgentAuditor
+from cloud.app.services.agent_ops.agent_runtime_service import AgentRuntimeService, ToolBridge
 from shared.auth_scope import require_scope
 from shared.base import success
 
@@ -122,3 +124,76 @@ def rollback_execution(
 ):
     service = AgentRuntimeService()
     return service.rollback_execution(trace_id, body.step, _auth_header(request))
+
+
+# ── Audit (prefix /agent/runtime/audit) ────────────────────────────────
+
+
+@router.post("/audit/log", tags=["Agent Runtime"])
+def audit_log_interaction(
+    user_id: str = Query(...),
+    agent_key: str = Query(...),
+    user_action: str = Query(...),
+    task_type: str = Query(""),
+    confidence: float = Query(0.0),
+    feedback: str = Query(""),
+    user=Depends(require_scope("visit")),
+    db=Depends(get_agent_db),
+):
+    auditor = AgentAuditor(db)
+    auditor.log_interaction(
+        user_id=user_id,
+        agent_key=agent_key,
+        user_action=user_action,
+        task_type=task_type,
+        confidence=confidence,
+        feedback=feedback,
+    )
+    return success(message="logged")
+
+
+@router.get("/audit/logs", tags=["Agent Runtime"])
+def audit_query_logs(
+    user_id: str = Query(""),
+    agent_key: str = Query(""),
+    user_action: str = Query(""),
+    start: str = Query(""),
+    end: str = Query(""),
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    user=Depends(require_scope("visit")),
+    db=Depends(get_agent_db),
+):
+    auditor = AgentAuditor(db)
+    return success(data=auditor.query_logs(user_id, agent_key, user_action, start, end, limit, offset))
+
+
+@router.get("/audit/report", tags=["Agent Runtime"])
+def audit_report(
+    days: int = Query(7, ge=1, le=90),
+    user=Depends(require_scope("visit")),
+    db=Depends(get_agent_db),
+):
+    auditor = AgentAuditor(db)
+    return success(data=auditor.get_summary_report(days))
+
+
+@router.get("/audit/trends", tags=["Agent Runtime"])
+def audit_trends(
+    days: int = Query(7, ge=1, le=90),
+    user=Depends(require_scope("visit")),
+    db=Depends(get_agent_db),
+):
+    auditor = AgentAuditor(db)
+    return success(data=auditor.get_feedback_trends(days))
+
+
+@router.get("/audit/dismissed", tags=["Agent Runtime"])
+def audit_high_dismiss(
+    days: int = Query(7, ge=1, le=90),
+    min_count: int = Query(3, ge=1),
+    user=Depends(require_scope("visit")),
+    db=Depends(get_agent_db),
+):
+    auditor = AgentAuditor(db)
+    return success(data=auditor.get_high_dismiss(days, min_count))
