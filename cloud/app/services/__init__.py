@@ -214,6 +214,16 @@ _register_subpackage(
 )
 
 _register_subpackage(
+    "bidding",
+    ("admission_service",),
+)
+
+_register_subpackage(
+    "channel",
+    ("dealer_service",),
+)
+
+_register_subpackage(
     "platform_svc",
     (
         "admission_service",
