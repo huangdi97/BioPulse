@@ -37,17 +37,25 @@ class SuggestionAgent(BaseAgent):
         visit_service: Any = None,
         competitor_tools: Any = None,
         llm_service: Any = None,
+        runtime_core: Any = None,
     ) -> None:
         self._identity = identity
         self._hcp_service = hcp_service
         self._visit_service = visit_service
         self._competitor_tools = competitor_tools
         self._llm = llm_service
+        if runtime_core is not None:
+            self._runtime_core = runtime_core
+        else:
+            from cloud.app.agent_runtime.core.runtime_core import RuntimeCore
+
+            self._runtime_core = RuntimeCore()
 
     async def execute(self, context: AgentContext) -> AgentResponse:
         """执行销售策略建议生成，返回结构化 SuggestionResult 嵌入 AgentResponse。
 
-        流程：解析 HCP ID → 收集 HCP 画像/拜访历史/竞品情报 → 调用 LLM 生成建议。
+        优先通过 RuntimeCore 走完整 L4 循环（规划→执行→验证），
+        降级时直接调用 LLM 生成建议。
         """
         agent_id = self._identity.key
         agent_name = self._identity.name
@@ -66,6 +74,49 @@ class SuggestionAgent(BaseAgent):
                 ),
             )
 
+        if self._runtime_core is not None:
+            return self._l4_execute(agent_id, agent_name, hcp_id, context)
+
+        return await self._direct_llm_execute(agent_id, agent_name, hcp_id, context)
+
+    def _l4_execute(self, agent_id: str, agent_name: str, hcp_id: str, context: AgentContext) -> AgentResponse:
+        from cloud.app.agent_runtime.safety.safety_guard import SafetyGuard
+
+        plan = self._runtime_core.plan(purpose="sales_suggestion", context=context.to_dict())
+        if not plan.steps:
+            logger.warning("L4 planner returned empty plan for hcp_id=%s, falling back", hcp_id)
+            return self._direct_llm_execute(agent_id, agent_name, hcp_id, context)
+
+        for step in plan.steps:
+            result = self._runtime_core.execute_step(step)
+            verifier = SafetyGuard()
+            verifier.verify(result)
+
+        return AgentResponse(
+            reply=json.dumps(
+                {
+                    "strategy_type": "l4_harness",
+                    "key_findings": [f"L4 Harness 执行完成，步数: {len(plan.steps)}"],
+                    "suggested_actions": [],
+                },
+                ensure_ascii=False,
+            ),
+            actions=[
+                {
+                    "agent": agent_name,
+                    "hcp_id": hcp_id,
+                    "strategy_type": "l4_harness",
+                },
+            ],
+            memory_updates=[],
+        )
+
+    def capabilities(self) -> list[str]:
+        """返回 identity 允许的工具列表。"""
+        return list(self._identity.allowed_tools)
+
+    async def _direct_llm_execute(self, agent_id: str, agent_name: str, hcp_id: str, context: AgentContext) -> AgentResponse:
+        """降级路径：直接调用 LLM 生成销售策略建议。"""
         hcp_profile = await self._fetch_hcp_profile(hcp_id)
         visit_history = await self._fetch_visit_history(hcp_id)
         competitor_intel = await self._fetch_competitor_intel(hcp_id)
@@ -92,10 +143,6 @@ class SuggestionAgent(BaseAgent):
             ],
             memory_updates=[],
         )
-
-    def capabilities(self) -> list[str]:
-        """返回 identity 允许的工具列表。"""
-        return list(self._identity.allowed_tools)
 
     def _extract_hcp_id(self, context: AgentContext) -> str | None:
         """从 context 中解析 HCP ID。"""

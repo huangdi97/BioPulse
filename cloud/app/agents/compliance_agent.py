@@ -1,4 +1,4 @@
-"""ComplianceAgent — 规则引擎驱动的合规审核 Agent，不调用 LLM。"""
+"""ComplianceAgent — L4 Harness 驱动的合规审核 Agent，走完整规划-执行-验证循环。"""
 
 from __future__ import annotations
 
@@ -17,10 +17,10 @@ __all__ = ["ComplianceAgent"]
 
 
 class ComplianceAgent(BaseAgent):
-    """规则引擎驱动的合规审核 Agent。
+    """L4 Harness 驱动的合规审核 Agent。
 
-    解析 context.message 提取 visit_id / expense_id，调用全息校验引擎
-    进行数据交叉核验，触发红/绿灯决策并记录审计日志。
+    优先通过 RuntimeCore 走完整 L4 循环（规划→执行→验证），
+    降级时直接调用全息校验引擎 + 红绿灯决策。
     """
 
     def __init__(
@@ -29,14 +29,15 @@ class ComplianceAgent(BaseAgent):
         compliance_service: Any,
         triangulation_engine: HolographicAuditEngine,
         red_light: Optional[RedLightManager] = None,
+        runtime_core: Optional[Any] = None,
     ) -> None:
         self._identity = identity
         self._compliance_service = compliance_service
         self._triangulation_engine = triangulation_engine
         self._red_light = red_light or RedLightManager()
+        self._runtime_core = runtime_core
 
     async def execute(self, context: AgentContext) -> AgentResponse:
-        """执行合规审核，纯规则引擎路径，不调用 LLM。"""
         agent_id = self._identity.key
         agent_name = self._identity.name
         message = context.message
@@ -53,8 +54,45 @@ class ComplianceAgent(BaseAgent):
                 reply=f"[{agent_name}] 无法从消息中解析 visit_id 或 expense_id，请提供有效 ID。",
             )
 
-        expense_data = {"visit_id": visit_id} if visit_id else None
-        visit_data = {"visit_id": visit_id, "expense_id": expense_id} if (visit_id or expense_id) else None
+        if self._runtime_core is not None:
+            return self._l4_execute(agent_id, agent_name, entity_id, entity_type, context)
+
+        return await self._direct_llm_execute(agent_id, agent_name, entity_id, entity_type, context)
+
+    def _l4_execute(self, agent_id: str, agent_name: str, entity_id: int, entity_type: str, context: AgentContext) -> AgentResponse:
+        from cloud.app.agent_runtime.safety.safety_guard import SafetyGuard
+
+        goal = f"Compliance check for {entity_type}:{entity_id}"
+
+        plan = self._runtime_core._planner.generate_plan(
+            goal=goal,
+            tools=self.capabilities(),
+            context={"entity_type": entity_type, "entity_id": entity_id, "message": context.message},
+        )
+        if not plan.steps:
+            logger.warning("L4 planner returned empty plan for %s:%s, falling back", entity_type, entity_id)
+            return self._direct_llm_execute(agent_id, agent_name, entity_id, entity_type, context)
+
+        runtime_result = self._runtime_core._engine._execute_impl(
+            goal=goal,
+            agent_key=agent_id,
+            context={"entity_type": entity_type, "entity_id": entity_id, "plan": plan.model_dump(), "message": context.message},
+        )
+
+        safe, reason = SafetyGuard.guard_output(runtime_result.result or "")
+        if not safe:
+            logger.warning("SafetyGuard rejected L4 result for %s:%s: %s", entity_type, entity_id, reason)
+
+        reply = runtime_result.result or f"[{agent_name}] 合规审核完成（L4 Harness），状态: {runtime_result.status}"
+        return AgentResponse(
+            reply=reply,
+            actions=[{"finding": reply, "confidence": 1.0, "level": "l4", "decision": runtime_result.status}],
+            memory_updates=[],
+        )
+
+    async def _direct_llm_execute(self, agent_id: str, agent_name: str, entity_id: int, entity_type: str, context: AgentContext) -> AgentResponse:
+        expense_data = {"visit_id": entity_id} if entity_type == "visit" else None
+        visit_data = {"visit_id": entity_id, "expense_id": entity_id} if entity_type != "unknown" else None
         distribution_data = None
 
         try:

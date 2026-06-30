@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import AgentSummaryCard from '../../components/AgentSummaryCard'
+import AgentExecutiveSummary from '../../components/agent/AgentExecutiveSummary'
 import StatCard from '@/components/StatCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CalendarCheck, Users, Target, AlertTriangle, Trophy } from 'lucide-react'
@@ -46,7 +46,7 @@ export default function ManagerDashboard() {
 
   return (
     <div className="space-y-4">
-      <AgentSummaryCard title='团队健康摘要' agentKey='anomaly_analysis' pageId='manager_dashboard' variant='summary' />
+      <AgentExecutiveSummary />
       <div className="flex gap-4">
         <StatCard
           icon={<CalendarCheck className="h-5 w-5 text-blue-600" />}

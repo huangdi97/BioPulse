@@ -40,6 +40,7 @@ const AgentInferenceView = lazy(() => import('./pages/manager/AgentInferenceView
 const AdmissionTracker = lazy(() => import('./pages/manager/AdmissionTracker'))
 const Settings = lazy(() => import('./pages/manager/Settings'))
 const AgentExplainability = lazy(() => import('./pages/manager/AgentExplainability'))
+const WorldModelInsights = lazy(() => import('./pages/manager/WorldModelInsights'))
 const PresidentSummary = lazy(() => import('./pages/admin/president/Summary'))
 const PresidentCompliance = lazy(() => import('./pages/admin/president/ComplianceOverview'))
 const PresidentRankings = lazy(() => import('./pages/admin/president/TeamRankings'))
@@ -135,6 +136,7 @@ export default function App() {
                 <Route path="approval" element={<ApprovalPanel />} />
                 <Route path="inference" element={<AgentInferenceView />} />
                 <Route path="explainability" element={<AgentExplainability />} />
+                <Route path="world-model" element={<WorldModelInsights />} />
                 <Route path="admission" element={<AdmissionTracker />} />
                 <Route path="settings" element={<Settings />} />
               </Route>

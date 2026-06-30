@@ -26,7 +26,10 @@ export default function HcpDetail() {
 
   return (
     <div className="space-y-4">
-      <AgentSummaryCard agentKey='knowledge_worker' pageId='hcp_detail' title='情报摘要' variant='summary' />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <AgentSummaryCard agentKey='knowledge_worker' pageId='hcp_detail' title='知识情报摘要' variant='summary' />
+        <AgentSummaryCard agentKey='sales_suggestion' pageId='hcp_detail' title='策略建议' variant='suggestion' />
+      </div>
       <button onClick={() => navigate('/assistant/hcps')} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-4 w-4" />返回列表
       </button>

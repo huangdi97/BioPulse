@@ -1,17 +1,12 @@
 """成本管控模块，按 token 用量估算并限制 LLM 调用成本。"""
 
-import json
 import logging
-import os
 import sqlite3
-import urllib.error
-import urllib.request
 from collections import defaultdict
 from datetime import date
 
 logger = logging.getLogger(__name__)
 
-_TELEGRAM_WEBHOOK_URL = os.getenv("TELEGRAM_WEBHOOK_URL", "")
 _alerted_today: set[tuple[str, str]] = set()
 
 
@@ -97,13 +92,6 @@ class CostGovernor:
         msg = f"CostGovernor: 预算不足 (remaining={budget_pct:.1f}%, ${budget_remaining:.4f}, user={user_id}) — 请及时充值"
         logger.warning(msg)
         self._send_alert(msg, "high")
-        try:
-            from cloud.app.agent_runtime.comm.notifier import Notifier
-
-            notifier = Notifier()
-            notifier.send(msg, priority="high")
-        except Exception:
-            logger.exception("CostGovernor: 发送低预算通知失败")
 
     def _fire_exhausted_alert(self) -> None:
         """预算耗尽时触发告警。"""
@@ -116,24 +104,22 @@ class CostGovernor:
         msg = f"CostGovernor: 预算已耗尽 (total_cost=${self._total_cost:.4f}, max_cost=${self._max_cost:.4f}, user={user_id}) — 新请求被拒绝"
         logger.error(msg)
         self._send_alert(msg, "critical")
-        try:
-            from cloud.app.agent_runtime.comm.notifier import Notifier
 
-            notifier = Notifier()
-            notifier.send(msg, priority="critical")
-        except Exception:
-            logger.exception("CostGovernor: 发送预算耗尽通知失败")
-
-    @staticmethod
-    def _send_alert(message: str, priority: str) -> None:
-        if not _TELEGRAM_WEBHOOK_URL:
-            return
+    def _send_alert(self, message: str, priority: str) -> None:
         try:
-            body = json.dumps({"text": f"[{priority}] {message}", "priority": priority}).encode("utf-8")
-            req = urllib.request.Request(_TELEGRAM_WEBHOOK_URL, data=body, headers={"Content-Type": "application/json"}, method="POST")
-            urllib.request.urlopen(req, timeout=10)
+            from cloud.app.services.rep_workbench.notification_service import NotificationService
+
+            user_id_str = str((self._user_context or {}).get("user_id", "0"))
+            user_id = int(user_id_str) if user_id_str.isdigit() else 0
+            svc = NotificationService()
+            svc.send(
+                user_id=user_id,
+                title=f"[CostGovernor][{priority}]",
+                body=message,
+                category="system_alert",
+            )
         except Exception:
-            logger.exception("CostGovernor: 发送 webhook 告警失败")
+            logger.warning("CostGovernor: notification_service unavailable, fallback: %s", message)
 
     def record(self, model: str, input_tokens: int, output_tokens: int, model_tier: str = "cloud_normal", step: int | None = None) -> float:
         """记录一次 LLM 调用的 token 消耗与成本。"""

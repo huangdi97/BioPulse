@@ -6,12 +6,10 @@ import { fetchSuggestions } from '@/api/recommends'
 import { fetchTodayRecommendations } from '@/api/rep-dashboard'
 import type { DashboardSummary, Task, AiSuggestion, TodayRecommendation } from '@/types'
 import StatCard from '@/components/StatCard'
-import AiSuggestionCard from '@/components/AiSuggestionCard'
-import AiCapabilityCard from '@/components/ai/AiCapabilityCard'
-import AgentSummaryCard from '../../components/AgentSummaryCard'
 import AgentInsightBar from '../../components/AgentInsightBar'
+import AgentDailyBrief from '../../components/agent/AgentDailyBrief'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ClipboardList, CalendarCheck, AlertTriangle, Check, Mic, Bell, Zap, Target, DollarSign, UserCheck } from 'lucide-react'
+import { ClipboardList, CalendarCheck, AlertTriangle, Check, Target, DollarSign, UserCheck } from 'lucide-react'
 
 export default function RepDashboard() {
   const navigate = useNavigate()
@@ -58,11 +56,7 @@ export default function RepDashboard() {
   if (loading) {
     return (
       <div className="space-y-4 animate-pulse">
-        <div className="flex gap-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex-1 h-24 bg-muted rounded-xl" />
-          ))}
-        </div>
+        <div className="flex gap-4">{[1, 2, 3].map((i) => <div key={i} className="flex-1 h-24 bg-muted rounded-xl" />)}</div>
         <div className="h-48 bg-muted rounded-xl" />
         <div className="h-32 bg-muted rounded-xl" />
       </div>
@@ -73,7 +67,7 @@ export default function RepDashboard() {
 
   return (
     <div className="space-y-4">
-      <AgentSummaryCard title='今日建议' agentKey='sales_suggestion' pageId='rep_dashboard' variant='suggestion' />
+      <AgentDailyBrief />
       <div className="flex gap-4">
         <StatCard
           icon={<ClipboardList className="h-5 w-5 text-blue-600" />}
@@ -200,31 +194,6 @@ export default function RepDashboard() {
         </CardContent>
       </Card>
 
-      <AiSuggestionCard suggestions={suggestions} maxItems={1} />
-
-      <div>
-        <h2 className="text-sm font-semibold text-muted-foreground mb-3">AI 能力</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <AiCapabilityCard
-            icon={<Mic className="h-5 w-5 text-blue-600" />}
-            title="ASR 转录"
-            description="自动将语音转换为文字，支持实时通话转录"
-            status="simulated"
-          />
-          <AiCapabilityCard
-            icon={<Bell className="h-5 w-5 text-purple-600" />}
-            title="智能提醒"
-            description="基于拜访历史和合规要求自动生成提醒"
-            status="simulated"
-          />
-          <AiCapabilityCard
-            icon={<Zap className="h-5 w-5 text-green-600" />}
-            title="拜访建议"
-            description="根据客户画像提供个性化沟通策略"
-            status="simulated"
-          />
-        </div>
-      </div>
     </div>
   )
 }

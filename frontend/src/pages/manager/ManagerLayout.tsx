@@ -15,6 +15,7 @@ import {
   ClipboardCheck,
   FileCheck,
   Stethoscope,
+  Network,
 } from 'lucide-react'
 
 const END_PORTS = [
@@ -35,6 +36,7 @@ const sidebarItems = [
   { to: '/manager/inspection/review', label: '复查确认', icon: ClipboardCheck },
   { to: '/manager/approval', label: '报价审批', icon: FileCheck },
   { to: '/manager/admission', label: '入院Tracker', icon: Stethoscope },
+  { to: '/manager/world-model', label: '世界模型', icon: Network },
 ]
 
 const bottomTabs = [

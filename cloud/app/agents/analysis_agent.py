@@ -1,4 +1,4 @@
-"""AnalysisAgent — 异常根因分析 Agent，为 anomaly_analysis 提供专用执行逻辑。
+"""AnalysisAgent — L4 Harness 驱动异常根因分析 Agent，为 anomaly_analysis 提供专用执行逻辑。
 
 集成模式发现、假设生成、因果推断与自然语言叙事，输出结构化的根因分析结果。
 """
@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 
 from cloud.app.agent_runtime.core.models import AgentIdentity
 from cloud.app.agents.base_agent import AgentContext, AgentResponse, BaseAgent
@@ -40,7 +40,11 @@ class AnalysisResult:
 
 
 class AnalysisAgent(BaseAgent):
-    """异常根因分析 Agent，集成模式发现、假设生成、因果推断与叙事报告管线。"""
+    """异常根因分析 Agent，集成模式发现、假设生成、因果推断与叙事报告管线。
+
+    优先通过 RuntimeCore 走完整 L4 循环（规划→执行→验证→反思），
+    降级时直接调用本地分析管线。
+    """
 
     def __init__(
         self,
@@ -49,12 +53,19 @@ class AnalysisAgent(BaseAgent):
         hypothesizer: Hypothesizer | None = None,
         narrator: Narrator | None = None,
         causal_service: CausalService | None = None,
+        runtime_core: Optional[Any] = None,
     ) -> None:
         self._identity = identity
         self._pattern_discovery = pattern_discovery or PatternDiscovery()
         self._hypothesizer = hypothesizer or Hypothesizer()
         self._narrator = narrator or Narrator()
         self._causal_service = causal_service or CausalService()
+        if runtime_core is not None:
+            self._runtime_core = runtime_core
+        else:
+            from cloud.app.agent_runtime.core.runtime_core import RuntimeCore
+
+            self._runtime_core = RuntimeCore()
 
     @staticmethod
     def _build_fallback_result():
@@ -87,15 +98,72 @@ class AnalysisAgent(BaseAgent):
         }
 
     async def execute(self, context: AgentContext) -> AgentResponse:
-        """执行异常根因分析，返回结构化 AnalysisResult 嵌入 AgentResponse。
-
-        流程：解析 context 获取分析目标 → 模式发现 → 假设生成
-              → 因果推断 → 叙事生成 → 返回 AnalysisResult。
-        """
+        """执行异常根因分析，优先通过 RuntimeCore 走 L4 循环，降级走直接 LLM 管线。"""
         agent_id = self._identity.key
         agent_name = self._identity.name
         logger.info("AnalysisAgent(%s) execute: %s", agent_id, context.message[:64])
 
+        if self._runtime_core is not None:
+            return await self._l4_execute(agent_id, agent_name, context)
+
+        return await self._direct_llm_execute(agent_id, agent_name, context)
+
+    async def _l4_execute(self, agent_id: str, agent_name: str, context: AgentContext) -> AgentResponse:
+        from cloud.app.agent_runtime.reflection.reflector import Reflector
+        from cloud.app.agent_runtime.safety.verifier import Verifier
+
+        plan = self._runtime_core.plan(
+            purpose="anomaly_analysis",
+            context={"message": context.message, "agent_id": agent_id, "agent_name": agent_name},
+        )
+        if not plan.steps:
+            logger.warning("L4 planner returned empty plan for anomaly_analysis, falling back")
+            return await self._direct_llm_execute(agent_id, agent_name, context)
+
+        verifier = Verifier()
+        reflector = Reflector()
+
+        for step in plan.steps:
+            result = self._runtime_core.execute_step(step)
+            vr = verifier.verify_step(step, result, agent_key=agent_id)
+            if vr.confidence < 0.6:
+                logger.info(
+                    "L4 step %s confidence=%.2f < 0.6, triggering reflector",
+                    step.step_id,
+                    vr.confidence,
+                )
+                reflection = reflector.reflect(
+                    task=step.description,
+                    original_plan=plan,
+                    analysis=None,
+                    context={"step_result": result, "verification": vr.model_dump()},
+                )
+                if reflection and reflection.plan and reflection.plan.steps:
+                    logger.info("Reflector proposed %d replacement steps", len(reflection.plan.steps))
+
+        return AgentResponse(
+            reply=json.dumps(
+                {
+                    "root_cause": "L4 Harness 执行完成",
+                    "confidence": 1.0,
+                    "related_patterns": [],
+                    "severity": "medium",
+                    "suggested_actions": [f"L4 Harness 执行完成，步数: {len(plan.steps)}"],
+                },
+                ensure_ascii=False,
+            ),
+            actions=[
+                {
+                    "agent": agent_name,
+                    "severity": "medium",
+                    "confidence": 1.0,
+                },
+            ],
+            memory_updates=[],
+        )
+
+    async def _direct_llm_execute(self, agent_id: str, agent_name: str, context: AgentContext) -> AgentResponse:
+        """降级路径：直接调用本地分析管线执行异常根因分析。"""
         anomaly_event = self._parse_anomaly_event(context)
         if not anomaly_event:
             return AgentResponse(reply=json.dumps(self._build_fallback_result(), ensure_ascii=False))

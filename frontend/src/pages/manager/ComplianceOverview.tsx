@@ -1,3 +1,4 @@
+import AgentCompliancePulse from '@/components/agent/AgentCompliancePulse'
 import React, { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import StatCard from '@/components/StatCard'
@@ -94,6 +95,7 @@ export default function ComplianceOverview() {
   return (
     <ErrorBoundary>
       <div className="space-y-4">
+      <AgentCompliancePulse />
       <div className="flex gap-4">
         <StatCard
           icon={<AlertTriangle className="h-5 w-5 text-orange-600" />}

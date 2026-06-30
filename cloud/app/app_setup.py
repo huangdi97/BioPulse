@@ -1,6 +1,7 @@
 """FastAPI 路由注册与启动/关闭事件。"""
 
 import logging
+import os
 from importlib import import_module
 from pkgutil import iter_modules
 
@@ -15,6 +16,12 @@ from cloud.app.services.tenant_isolation_service import router as tenant_isolati
 from cloud.app.soap_route import router as soap_decision_router
 
 logger = logging.getLogger(__name__)
+
+_LOG_DIR = "/var/log/biopulse"
+os.makedirs(_LOG_DIR, exist_ok=True)
+_file_handler = logging.FileHandler(f"{_LOG_DIR}/app.log")
+_file_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s"))
+logging.getLogger().addHandler(_file_handler)
 
 ROUTER_MODULE_BLACKLIST: frozenset[str] = frozenset()
 MANUAL_ROUTERS = (opportunity_v2_router, soap_decision_router, tenant_isolation_router)
